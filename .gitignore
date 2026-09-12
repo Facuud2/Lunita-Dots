@@ -1,2 +1,16 @@
 node_modules/
 @girs/
+
+
+# Backups y archivos temporales
+*.bak
+*.tmp
+*~
+
+
+# Configuración exclusiva de hardware del usuario
+hypr/modules/monitors.lua
+
+# (Opcional) Si en el futuro creas un archivo para overrides locales
+
+# modules/local.lua
