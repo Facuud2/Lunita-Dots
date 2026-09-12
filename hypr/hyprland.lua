@@ -6,6 +6,13 @@
 local config_dir = os.getenv("HOME") .. "/.config/hypr"
 package.path = config_dir .. "/?.lua;" .. config_dir .. "/?/init.lua;" .. package.path
 
+-- Invalidate cached modules so hyprctl reload picks up color and config changes
+for k, _ in pairs(package.loaded) do
+    if k:match("^modules%.") then
+        package.loaded[k] = nil
+    end
+end
+
 ---------------------
 ---- MY PROGRAMS ----
 ---------------------
