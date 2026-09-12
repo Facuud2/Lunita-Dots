@@ -1,0 +1,383 @@
+import { Gtk, Gdk } from "ags/gtk4"
+import { createState, With } from "ags"
+import { execAsync } from "ags/process"
+import {
+  clock,
+  networkState,
+  bluetoothState,
+  volumeState,
+  systemMeters,
+} from "./services"
+import MediaCard from "./MediaCard"
+import NetworkOverlay from "./NetworkOverlay"
+import BluetoothOverlay from "./BluetoothOverlay"
+
+export default function ExpandedPanel({
+  onClose,
+}: {
+  onClose?: () => void
+}) {
+  const [coffeeMode, setCoffeeMode] = createState(false)
+  const [recording, setRecording] = createState(false)
+  const [activeOverlay, setActiveOverlay] = createState<"none" | "wifi" | "bt">("none")
+
+  // Local audio state — updated instantly on drag/click without waiting for the poll
+  const [localVolume, setLocalVolume] = createState(volumeState.peek().volume)
+  const [localMuted, setLocalMuted] = createState(volumeState.peek().muted)
+
+  // Keep local state in sync whenever the background poll catches up
+  volumeState.subscribe((v) => {
+    setLocalVolume(v.volume)
+    setLocalMuted(v.muted)
+  })
+
+  const toggleCoffee = () => {
+    const next = !coffeeMode.peek()
+    setCoffeeMode(next)
+    if (next) {
+      execAsync("systemd-inhibit --what=idle:sleep --why='Coffee Mode' sleep infinity &").catch(() => {})
+    } else {
+      execAsync("pkill -f 'Coffee Mode'").catch(() => {})
+    }
+  }
+
+  const toggleRecording = () => {
+    const next = !recording.peek()
+    setRecording(next)
+    if (next) {
+      execAsync("wf-recorder -f ~/Videos/recording_$(date +%s).mp4 &").catch(() => {})
+    } else {
+      execAsync("pkill -INT wf-recorder").catch(() => {})
+    }
+  }
+
+  const toggleMute = () => {
+    execAsync("pamixer -t").catch(() => {})
+  }
+
+  const openAppLauncher = () => {
+    execAsync("rofi -show drun || wofi --show drun").catch(() => {})
+    onClose?.()
+  }
+
+  const openPowerMenu = () => {
+    execAsync("wlogout").catch(() => {})
+    onClose?.()
+  }
+
+  const openLockScreen = () => {
+    execAsync("swaylock || hyprlock || loginctl lock-session").catch(() => {})
+    onClose?.()
+  }
+
+  return (
+    <box orientation={Gtk.Orientation.VERTICAL} class="expanded-panel" spacing={10}>
+      {/* ── Overlay Display (Conditional) ── */}
+      <With value={activeOverlay}>
+        {(overlay) => {
+          if (overlay === "wifi") {
+            return <NetworkOverlay onClose={() => setActiveOverlay("none")} />
+          }
+          if (overlay === "bt") {
+            return <BluetoothOverlay onClose={() => setActiveOverlay("none")} />
+          }
+
+          return (
+            <box orientation={Gtk.Orientation.VERTICAL} spacing={10}>
+              {/* ── 1. Header: Large Clock + Date ── */}
+              <box class="header-clock" valign={Gtk.Align.CENTER}>
+                {/* Large Time + Seconds */}
+                <box spacing={4} valign={Gtk.Align.END}>
+                  <label class="large-clock" label={clock((c) => c.time)} />
+                  <label class="small-seconds" label={clock((c) => c.sec)} />
+                </box>
+
+                {/* Date / Calendar Card */}
+                <box hexpand halign={Gtk.Align.END} valign={Gtk.Align.CENTER}>
+                  <button
+                    class="date-card"
+                    onClicked={() => {}}
+                    cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
+                  >
+                    <box orientation={Gtk.Orientation.VERTICAL} spacing={2} halign={Gtk.Align.END}>
+                      <label class="date-title" label={clock((c) => c.date)} />
+                      <label class="date-sub" label="CALENDARIO" />
+                    </box>
+                  </button>
+                </box>
+              </box>
+
+              {/* ── 2. Status Pills Row: Network, Bluetooth, Audio ── */}
+              <box class="status-pills-row" spacing={8} homogeneous>
+                {/* Network Pill -> Opens Network Overlay */}
+                <button
+                  class={networkState((net) =>
+                    net.connected ? "status-pill active" : "status-pill"
+                  )}
+                  onClicked={() => setActiveOverlay("wifi")}
+                >
+                  <box spacing={8} valign={Gtk.Align.CENTER}>
+                    <label
+                      class="font-icon pill-icon-bg"
+                      label={networkState((net) =>
+                        !net.connected ? "wifi_off" : net.isWifi ? "wifi" : "lan"
+                      )}
+                    />
+                    <box orientation={Gtk.Orientation.VERTICAL} spacing={1}>
+                      <label
+                        class="pill-title"
+                        label={networkState((net) => net.name)}
+                        halign={Gtk.Align.START}
+                        ellipsize={3}
+                      />
+                      <label
+                        class="pill-subtitle"
+                        label={networkState((net) =>
+                          net.connected ? "CONECTADO" : "SIN RED"
+                        )}
+                        halign={Gtk.Align.START}
+                      />
+                    </box>
+                  </box>
+                </button>
+
+                {/* Bluetooth Pill -> Opens Bluetooth Overlay */}
+                <button
+                  class={bluetoothState((b) =>
+                    b.enabled ? "status-pill active" : "status-pill"
+                  )}
+                  onClicked={() => setActiveOverlay("bt")}
+                >
+                  <box spacing={8} valign={Gtk.Align.CENTER}>
+                    <label
+                      class="font-icon pill-icon-bg"
+                      label={bluetoothState((b) =>
+                        b.enabled ? "bluetooth" : "bluetooth_disabled"
+                      )}
+                    />
+                    <box orientation={Gtk.Orientation.VERTICAL} spacing={1}>
+                      <label class="pill-title" label="Bluetooth" halign={Gtk.Align.START} />
+                      <label
+                        class="pill-subtitle"
+                        label={bluetoothState((b) =>
+                          b.enabled
+                            ? b.connectedDevice || "ENCENDIDO"
+                            : "APAGADO"
+                        )}
+                        halign={Gtk.Align.START}
+                        ellipsize={3}
+                      />
+                    </box>
+                  </box>
+                </button>
+
+                {/* Audio / Volume Pill -> Drag to change volume, right-click to mute */}
+                {(() => {
+                  let dragStartVol = 0
+                  let didDrag = false
+
+                  return (
+                    <box
+                      class={localMuted((m) =>
+                        !m ? "status-pill audio-pill active" : "status-pill audio-pill"
+                      )}
+                      cursor={Gdk.Cursor.new_from_name("ew-resize", null) as any}
+                      $={(self) => {
+                        // ── Drag gesture: adjust volume ──
+                        const drag = new Gtk.GestureDrag()
+                        drag.connect("drag-begin", () => {
+                          dragStartVol = localVolume.peek()
+                          didDrag = false
+                        })
+                        drag.connect("drag-update", (_g: any, dx: number) => {
+                          // ~140px = full range (0-100%)
+                          const delta = Math.round((dx / 140) * 100)
+                          const next = Math.max(0, Math.min(100, dragStartVol + delta))
+                          // Update UI immediately — no poll lag
+                          setLocalVolume(next)
+                          execAsync(`pamixer --set-volume ${next}`).catch(() => {})
+                          if (Math.abs(dx) > 5) didDrag = true
+                        })
+                        self.add_controller(drag)
+
+                        // ── Right-click gesture: instant mute ──
+                        const rclick = new Gtk.GestureClick()
+                        rclick.set_button(3)
+                        rclick.connect("pressed", () => {
+                          setLocalMuted(true)
+                          execAsync("pamixer -m").catch(() => {})
+                        })
+                        self.add_controller(rclick)
+
+                        // ── Left-click gesture: toggle mute (only if not a drag) ──
+                        const lclick = new Gtk.GestureClick()
+                        lclick.set_button(1)
+                        lclick.connect("released", () => {
+                          if (!didDrag) {
+                            const next = !localMuted.peek()
+                            setLocalMuted(next)
+                            execAsync("pamixer -t").catch(() => {})
+                          }
+                        })
+                        self.add_controller(lclick)
+                      }}
+                    >
+                      <box spacing={8} valign={Gtk.Align.CENTER} hexpand>
+                        <label
+                          class="font-icon pill-icon-bg"
+                          label={localMuted((m) => (m ? "volume_off" : "volume_up"))}
+                        />
+                        <box orientation={Gtk.Orientation.VERTICAL} spacing={1} hexpand>
+                          <label
+                            class="pill-title font-dots"
+                            label={localVolume((v) => `${v}%`)}
+                            halign={Gtk.Align.START}
+                          />
+                          <label
+                            class="pill-subtitle"
+                            label={localMuted((m) => (m ? "MUTED" : "VOLUMEN"))}
+                            halign={Gtk.Align.START}
+                          />
+                        </box>
+                        {/* Inline volume bar — driven by localVolume for instant feedback */}
+                        <box class="audio-pill-track" valign={Gtk.Align.CENTER}>
+                          <box
+                            class="audio-pill-fill"
+                            css={localVolume((v) =>
+                              `min-width: ${Math.max(2, Math.round(v * 0.44))}px;`
+                            )}
+                          />
+                        </box>
+                      </box>
+                    </box>
+                  )
+                })()}
+              </box>
+
+              {/* ── 3. Media Player Card (1:1 with Waveform & Timestamps) ── */}
+              <MediaCard />
+
+              {/* ── 4. Recording & Meters Row (CPU, RAM, GPU) ── */}
+              <box class="meters-row" spacing={8}>
+                {/* Screen Recording Card */}
+                <button
+                  class={recording((r) => (r ? "rec-card recording" : "rec-card"))}
+                  onClicked={toggleRecording}
+                >
+                  <box spacing={10} valign={Gtk.Align.CENTER}>
+                    <box class="rec-badge" valign={Gtk.Align.CENTER}>
+                      <label
+                        class="font-icon rec-icon"
+                        label={recording((r) => (r ? "stop" : "fiber_manual_record"))}
+                      />
+                    </box>
+                    <box orientation={Gtk.Orientation.VERTICAL} spacing={1}>
+                      <label class="rec-title" label="GRABACIÓN" halign={Gtk.Align.START} />
+                      <label
+                        class="rec-time font-dots"
+                        label={recording((r) => (r ? "REC • ON" : "00:00"))}
+                        halign={Gtk.Align.START}
+                      />
+                    </box>
+                  </box>
+                </button>
+
+                {/* CPU, RAM, GPU Progress Meters */}
+                <box class="stats-card" orientation={Gtk.Orientation.VERTICAL} spacing={6} hexpand>
+                  {/* CPU Meter */}
+                  <box spacing={8} valign={Gtk.Align.CENTER}>
+                    <label class="font-icon meter-icon" label="memory" />
+                    <label class="meter-label" label="CPU" />
+                    <box class="meter-track" hexpand valign={Gtk.Align.CENTER}>
+                      <box
+                        class={systemMeters((m) =>
+                          m.cpu > 80 ? "meter-fill alert" : "meter-fill"
+                        )}
+                        css={systemMeters((m) => `min-width: ${Math.max(4, m.cpu * 1.4)}px;`)}
+                      />
+                    </box>
+                    <label class="meter-val font-dots" label={systemMeters((m) => `${m.cpu}%`)} />
+                    <box spacing={2} valign={Gtk.Align.CENTER}>
+                      <label class="font-icon temp-icon alert" label="local_fire_department" />
+                      <label class="temp-val font-dots" label={systemMeters((m) => `${m.cpuTemp}°`)} />
+                    </box>
+                  </box>
+
+                  {/* RAM Meter */}
+                  <box spacing={8} valign={Gtk.Align.CENTER}>
+                    <label class="font-icon meter-icon" label="developer_board" />
+                    <label class="meter-label" label="RAM" />
+                    <box class="meter-track" hexpand valign={Gtk.Align.CENTER}>
+                      <box
+                        class={systemMeters((m) =>
+                          m.ram > 85 ? "meter-fill alert" : "meter-fill"
+                        )}
+                        css={systemMeters((m) => `min-width: ${Math.max(4, m.ram * 1.4)}px;`)}
+                      />
+                    </box>
+                    <label class="meter-val font-dots" label={systemMeters((m) => `${m.ram}%`)} />
+                  </box>
+
+                  {/* GPU Meter */}
+                  <box spacing={8} valign={Gtk.Align.CENTER}>
+                    <label class="font-icon meter-icon" label="videogame_asset" />
+                    <label class="meter-label" label="GPU" />
+                    <box class="meter-track" hexpand valign={Gtk.Align.CENTER}>
+                      <box
+                        class={systemMeters((m) =>
+                          m.gpu > 80 ? "meter-fill alert" : "meter-fill"
+                        )}
+                        css={systemMeters((m) => `min-width: ${Math.max(4, m.gpu * 1.4)}px;`)}
+                      />
+                    </box>
+                    <label class="meter-val font-dots" label={systemMeters((m) => `${m.gpu}%`)} />
+                    <box spacing={2} valign={Gtk.Align.CENTER}>
+                      <label class="font-icon temp-icon alert" label="local_fire_department" />
+                      <label class="temp-val font-dots" label={systemMeters((m) => `${m.gpuTemp}°`)} />
+                    </box>
+                  </box>
+                </box>
+              </box>
+
+              {/* ── 5. Quick Actions Row (Coffee Mode + Lock, Apps, Power) ── */}
+              <box class="quick-actions-row" spacing={8} valign={Gtk.Align.CENTER}>
+                {/* Coffee Mode Pill */}
+                <button
+                  class={coffeeMode((active) =>
+                    active ? "coffee-pill active" : "coffee-pill"
+                  )}
+                  hexpand
+                  onClicked={toggleCoffee}
+                >
+                  <box spacing={8} valign={Gtk.Align.CENTER}>
+                    <label class="font-icon coffee-icon" label="coffee" />
+                    <label class="coffee-label" label="MODO CAFÉ" />
+                    <box hexpand />
+                    <box class={coffeeMode((c) => (c ? "m3-switch active" : "m3-switch"))}>
+                      <box class="m3-handle" />
+                    </box>
+                  </box>
+                </button>
+
+                {/* Lock Screen Action */}
+                <button class="action-btn" onClicked={openLockScreen}>
+                  <label class="font-icon" label="lock" />
+                </button>
+
+                {/* App Launcher Action */}
+                <button class="action-btn" onClicked={openAppLauncher}>
+                  <label class="font-icon" label="apps" />
+                </button>
+
+                {/* Power Menu Action */}
+                <button class="action-btn danger" onClicked={openPowerMenu}>
+                  <label class="font-icon" label="power_settings_new" />
+                </button>
+              </box>
+            </box>
+          )
+        }}
+      </With>
+    </box>
+  )
+}

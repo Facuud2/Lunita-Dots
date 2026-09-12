@@ -1,0 +1,821 @@
+// ── 1. Variables CSS (:root) ──
+:root {
+  --bg-panel: #0B0B0B;
+  --bg-card: #161616;
+  --bg-card-hover: #242424;
+  --bg-card-active: #FFFFFF;
+  --border-subtle: #1A1A1A;
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-faint: rgba(255, 255, 255, 0.30);
+  --text-inverse: #000000;
+  --accent-red: #D71921;
+  --slider-track: #242424;
+  --slider-fill: #FFFFFF;
+  --media-gradient: linear-gradient(180deg, #161616 0%, #161616 40%, rgba(215, 25, 33, 0.30) 100%);
+}
+
+// SCSS Fonts Tokens
+$font-ui: "Space Grotesk", sans-serif;
+$font-dots: "NDOT 47 (inspired by NOTHING)", "NDOT 47", "Doto", monospace;
+$font-icons: "Material Symbols Rounded";
+
+// Global reset & fonts
+* {
+  font-family: $font-ui;
+  color: var(--text-primary);
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+// Window Containers & Transparent Backdrop
+window,
+window.dynamic-island-window,
+window.dynamic-island-pill,
+window.dynamic-island-popup,
+window.island-backdrop-window {
+  background: transparent;
+}
+
+window.island-backdrop-window {
+  button.backdrop-btn {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+// ── 2. Main Island Shell (Panel Principal) ──
+.island-shell {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  transition: all 380ms cubic-bezier(0.05, 0.7, 0.1, 1.0);
+
+  &.compact {
+    min-width: 460px;
+    min-height: 36px;
+    border-radius: 18px;
+    padding: 0 14px;
+  }
+
+  &.expanded {
+    min-width: 580px;
+    border-radius: 26px;
+    padding: 14px;
+  }
+}
+
+// Typography Helpers & Icon Font Rules
+.font-dots {
+  font-family: $font-dots;
+  font-weight: bold;
+}
+
+.font-ui {
+  font-family: $font-ui;
+}
+
+.font-icon,
+.status-icon,
+.pill-icon-bg,
+.media-art-icon,
+.rec-icon,
+.coffee-icon,
+.meter-icon,
+.temp-icon {
+  font-family: $font-icons;
+  -gtk-icon-style: requested;
+}
+
+// Ensure labels inside icon buttons always render with icon font
+.action-btn,
+.action-btn label,
+.media-small-btn,
+.media-small-btn label,
+.media-main-btn,
+.media-main-btn label,
+.overlay-close-btn,
+.overlay-close-btn label,
+.overlay-mini-btn,
+.overlay-mini-btn label {
+  font-family: $font-icons;
+}
+
+.label-uppercase {
+  font-family: $font-ui;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+}
+
+// Compact Pill Content
+button.compact-trigger {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+.compact-pill {
+  min-height: 36px;
+
+  .clock-text {
+    font-family: $font-dots;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--text-primary);
+  }
+
+  .status-item {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .status-icon {
+    font-family: $font-icons;
+    font-size: 16px;
+    color: var(--text-primary);
+
+    &.muted {
+      color: var(--text-faint);
+    }
+  }
+
+  .alert-icon {
+    color: var(--accent-red) !important;
+  }
+
+  .ws-dot {
+    min-width: 6px;
+    min-height: 6px;
+    border-radius: 3px;
+    background-color: var(--text-faint);
+    margin: 0 2px;
+
+    &.active {
+      min-width: 16px;
+      background-color: var(--text-primary);
+    }
+  }
+}
+
+// ── Expanded Panel Content ──
+.expanded-panel {
+  padding-top: 4px;
+
+  .header-clock {
+    .large-clock {
+      font-family: $font-dots;
+      font-size: 38px;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+
+    .small-seconds {
+      font-family: $font-dots;
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+
+    .date-card {
+      background-color: transparent;
+      border-radius: 14px;
+      padding: 6px 10px;
+      transition: background-color 180ms ease;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.10);
+      }
+
+      .date-title {
+        font-family: $font-ui;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        color: var(--text-secondary);
+      }
+
+      .date-sub {
+        font-family: $font-ui;
+        font-size: 10px;
+        letter-spacing: 1.2px;
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  // ── 3. Tarjetas de Conexión (Status Pills: Ethernet / Bluetooth / Sonido) ──
+  .status-pills-row {
+    margin-top: 10px;
+
+    .status-pill {
+      min-height: 52px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 6px 10px;
+      transition: all 200ms ease;
+
+      &:hover {
+        background-color: var(--bg-card-hover);
+      }
+
+      // Estado Activo (Como en la referencia)
+      &.active {
+        background-color: var(--bg-card-active);
+
+        * {
+          color: var(--text-inverse);
+        }
+
+        .pill-icon-bg {
+          background-color: var(--text-inverse);
+          color: var(--bg-card-active);
+        }
+
+        .pill-title {
+          color: var(--text-inverse);
+        }
+
+        .pill-subtitle {
+          color: var(--text-inverse);
+        }
+      }
+
+      // Estado Inactivo
+      .pill-icon-bg {
+        min-width: 34px;
+        min-height: 34px;
+        border-radius: 17px;
+        background-color: var(--bg-card-hover);
+        color: var(--text-secondary);
+        font-family: $font-icons;
+        font-size: 18px;
+      }
+
+      .pill-title {
+        font-family: $font-ui;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .pill-subtitle {
+        font-family: $font-ui;
+        font-size: 9px;
+        letter-spacing: 1.0px;
+        color: var(--text-secondary);
+      }
+    }
+
+    // ── Audio Pill: drag-to-scrub volume bar ──
+    .audio-pill {
+      // Mini volume track shown at the right edge of the pill
+      .audio-pill-track {
+        min-width: 44px;
+        min-height: 4px;
+        border-radius: 2px;
+        background-color: rgba(255, 255, 255, 0.15);
+
+        .audio-pill-fill {
+          min-height: 4px;
+          border-radius: 2px;
+          background-color: var(--text-primary);
+          transition: min-width 80ms ease;
+        }
+      }
+
+      // When active (unmuted + white bg) invert track colours
+      &.active {
+        .audio-pill-track {
+          background-color: rgba(0, 0, 0, 0.15);
+
+          .audio-pill-fill {
+            background-color: var(--text-inverse);
+          }
+        }
+      }
+    }
+  }
+
+  // ── 4. Reproductor Multimedia (Media Player) ──
+  .media-card {
+    margin-top: 10px;
+    min-height: 110px;
+    border-radius: 18px;
+    background: var(--media-gradient);
+    border: 1px solid var(--border-subtle);
+    padding: 12px;
+
+    .media-art-box {
+      min-width: 46px;
+      min-height: 46px;
+      border-radius: 12px;
+      background-color: var(--bg-card-hover);
+
+      .media-art-icon {
+        font-family: $font-icons;
+        font-size: 24px;
+        color: var(--text-primary);
+      }
+    }
+
+    .media-title {
+      font-family: $font-ui;
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+
+    .media-artist {
+      font-family: $font-ui;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .media-small-btn {
+      min-width: 32px;
+      min-height: 32px;
+      border-radius: 16px;
+      background-color: var(--bg-card-hover);
+      color: var(--text-primary);
+      font-family: $font-icons;
+      font-size: 18px;
+
+      label,
+      * {
+        font-family: $font-icons;
+        font-size: 18px;
+        color: var(--text-primary);
+      }
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.20);
+      }
+    }
+
+    .media-main-btn {
+      min-width: 40px;
+      min-height: 40px;
+      border-radius: 20px;
+      background-color: var(--bg-card-active);
+      color: var(--text-inverse);
+      font-family: $font-icons;
+      font-size: 22px;
+      transition: transform 150ms ease;
+
+      label,
+      * {
+        font-family: $font-icons;
+        font-size: 22px;
+        color: var(--text-inverse);
+      }
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+
+    // Waveform Progress Visualizer
+    .waveform-container {
+      margin-top: 6px;
+
+      .waveform-row {
+        min-height: 28px;
+
+        .waveform-bar-btn {
+          padding: 0;
+          margin: 0;
+          background: transparent;
+
+          .waveform-bar {
+            min-width: 3px;
+            border-radius: 1.5px;
+            background-color: var(--bg-card-hover);
+            transition: all 180ms ease;
+
+            &.played {
+              background-color: var(--text-primary);
+            }
+          }
+        }
+      }
+
+      .waveform-time-row {
+        .time-label {
+          font-family: $font-dots;
+          font-size: 11px;
+          color: var(--text-secondary);
+        }
+      }
+    }
+  }
+
+  // ── 5. Sliders de Hardware (Meters: CPU, RAM, GPU) ──
+  .meters-row {
+    margin-top: 10px;
+
+    .rec-card {
+      min-width: 140px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 10px 12px;
+      transition: background-color 180ms ease;
+
+      &:hover {
+        background-color: var(--bg-card-hover);
+      }
+
+      &.recording {
+        background-color: rgba(215, 25, 33, 0.15);
+        border: 1px solid var(--accent-red);
+      }
+
+      .rec-badge {
+        min-width: 30px;
+        min-height: 30px;
+        border-radius: 15px;
+        background-color: var(--bg-card-hover);
+
+        .rec-icon {
+          font-family: $font-icons;
+          font-size: 16px;
+          color: var(--accent-red);
+        }
+      }
+
+      .rec-title {
+        font-family: $font-ui;
+        font-size: 10px;
+        letter-spacing: 1.2px;
+        color: var(--text-secondary);
+      }
+
+      .rec-time {
+        font-family: $font-dots;
+        font-size: 14px;
+        font-weight: bold;
+        color: var(--text-primary);
+      }
+    }
+
+    .stats-card {
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 10px 14px;
+
+      .meter-icon {
+        font-size: 16px;
+        color: var(--text-secondary);
+      }
+
+      .meter-label {
+        font-family: $font-ui;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        color: var(--text-secondary);
+        min-width: 28px;
+      }
+
+      .meter-track {
+        min-height: 6px;
+        border-radius: 3px;
+        background-color: var(--slider-track);
+
+        .meter-fill {
+          min-height: 6px;
+          border-radius: 3px;
+          background-color: var(--slider-fill);
+          transition: min-width 300ms ease;
+
+          &.alert {
+            background-color: var(--accent-red);
+          }
+        }
+      }
+
+      .meter-val {
+        font-family: $font-dots;
+        font-size: 12px;
+        font-weight: bold;
+        color: var(--text-secondary);
+        min-width: 32px;
+      }
+
+      .temp-icon {
+        font-size: 14px;
+        color: var(--accent-red);
+      }
+
+      .temp-val {
+        font-family: $font-dots;
+        font-size: 11px;
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  // ── Quick Actions Row ──
+  .quick-actions-row {
+    margin-top: 10px;
+    margin-bottom: 4px;
+
+    .coffee-pill {
+      min-height: 44px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 0 14px;
+      transition: all 200ms ease;
+
+      &:hover {
+        background-color: var(--bg-card-hover);
+      }
+
+      &.active {
+        background-color: var(--bg-card-active);
+
+        * {
+          color: var(--text-inverse);
+        }
+      }
+
+      .coffee-icon {
+        font-family: $font-icons;
+        font-size: 20px;
+        color: var(--text-secondary);
+      }
+
+      .coffee-label {
+        font-family: $font-ui;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        color: var(--text-primary);
+      }
+    }
+
+    .action-btn {
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      font-family: $font-icons;
+      font-size: 20px;
+      color: var(--text-primary);
+      transition: all 180ms ease;
+
+      label,
+      * {
+        font-family: $font-icons;
+        font-size: 20px;
+        color: var(--text-primary);
+      }
+
+      &:hover {
+        background-color: var(--bg-card-hover);
+      }
+
+      &.danger {
+        color: var(--accent-red);
+
+        label,
+        * {
+          color: var(--accent-red);
+        }
+      }
+    }
+  }
+
+  // ── Overlays: Network & Bluetooth ──
+  .island-overlay-card {
+    padding: 6px 0;
+
+    .overlay-header {
+      .overlay-title {
+        font-family: $font-ui;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        color: var(--text-faint);
+      }
+
+      .overlay-close-btn {
+        min-width: 26px;
+        min-height: 26px;
+        border-radius: 13px;
+        background-color: var(--bg-card-hover);
+        color: var(--text-primary);
+        font-family: $font-icons;
+        font-size: 15px;
+
+        label,
+        * {
+          font-family: $font-icons;
+          font-size: 15px;
+          color: var(--text-primary);
+        }
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.20);
+        }
+      }
+    }
+
+    .overlay-tabs {
+      .overlay-tab {
+        min-height: 38px;
+        border-radius: 14px;
+        background-color: var(--bg-card);
+        padding: 4px 12px;
+        transition: all 180ms ease;
+
+        .font-icon {
+          font-size: 18px;
+          color: var(--text-primary);
+        }
+
+        &:hover {
+          background-color: var(--bg-card-hover);
+        }
+
+        &.active {
+          background-color: var(--bg-card-active);
+
+          * {
+            color: var(--text-inverse);
+          }
+
+          .font-icon {
+            color: var(--text-inverse);
+          }
+        }
+      }
+    }
+
+    .overlay-toggle-card {
+      min-height: 52px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 8px 14px;
+
+      .pill-icon-bg {
+        min-width: 34px;
+        min-height: 34px;
+        border-radius: 17px;
+        background-color: var(--bg-card-hover);
+        color: var(--text-primary);
+        font-family: $font-icons;
+        font-size: 18px;
+      }
+
+      .pill-title {
+        font-family: $font-ui;
+        font-size: 13px;
+        font-weight: bold;
+        color: var(--text-primary);
+      }
+
+      .pill-subtitle {
+        font-family: $font-ui;
+        font-size: 9px;
+        letter-spacing: 1.0px;
+        color: var(--text-secondary);
+      }
+    }
+
+    // Material 3 Switch
+    .m3-switch {
+      min-width: 44px;
+      min-height: 24px;
+      border-radius: 12px;
+      background-color: var(--bg-card-hover);
+      border: 2px solid var(--border-subtle);
+      padding: 2px;
+      transition: all 200ms ease;
+
+      .m3-handle {
+        min-width: 14px;
+        min-height: 14px;
+        border-radius: 7px;
+        background-color: var(--text-primary);
+        transition: all 200ms ease;
+      }
+
+      &.active {
+        background-color: var(--bg-card-active);
+        border-color: var(--bg-card-active);
+
+        .m3-handle {
+          background-color: var(--text-inverse);
+          margin-left: 20px;
+        }
+      }
+    }
+
+    .section-label {
+      font-family: $font-ui;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.2px;
+      color: var(--text-faint);
+    }
+
+    .overlay-mini-btn {
+      min-width: 28px;
+      min-height: 28px;
+      border-radius: 14px;
+      background-color: var(--bg-card-hover);
+      color: var(--text-primary);
+      font-family: $font-icons;
+      font-size: 16px;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.20);
+      }
+    }
+
+    .device-list {
+      .device-row {
+        min-height: 42px;
+        border-radius: 12px;
+        background-color: var(--bg-card);
+        padding: 6px 12px;
+        transition: background-color 150ms ease;
+
+        .font-icon {
+          font-size: 18px;
+          color: var(--text-primary);
+          min-width: 22px;
+        }
+
+        &:hover {
+          background-color: var(--bg-card-hover);
+        }
+
+        &.active {
+          border: 1px solid var(--text-secondary);
+
+          .device-name {
+            font-weight: bold;
+            color: var(--text-primary);
+          }
+        }
+
+        .device-name {
+          font-family: $font-ui;
+          font-size: 12px;
+          color: var(--text-primary);
+        }
+
+        .device-detail {
+          font-family: $font-ui;
+          font-size: 9px;
+          color: var(--text-secondary);
+        }
+
+        .device-signal {
+          font-size: 11px;
+          color: var(--text-secondary);
+        }
+
+        .device-status-badge {
+          font-family: $font-dots;
+          font-size: 10px;
+          color: var(--text-faint);
+
+          &.active {
+            color: var(--text-primary);
+            font-weight: bold;
+          }
+        }
+      }
+    }
+
+    .ethernet-info-card {
+      border-radius: 14px;
+      background-color: var(--bg-card);
+      padding: 12px;
+    }
+
+    .overlay-action-btn {
+      min-height: 40px;
+      border-radius: 14px;
+      background-color: var(--bg-card-hover);
+      padding: 8px 14px;
+      transition: background-color 180ms ease;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.20);
+      }
+    }
+  }
+}
