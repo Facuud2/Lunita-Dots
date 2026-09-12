@@ -1,33 +1,40 @@
 import { Gtk } from "ags/gtk4"
 import { createState, For } from "ags"
 import { execAsync } from "ags/process"
-import { bluetoothState, BluetoothDevice } from "./services"
+import {
+  bluetoothState,
+  BluetoothDevice,
+  toggleBluetooth,
+  connectBluetoothDevice,
+  fetchBluetooth,
+} from "./services"
 
 export default function BluetoothOverlay({ onClose }: { onClose: () => void }) {
   const [scanning, setScanning] = createState(false)
 
   const togglePower = () => {
-    const isPowered = bluetoothState.peek().enabled
-    execAsync(`bluetoothctl power ${isPowered ? "off" : "on"}`).catch(() => {})
+    toggleBluetooth()
   }
 
   const rescanDevices = () => {
     setScanning(true)
     execAsync("bluetoothctl --timeout 5 scan on")
-      .then(() => setScanning(false))
-      .catch(() => setScanning(false))
+      .then(() => {
+        setScanning(false)
+        fetchBluetooth()
+      })
+      .catch(() => {
+        setScanning(false)
+        fetchBluetooth()
+      })
   }
 
   const connectDevice = (mac: string, connected: boolean) => {
-    if (connected) {
-      execAsync(`bluetoothctl disconnect ${mac}`).catch(() => {})
-    } else {
-      execAsync(`bluetoothctl connect ${mac}`).catch(() => {})
-    }
+    connectBluetoothDevice(mac, connected)
   }
 
   const openBluemanManager = () => {
-    execAsync("blueman-manager || rofi-bluetooth").catch(() => {})
+    execAsync(["bash", "-c", "blueman-manager || rofi-bluetooth"]).catch(() => {})
   }
 
   return (

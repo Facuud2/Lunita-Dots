@@ -6,11 +6,15 @@ import {
   networkState,
   bluetoothState,
   volumeState,
+  setSystemVolume,
+  toggleSystemMute,
   systemMeters,
+  updateSystemMetrics,
 } from "./services"
 import MediaCard from "./MediaCard"
 import NetworkOverlay from "./NetworkOverlay"
 import BluetoothOverlay from "./BluetoothOverlay"
+import StatusTraySystem from "./StatusTraySystem"
 
 export default function ExpandedPanel({
   onClose,
@@ -21,15 +25,8 @@ export default function ExpandedPanel({
   const [recording, setRecording] = createState(false)
   const [activeOverlay, setActiveOverlay] = createState<"none" | "wifi" | "bt">("none")
 
-  // Local audio state — updated instantly on drag/click without waiting for the poll
-  const [localVolume, setLocalVolume] = createState(volumeState.peek().volume)
-  const [localMuted, setLocalMuted] = createState(volumeState.peek().muted)
-
-  // Keep local state in sync whenever the background poll catches up
-  volumeState.subscribe((v) => {
-    setLocalVolume(v.volume)
-    setLocalMuted(v.muted)
-  })
+  // Ensure fresh system metrics right when panel opens
+  updateSystemMetrics().catch(() => {})
 
   const toggleCoffee = () => {
     const next = !coffeeMode.peek()
@@ -56,7 +53,7 @@ export default function ExpandedPanel({
   }
 
   const openAppLauncher = () => {
-    execAsync("rofi -show drun || wofi --show drun").catch(() => {})
+    execAsync(["bash", "-c", "rofi -show drun || wofi --show drun"]).catch(() => {})
     onClose?.()
   }
 
@@ -66,7 +63,7 @@ export default function ExpandedPanel({
   }
 
   const openLockScreen = () => {
-    execAsync("swaylock || hyprlock || loginctl lock-session").catch(() => {})
+    execAsync(["bash", "-c", "swaylock || hyprlock || loginctl lock-session"]).catch(() => {})
     onClose?.()
   }
 
@@ -174,77 +171,78 @@ export default function ExpandedPanel({
                 {/* Audio / Volume Pill -> Drag to change volume, right-click to mute */}
                 {(() => {
                   let dragStartVol = 0
-                  let didDrag = false
+                  let isDragging = false
 
                   return (
                     <box
-                      class={localMuted((m) =>
-                        !m ? "status-pill audio-pill active" : "status-pill audio-pill"
+                      class={volumeState((v) =>
+                        !v.muted && v.volume > 0 ? "status-pill audio-pill active" : "status-pill audio-pill"
                       )}
                       cursor={Gdk.Cursor.new_from_name("ew-resize", null) as any}
                       $={(self) => {
-                        // ── Drag gesture: adjust volume ──
+                        // ── Drag gesture: adjust volume only on genuine movement ──
                         const drag = new Gtk.GestureDrag()
                         drag.connect("drag-begin", () => {
-                          dragStartVol = localVolume.peek()
-                          didDrag = false
+                          dragStartVol = volumeState.peek().volume
+                          isDragging = false
                         })
                         drag.connect("drag-update", (_g: any, dx: number) => {
-                          // ~140px = full range (0-100%)
+                          if (!isDragging && Math.abs(dx) < 6) return
+                          isDragging = true
                           const delta = Math.round((dx / 140) * 100)
                           const next = Math.max(0, Math.min(100, dragStartVol + delta))
-                          // Update UI immediately — no poll lag
-                          setLocalVolume(next)
-                          execAsync(`pamixer --set-volume ${next}`).catch(() => {})
-                          if (Math.abs(dx) > 5) didDrag = true
+                          setSystemVolume(next)
+                        })
+                        drag.connect("drag-end", () => {
+                          isDragging = false
                         })
                         self.add_controller(drag)
 
-                        // ── Right-click gesture: instant mute ──
-                        const rclick = new Gtk.GestureClick()
-                        rclick.set_button(3)
-                        rclick.connect("pressed", () => {
-                          setLocalMuted(true)
-                          execAsync("pamixer -m").catch(() => {})
-                        })
-                        self.add_controller(rclick)
-
-                        // ── Left-click gesture: toggle mute (only if not a drag) ──
-                        const lclick = new Gtk.GestureClick()
-                        lclick.set_button(1)
-                        lclick.connect("released", () => {
-                          if (!didDrag) {
-                            const next = !localMuted.peek()
-                            setLocalMuted(next)
-                            execAsync("pamixer -t").catch(() => {})
+                        // ── Click gesture: toggle mute on normal click ──
+                        const click = new Gtk.GestureClick()
+                        click.set_button(1)
+                        click.connect("released", () => {
+                          if (!isDragging) {
+                            toggleSystemMute()
                           }
                         })
-                        self.add_controller(lclick)
+                        self.add_controller(click)
+
+                        // ── Mouse scroll: finely adjust volume ──
+                        const scroll = new Gtk.EventControllerScroll()
+                        scroll.set_flags(Gtk.EventControllerScrollFlags.VERTICAL)
+                        scroll.connect("scroll", (_c, _dx, dy) => {
+                          const cur = volumeState.peek().volume
+                          const next = dy < 0 ? Math.min(100, cur + 2) : Math.max(0, cur - 2)
+                          setSystemVolume(next)
+                          return true
+                        })
+                        self.add_controller(scroll)
                       }}
                     >
                       <box spacing={8} valign={Gtk.Align.CENTER} hexpand>
                         <label
                           class="font-icon pill-icon-bg"
-                          label={localMuted((m) => (m ? "volume_off" : "volume_up"))}
+                          label={volumeState((v) => (v.muted || v.volume === 0 ? "volume_off" : "volume_up"))}
                         />
                         <box orientation={Gtk.Orientation.VERTICAL} spacing={1} hexpand>
                           <label
                             class="pill-title font-dots"
-                            label={localVolume((v) => `${v}%`)}
+                            label={volumeState((v) => `${v.volume}%`)}
                             halign={Gtk.Align.START}
                           />
                           <label
                             class="pill-subtitle"
-                            label={localMuted((m) => (m ? "MUTED" : "VOLUMEN"))}
+                            label={volumeState((v) => (v.muted || v.volume === 0 ? "MUTED" : "VOLUMEN"))}
                             halign={Gtk.Align.START}
                           />
                         </box>
-                        {/* Inline volume bar — driven by localVolume for instant feedback */}
+                        {/* Inline volume bar — driven directly by volumeState */}
                         <box class="audio-pill-track" valign={Gtk.Align.CENTER}>
                           <box
                             class="audio-pill-fill"
-                            css={localVolume((v) =>
-                              `min-width: ${Math.max(2, Math.round(v * 0.44))}px;`
+                            css={volumeState((v) =>
+                              `min-width: ${Math.max(2, Math.round(v.volume * 0.44))}px;`
                             )}
                           />
                         </box>
@@ -282,61 +280,8 @@ export default function ExpandedPanel({
                   </box>
                 </button>
 
-                {/* CPU, RAM, GPU Progress Meters */}
-                <box class="stats-card" orientation={Gtk.Orientation.VERTICAL} spacing={6} hexpand>
-                  {/* CPU Meter */}
-                  <box spacing={8} valign={Gtk.Align.CENTER}>
-                    <label class="font-icon meter-icon" label="memory" />
-                    <label class="meter-label" label="CPU" />
-                    <box class="meter-track" hexpand valign={Gtk.Align.CENTER}>
-                      <box
-                        class={systemMeters((m) =>
-                          m.cpu > 80 ? "meter-fill alert" : "meter-fill"
-                        )}
-                        css={systemMeters((m) => `min-width: ${Math.max(4, m.cpu * 1.4)}px;`)}
-                      />
-                    </box>
-                    <label class="meter-val font-dots" label={systemMeters((m) => `${m.cpu}%`)} />
-                    <box spacing={2} valign={Gtk.Align.CENTER}>
-                      <label class="font-icon temp-icon alert" label="local_fire_department" />
-                      <label class="temp-val font-dots" label={systemMeters((m) => `${m.cpuTemp}°`)} />
-                    </box>
-                  </box>
-
-                  {/* RAM Meter */}
-                  <box spacing={8} valign={Gtk.Align.CENTER}>
-                    <label class="font-icon meter-icon" label="developer_board" />
-                    <label class="meter-label" label="RAM" />
-                    <box class="meter-track" hexpand valign={Gtk.Align.CENTER}>
-                      <box
-                        class={systemMeters((m) =>
-                          m.ram > 85 ? "meter-fill alert" : "meter-fill"
-                        )}
-                        css={systemMeters((m) => `min-width: ${Math.max(4, m.ram * 1.4)}px;`)}
-                      />
-                    </box>
-                    <label class="meter-val font-dots" label={systemMeters((m) => `${m.ram}%`)} />
-                  </box>
-
-                  {/* GPU Meter */}
-                  <box spacing={8} valign={Gtk.Align.CENTER}>
-                    <label class="font-icon meter-icon" label="videogame_asset" />
-                    <label class="meter-label" label="GPU" />
-                    <box class="meter-track" hexpand valign={Gtk.Align.CENTER}>
-                      <box
-                        class={systemMeters((m) =>
-                          m.gpu > 80 ? "meter-fill alert" : "meter-fill"
-                        )}
-                        css={systemMeters((m) => `min-width: ${Math.max(4, m.gpu * 1.4)}px;`)}
-                      />
-                    </box>
-                    <label class="meter-val font-dots" label={systemMeters((m) => `${m.gpu}%`)} />
-                    <box spacing={2} valign={Gtk.Align.CENTER}>
-                      <label class="font-icon temp-icon alert" label="local_fire_department" />
-                      <label class="temp-val font-dots" label={systemMeters((m) => `${m.gpuTemp}°`)} />
-                    </box>
-                  </box>
-                </box>
+                {/* CPU, RAM, GPU Progress Meters (StatusTraySystem) */}
+                <StatusTraySystem />
               </box>
 
               {/* ── 5. Quick Actions Row (Coffee Mode + Lock, Apps, Power) ── */}

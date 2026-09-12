@@ -1,22 +1,33 @@
 import { Gtk } from "ags/gtk4"
 import { createState, For } from "ags"
 import { execAsync } from "ags/process"
-import { networkState, wifiNetworks, WifiNetwork } from "./services"
+import {
+  networkState,
+  wifiNetworks,
+  WifiNetwork,
+  toggleWifi,
+  fetchWifiNetworks,
+} from "./services"
 
 export default function NetworkOverlay({ onClose }: { onClose: () => void }) {
   const [activeTab, setActiveTab] = createState<"wifi" | "ethernet">("wifi")
   const [scanning, setScanning] = createState(false)
 
   const toggleWifiRadio = () => {
-    const current = networkState.peek().wifiEnabled
-    execAsync(`nmcli radio wifi ${current ? "off" : "on"}`).catch(() => {})
+    toggleWifi()
   }
 
   const rescanWifi = () => {
     setScanning(true)
     execAsync("nmcli dev wifi list --rescan yes")
-      .then(() => setScanning(false))
-      .catch(() => setScanning(false))
+      .then(() => {
+        setScanning(false)
+        fetchWifiNetworks()
+      })
+      .catch(() => {
+        setScanning(false)
+        fetchWifiNetworks()
+      })
   }
 
   const connectToWifi = (ssid: string) => {
