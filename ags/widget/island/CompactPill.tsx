@@ -1,5 +1,15 @@
 import { Gtk } from "ags/gtk4"
-import { clock, activeWorkspace, networkState, volumeState, batteryState, mediaState } from "./services"
+import {
+  clock,
+  activeWorkspace,
+  networkState,
+  volumeState,
+  setSystemVolume,
+  toggleSystemMute,
+  batteryState,
+  mediaState,
+  bluetoothState,
+} from "./services"
 
 export default function CompactPill() {
   const wsArray = [1, 2, 3, 4, 5]
@@ -27,7 +37,7 @@ export default function CompactPill() {
         />
       </box>
 
-      {/* ── Right Group: Network, Volume & Battery / Media ── */}
+      {/* ── Right Group: Network, Bluetooth, Volume & Battery / Media ── */}
       <box halign={Gtk.Align.END} valign={Gtk.Align.CENTER} spacing={10}>
         {/* Network indicator */}
         <box spacing={4} valign={Gtk.Align.CENTER}>
@@ -41,18 +51,69 @@ export default function CompactPill() {
           />
         </box>
 
-        {/* Audio Volume indicator */}
+        {/* Bluetooth indicator */}
         <box spacing={4} valign={Gtk.Align.CENTER}>
           <label
+            class={bluetoothState((bt) =>
+              !bt.enabled
+                ? "status-icon bt-off"
+                : bt.connectedDevice
+                ? "status-icon bt-connected"
+                : "status-icon"
+            )}
+            label={bluetoothState((bt) =>
+              !bt.enabled
+                ? "bluetooth_disabled"
+                : bt.connectedDevice
+                ? "bluetooth_connected"
+                : "bluetooth"
+            )}
+          />
+        </box>
+
+        {/* Audio Volume indicator (scroll wheel to change volume, click to mute) */}
+        <box
+          spacing={4}
+          valign={Gtk.Align.CENTER}
+          $={(self) => {
+            const scroll = new Gtk.EventControllerScroll()
+            scroll.set_flags(Gtk.EventControllerScrollFlags.VERTICAL)
+            scroll.connect("scroll", (_c, _dx, dy) => {
+              const cur = volumeState.peek().volume
+              const next = dy < 0 ? Math.min(100, cur + 2) : Math.max(0, cur - 2)
+              setSystemVolume(next)
+              return true
+            })
+            self.add_controller(scroll)
+
+            const click = new Gtk.GestureClick()
+            click.set_button(1)
+            click.connect("released", () => {
+              toggleSystemMute()
+            })
+            self.add_controller(click)
+          }}
+        >
+          <label
             class={volumeState((vol) =>
-              vol.muted ? "status-icon muted" : "status-icon"
+              vol.muted || vol.volume === 0 ? "status-icon muted" : "status-icon"
             )}
             label={volumeState((vol) =>
-              vol.muted ? "volume_off" : "volume_up"
+              vol.muted || vol.volume === 0
+                ? "volume_off"
+                : vol.volume < 33
+                ? "volume_mute"
+                : vol.volume < 66
+                ? "volume_down"
+                : "volume_up"
             )}
           />
           <label
-            class="status-item font-dots"
+            class={volumeState((vol) =>
+              vol.muted || vol.volume === 0
+                ? "status-item font-dots muted-text"
+                : "status-item font-dots"
+            )}
             label={volumeState((vol) => `${vol.volume}%`)}
           />
         </box>

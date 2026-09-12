@@ -144,12 +144,24 @@ button.compact-trigger {
     color: var(--text-primary);
 
     &.muted {
+      color: var(--accent-red);
+    }
+
+    &.bt-off {
       color: var(--text-faint);
+    }
+
+    &.bt-connected {
+      color: #4a9eff;
     }
   }
 
+  .muted-text {
+    color: var(--accent-red);
+  }
+
   .alert-icon {
-    color: var(--accent-red) !important;
+    color: var(--accent-red);
   }
 
   .ws-dot {
