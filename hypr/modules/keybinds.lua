@@ -33,6 +33,12 @@ function M.setup(opts_or_terminal, fileManager, menu, browser, ide, mainMod)
     hl.bind(mod .. " + R", hl.dsp.exec_cmd(menu))
     hl.bind(mod .. " + P", hl.dsp.window.pseudo())
     hl.bind(mod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
+
+    -- Tabbed windows / Grupos de pestañas
+    hl.bind(mod .. " + G",           hl.dsp.group.toggle())
+    hl.bind(mod .. " + TAB",         hl.dsp.group.next())
+    hl.bind(mod .. " + SHIFT + TAB", hl.dsp.group.prev())
+    hl.bind(mod .. " + CTRL + G",    hl.dsp.group.lock_active())
     hl.bind(mod .. " + B", hl.dsp.exec_cmd(browser))
     hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(browser .. " --private-window"))
     hl.bind(mod .. " + X", hl.dsp.exec_cmd(ide))

@@ -101,29 +101,32 @@ def emit_idle():
     )
 
 def handle_line(line):
-    line = line.strip()
-    if not line:
-        return
-    parts = line.split("||")
-    status = parts[0] if len(parts) > 0 else "Stopped"
-    raw_player = parts[1] if len(parts) > 1 else ""
-    title = parts[2] if len(parts) > 2 else ""
-    artist = parts[3] if len(parts) > 3 else ""
-    art_url = parts[4] if len(parts) > 4 else ""
-    track_url = parts[5] if len(parts) > 5 else ""
+    try:
+        line = line.strip()
+        if not line:
+            return
+        parts = line.split("||")
+        status = parts[0] if len(parts) > 0 else "Stopped"
+        raw_player = parts[1] if len(parts) > 1 else ""
+        title = parts[2] if len(parts) > 2 else ""
+        artist = parts[3] if len(parts) > 3 else ""
+        art_url = parts[4] if len(parts) > 4 else ""
+        track_url = parts[5] if len(parts) > 5 else ""
 
-    has_media = bool(status in ("Playing", "Paused") and (title or artist))
-    player = clean_player_name(raw_player)
-    cover = process_cover_with_ffmpeg(art_url, track_url)
+        has_media = bool(status in ("Playing", "Paused") and (title or artist))
+        player = clean_player_name(raw_player)
+        cover = process_cover_with_ffmpeg(art_url, track_url)
 
-    emit_json(
-        status=status,
-        player=player,
-        title=title if title else "No Music Playing",
-        artist=artist,
-        cover=cover,
-        has_media=has_media
-    )
+        emit_json(
+            status=status,
+            player=player,
+            title=title if title else "No Music Playing",
+            artist=artist,
+            cover=cover,
+            has_media=has_media
+        )
+    except Exception:
+        emit_idle()
 
 def main():
     fmt = "{{status}}||{{playerName}}||{{title}}||{{artist}}||{{mpris:artUrl}}||{{xesam:url}}"
@@ -137,9 +140,14 @@ def main():
                 stderr=subprocess.DEVNULL,
                 text=True
             )
+            handled = False
             if curr.returncode == 0 and curr.stdout.strip():
-                handle_line(curr.stdout.strip())
-            else:
+                for l in curr.stdout.strip().splitlines():
+                    if l.strip():
+                        handle_line(l.strip())
+                        handled = True
+                        break
+            if not handled:
                 emit_idle()
 
             # Follow for subsequent events
