@@ -3,11 +3,6 @@ import style from "./style.scss"
 import DynamicIsland from "./widget/DynamicIsland"
 import { toggleExpand } from "./widget/islandState"
 
-// AGS bundlea todo en un solo archivo: los imports son siempre estáticos.
-// El aislamiento entre componentes se logra protegiendo el *montado* con
-// try/catch — si MusicPlayer falla al inicializarse, DynamicIsland continúa.
-import MusicPlayerComponent from "./widget/MusicPlayer/index"
-
 // Suppress unhandled promise rejections from GLib.MainLoop.runAsync internals
 globalThis.addEventListener?.("unhandledrejection", (event: PromiseRejectionEvent) => {
   // Silently ignore — these come from GLib internals, not our code
@@ -37,11 +32,8 @@ app.start({
   },
   main() {
     // ── DynamicIsland (siempre montado, todos los monitores) ──
-    app.get_monitors().map(DynamicIsland)
-
-    // ── MusicPlayer (todos los monitores) ──
     app.get_monitors().map((monitor) =>
-      safeMount("MusicPlayer", () => MusicPlayerComponent(monitor))
+      safeMount("DynamicIsland", () => DynamicIsland(monitor))
     )
   },
 })
