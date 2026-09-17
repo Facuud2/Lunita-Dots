@@ -15,6 +15,10 @@ import MediaCard from "./MediaCard"
 import NetworkOverlay from "./NetworkOverlay"
 import BluetoothOverlay from "./BluetoothOverlay"
 import StatusTraySystem from "./StatusTraySystem"
+import NotificationOverlay from "./NotificationOverlay"
+import { notifications } from "./NotificationService"
+import { toggleLauncher } from "../launcher/LauncherState"
+import { activeOverlayState as activeOverlay, setActiveOverlayState as setActiveOverlay } from "../islandState"
 
 export default function ExpandedPanel({
   onClose,
@@ -23,7 +27,6 @@ export default function ExpandedPanel({
 }) {
   const [coffeeMode, setCoffeeMode] = createState(false)
   const [recording, setRecording] = createState(false)
-  const [activeOverlay, setActiveOverlay] = createState<"none" | "wifi" | "bt">("none")
 
   // Ensure fresh system metrics right when panel opens
   updateSystemMetrics().catch(() => {})
@@ -53,8 +56,9 @@ export default function ExpandedPanel({
   }
 
   const openAppLauncher = () => {
-    execAsync(["bash", "-c", "rofi -show drun || wofi --show drun"]).catch(() => {})
     onClose?.()
+    // Small delay so island closes gracefully before launcher opens
+    setTimeout(() => toggleLauncher(), 160)
   }
 
   const openPowerMenu = () => {
@@ -77,6 +81,9 @@ export default function ExpandedPanel({
           }
           if (overlay === "bt") {
             return <BluetoothOverlay onClose={() => setActiveOverlay("none")} />
+          }
+          if (overlay === "notifications") {
+            return <NotificationOverlay onClose={() => setActiveOverlay("none")} />
           }
 
           return (
@@ -309,9 +316,19 @@ export default function ExpandedPanel({
                   <label class="font-icon" label="lock" />
                 </button>
 
-                {/* App Launcher Action */}
-                <button class="action-btn" onClicked={openAppLauncher}>
-                  <label class="font-icon" label="apps" />
+                {/* System Notifications Action */}
+                <button
+                  class={notifications((list) =>
+                    list.length > 0 ? "action-btn has-unread" : "action-btn"
+                  )}
+                  onClicked={() => setActiveOverlay("notifications")}
+                >
+                  <label
+                    class="font-icon"
+                    label={notifications((list) =>
+                      list.length > 0 ? "notifications_active" : "notifications"
+                    )}
+                  />
                 </button>
 
                 {/* Power Menu Action */}
