@@ -7,6 +7,7 @@ import {
   invokeNotificationAction,
   NotificationPopupItem,
 } from "./NotificationService"
+import { NotificationAppIcon, getPastelStatus, getCleanAppName } from "./NotificationOverlay"
 
 export default function NotificationPopup(gdkmonitor: Gdk.Monitor) {
   const { TOP } = Astal.WindowAnchor
@@ -25,39 +26,50 @@ export default function NotificationPopup(gdkmonitor: Gdk.Monitor) {
     >
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} class="notif-popup-container">
         <For each={activePopups}>
-          {(popup: NotificationPopupItem) => (
-            <button
-              class="notif-popup-card-btn"
-              onClicked={() => {
-                // If it has actions, invoke the first one, otherwise dismiss
-                if (popup.actions && popup.actions.length > 0) {
-                  invokeNotificationAction(popup.id, popup.actions[0].id)
-                } else {
-                  dismissPopup(popup.id, 2)
-                }
-              }}
-              cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
-            >
-              <box class="notif-popup-card" orientation={Gtk.Orientation.VERTICAL} spacing={4}>
-                {/* ── Top Line: App Name & Close Button (Style Image 2) ── */}
-                {(() => {
-                  const isNotifySend = popup.appName.toLowerCase() === "notify-send"
-                  const title = isNotifySend
-                    ? (popup.summary || "NOTIFICACIÓN")
-                    : (popup.appName || popup.summary || "NOTIFICACIÓN")
-                  const body = isNotifySend
-                    ? popup.body
-                    : (popup.body || (popup.summary !== title ? popup.summary : ""))
+          {(popup: NotificationPopupItem) => {
+            const statusInfo = getPastelStatus(popup)
+            return (
+              <button
+                class="notif-popup-card-btn"
+                onClicked={() => {
+                  // If it has actions, invoke the first one, otherwise dismiss
+                  if (popup.actions && popup.actions.length > 0) {
+                    invokeNotificationAction(popup.id, popup.actions[0].id)
+                  } else {
+                    dismissPopup(popup.id, 2)
+                  }
+                }}
+                cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
+              >
+                <box class="notif-popup-card" orientation={Gtk.Orientation.VERTICAL} spacing={4}>
+                  <box spacing={10} valign={Gtk.Align.CENTER}>
+                    {/* Left: Outline App Icon (fondo gris oscuro, reborde blanco) */}
+                    <NotificationAppIcon notif={popup} size={32} />
 
-                  return (
-                    <box orientation={Gtk.Orientation.VERTICAL} spacing={4}>
-                      <box valign={Gtk.Align.CENTER} spacing={8}>
+                    {/* Middle / Right: Content */}
+                    <box orientation={Gtk.Orientation.VERTICAL} spacing={2} hexpand>
+                      {/* Top Line: App Name + Flat Pastel Icon + Close Button */}
+                      <box valign={Gtk.Align.CENTER} spacing={6}>
                         <label
-                          class="notif-popup-app"
-                          label={title}
+                          class="notif-popup-app font-dots"
+                          label={getCleanAppName(popup.appName)}
                           halign={Gtk.Align.START}
-                          hexpand
                         />
+
+                        {/* Flat Pastel Status Icon (sin pill ni contenedor con bordes) */}
+                        {statusInfo.icon ? (
+                          <label
+                            class={`font-icon notif-flat-icon ${statusInfo.className}`}
+                            label={statusInfo.icon}
+                            valign={Gtk.Align.CENTER}
+                            halign={Gtk.Align.CENTER}
+                            xalign={0.5}
+                            yalign={0.5}
+                          />
+                        ) : null}
+
+                        <box hexpand />
+
                         <button
                           class="notif-popup-close"
                           onClicked={(e: any) => {
@@ -66,42 +78,61 @@ export default function NotificationPopup(gdkmonitor: Gdk.Monitor) {
                           }}
                           cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
                         >
-                          <label class="font-icon" label="close" />
+                          <label
+                            class="font-icon"
+                            label="close"
+                            valign={Gtk.Align.CENTER}
+                            halign={Gtk.Align.CENTER}
+                            xalign={0.5}
+                            yalign={0.5}
+                          />
                         </button>
                       </box>
 
-                      {body ? (
+                      {/* Summary / Title */}
+                      {popup.summary ? (
                         <label
-                          class="notif-popup-body"
-                          label={body}
+                          class="notif-popup-summary font-ui"
+                          label={popup.summary}
+                          halign={Gtk.Align.START}
+                          ellipsize={3}
+                        />
+                      ) : null}
+
+                      {/* Body text */}
+                      {popup.body ? (
+                        <label
+                          class="notif-popup-body font-ui"
+                          label={popup.body}
                           halign={Gtk.Align.START}
                           wrap
                           wrapMode={2}
                         />
                       ) : null}
                     </box>
-                  )
-                })()}
-
-                {/* ── Action Pills if provided ── */}
-                {popup.actions && popup.actions.length > 0 ? (
-                  <box spacing={6} class="notif-popup-actions" marginTop={4}>
-                    {popup.actions.map((act) => (
-                      <button
-                        class="notif-popup-action-btn"
-                        onClicked={(e: any) => {
-                          e?.stopPropagation?.()
-                          invokeNotificationAction(popup.id, act.id)
-                        }}
-                      >
-                        <label label={act.label} />
-                      </button>
-                    ))}
                   </box>
-                ) : null}
-              </box>
-            </button>
-          )}
+
+                  {/* Action Pills if provided */}
+                  {popup.actions && popup.actions.length > 0 ? (
+                    <box spacing={6} class="notif-popup-actions" marginTop={2}>
+                      {popup.actions.map((act) => (
+                        <button
+                          class="notif-popup-action-btn"
+                          onClicked={(e: any) => {
+                            e?.stopPropagation?.()
+                            invokeNotificationAction(popup.id, act.id)
+                          }}
+                          cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
+                        >
+                          <label class="font-ui" label={act.label} />
+                        </button>
+                      ))}
+                    </box>
+                  ) : null}
+                </box>
+              </button>
+            )
+          }}
         </For>
       </box>
     </window>
