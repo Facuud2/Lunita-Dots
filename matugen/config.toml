@@ -5,6 +5,10 @@ source_color_index = 0
 input_path = '/home/facuud2/.config/matugen/templates/eww-colors.scss'
 output_path = '/home/facuud2/.config/eww/colors.scss'
 
+[templates.ags_colors]
+input_path = '/home/facuud2/.config/matugen/templates/ags-colors.scss'
+output_path = '/home/facuud2/.config/ags/colors.scss'
+
 [templates.hyprland_colors]
 input_path = '/home/facuud2/.config/matugen/templates/hyprland-colors.lua'
 output_path = '/home/facuud2/.config/hypr/modules/colors.lua'
@@ -21,3 +25,11 @@ output_path = '/home/facuud2/.config/nvim/lua/colors.lua'
 [templates.zsh_colors]
 input_path = '/home/facuud2/.config/matugen/templates/zsh-colors.zsh'
 output_path = '/home/facuud2/.oh-my-zsh/custom/zsh-colors.zsh'
+
+[templates.hyprlock_colors]
+input_path = '/home/facuud2/.config/matugen/templates/hyprlock-colors.conf'
+output_path = '/home/facuud2/.config/hypr/hyprlock-colors.conf'
+
+[templates.prelock_palette]
+input_path = '/home/facuud2/.config/matugen/templates/prelock-palette.conf'
+output_path = '/home/facuud2/.config/prelock/palette.conf'

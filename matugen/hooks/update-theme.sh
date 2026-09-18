@@ -34,3 +34,16 @@ fi
 if pgrep -x kitty > /dev/null; then
     kill -SIGUSR1 $(pgrep -x kitty) 2>/dev/null || true
 fi
+
+# Reload AGS (App Launcher & Dynamic Island)
+if pgrep -x ags > /dev/null; then
+    ags quit 2>/dev/null
+    sleep 0.3
+    hyprctl dispatch 'hl.dsp.exec_cmd("env PATH=$HOME/.local/bin:$PATH ags run")' >/dev/null 2>&1 || true
+fi
+
+# Update hyprlock wallpaper copy to match active wallpaper
+CURR_WALL=$(awww query 2>/dev/null | awk -F 'image: ' '{print $2}' | head -n 1)
+if [ -n "$CURR_WALL" ] && [ -f "$CURR_WALL" ]; then
+    cp "$CURR_WALL" "$HOME/.config/hypr/current_wallpaper.png"
+fi

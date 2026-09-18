@@ -22,12 +22,13 @@ local programs = {
     menu        = "rofi -show drun",
     browser     = "zen-browser",
     ide         = "antigravity",
+    music       = "spotify",
 }
 
 -----------------
 ---- MODULES ----
 -----------------
-require("modules.env").setup()
+require("modules.env").setup(programs)
 require("modules.monitors").setup()
 require("modules.general").setup()
 require("modules.animations").setup()
