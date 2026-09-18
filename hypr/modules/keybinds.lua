@@ -43,7 +43,11 @@ function M.setup(opts_or_terminal, fileManager, menu, browser, ide, mainMod)
     hl.bind(mod .. " + B", hl.dsp.exec_cmd(browser))
     hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(browser .. " --private-window"))
     hl.bind(mod .. " + X", hl.dsp.exec_cmd(ide))
+    hl.bind(mod .. " + W", hl.dsp.exec_cmd("hyprquickpaper"))
     local scripts_dir = os.getenv("HOME") .. "/.config/hypr/scripts"
+
+    -- Bloqueo de pantalla con animaciones prelock y hyprlock
+    hl.bind(mod .. " + L", hl.dsp.exec_cmd(scripts_dir .. "/smart_lock.sh classic"))
 
     -- Capturas de pantalla (área y pantalla completa)
     hl.bind("Print",         hl.dsp.exec_cmd(scripts_dir .. "/screenshot.sh area"))

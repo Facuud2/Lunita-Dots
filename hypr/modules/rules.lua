@@ -63,6 +63,22 @@ function M.setup()
         move  = "20 monitor_h-120",
         float = true,
     })
+
+    -- Prelock animation overlay
+    hl.window_rule({
+        name             = "prelock-overlay",
+        match            = { class = "^(Smooth_Prelock)$" },
+        float            = true,
+        pin              = true,
+        move             = "0 0",
+        size             = "monitor_w monitor_h",
+        border_size      = 0,
+        rounding         = 0,
+        no_initial_focus = true,
+        no_focus         = true,
+        no_follow_mouse  = true,
+        suppress_event   = "activatefocus maximize fullscreen",
+    })
 end
 
 return M
