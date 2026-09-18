@@ -97,12 +97,47 @@ export function toggleSystemMute() {
   })
 }
 
+// 3.1. Microphone Volume Service
+export interface MicState {
+  volume: number
+  muted: boolean
+}
+
+export const [micState, setMicState] = createState<MicState>({ volume: 100, muted: false })
+
+export async function fetchMic() {
+  try {
+    const out = await execAsync("wpctl get-volume @DEFAULT_AUDIO_SOURCE@").catch(() => "")
+    const muted = out.includes("[MUTED]")
+    const match = out.match(/Volume:\s*([0-9.]+)/)
+    if (match) {
+      const volume = Math.min(100, Math.max(0, Math.round(parseFloat(match[1]) * 100)))
+      setMicState({ volume, muted })
+      return
+    }
+  } catch {}
+}
+
+export function setSystemMicVolume(percent: number) {
+  const clamped = Math.max(0, Math.min(100, Math.round(percent)))
+  setMicState({ ...micState.peek(), volume: clamped })
+  const frac = (clamped / 100).toFixed(2)
+  execAsync(`wpctl set-volume @DEFAULT_AUDIO_SOURCE@ ${frac}`).catch(() => {})
+}
+
+export function toggleSystemMicMute() {
+  const next = !micState.peek().muted
+  setMicState({ ...micState.peek(), muted: next })
+  execAsync("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle").catch(() => {})
+}
+
 let volDebounce: number | null = null
 function queueVolumeFetch() {
   if (volDebounce !== null) GLib.source_remove(volDebounce)
   volDebounce = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 40, () => {
     volDebounce = null
     fetchVolume()
+    fetchMic()
     return GLib.SOURCE_REMOVE
   })
 }
@@ -149,6 +184,7 @@ function queueVolumeFetch() {
   } catch {
     GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
       fetchVolume()
+      fetchMic()
       return GLib.SOURCE_CONTINUE
     })
   }
@@ -156,10 +192,12 @@ function queueVolumeFetch() {
 
 // Lectura inicial
 fetchVolume()
+fetchMic()
 
 // Resincronización periódica cada 2 segundos
 GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
   fetchVolume()
+  fetchMic()
   return GLib.SOURCE_CONTINUE
 })
 
@@ -540,7 +578,63 @@ export interface MediaInfo {
   lengthStr: string
   progress: number
   artUrl: string
+  coverPath: string
   waveform: number[]
+}
+
+const CACHE_MEDIA_DIR = "/tmp/ags_media"
+let currentCoverToggle = false
+let lastArtSource: string | null = null
+let currentCoverPath = ""
+
+async function processCoverWithFfmpeg(artUrl: string, trackUrl: string): Promise<string> {
+  let source: string | null = null
+
+  if (artUrl) {
+    if (artUrl.startsWith("file://")) {
+      try {
+        source = decodeURIComponent(artUrl.slice(7))
+      } catch {
+        source = artUrl.slice(7)
+      }
+    } else {
+      source = artUrl
+    }
+  } else if (trackUrl && trackUrl.startsWith("file://")) {
+    try {
+      source = decodeURIComponent(trackUrl.slice(7))
+    } catch {
+      source = trackUrl.slice(7)
+    }
+  }
+
+  if (!source) {
+    lastArtSource = null
+    currentCoverPath = ""
+    return ""
+  }
+
+  if (source === lastArtSource && currentCoverPath && GLib.file_test(currentCoverPath, GLib.FileTest.EXISTS)) {
+    return currentCoverPath
+  }
+
+  try {
+    GLib.mkdir_with_parents(CACHE_MEDIA_DIR, 0o755)
+    const targetCover = `${CACHE_MEDIA_DIR}/cover_${currentCoverToggle ? "b" : "a"}.png`
+    currentCoverToggle = !currentCoverToggle
+
+    const escapedSource = source.replace(/'/g, "'\\''")
+    const cmd = `ffmpeg -y -i '${escapedSource}' -vf "scale=140:140:force_original_aspect_ratio=increase,crop=140:140" -frames:v 1 -update 1 '${targetCover}'`
+    await execAsync(cmd)
+
+    if (GLib.file_test(targetCover, GLib.FileTest.EXISTS)) {
+      currentCoverPath = targetCover
+      lastArtSource = source
+      return currentCoverPath
+    }
+  } catch {}
+
+  return ""
 }
 
 function formatDuration(sec: number): string {
@@ -580,6 +674,7 @@ export const mediaState = createPoll(
     lengthStr: "0:00",
     progress: 0,
     artUrl: "",
+    coverPath: "",
     waveform: generateWaveform(""),
   } as MediaInfo,
   1000,
@@ -590,15 +685,17 @@ export const mediaState = createPoll(
 
       if (status === "Playing" || status === "Paused") {
         const metadata = await execAsync(
-          "playerctl metadata --format '{{title}};;;{{artist}};;;{{position}};;;{{mpris:length}};;;{{mpris:artUrl}}' 2>/dev/null"
+          "playerctl metadata --format '{{title}};;;{{artist}};;;{{position}};;;{{mpris:length}};;;{{mpris:artUrl}};;;{{xesam:url}}' 2>/dev/null"
         ).catch(() => "")
 
-        const [title = "", artist = "", posMicros = "0", lenMicros = "0", artUrl = ""] =
+        const [title = "", artist = "", posMicros = "0", lenMicros = "0", artUrl = "", trackUrl = ""] =
           metadata.trim().split(";;;")
 
         const position = Math.round((parseInt(posMicros, 10) || 0) / 1000000)
         const length = Math.round((parseInt(lenMicros, 10) || 0) / 1000000)
         const progress = length > 0 ? Math.min(1, Math.max(0, position / length)) : 0
+
+        const coverPath = await processCoverWithFfmpeg(artUrl.trim(), trackUrl.trim())
 
         return {
           active: true,
@@ -611,6 +708,7 @@ export const mediaState = createPoll(
           lengthStr: formatDuration(length),
           progress,
           artUrl: artUrl.trim(),
+          coverPath,
           waveform: generateWaveform(title.trim() || "Audio"),
         }
       }
@@ -625,6 +723,7 @@ export const mediaState = createPoll(
         lengthStr: "0:00",
         progress: 0,
         artUrl: "",
+        coverPath: "",
         waveform: generateWaveform(""),
       }
     } catch {
@@ -639,6 +738,7 @@ export const mediaState = createPoll(
         lengthStr: "0:00",
         progress: 0,
         artUrl: "",
+        coverPath: "",
         waveform: generateWaveform(""),
       }
     }
