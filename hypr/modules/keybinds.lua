@@ -24,6 +24,7 @@ function M.setup(opts_or_terminal, fileManager, menu, browser, ide, mainMod)
 
     -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
     hl.bind(mod .. " + SPACE", hl.dsp.exec_cmd("ags request toggle-island"))
+    hl.bind(mod .. " + A",     hl.dsp.exec_cmd("ags request toggle-launcher"))
     hl.bind(mod .. " + Q", hl.dsp.exec_cmd(terminal))
     local closeWindowBind = hl.bind(mod .. " + C", hl.dsp.window.close())
     -- closeWindowBind:set_enabled(false)
@@ -42,7 +43,11 @@ function M.setup(opts_or_terminal, fileManager, menu, browser, ide, mainMod)
     hl.bind(mod .. " + B", hl.dsp.exec_cmd(browser))
     hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd(browser .. " --private-window"))
     hl.bind(mod .. " + X", hl.dsp.exec_cmd(ide))
-    hl.bind("Print", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
+    local scripts_dir = os.getenv("HOME") .. "/.config/hypr/scripts"
+
+    -- Capturas de pantalla (área y pantalla completa)
+    hl.bind("Print",         hl.dsp.exec_cmd(scripts_dir .. "/screenshot.sh area"))
+    hl.bind("SHIFT + Print", hl.dsp.exec_cmd(scripts_dir .. "/screenshot.sh screen"))
 
     -- Move focus with mod + arrow keys
     hl.bind(mod .. " + left",  hl.dsp.focus({ direction = "left" }))
@@ -83,6 +88,49 @@ function M.setup(opts_or_terminal, fileManager, menu, browser, ide, mainMod)
     hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
     hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
     hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
+
+    -- Grabación de pantalla
+    hl.bind(mod .. " + ALT + R",   hl.dsp.exec_cmd(scripts_dir .. "/record.sh area"))
+    hl.bind(mod .. " + SHIFT + R", hl.dsp.exec_cmd(scripts_dir .. "/record.sh screen"))
+    hl.bind(mod .. " + Escape",    hl.dsp.exec_cmd(scripts_dir .. "/record.sh stop"))
+
+    -- Activar Wayscriber para dibujar en pantalla (mod + D)
+--    hl.bind(mod .. " + D", hl.dsp.exec_cmd('wayscriber --daemon-toggle'))
+
+    -- Atajos táctiles con Hyprgrass (iPad / Weylus / Wayscriber)
+--    if not (hl.plugin and hl.plugin.hyprgrass) then
+--        pcall(hl.plugin.load, "/var/cache/hyprpm/facuud2/hyprgrass/hyprgrass.so")
+--    end
+
+    if hl.plugin and hl.plugin.hyprgrass then
+        -- Toque de 3 dedos: Abre/cierra Wayscriber directamente
+        hl.plugin.hyprgrass.bind({
+            pattern = { kind = "tap", fingers = 3 },
+            action  = hl.dsp.exec_cmd("wayscriber --daemon-toggle"),
+        })
+
+        -- Toque de 4 dedos: Cambiar a Cursor (V)
+        hl.plugin.hyprgrass.bind({
+            pattern = { kind = "tap", fingers = 4 },
+            action  = hl.dsp.exec_cmd("wtype -k v"),
+        })
+
+        -- Deslizamiento de 3 dedos hacia abajo: Cerrar (Escape)
+        hl.plugin.hyprgrass.bind({
+            pattern = { kind = "swipe", fingers = 3, direction = "down" },
+            action  = hl.dsp.exec_cmd("wtype -k Escape"),
+        })
+
+        -- Deslizamiento de 3 dedos hacia arriba: Eliminar trazo (Supr)
+ hl.plugin.hyprgrass.bind({
+            pattern = { kind = "swipe", fingers = 3, direction = "up" },
+            action  = hl.dsp.exec_cmd("wtype -k Delete"),
+        })
+    end
+
+
+
+
 end
 
 return M

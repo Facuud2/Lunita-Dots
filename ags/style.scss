@@ -438,46 +438,108 @@ button.compact-trigger {
     margin-top: 10px;
 
     .rec-card {
-      min-width: 140px;
+      min-width: 170px;
       border-radius: 18px;
       background-color: var(--bg-card);
-      padding: 10px 12px;
-      transition: background-color 180ms ease;
-
-      &:hover {
-        background-color: var(--bg-card-hover);
-      }
+      padding: 6px 10px 6px 8px;
+      transition: background-color 180ms ease, border 180ms ease;
 
       &.recording {
         background-color: rgba(215, 25, 33, 0.15);
         border: 1px solid var(--accent-red);
       }
 
-      .rec-badge {
-        min-width: 30px;
-        min-height: 30px;
-        border-radius: 15px;
-        background-color: var(--bg-card-hover);
+      .rec-main-action {
+        background-color: transparent;
+        border-radius: 12px;
+        padding: 4px 6px;
+        transition: background-color 180ms ease;
 
-        .rec-icon {
-          font-family: $font-icons;
-          font-size: 16px;
-          color: var(--accent-red);
+        &:hover {
+          background-color: var(--bg-card-hover);
+        }
+
+        .rec-badge {
+          min-width: 32px;
+          min-height: 32px;
+          border-radius: 16px;
+          background-color: var(--bg-card-hover);
+
+          .rec-icon {
+            font-family: $font-icons;
+            font-size: 16px;
+            color: var(--accent-red);
+          }
+        }
+
+        .rec-title {
+          font-family: $font-ui;
+          font-size: 10px;
+          letter-spacing: 1.2px;
+          color: var(--text-secondary);
+        }
+
+        .rec-time {
+          font-family: $font-dots;
+          font-size: 14px;
+          font-weight: bold;
+          color: var(--text-primary);
         }
       }
 
-      .rec-title {
-        font-family: $font-ui;
-        font-size: 10px;
-        letter-spacing: 1.2px;
-        color: var(--text-secondary);
+      .rec-divider {
+        min-width: 1px;
+        background-color: var(--border-subtle);
+        margin: 6px 2px;
       }
 
-      .rec-time {
-        font-family: $font-dots;
-        font-size: 14px;
-        font-weight: bold;
-        color: var(--text-primary);
+      .rec-toggles {
+        .rec-toggle-btn {
+          min-width: 28px;
+          min-height: 28px;
+          border-radius: 14px;
+          background-color: var(--bg-card-hover);
+          padding: 0;
+          transition: all 160ms ease;
+
+          label,
+          * {
+            font-family: $font-icons;
+            font-size: 15px;
+            color: var(--text-faint);
+            transition: color 160ms ease;
+          }
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.14);
+
+            label,
+            * {
+              color: var(--text-primary);
+            }
+          }
+
+          &.active {
+            background-color: rgba(255, 255, 255, 0.22);
+
+            label,
+            * {
+              color: var(--text-primary);
+            }
+          }
+        }
+      }
+
+      &.recording {
+        .rec-toggles .rec-toggle-btn.active {
+          background-color: rgba(215, 25, 33, 0.30);
+          border: 1px solid rgba(215, 25, 33, 0.50);
+
+          label,
+          * {
+            color: var(--accent-red);
+          }
+        }
       }
     }
 
@@ -1995,6 +2057,4 @@ window.notification-popup-window {
   }
 }
 
-
-
-
+@import "./widget/powermenu/powermenu.scss";

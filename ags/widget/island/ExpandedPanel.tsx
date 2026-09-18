@@ -18,7 +18,14 @@ import StatusTraySystem from "./StatusTraySystem"
 import NotificationOverlay from "./NotificationOverlay"
 import { notifications } from "./NotificationService"
 import { toggleLauncher } from "../launcher/LauncherState"
+import { togglePowerMenu } from "../powermenu/PowerMenuState"
 import { activeOverlayState as activeOverlay, setActiveOverlayState as setActiveOverlay } from "../islandState"
+import {
+  recordingState,
+  toggleRecording,
+  toggleSystemAudio,
+  toggleMicAudio,
+} from "./RecordingService"
 
 export default function ExpandedPanel({
   onClose,
@@ -26,7 +33,6 @@ export default function ExpandedPanel({
   onClose?: () => void
 }) {
   const [coffeeMode, setCoffeeMode] = createState(false)
-  const [recording, setRecording] = createState(false)
 
   // Ensure fresh system metrics right when panel opens
   updateSystemMetrics().catch(() => {})
@@ -41,16 +47,6 @@ export default function ExpandedPanel({
     }
   }
 
-  const toggleRecording = () => {
-    const next = !recording.peek()
-    setRecording(next)
-    if (next) {
-      execAsync("wf-recorder -f ~/Videos/recording_$(date +%s).mp4 &").catch(() => {})
-    } else {
-      execAsync("pkill -INT wf-recorder").catch(() => {})
-    }
-  }
-
   const toggleMute = () => {
     execAsync("pamixer -t").catch(() => {})
   }
@@ -62,12 +58,12 @@ export default function ExpandedPanel({
   }
 
   const openPowerMenu = () => {
-    execAsync("wlogout").catch(() => {})
     onClose?.()
+    setTimeout(() => togglePowerMenu(), 160)
   }
 
   const openLockScreen = () => {
-    execAsync(["bash", "-c", "swaylock || hyprlock || loginctl lock-session"]).catch(() => {})
+    execAsync(["bash", "-c", "$HOME/.config/hypr/scripts/smart_lock.sh classic || hyprlock"]).catch(() => {})
     onClose?.()
   }
 
@@ -264,28 +260,79 @@ export default function ExpandedPanel({
 
               {/* ── 4. Recording & Meters Row (CPU, RAM, GPU) ── */}
               <box class="meters-row" spacing={8}>
-                {/* Screen Recording Card */}
-                <button
-                  class={recording((r) => (r ? "rec-card recording" : "rec-card"))}
-                  onClicked={toggleRecording}
+                {/* Screen Recording Card with Audio Toggles */}
+                <box
+                  class={recordingState((r) => (r.isRecording ? "rec-card recording" : "rec-card"))}
+                  spacing={6}
+                  valign={Gtk.Align.CENTER}
                 >
-                  <box spacing={10} valign={Gtk.Align.CENTER}>
-                    <box class="rec-badge" valign={Gtk.Align.CENTER}>
-                      <label
-                        class="font-icon rec-icon"
-                        label={recording((r) => (r ? "stop" : "fiber_manual_record"))}
-                      />
+                  {/* Main screen recording action button */}
+                  <button
+                    class="rec-main-action"
+                    onClicked={toggleRecording}
+                    cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
+                  >
+                    <box spacing={8} valign={Gtk.Align.CENTER}>
+                      <box class="rec-badge" valign={Gtk.Align.CENTER}>
+                        <label
+                          class="font-icon rec-icon"
+                          label={recordingState((r) => (r.isRecording ? "stop" : "fiber_manual_record"))}
+                        />
+                      </box>
+                      <box orientation={Gtk.Orientation.VERTICAL} spacing={1} valign={Gtk.Align.CENTER}>
+                        <label class="rec-title" label="GRABACIÓN" halign={Gtk.Align.START} />
+                        <label
+                          class="rec-time font-dots"
+                          label={recordingState((r) =>
+                            r.isRecording ? r.formattedDuration || "REC • ON" : "00:00"
+                          )}
+                          halign={Gtk.Align.START}
+                        />
+                      </box>
                     </box>
-                    <box orientation={Gtk.Orientation.VERTICAL} spacing={1}>
-                      <label class="rec-title" label="GRABACIÓN" halign={Gtk.Align.START} />
+                  </button>
+
+                  {/* Vertical divider */}
+                  <box class="rec-divider" valign={Gtk.Align.FILL} />
+
+                  {/* Audio toggles: System audio & Microphone */}
+                  <box
+                    class="rec-toggles"
+                    orientation={Gtk.Orientation.VERTICAL}
+                    spacing={3}
+                    valign={Gtk.Align.CENTER}
+                  >
+                    {/* System Audio Toggle */}
+                    <button
+                      class={recordingState((r) =>
+                        r.systemAudio ? "rec-toggle-btn active" : "rec-toggle-btn"
+                      )}
+                      tooltipText="Sonido del sistema"
+                      onClicked={toggleSystemAudio}
+                      cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
+                    >
                       <label
-                        class="rec-time font-dots"
-                        label={recording((r) => (r ? "REC • ON" : "00:00"))}
-                        halign={Gtk.Align.START}
+                        class="font-icon"
+                        label={recordingState((r) => (r.systemAudio ? "volume_up" : "volume_off"))}
                       />
-                    </box>
+                    </button>
+
+                    {/* Microphone Toggle */}
+                    <button
+                      class={recordingState((r) =>
+                        r.micAudio ? "rec-toggle-btn active" : "rec-toggle-btn"
+                      )}
+                      tooltipText="Micrófono"
+                      onClicked={toggleMicAudio}
+                      cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
+                    >
+                      <label
+                        class="font-icon"
+                        label={recordingState((r) => (r.micAudio ? "mic" : "mic_off"))}
+                      />
+                    </button>
                   </box>
-                </button>
+                </box>
 
                 {/* CPU, RAM, GPU Progress Meters (StatusTraySystem) */}
                 <StatusTraySystem />

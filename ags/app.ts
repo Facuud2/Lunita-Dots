@@ -6,6 +6,8 @@ import NotificationPopup from "./widget/island/NotificationPopup"
 import { initNotificationDaemon, clearAllNotifications } from "./widget/island/NotificationService"
 import { toggleExpand, toggleNotificationsMenu } from "./widget/islandState"
 import { toggleLauncher } from "./widget/launcher/LauncherState"
+import PowerMenu from "./widget/PowerMenu"
+import { togglePowerMenu, openPowerMenu, closePowerMenu } from "./widget/powermenu/PowerMenuState"
 
 // Suppress unhandled promise rejections from GLib.MainLoop.runAsync internals
 globalThis.addEventListener?.("unhandledrejection", (event: PromiseRejectionEvent) => {
@@ -71,6 +73,15 @@ app.start({
         }
         res(JSON.stringify(state))
       })
+    } else if (argv[0] === "toggle-powermenu") {
+      togglePowerMenu()
+      res("ok")
+    } else if (argv[0] === "open-powermenu") {
+      openPowerMenu(argv[1])
+      res("ok")
+    } else if (argv[0] === "close-powermenu") {
+      closePowerMenu()
+      res("ok")
     } else {
       res("unknown request: " + argv[0])
     }
@@ -93,6 +104,11 @@ app.start({
     // ── AppLauncher (independiente, todos los monitores) ──
     app.get_monitors().map((monitor) =>
       safeMount("AppLauncher", () => AppLauncher(monitor))
+    )
+
+    // ── PowerMenu Overlay (independiente, todos los monitores) ──
+    app.get_monitors().map((monitor) =>
+      safeMount("PowerMenu", () => PowerMenu(monitor))
     )
   },
 })
