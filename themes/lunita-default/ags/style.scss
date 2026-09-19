@@ -1,0 +1,2161 @@
+// ── 1. Variables CSS (:root) ──
+:root {
+  --bg-panel: #0B0B0B;
+  --bg-card: #161616;
+  --bg-card-hover: #242424;
+  --bg-card-active: #FFFFFF;
+  --border-subtle: #1A1A1A;
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-faint: rgba(255, 255, 255, 0.30);
+  --text-inverse: #000000;
+  --accent-red: #D71921;
+  --slider-track: #242424;
+  --slider-fill: #FFFFFF;
+  --media-gradient: radial-gradient(circle at 65% 45%, rgba(215, 25, 33, 0.22) 0%, rgba(22, 22, 22, 0.95) 70%, #161616 100%);
+}
+
+// SCSS Fonts Tokens
+$font-ui: "Space Grotesk", sans-serif;
+$font-dots: "NDOT 47 (inspired by NOTHING)", "NDOT 47", "Doto", monospace;
+$font-icons: "Material Symbols Rounded";
+
+// Global reset & fonts
+* {
+  font-family: $font-ui;
+  color: var(--text-primary);
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+// Window Containers & Transparent Backdrop
+window,
+window.dynamic-island-window,
+window.dynamic-island-pill,
+window.dynamic-island-popup,
+window.island-backdrop-window {
+  background: transparent;
+}
+
+window.island-backdrop-window {
+  button.backdrop-btn {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+// ── 2. Main Island Shell (Panel Principal) ──
+.island-shell {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  transition: all 380ms cubic-bezier(0.05, 0.7, 0.1, 1.0);
+
+  &.compact {
+    min-width: 460px;
+    min-height: 36px;
+    border-radius: 18px;
+    padding: 0 14px;
+  }
+
+  &.expanded {
+    min-width: 580px;
+    border-radius: 26px;
+    padding: 14px;
+  }
+}
+
+// Typography Helpers & Icon Font Rules
+.font-dots {
+  font-family: $font-dots;
+  font-weight: bold;
+}
+
+.font-ui {
+  font-family: $font-ui;
+}
+
+.font-icon,
+.status-icon,
+.pill-icon-bg,
+.media-art-icon,
+.rec-icon,
+.coffee-icon,
+.meter-icon,
+.temp-icon,
+.notif-flat-icon,
+.notif-app-glyph {
+  font-family: $font-icons;
+  -gtk-icon-style: requested;
+}
+
+// Ensure labels inside icon buttons always render with icon font
+.action-btn,
+.action-btn label,
+.media-small-btn,
+.media-small-btn label,
+.media-main-btn,
+.media-main-btn label,
+.overlay-close-btn,
+.overlay-close-btn label,
+.overlay-mini-btn,
+.overlay-mini-btn label {
+  font-family: $font-icons;
+}
+
+.label-uppercase {
+  font-family: $font-ui;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+}
+
+// Compact Pill Content
+button.compact-trigger {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+.compact-pill {
+  min-height: 36px;
+
+  .clock-text {
+    font-family: $font-dots;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--text-primary);
+  }
+
+  .status-item {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .status-icon {
+    font-family: $font-icons;
+    font-size: 16px;
+    color: var(--text-primary);
+
+    &.muted {
+      color: var(--accent-red);
+    }
+
+    &.bt-off {
+      color: var(--text-faint);
+    }
+
+    &.bt-connected {
+      color: #4a9eff;
+    }
+  }
+
+  .muted-text {
+    color: var(--accent-red);
+  }
+
+  .alert-icon {
+    color: var(--accent-red);
+  }
+
+  .ws-dot {
+    min-width: 6px;
+    min-height: 6px;
+    border-radius: 3px;
+    background-color: var(--text-faint);
+    margin: 0 2px;
+
+    &.active {
+      min-width: 16px;
+      background-color: var(--text-primary);
+    }
+  }
+}
+
+// ── Expanded Panel Content ──
+.expanded-panel {
+  padding-top: 4px;
+
+  .header-clock {
+    .large-clock {
+      font-family: $font-dots;
+      font-size: 38px;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+
+    .small-seconds {
+      font-family: $font-dots;
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+
+    .date-card {
+      background-color: transparent;
+      border-radius: 14px;
+      padding: 6px 10px;
+      transition: background-color 180ms ease;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.10);
+      }
+
+      .date-title {
+        font-family: $font-ui;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        color: var(--text-secondary);
+      }
+
+      .date-sub {
+        font-family: $font-ui;
+        font-size: 10px;
+        letter-spacing: 1.2px;
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  // ── 3. Tarjetas de Conexión (Status Pills: Ethernet / Bluetooth / Sonido) ──
+  .status-pills-row {
+    margin-top: 10px;
+
+    .status-pill {
+      min-height: 52px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 6px 10px;
+      transition: all 200ms ease;
+
+      &:hover {
+        background-color: var(--bg-card-hover);
+      }
+
+      // Estado Activo (Como en la referencia)
+      &.active {
+        background-color: var(--bg-card-active);
+
+        * {
+          color: var(--text-inverse);
+        }
+
+        .pill-icon-bg {
+          background-color: var(--text-inverse);
+          color: var(--bg-card-active);
+        }
+
+        .pill-title {
+          color: var(--text-inverse);
+        }
+
+        .pill-subtitle {
+          color: var(--text-inverse);
+        }
+      }
+
+      // Estado Inactivo
+      .pill-icon-bg {
+        min-width: 34px;
+        min-height: 34px;
+        border-radius: 17px;
+        background-color: var(--bg-card-hover);
+        color: var(--text-secondary);
+        font-family: $font-icons;
+        font-size: 18px;
+      }
+
+      .pill-title {
+        font-family: $font-ui;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .pill-subtitle {
+        font-family: $font-ui;
+        font-size: 9px;
+        letter-spacing: 1.0px;
+        color: var(--text-secondary);
+      }
+    }
+
+    // ── Audio Pill: drag-to-scrub volume bar ──
+    .audio-pill {
+      // Mini volume track shown at the right edge of the pill
+      .audio-pill-track {
+        min-width: 44px;
+        min-height: 4px;
+        border-radius: 2px;
+        background-color: rgba(255, 255, 255, 0.15);
+
+        .audio-pill-fill {
+          min-height: 4px;
+          border-radius: 2px;
+          background-color: var(--text-primary);
+          transition: min-width 80ms ease;
+        }
+      }
+
+      // When active (unmuted + white bg) invert track colours
+      &.active {
+        .audio-pill-track {
+          background-color: rgba(0, 0, 0, 0.15);
+
+          .audio-pill-fill {
+            background-color: var(--text-inverse);
+          }
+        }
+      }
+    }
+  }
+
+  // ── Popover de Selección de Salida de Audio (Clic derecho en pastilla de volumen) ──
+  popover.audio-sink-popover {
+    background-color: transparent;
+    padding: 0;
+
+    > arrow {
+      background-color: var(--bg-card);
+      border-color: var(--border-subtle);
+    }
+
+    > contents {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 10px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75);
+    }
+
+    .audio-sink-container {
+      padding: 2px;
+    }
+
+    .sink-header {
+      padding: 4px 6px 8px 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 6px;
+
+      .sink-header-icon {
+        font-family: $font-icons;
+        font-size: 15px;
+        color: var(--text-secondary);
+      }
+
+      .sink-header-title {
+        font-family: $font-dots;
+        font-size: 11px;
+        letter-spacing: 1.2px;
+        color: var(--text-secondary);
+      }
+    }
+
+    .sink-list {
+      padding-top: 2px;
+    }
+
+    .audio-sink-row {
+      background-color: transparent;
+      border-radius: 10px;
+      padding: 8px 10px;
+      transition: all 140ms ease;
+
+      &:hover {
+        background-color: var(--bg-card-hover);
+      }
+
+      &.active {
+        background-color: rgba(255, 255, 255, 0.08);
+
+        .sink-icon {
+          color: #FFFFFF;
+        }
+
+        .sink-name {
+          color: #FFFFFF;
+          font-weight: 600;
+        }
+
+        .sink-check {
+          color: #FFFFFF;
+        }
+      }
+
+      .sink-icon {
+        font-family: $font-icons;
+        font-size: 18px;
+        color: var(--text-secondary);
+      }
+
+      .sink-name {
+        font-family: $font-ui;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .sink-sub {
+        font-family: $font-ui;
+        font-size: 10px;
+        color: var(--text-faint);
+      }
+
+      .sink-check {
+        font-family: $font-icons;
+        font-size: 16px;
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  // ── 4. Reproductor Multimedia (Media Player) ──
+  .media-card {
+    margin-top: 10px;
+    min-height: 116px;
+    border-radius: 18px;
+    background: var(--media-gradient);
+    border: 1px solid var(--border-subtle);
+    padding: 12px 14px 10px 14px;
+
+    .media-art-box {
+      min-width: 46px;
+      min-height: 46px;
+      border-radius: 10px;
+      background-color: var(--bg-card-hover);
+
+      .media-art-img {
+        border-radius: 10px;
+      }
+
+      .media-art-placeholder {
+        min-width: 46px;
+        min-height: 46px;
+        border-radius: 10px;
+        background-color: var(--bg-card-hover);
+
+        .media-art-icon {
+          font-family: $font-icons;
+          font-size: 24px;
+          color: var(--text-primary);
+        }
+      }
+    }
+
+    .media-title {
+      font-family: $font-ui;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .media-artist {
+      font-family: $font-ui;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+
+    .media-small-btn {
+      min-width: 32px;
+      min-height: 32px;
+      border-radius: 16px;
+      background-color: transparent;
+      color: var(--text-primary);
+      transition: background-color 150ms ease, transform 150ms ease;
+
+      label,
+      * {
+        font-family: $font-icons;
+        font-size: 18px;
+        color: var(--text-primary);
+      }
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+      }
+
+      &:active {
+        transform: scale(0.92);
+      }
+    }
+
+    .media-main-btn {
+      min-width: 40px;
+      min-height: 40px;
+      border-radius: 20px;
+      background-color: #FFFFFF;
+      color: #000000;
+      transition: transform 150ms ease, background-color 150ms ease;
+
+      label,
+      * {
+        font-family: $font-icons;
+        font-size: 22px;
+        color: #000000;
+      }
+
+      &:hover {
+        transform: scale(1.06);
+        background-color: #F0F0F0;
+      }
+
+      &:active {
+        transform: scale(0.94);
+      }
+    }
+
+    // Waveform Progress Visualizer (DrawingArea)
+    .waveform-container {
+      margin-top: 6px;
+      min-height: 30px;
+    }
+
+    .waveform-time-row {
+      margin-top: 2px;
+
+      .time-label {
+        font-family: $font-dots;
+        font-size: 12px;
+        font-weight: bold;
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  // ── 5. Sliders de Hardware (Meters: CPU, RAM, GPU) ──
+  .meters-row {
+    margin-top: 10px;
+
+    .rec-card {
+      min-width: 170px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 6px 10px 6px 8px;
+      transition: background-color 180ms ease, border 180ms ease;
+
+      &.recording {
+        background-color: rgba(215, 25, 33, 0.15);
+        border: 1px solid var(--accent-red);
+      }
+
+      .rec-main-action {
+        background-color: transparent;
+        border-radius: 12px;
+        padding: 4px 6px;
+        transition: background-color 180ms ease;
+
+        &:hover {
+          background-color: var(--bg-card-hover);
+        }
+
+        .rec-badge {
+          min-width: 32px;
+          min-height: 32px;
+          border-radius: 16px;
+          background-color: var(--bg-card-hover);
+
+          .rec-icon {
+            font-family: $font-icons;
+            font-size: 16px;
+            color: var(--accent-red);
+          }
+        }
+
+        .rec-title {
+          font-family: $font-ui;
+          font-size: 10px;
+          letter-spacing: 1.2px;
+          color: var(--text-secondary);
+        }
+
+        .rec-time {
+          font-family: $font-dots;
+          font-size: 14px;
+          font-weight: bold;
+          color: var(--text-primary);
+        }
+      }
+
+      .rec-divider {
+        min-width: 1px;
+        background-color: var(--border-subtle);
+        margin: 6px 2px;
+      }
+
+      .rec-toggles {
+        .rec-toggle-btn {
+          min-width: 28px;
+          min-height: 28px;
+          border-radius: 14px;
+          background-color: var(--bg-card-hover);
+          padding: 0;
+          transition: all 160ms ease;
+
+          label,
+          * {
+            font-family: $font-icons;
+            font-size: 15px;
+            color: var(--text-faint);
+            transition: color 160ms ease;
+          }
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.14);
+
+            label,
+            * {
+              color: var(--text-primary);
+            }
+          }
+
+          &.active {
+            background-color: rgba(255, 255, 255, 0.22);
+
+            label,
+            * {
+              color: var(--text-primary);
+            }
+          }
+        }
+      }
+
+      &.recording {
+        .rec-toggles .rec-toggle-btn.active {
+          background-color: rgba(215, 25, 33, 0.30);
+          border: 1px solid rgba(215, 25, 33, 0.50);
+
+          label,
+          * {
+            color: var(--accent-red);
+          }
+        }
+      }
+    }
+
+    .stats-card {
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 10px 14px;
+
+      .meter-icon {
+        font-size: 16px;
+        color: var(--text-secondary);
+      }
+
+      .meter-label {
+        font-family: $font-ui;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        color: var(--text-secondary);
+        min-width: 28px;
+      }
+
+      .meter-track {
+        min-height: 6px;
+        border-radius: 3px;
+        background-color: var(--slider-track);
+
+        .meter-fill {
+          min-height: 6px;
+          border-radius: 3px;
+          background-color: var(--slider-fill);
+          transition: min-width 300ms ease;
+
+          &.alert {
+            background-color: var(--accent-red);
+          }
+        }
+      }
+
+      .meter-val {
+        font-family: $font-dots;
+        font-size: 12px;
+        font-weight: bold;
+        color: var(--text-secondary);
+        min-width: 32px;
+      }
+
+      .temp-icon {
+        font-size: 14px;
+        color: var(--accent-red);
+      }
+
+      .temp-val {
+        font-family: $font-dots;
+        font-size: 11px;
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  // ── Quick Actions Row ──
+  .quick-actions-row {
+    margin-top: 10px;
+    margin-bottom: 4px;
+
+    .coffee-pill {
+      min-height: 44px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 0 14px;
+      transition: all 200ms ease;
+
+      &:hover {
+        background-color: var(--bg-card-hover);
+      }
+
+      &.active {
+        background-color: var(--bg-card-active);
+
+        * {
+          color: var(--text-inverse);
+        }
+      }
+
+      .coffee-icon {
+        font-family: $font-icons;
+        font-size: 20px;
+        color: var(--text-secondary);
+      }
+
+      .coffee-label {
+        font-family: $font-ui;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        color: var(--text-primary);
+      }
+    }
+
+    .action-btn {
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      font-family: $font-icons;
+      font-size: 20px;
+      color: var(--text-primary);
+      transition: all 180ms ease;
+
+      label,
+      * {
+        font-family: $font-icons;
+        font-size: 20px;
+        color: var(--text-primary);
+      }
+
+      &:hover {
+        background-color: var(--bg-card-hover);
+      }
+
+      &.danger {
+        color: var(--accent-red);
+
+        label,
+        * {
+          color: var(--accent-red);
+        }
+      }
+
+      &.has-unread {
+        background-color: rgba(215, 25, 33, 0.15);
+        color: var(--accent-red);
+        border: 1px solid rgba(215, 25, 33, 0.40);
+
+        label,
+        * {
+          color: var(--accent-red);
+        }
+
+        &:hover {
+          background-color: rgba(215, 25, 33, 0.25);
+        }
+      }
+    }
+  }
+
+  // ── Overlays: Network & Bluetooth ──
+  .island-overlay-card {
+    padding: 6px 0;
+
+    .overlay-header {
+      .overlay-title {
+        font-family: $font-ui;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 1.2px;
+        color: var(--text-faint);
+      }
+
+      .overlay-close-btn {
+        min-width: 26px;
+        min-height: 26px;
+        border-radius: 13px;
+        background-color: var(--bg-card-hover);
+        color: var(--text-primary);
+        font-family: $font-icons;
+        font-size: 15px;
+
+        label,
+        * {
+          font-family: $font-icons;
+          font-size: 15px;
+          color: var(--text-primary);
+        }
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.20);
+        }
+      }
+    }
+
+    .overlay-tabs {
+      .overlay-tab {
+        min-height: 38px;
+        border-radius: 14px;
+        background-color: var(--bg-card);
+        padding: 4px 12px;
+        transition: all 180ms ease;
+
+        .font-icon {
+          font-size: 18px;
+          color: var(--text-primary);
+        }
+
+        &:hover {
+          background-color: var(--bg-card-hover);
+        }
+
+        &.active {
+          background-color: var(--bg-card-active);
+
+          * {
+            color: var(--text-inverse);
+          }
+
+          .font-icon {
+            color: var(--text-inverse);
+          }
+        }
+      }
+    }
+
+    .overlay-toggle-card {
+      min-height: 52px;
+      border-radius: 18px;
+      background-color: var(--bg-card);
+      padding: 8px 14px;
+
+      .pill-icon-bg {
+        min-width: 34px;
+        min-height: 34px;
+        border-radius: 17px;
+        background-color: var(--bg-card-hover);
+        color: var(--text-primary);
+        font-family: $font-icons;
+        font-size: 18px;
+      }
+
+      .pill-title {
+        font-family: $font-ui;
+        font-size: 13px;
+        font-weight: bold;
+        color: var(--text-primary);
+      }
+
+      .pill-subtitle {
+        font-family: $font-ui;
+        font-size: 9px;
+        letter-spacing: 1.0px;
+        color: var(--text-secondary);
+      }
+    }
+
+    // Material 3 Switch
+    .m3-switch {
+      min-width: 44px;
+      min-height: 24px;
+      border-radius: 12px;
+      background-color: var(--bg-card-hover);
+      border: 2px solid var(--border-subtle);
+      padding: 2px;
+      transition: all 200ms ease;
+
+      .m3-handle {
+        min-width: 14px;
+        min-height: 14px;
+        border-radius: 7px;
+        background-color: var(--text-primary);
+        transition: all 200ms ease;
+      }
+
+      &.active {
+        background-color: var(--bg-card-active);
+        border-color: var(--bg-card-active);
+
+        .m3-handle {
+          background-color: var(--text-inverse);
+          margin-left: 20px;
+        }
+      }
+    }
+
+    .section-label {
+      font-family: $font-ui;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.2px;
+      color: var(--text-faint);
+    }
+
+    .overlay-mini-btn {
+      min-width: 28px;
+      min-height: 28px;
+      border-radius: 14px;
+      background-color: var(--bg-card-hover);
+      color: var(--text-primary);
+      font-family: $font-icons;
+      font-size: 16px;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.20);
+      }
+    }
+
+    .device-list {
+      .device-row {
+        min-height: 42px;
+        border-radius: 12px;
+        background-color: var(--bg-card);
+        padding: 6px 12px;
+        transition: background-color 150ms ease;
+
+        .font-icon {
+          font-size: 18px;
+          color: var(--text-primary);
+          min-width: 22px;
+        }
+
+        &:hover {
+          background-color: var(--bg-card-hover);
+        }
+
+        &.active {
+          border: 1px solid var(--text-secondary);
+
+          .device-name {
+            font-weight: bold;
+            color: var(--text-primary);
+          }
+        }
+
+        .device-name {
+          font-family: $font-ui;
+          font-size: 12px;
+          color: var(--text-primary);
+        }
+
+        .device-detail {
+          font-family: $font-ui;
+          font-size: 9px;
+          color: var(--text-secondary);
+        }
+
+        .device-signal {
+          font-size: 11px;
+          color: var(--text-secondary);
+        }
+
+        .device-status-badge {
+          font-family: $font-dots;
+          font-size: 10px;
+          color: var(--text-faint);
+
+          &.active {
+            color: var(--text-primary);
+            font-weight: bold;
+          }
+        }
+      }
+    }
+
+    .ethernet-info-card {
+      border-radius: 14px;
+      background-color: var(--bg-card);
+      padding: 12px;
+    }
+
+    .overlay-action-btn {
+      min-height: 40px;
+      border-radius: 14px;
+      background-color: var(--bg-card-hover);
+      padding: 8px 14px;
+      transition: background-color 180ms ease;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.20);
+      }
+    }
+  }
+}
+
+// ── MusicPlayer Widget (wallpaper layer) ──────────────────────────────────────
+// Prefijo mp- en todas las clases para evitar colisiones con otros componentes.
+
+window.music-player-window {
+  background: transparent;
+}
+
+.mp-container {
+  padding: 0;
+}
+
+.mp-header {
+  padding: 0 4px 2px;
+
+  .mp-header-icon {
+    font-family: $font-icons;
+    font-size: 14px;
+    color: var(--text-secondary);
+    -gtk-icon-style: requested;
+  }
+
+  .mp-header-title {
+    font-family: $font-ui;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    color: var(--text-secondary);
+  }
+
+  .mp-header-count {
+    font-family: $font-ui;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.8px;
+  }
+}
+
+.mp-card {
+  min-width: 340px;
+  border-radius: 20px;
+  background-color: rgba(11, 11, 11, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px 14px;
+}
+
+.mp-artwork {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  background-color: var(--bg-card-hover);
+
+  .mp-artwork-icon {
+    font-family: $font-icons;
+    font-size: 22px;
+    color: var(--text-secondary);
+    -gtk-icon-style: requested;
+  }
+}
+
+.mp-status-dot {
+  min-width: 6px;
+  min-height: 6px;
+  border-radius: 3px;
+
+  &.playing {
+    background-color: var(--text-primary);
+  }
+
+  &.paused {
+    background-color: var(--text-faint);
+  }
+}
+
+.mp-track-title {
+  font-family: $font-ui;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.mp-track-subtitle {
+  font-family: $font-ui;
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+}
+
+.mp-app-label {
+  font-family: $font-ui;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1.4px;
+  color: var(--text-faint);
+}
+
+.mp-ctrl-btn {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 50%;
+  transition: background-color 140ms ease;
+
+  label {
+    font-family: $font-icons;
+    -gtk-icon-style: requested;
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.10);
+  }
+
+  &:active {
+    background-color: rgba(255, 255, 255, 0.18);
+  }
+
+  &.mp-ctrl-small {
+    min-width: 28px;
+    min-height: 28px;
+
+    label {
+      font-size: 17px;
+      color: var(--text-secondary);
+    }
+  }
+
+  &.mp-ctrl-main {
+    min-width: 34px;
+    min-height: 34px;
+    background-color: var(--text-primary);
+    border-radius: 17px;
+
+    label {
+      font-size: 18px;
+      color: var(--text-inverse);
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.90);
+    }
+  }
+}
+
+.mp-progress-row {
+  min-height: 16px;
+}
+
+.mp-seg-btn {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-height: 16px;
+
+  .mp-seg {
+    min-height: 3px;
+    border-radius: 1.5px;
+    background-color: rgba(255, 255, 255, 0.14);
+    transition: background-color 120ms ease, min-height 120ms ease;
+
+    &.played {
+      background-color: var(--text-primary);
+    }
+  }
+
+  &:hover .mp-seg {
+    min-height: 5px;
+
+    &.played {
+      background-color: rgba(255, 255, 255, 0.85);
+    }
+  }
+}
+
+.mp-time-row {
+  padding: 0 2px;
+}
+
+.mp-time {
+  font-family: $font-dots;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--text-faint);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── App Launcher ──────────────────────────────────────────────────────────────
+// Inspired by bspwm-rice rofi applets (square / material-dark amber)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Dynamic Matugen palette with fallback defaults
+@import "./colors.scss";
+
+$al-font-ui:    "Comfortaa", "Space Grotesk", sans-serif;
+$al-font-icons: "feather", "Symbols Nerd Font", "JetBrainsMono Nerd Font", "Material Symbols Outlined", monospace;
+
+$al-bg:        #212121 !default;
+$al-bg-light:  #272727 !default;
+$al-bg-hover:  #333333 !default;
+$al-accent:    #ffc107 !default;
+$al-accent-fg: #212121 !default;
+$al-fg:        #bdbdbd !default;
+$al-fg-dim:    rgba(189, 189, 189, 0.65) !default;
+$al-danger:    #ef5350 !default;
+$al-danger-fg: #ffffff !default;
+$al-border:    rgba(255, 193, 7, 0.35) !default;
+
+// ── Backdrop window (transparent click-catcher — no dark overlay) ──
+window.al-backdrop-window {
+  background: transparent;
+
+  button.al-backdrop-btn {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    outline: none;
+
+    &:hover,
+    &:focus,
+    &:active {
+      background: transparent;
+      outline: none;
+      box-shadow: none;
+    }
+  }
+}
+
+
+// ── Launcher popup window ──
+window.al-window {
+  background: transparent;
+}
+
+.al-fullscreen-root {
+  background: transparent;
+}
+
+// ── Global focus reset for launcher to prevent blue GTK outlines ──
+window.al-window *:focus,
+window.al-window *:focus-visible,
+window.al-backdrop-window *:focus,
+window.al-backdrop-window *:focus-visible,
+.al-tab:focus,
+.al-tab:focus-visible,
+.al-cell:focus,
+.al-cell:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+
+// ── Panel (the floating card) ──
+.al-panel {
+  background-color: $al-bg;
+  border: 1px solid $al-border;
+  border-radius: 0px;
+  min-width: 760px;
+  margin: 16px;
+  padding: 0;
+  transform-origin: center center;
+
+  // Zoom-in animation replicating picom --animation-for-open-window zoom
+  animation: al-zoom-in-odd 230ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  &.al-open-odd {
+    animation: al-zoom-in-odd 230ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  &.al-open-even {
+    animation: al-zoom-in-even 230ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  // Zoom-out exit animation replicating picom --animation-for-unmap-window zoom
+  &.al-closing {
+    animation: al-zoom-out 140ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
+  // Subtle bounce animation on tab switch (no opacity fade; closes slightly then pops open)
+  &.al-bounce-odd {
+    animation: al-window-bounce-odd 270ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
+  &.al-bounce-even {
+    animation: al-window-bounce-even 270ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+}
+
+@keyframes al-zoom-in-odd {
+  0% {
+    opacity: 0;
+    transform: scale(0.76);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(1.026);
+  }
+  84% {
+    opacity: 1;
+    transform: scale(0.996);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0);
+  }
+}
+
+@keyframes al-zoom-in-even {
+  0% {
+    opacity: 0;
+    transform: scale(0.76);
+  }
+  62% {
+    opacity: 1;
+    transform: scale(1.026);
+  }
+  84% {
+    opacity: 1;
+    transform: scale(0.996);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0);
+  }
+}
+
+@keyframes al-zoom-out {
+  0% {
+    opacity: 1;
+    transform: scale(1.0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.80);
+  }
+}
+
+@keyframes al-window-bounce-odd {
+  0% {
+    opacity: 1;
+    transform: scale(1.0, 1.0);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(0.96, 0.93);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.02, 1.025);
+  }
+  85% {
+    opacity: 1;
+    transform: scale(0.995, 0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0, 1.0);
+  }
+}
+
+@keyframes al-window-bounce-even {
+  0% {
+    opacity: 1;
+    transform: scale(1.0, 1.0);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(0.96, 0.93);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.02, 1.025);
+  }
+  85% {
+    opacity: 1;
+    transform: scale(0.995, 0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0, 1.0);
+  }
+}
+
+// ── Header row ──
+.al-header {
+  padding: 0;
+  background-color: $al-bg;
+  min-height: 44px;
+}
+
+// ── Tab buttons (the badge-style category pills) ──
+.al-tab-row {
+  background-color: transparent;
+}
+
+.al-tab {
+  background-color: $al-bg-light;
+  border: none;
+  border-radius: 0px;
+  padding: 10px 18px;
+  min-height: 44px;
+  outline: none;
+  box-shadow: none;
+  transition: background-color 160ms ease, color 160ms ease;
+
+  label {
+    font-family: $al-font-ui;
+    font-size: 13px;
+    font-weight: 500;
+    color: $al-fg-dim;
+    transition: color 160ms ease;
+  }
+
+  &:hover {
+    background-color: $al-bg-hover;
+
+    label {
+      color: $al-fg;
+    }
+  }
+
+  // Active tab — accent badge style (matches bspwm-rice textbox-prompt-colon)
+  &.al-tab-active {
+    background-color: $al-accent;
+
+    label {
+      color: $al-accent-fg;
+      font-weight: 700;
+    }
+
+    &:hover {
+      background-color: lighten($al-accent, 6%);
+    }
+  }
+}
+
+// ── Info label (right of header — shows "Most Used", "Open In : browser", uptime) ──
+.al-info-label {
+  font-family: $al-font-ui;
+  font-size: 12px;
+  font-weight: 600;
+  color: $al-accent;
+  background-color: $al-bg-light;
+  padding: 4px 18px;
+  border: 2px solid $al-accent;
+}
+
+// ── Separator ──
+.al-separator {
+  min-height: 1px;
+  background-color: $al-border;
+}
+
+// ── Content area ──
+.al-content {
+  padding: 28px 32px 32px;
+  background-color: $al-bg;
+}
+
+// ── App / Link / Power grid ──
+.al-grid {
+  background: transparent;
+}
+
+// ── Individual cell ──
+.al-cell {
+  background-color: $al-bg-light;
+  border: none;
+  border-radius: 0px;
+  outline: none;
+  box-shadow: none;
+  min-width: 100px;
+  min-height: 100px;
+  padding: 0;
+  transition:
+    background-color 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform       160ms cubic-bezier(0.34, 1.4, 0.64, 1.0);
+
+  // Selection is strictly controlled by .selected — ensures only ONE element is ever active
+  &.selected {
+    background-color: $al-accent;
+    transform: scale(1.04);
+    outline: none;
+    box-shadow: none;
+
+    .al-cell-icon,
+    .al-cell-label {
+      color: $al-accent-fg;
+    }
+
+    .al-cell-label {
+      font-weight: 700;
+    }
+  }
+
+  &:active {
+    transform: scale(0.97);
+    background-color: mix($al-accent, $al-bg, 75%);
+  }
+
+  // Danger variant (power/reboot/logout cells)
+  &.al-cell-danger {
+    &.selected {
+      background-color: $al-danger;
+      outline: none;
+      box-shadow: none;
+
+      .al-cell-icon,
+      .al-cell-label {
+        color: $al-danger-fg;
+      }
+    }
+  }
+
+}
+
+.al-cell-icon {
+  font-family: $al-font-icons;
+  font-size: 32px;
+  font-weight: 300;
+  color: $al-fg;
+  -gtk-icon-style: requested;
+  transition: color 160ms ease;
+}
+
+.al-cell-icon.al-danger-icon {
+  color: $al-danger;
+}
+
+.al-cell-label {
+  font-family: $al-font-ui;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  color: $al-fg-dim;
+  transition: color 160ms ease;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── App Search Menu (Rofi-like App Finder) ───────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+.al-search-menu {
+  background-color: $al-bg;
+  min-width: 760px;
+  animation: al-search-enter 220ms cubic-bezier(0.34, 1.3, 0.64, 1.0) forwards;
+}
+
+.al-quick-view {
+  background-color: $al-bg;
+  min-width: 760px;
+  animation: al-quick-enter 220ms cubic-bezier(0.34, 1.3, 0.64, 1.0) forwards;
+}
+
+@keyframes al-search-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0);
+  }
+}
+
+@keyframes al-quick-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0);
+  }
+}
+
+
+.al-tab-back {
+  background-color: $al-bg-light;
+
+  label {
+    font-family: $al-font-ui;
+    font-size: 13px;
+    font-weight: 500;
+    color: $al-fg;
+  }
+
+  .al-back-icon,
+  .font-icon {
+    font-family: $al-font-icons;
+    font-size: 18px;
+    color: $al-accent;
+  }
+
+  &:hover {
+    background-color: $al-bg-hover;
+
+    label {
+      color: $al-fg;
+    }
+  }
+}
+
+.al-search-body {
+  padding: 20px 28px 28px;
+  background-color: $al-bg;
+}
+
+.al-search-bar {
+  background-color: $al-bg-light;
+  border: 1.5px solid $al-border;
+  padding: 8px 16px;
+  transition: border-color 160ms ease;
+
+  &:focus-within {
+    border-color: $al-accent;
+  }
+
+  .al-search-bar-icon {
+    font-family: $al-font-icons;
+    font-size: 20px;
+    color: $al-accent;
+  }
+
+  .al-search-entry {
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    color: $al-fg;
+    font-family: $al-font-ui;
+    font-size: 14px;
+    padding: 0;
+
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  .al-search-clear-btn {
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    padding: 2px 4px;
+
+    .al-clear-icon,
+    .font-icon {
+      font-family: $al-font-icons;
+      font-size: 18px;
+      color: $al-fg-dim;
+    }
+
+    &:hover .al-clear-icon,
+    &:hover .font-icon {
+      color: $al-fg;
+    }
+  }
+}
+
+.al-search-scroll {
+  min-height: 330px;
+  max-height: 330px;
+  background: transparent;
+
+  scrollbar {
+    background: transparent;
+
+    slider {
+      background: $al-bg-hover;
+      border-radius: 2px;
+      min-width: 4px;
+    }
+  }
+}
+
+.al-app-list {
+  background: transparent;
+  padding-right: 4px;
+}
+
+.al-app-row {
+  background-color: $al-bg-light;
+  border: none;
+  border-radius: 0px;
+  padding: 8px 14px;
+  min-height: 48px;
+  outline: none;
+  box-shadow: none;
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease;
+
+  .al-app-name {
+    font-family: $al-font-ui;
+    font-size: 13px;
+    font-weight: 700;
+    color: $al-fg;
+    transition: color 120ms ease;
+  }
+
+  .al-app-desc {
+    font-family: $al-font-ui;
+    font-size: 10px;
+    color: $al-fg-dim;
+    transition: color 120ms ease;
+  }
+
+  .al-app-arrow {
+    font-family: $al-font-icons;
+    font-size: 16px;
+    color: transparent;
+    transition: color 120ms ease;
+  }
+
+  &.selected {
+    background-color: $al-accent;
+    transform: scale(1.01);
+    outline: none;
+    box-shadow: none;
+
+    .al-app-name,
+    .al-app-desc {
+      color: $al-accent-fg;
+    }
+
+    .al-app-arrow {
+      color: $al-accent-fg;
+    }
+  }
+
+  &:active {
+    background-color: mix($al-accent, $al-bg, 80%);
+  }
+}
+
+.al-search-empty {
+  min-height: 200px;
+  background: transparent;
+
+  .al-empty-icon {
+    font-family: $al-font-icons;
+    font-size: 40px;
+    color: $al-fg-dim;
+  }
+
+  .al-empty-text {
+    font-family: $al-font-ui;
+    font-size: 13px;
+    color: $al-fg-dim;
+  }
+}
+
+// ── 7. Notification System (Popup Toasts & Notification Center - Nothing OS Aesthetic) ──
+
+// Pastel Flat Color Tokens (Green, Red, Gray)
+$notif-pastel-green: #86EFAC;
+$notif-pastel-green-bg: rgba(134, 239, 172, 0.12);
+$notif-pastel-green-border: rgba(134, 239, 172, 0.28);
+
+$notif-pastel-red: #F87171;
+$notif-pastel-red-bg: rgba(248, 113, 113, 0.12);
+$notif-pastel-red-border: rgba(248, 113, 113, 0.28);
+
+$notif-pastel-gray: #A1A1AA;
+$notif-pastel-gray-bg: rgba(161, 161, 170, 0.10);
+$notif-pastel-gray-border: rgba(161, 161, 170, 0.22);
+
+// App Outline Icon Tokens: dark gray background + pure white outline
+$notif-app-outline-bg: #18181B;
+$notif-app-outline-border: #FFFFFF;
+
+// Common App Outline Icon Box
+.notif-app-outline-box {
+  min-width: 36px;
+  min-height: 36px;
+  background-color: $notif-app-outline-bg;
+  border: 1.5px solid $notif-app-outline-border;
+  border-radius: 11px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  transition: all 160ms ease;
+  padding: 0;
+
+  .notif-app-glyph {
+    font-size: 18px;
+    color: #FFFFFF;
+  }
+
+  image {
+    -gtk-icon-style: requested;
+    color: #FFFFFF;
+  }
+}
+
+// Flat Pastel Status Glyphs (Green, Red, Gray) - Clean, flat, no pill container
+.notif-flat-icon {
+  font-size: 13px;
+  min-width: 14px;
+  min-height: 14px;
+  padding: 0;
+  margin: 0 0 0 2px;
+
+  &.pastel-green {
+    color: $notif-pastel-green;
+  }
+
+  &.pastel-red {
+    color: $notif-pastel-red;
+  }
+
+  &.pastel-gray {
+    color: $notif-pastel-gray;
+  }
+}
+
+// ── Floating Toast Window & Cards ──
+window.notification-popup-window {
+  background: transparent;
+}
+
+.notif-popup-container {
+  min-width: 360px;
+}
+
+.notif-popup-card-btn {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notif-popup-card {
+  background-color: rgba(18, 18, 20, 0.80);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 8px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.50);
+  transition: all 180ms ease;
+
+  &:hover {
+    background-color: rgba(24, 24, 28, 0.88);
+    border-color: rgba(255, 255, 255, 0.22);
+
+    .notif-app-outline-box {
+      border-color: #FFFFFF;
+      box-shadow: 0 3px 10px rgba(255, 255, 255, 0.10);
+    }
+  }
+
+  .notif-app-outline-box {
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 9px;
+
+    .notif-app-glyph {
+      font-size: 16px;
+    }
+  }
+
+  .notif-popup-app {
+    font-family: $font-dots;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1.1px;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .notif-popup-close {
+    min-width: 20px;
+    min-height: 20px;
+    border-radius: 10px;
+    background: transparent;
+    padding: 0;
+
+    label, * {
+      font-family: $font-icons;
+      font-size: 13px;
+      color: $notif-pastel-gray;
+      transition: all 140ms ease;
+    }
+
+    &:hover {
+      background-color: rgba(248, 113, 113, 0.16);
+      label, * {
+        color: $notif-pastel-red;
+      }
+    }
+  }
+
+  .notif-popup-summary {
+    font-family: $font-ui;
+    font-size: 13px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-top: 1px;
+    line-height: 1.2;
+  }
+
+  .notif-popup-body {
+    font-family: $font-ui;
+    font-size: 12px;
+    line-height: 1.3;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  .notif-popup-actions {
+    margin-top: 4px;
+
+    .notif-popup-action-btn {
+      background-color: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 4px 12px;
+      transition: all 150ms ease;
+
+      label {
+        font-family: $font-ui;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.24);
+      }
+    }
+  }
+}
+
+// ── Notification Center / Overlay ──
+.notification-overlay {
+  .overlay-title-icon {
+    font-size: 16px;
+    color: $notif-pastel-red;
+  }
+
+  .notif-controls-header {
+    margin-top: 4px;
+
+    .section-label {
+      letter-spacing: 1.2px;
+    }
+
+    .clear-all-btn {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      background-color: var(--bg-card);
+      padding: 4px 10px;
+      transition: all 160ms ease;
+
+      .font-icon,
+      .notif-clear-icon {
+        font-size: 14px;
+        color: $notif-pastel-gray;
+        transition: color 150ms ease;
+      }
+
+      .btn-label {
+        font-family: $font-ui;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        transition: color 150ms ease;
+      }
+
+      &:hover {
+        background-color: var(--bg-card-hover);
+        border-color: rgba(248, 113, 113, 0.35);
+
+        .font-icon,
+        .notif-clear-icon,
+        .btn-label {
+          color: $notif-pastel-red;
+        }
+      }
+    }
+  }
+
+  .notif-dnd-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 10px 14px;
+    transition: all 180ms ease;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .notif-dnd-icon-active {
+      color: $notif-pastel-red;
+    }
+
+    .notif-dnd-icon-idle {
+      color: $notif-pastel-gray;
+    }
+
+    .notif-dnd-subtitle-active {
+      color: $notif-pastel-red;
+      letter-spacing: 0.8px;
+    }
+
+    .notif-dnd-subtitle-idle {
+      color: var(--text-faint);
+      letter-spacing: 0.8px;
+    }
+  }
+
+  .notif-list-box {
+    padding: 0 4px;
+  }
+
+  .notification-card {
+    min-width: 420px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: all 180ms ease;
+
+    &:hover {
+      background-color: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.16);
+
+      .notif-app-outline-box {
+        border-color: #FFFFFF;
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.12);
+      }
+    }
+
+    .notif-app-outline-box {
+      min-width: 34px;
+      min-height: 34px;
+      border-radius: 10px;
+
+      .notif-app-glyph {
+        font-size: 17px;
+      }
+    }
+
+    .notif-card-app-title {
+      font-family: $font-dots;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 1.1px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .notif-card-title {
+      font-family: $font-ui;
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-top: 2px;
+    }
+
+    .notif-card-body {
+      font-family: $font-ui;
+      font-size: 12px;
+      line-height: 1.4;
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    .notif-card-time {
+      font-family: $font-dots;
+      font-size: 10px;
+      color: var(--text-faint);
+    }
+
+    .notif-card-close-btn {
+      min-width: 22px;
+      min-height: 22px;
+      border-radius: 11px;
+      background: transparent;
+      padding: 0;
+
+      label, * {
+        font-family: $font-icons;
+        font-size: 14px;
+        color: $notif-pastel-gray;
+        transition: all 140ms ease;
+      }
+
+      &:hover {
+        background-color: rgba(248, 113, 113, 0.16);
+        label, * {
+          color: $notif-pastel-red;
+        }
+      }
+    }
+
+    .notif-actions-row {
+      margin-top: 4px;
+
+      .notif-action-pill {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        padding: 4px 12px;
+        transition: all 150ms ease;
+
+        .notif-action-label {
+          font-family: $font-ui;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-secondary);
+          transition: color 150ms ease;
+        }
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.12);
+          border-color: rgba(255, 255, 255, 0.22);
+          .notif-action-label {
+            color: var(--text-primary);
+          }
+        }
+      }
+    }
+  }
+
+  .notif-empty-state {
+    padding: 36px 16px;
+
+    .empty-icon {
+      font-size: 40px;
+      color: $notif-pastel-gray;
+      opacity: 0.65;
+    }
+
+    .empty-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      letter-spacing: 1.2px;
+    }
+
+    .empty-desc {
+      font-family: $font-ui;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+  }
+}
+
+@import "./widget/powermenu/powermenu.scss";
+@import "./widget/cliphist/cliphist.scss";

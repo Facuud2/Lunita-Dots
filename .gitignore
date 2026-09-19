@@ -8,9 +8,7 @@ node_modules/
 *~
 
 
-# Configuración exclusiva de hardware del usuario
-hypr/modules/monitors.lua
-
-# (Opcional) Si en el futuro creas un archivo para overrides locales
-
-# modules/local.lua
+# Configuración exclusiva de hardware del usuario y archivos generados en caliente
+**/hypr/modules/monitors.lua
+**/hypr/current_wallpaper.png
+core/hypr/monitors.lua

@@ -1,0 +1,408 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🌙 LUNITA THEME MANAGER CLI
+# Gestor central de temas para Lunita-Dots
+# ==============================================================================
+
+set -e
+
+# Detectar directorio raíz canónico del repositorio Lunita-Dots
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+DOTS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+THEMES_DIR="$DOTS_DIR/themes"
+STATE_FILE="$DOTS_DIR/.lunita-theme"
+USER_STATE_DIR="$HOME/.config/lunita"
+USER_STATE_FILE="$USER_STATE_DIR/current_theme"
+
+# Colores y estilo
+BOLD="\033[1m"
+GREEN="\033[32m"
+BLUE="\033[34m"
+CYAN="\033[36m"
+YELLOW="\033[33m"
+RED="\033[31m"
+MAGENTA="\033[35m"
+RESET="\033[0m"
+
+info() { echo -e "${CYAN}ℹ${RESET} $1"; }
+success() { echo -e "${GREEN}✓${RESET} $1"; }
+warn() { echo -e "${YELLOW}⚠${RESET} $1"; }
+error() { echo -e "${RED}✗${RESET} $1" >&2; }
+
+# Obtener nombre del tema activo actual
+get_current_theme() {
+    if [ -f "$STATE_FILE" ]; then
+        cat "$STATE_FILE" | tr -d '[:space:]'
+    elif [ -f "$USER_STATE_FILE" ]; then
+        cat "$USER_STATE_FILE" | tr -d '[:space:]'
+    else
+        echo "lunita-default"
+    fi
+}
+
+# ------------------------------------------------------------------------------
+# Comando: LIST
+# ------------------------------------------------------------------------------
+cmd_list() {
+    local current
+    current="$(get_current_theme)"
+    
+    echo -e "${BOLD}${MAGENTA}🌙 Lunita-Dots — Temas Disponibles${RESET}"
+    echo "=================================================="
+
+    if [ ! -d "$THEMES_DIR" ]; then
+        error "No se encontró el directorio de temas en $THEMES_DIR"
+        exit 1
+    fi
+
+    for theme_path in "$THEMES_DIR"/*; do
+        if [ -d "$theme_path" ]; then
+            local theme_id
+            theme_id="$(basename "$theme_path")"
+            local theme_json="$theme_path/theme.json"
+            local theme_name="$theme_id"
+            local theme_desc="Sin descripción disponible"
+            local theme_author="Desconocido"
+            local theme_ver="1.0"
+
+            if [ -f "$theme_json" ] && command -v jq &>/dev/null; then
+                theme_name="$(jq -r '.name // "'"$theme_id"'"' "$theme_json")"
+                theme_desc="$(jq -r '.description // "Sin descripción"' "$theme_json")"
+                theme_author="$(jq -r '.author // "Desconocido"' "$theme_json")"
+                theme_ver="$(jq -r '.version // "1.0"' "$theme_json")"
+            fi
+
+            if [ "$theme_id" = "$current" ]; then
+                echo -e "${GREEN}${BOLD}● $theme_name${RESET} (${CYAN}$theme_id${RESET}) ${GREEN}${BOLD}[ACTIVO]${RESET}"
+            else
+                echo -e "○ ${BOLD}$theme_name${RESET} (${CYAN}$theme_id${RESET})"
+            fi
+            echo -e "  ${YELLOW}Versión:${RESET} $theme_ver | ${YELLOW}Autor:${RESET} $theme_author"
+            echo -e "  ${BOLD}Descripción:${RESET} $theme_desc"
+            echo ""
+        fi
+    done
+}
+
+# ------------------------------------------------------------------------------
+# Comando: CURRENT
+# ------------------------------------------------------------------------------
+cmd_current() {
+    local current
+    current="$(get_current_theme)"
+    local theme_dir="$THEMES_DIR/$current"
+    local theme_json="$theme_dir/theme.json"
+
+    echo -e "${BOLD}${MAGENTA}🌙 Tema Activo:${RESET} ${GREEN}${BOLD}$current${RESET}"
+    echo "--------------------------------------------------"
+
+    if [ -f "$theme_json" ] && command -v jq &>/dev/null; then
+        local name author desc
+        name="$(jq -r '.name // "'"$current"'"' "$theme_json")"
+        author="$(jq -r '.author // "Desconocido"' "$theme_json")"
+        desc="$(jq -r '.description // "Sin descripción"' "$theme_json")"
+        
+        echo -e "${BOLD}Nombre:${RESET} $name"
+        echo -e "${BOLD}Autor:${RESET}  $author"
+        echo -e "${BOLD}Detalles:${RESET} $desc"
+        echo ""
+        echo -e "${BOLD}Componentes configurados:${RESET}"
+        jq -r '.components | to_entries[] | "  - \(.key): \(.value)"' "$theme_json" 2>/dev/null || true
+    else
+        echo "Ruta: $theme_dir"
+    fi
+}
+
+# ------------------------------------------------------------------------------
+# Función auxiliar: Crear enlace simbólico seguro
+# ------------------------------------------------------------------------------
+link_component() {
+    local src="$1"
+    local dest="$2"
+
+    if [ ! -e "$src" ]; then
+        return 0
+    fi
+
+    # Si el destino ya existe y NO es un enlace simbólico, respaldarlo una sola vez
+    if [ -e "$dest" ] && [ ! -L "$dest" ]; then
+        local backup="${dest}.bak-$(date +%Y%m%d%H%M%S)"
+        warn "Respaldando directorio existente: $dest -> $backup"
+        mv "$dest" "$backup"
+    fi
+
+    mkdir -p "$(dirname "$dest")"
+    ln -sfn "$src" "$dest"
+    success "Enlazado: $dest -> $src"
+}
+
+# ------------------------------------------------------------------------------
+# Comando: APPLY / SET
+# ------------------------------------------------------------------------------
+cmd_apply() {
+    local target="$1"
+
+    if [ -z "$target" ]; then
+        error "Debes especificar el identificador del tema. Ejemplo: lunita-theme apply lunita-default"
+        exit 1
+    fi
+
+    local target_dir="$THEMES_DIR/$target"
+    if [ ! -d "$target_dir" ]; then
+        error "El tema '$target' no existe en $THEMES_DIR"
+        echo "Usa 'lunita-theme list' para ver los temas disponibles."
+        exit 1
+    fi
+
+    info "Aplicando tema: ${BOLD}$target${RESET}..."
+
+    # 1. Enlazar componentes del tema hacia ~/.config
+    mkdir -p "$HOME/.config" "$USER_STATE_DIR"
+
+    # Enlazar AGS
+    link_component "$target_dir/ags" "$HOME/.config/ags"
+
+    # Enlazar Eww
+    link_component "$target_dir/eww" "$HOME/.config/eww"
+
+    # Enlazar Hyprland
+    link_component "$target_dir/hypr" "$HOME/.config/hypr"
+
+    # Enlazar Matugen
+    link_component "$target_dir/matugen" "$HOME/.config/matugen"
+
+    # Enlazar Kitty
+    link_component "$target_dir/kitty" "$HOME/.config/kitty"
+
+    # Enlazar Neovim
+    link_component "$target_dir/nvim" "$HOME/.config/nvim"
+
+    # Enlazar Wlogout
+    link_component "$target_dir/wlogout" "$HOME/.config/wlogout"
+
+    # Enlazar HyprQuickPaper en Quickshell
+    link_component "$target_dir/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
+
+    # Enlazar Dolphin
+    link_component "$target_dir/dolphin/dolphinrc" "$HOME/.config/dolphinrc"
+    if [ -f "$target_dir/dolphin/user-places.xbel" ]; then
+        link_component "$target_dir/dolphin/user-places.xbel" "$HOME/.local/share/user-places.xbel"
+    fi
+
+    # Enlazar Qt6ct
+    if [ -f "$target_dir/qt6ct/qt6ct.conf" ]; then
+        link_component "$target_dir/qt6ct/qt6ct.conf" "$HOME/.config/qt6ct/qt6ct.conf"
+    fi
+
+    # Enlazar ajustes de cursor y GTK
+    link_component "$target_dir/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
+    if [ -f "$target_dir/gtk-3.0/bookmarks" ]; then
+        link_component "$target_dir/gtk-3.0/bookmarks" "$HOME/.config/gtk-3.0/bookmarks"
+    fi
+    link_component "$target_dir/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
+    link_component "$target_dir/icons/default/index.theme" "$HOME/.icons/default/index.theme"
+    link_component "$target_dir/xresources/.Xresources" "$HOME/.Xresources"
+
+    # Enlazar Zsh prompt
+    if [ -d "$HOME/.oh-my-zsh/custom/themes" ] && [ -f "$target_dir/zsh/pills.zsh-theme" ]; then
+        ln -sf "$target_dir/zsh/pills.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme"
+        success "Prompt Zsh enlazado en ~/.oh-my-zsh/custom/themes/pills.zsh-theme"
+    fi
+
+    # Enlazar wrapper de Dolphin
+    if [ -f "$DOTS_DIR/scripts/dolphin" ]; then
+        mkdir -p "$HOME/.local/bin"
+        ln -sf "$DOTS_DIR/scripts/dolphin" "$HOME/.local/bin/dolphin"
+        success "Wrapper Dolphin enlazado en ~/.local/bin/dolphin"
+    fi
+
+    # Enlazar Cliphist
+    if [ -d "$target_dir/cliphist" ]; then
+        link_component "$target_dir/cliphist" "$HOME/.config/cliphist"
+    fi
+
+    # Enlazar servicios systemd de usuario
+    if [ -d "$target_dir/systemd/user" ]; then
+        mkdir -p "$HOME/.config/systemd/user"
+        for s in "$target_dir/systemd/user"/*; do
+            if [ -f "$s" ]; then
+                link_component "$s" "$HOME/.config/systemd/user/$(basename "$s")"
+            fi
+        done
+        systemctl --user daemon-reload 2>/dev/null || true
+    fi
+
+    # 2. Guardar estado
+    echo "$target" > "$STATE_FILE"
+    echo "$target" > "$USER_STATE_FILE"
+
+    # 3. Asegurar binario en PATH
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$DOTS_DIR/scripts/lunita-theme.sh" "$HOME/.local/bin/lunita-theme"
+
+    # 4. Recarga suave de componentes si están en ejecución
+    info "Recargando entorno visual..."
+
+    # Recargar Eww
+    if pgrep -x eww > /dev/null; then
+        eww reload 2>/dev/null || true
+        success "Eww recargado."
+    fi
+
+    # Recargar Hyprland y aplicar cursor
+    if pgrep -x Hyprland > /dev/null; then
+        hyprctl setcursor Bibata-Modern-Ice 40 >/dev/null 2>&1 || true
+        hyprctl reload >/dev/null 2>&1 || true
+        success "Hyprland recargado."
+    fi
+
+    # Sincronizar tema de cursor, GTK e iconos en GSettings / dconf
+    if command -v gsettings &>/dev/null; then
+        gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice' 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface cursor-size 40 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface icon-theme 'BeautyLine' 2>/dev/null || true
+    fi
+
+    # Reiniciar portal GTK para aplicar estilos CSS actualizados
+    if systemctl --user is-active --quiet xdg-desktop-portal-gtk 2>/dev/null; then
+        systemctl --user restart xdg-desktop-portal-gtk 2>/dev/null || true
+    fi
+
+    # Recargar Kitty
+    if pgrep -x kitty > /dev/null; then
+        kill -SIGUSR1 $(pgrep -x kitty) 2>/dev/null || true
+        success "Terminales Kitty recargadas."
+    fi
+
+    # Recargar AGS
+    if pgrep -x ags > /dev/null; then
+        ags quit 2>/dev/null || true
+        sleep 0.3
+        hyprctl dispatch 'hl.dsp.exec_cmd("env PATH=$HOME/.local/bin:$PATH ags run")' >/dev/null 2>&1 || true
+        success "AGS reiniciado con los nuevos componentes."
+    fi
+
+    # Disparar Matugen con el fondo actual si existe
+    local curr_wall
+    curr_wall="$(awww query 2>/dev/null | awk -F 'image: ' '{print $2}' | head -n 1)"
+    if [ -n "$curr_wall" ] && [ -f "$curr_wall" ] && command -v matugen &>/dev/null; then
+        info "Sincronizando colores Matugen con el fondo actual..."
+        matugen image "$curr_wall" --source-color-index 0 >/dev/null 2>&1 || true
+    fi
+
+    echo ""
+    success "${BOLD}¡Tema '$target' aplicado exitosamente!${RESET}"
+}
+
+# ------------------------------------------------------------------------------
+# Comando: CREATE (Scaffold para Tema 2 o nuevos temas)
+# ------------------------------------------------------------------------------
+cmd_create() {
+    local new_theme="$1"
+
+    if [ -z "$new_theme" ]; then
+        error "Debes especificar el nombre para el nuevo tema. Ejemplo: lunita-theme create tema-2"
+        exit 1
+    fi
+
+    local dest="$THEMES_DIR/$new_theme"
+    if [ -d "$dest" ]; then
+        error "El tema '$new_theme' ya existe en $dest"
+        exit 1
+    fi
+
+    info "Creando estructura base para nuevo tema '${BOLD}$new_theme${RESET}'..."
+    mkdir -p "$dest"/{ags,eww,hypr/modules,hypr/scripts,kitty,matugen/templates,matugen/hooks,wlogout,zsh}
+
+    # Crear theme.json
+    cat << JSON > "$dest/theme.json"
+{
+  "id": "$new_theme",
+  "name": "${new_theme^}",
+  "version": "1.0.0",
+  "author": "$(whoami)",
+  "description": "Nuevo tema personalizado para Lunita-Dots.",
+  "components": {
+    "bar": "custom",
+    "launcher": "custom",
+    "widgets": "custom",
+    "color_engine": "matugen"
+  },
+  "features": [
+    "Diseño personalizado"
+  ]
+}
+JSON
+
+    # Crear README.md
+    cat << MD > "$dest/README.md"
+# 🎨 Tema: ${new_theme^}
+
+Tema personalizado creado a partir de la arquitectura modular de Lunita-Dots.
+
+## Componentes
+- **Barra**: Por definir (AGS, Waybar, etc.)
+- **Widgets**: Por definir
+- **Estilos**: Ver \`hypr/\`, \`matugen/\`, etc.
+MD
+
+    success "Tema creado en: $dest"
+    echo ""
+    echo -e "Puedes empezar a personalizar tu nuevo tema en: ${CYAN}$dest${RESET}"
+    echo -e "Para activarlo una vez configurado, ejecuta: ${GREEN}lunita-theme apply $new_theme${RESET}"
+}
+
+# ------------------------------------------------------------------------------
+# Menú de Ayuda
+# ------------------------------------------------------------------------------
+cmd_help() {
+    echo -e "${BOLD}${MAGENTA}🌙 Lunita Theme Manager${RESET} — Control de Temas para Lunita-Dots"
+    echo ""
+    echo -e "${BOLD}Uso:${RESET} lunita-theme [COMANDO] [ARGUMENTOS]"
+    echo ""
+    echo -e "${BOLD}Comandos:${RESET}"
+    echo -e "  ${CYAN}list, ls${RESET}                  Lista todos los temas disponibles e indica el activo."
+    echo -e "  ${CYAN}current${RESET}                   Muestra información y componentes del tema actual."
+    echo -e "  ${CYAN}apply, set <tema>${RESET}         Aplica el tema indicado, enlazando configuraciones y recargando."
+    echo -e "  ${CYAN}create <nombre>${RESET}           Genera el esqueleto y descriptor para un nuevo tema (ej. Tema 2)."
+    echo -e "  ${CYAN}help, --help, -h${RESET}          Muestra este mensaje de ayuda."
+    echo ""
+    echo -e "${BOLD}Ejemplos:${RESET}"
+    echo "  lunita-theme list"
+    echo "  lunita-theme apply lunita-default"
+    echo "  lunita-theme create tema-2"
+}
+
+# ------------------------------------------------------------------------------
+# Entrypoint
+# ------------------------------------------------------------------------------
+case "$1" in
+    list|ls)
+        cmd_list
+        ;;
+    current)
+        cmd_current
+        ;;
+    apply|set)
+        cmd_apply "$2"
+        ;;
+    create)
+        cmd_create "$2"
+        ;;
+    help|--help|-h|"")
+        cmd_help
+        ;;
+    *)
+        error "Comando desconocido: '$1'"
+        echo "Ejecuta 'lunita-theme help' para ver la lista de comandos disponibles."
+        exit 1
+        ;;
+esac

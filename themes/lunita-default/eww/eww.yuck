@@ -1,0 +1,141 @@
+;; ====================================================================
+;; EWW ANIME SIDEBAR WIDGET
+;; Desktop widget for Konachan anime cards
+;; Focusable: false (NEVER steals keyboard focus from desktop windows)
+;; Stacking: bottom (rests peacefully on the desktop layer)
+;; ====================================================================
+
+(deflisten anime_data
+  :initial '{"img1":"/home/facuud2/.config/eww/assets/placeholder.png","img2":"/home/facuud2/.config/eww/assets/placeholder.png","img3":"/home/facuud2/.config/eww/assets/placeholder.png","img4":"/home/facuud2/.config/eww/assets/placeholder.png","img5":"/home/facuud2/.config/eww/assets/placeholder.png","img6":"/home/facuud2/.config/eww/assets/placeholder.png","nsfw":false,"nsfw_label":"OFF","nsfw_class":"inactive","count":0,"source":"Konachan"}'
+  "python3 /home/facuud2/.config/eww/scripts/konachan.py watch")
+
+;; ------------------------------------------------------------------ ;;
+;;  Card Widget                                                       ;;
+;; ------------------------------------------------------------------ ;;
+(defwidget anime-card [path]
+  (box :class "card-outer"
+       :orientation "vertical"
+       :space-evenly false
+       :visible {path != ""}
+    (overlay
+      (box :class "card-img-container"
+        (image :class "card-img"
+               :path path
+               :image-width 340
+               :image-height 210))
+      (button :class "card-action-btn"
+              :valign "start"
+              :halign "end"
+              :onclick "xdg-open '${path}' &"
+              :tooltip "Open full image"
+        ""))))
+
+;; ------------------------------------------------------------------ ;;
+;;  Main Sidebar Widget                                                ;;
+;; ------------------------------------------------------------------ ;;
+(defwidget anime-sidebar-widget []
+  (box :class "anime-sidebar-container"
+       :orientation "vertical"
+       :space-evenly false
+       :vexpand true
+
+    ;; Header: Navigation Chips
+    (box :class "sidebar-header"
+         :orientation "horizontal"
+         :space-evenly false
+         :spacing 10
+      (box :class "tab-chip inactive"
+           :space-evenly false
+           :spacing 6
+        (label :class "chip-icon" :text "󰚩")
+        (label :class "chip-text" :text "Intelligence"))
+      (box :class "tab-chip active"
+           :space-evenly false
+           :spacing 6
+        (label :class "chip-icon" :text "󰄛")
+        (label :class "chip-text" :text "Anime")))
+
+    ;; Scrollable Card Feed
+    (scroll :class "cards-scroll-area"
+            :vscroll true
+            :hscroll false
+            :vexpand true
+      (box :class "cards-feed-box"
+           :orientation "vertical"
+           :space-evenly false
+           :spacing 16
+        (anime-card :path {anime_data.img1})
+        (anime-card :path {anime_data.img2})
+        (anime-card :path {anime_data.img3})
+        (anime-card :path {anime_data.img4})
+        (anime-card :path {anime_data.img5})
+        (anime-card :path {anime_data.img6})
+
+        ;; Scroll / Next button at the bottom of feed
+        (button :class "scroll-footer-btn"
+                :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py next &"
+                :tooltip "Load more anime cards"
+          (box :space-evenly false :spacing 8 :halign "center"
+            (label :class "scroll-btn-icon" :text "")
+            (label :class "scroll-btn-label" :text "Scroll to Bottom")))))
+
+    ;; Footer Command Input Bar (aesthetic, non-focus-stealing)
+    (box :class "footer-cmd-bar"
+         :orientation "horizontal"
+         :space-evenly false
+      (label :class "footer-cmd-text"
+             :hexpand true
+             :halign "start"
+             :text "Enter tags, or \"/\" for commands")
+      (button :class "footer-cmd-arrow"
+              :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py fetch &"
+              :tooltip "Fetch new batch"
+        ""))
+
+    ;; Footer Status & Control Bar
+    (box :class "footer-status-bar"
+         :orientation "horizontal"
+         :space-evenly false
+         :spacing 12
+
+      ;; Source dot + name
+      (box :class "source-indicator"
+           :space-evenly false
+           :spacing 6
+        (label :class "status-dot" :text "•")
+        (label :class "source-name" :text {anime_data.source}))
+
+      ;; NSFW Toggle
+      (button :class "nsfw-toggle-btn"
+              :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py toggle_nsfw &"
+              :tooltip "Toggle Safe / NSFW"
+        (box :space-evenly false :spacing 6
+          (label :class "nsfw-text" :text "Allow NSFW")
+          (label :class "nsfw-pill ${anime_data.nsfw_class}" :text {anime_data.nsfw_label})))
+
+      ;; Quick command links
+      (button :class "quick-cmd-btn"
+              :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py next &"
+              :tooltip "Rotate cards"
+        "/mode")
+
+      (button :class "quick-cmd-btn"
+              :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py fetch &"
+              :tooltip "Fetch newest"
+        "/clear"))))
+
+;; ------------------------------------------------------------------ ;;
+;;  Window Configuration                                               ;;
+;; ------------------------------------------------------------------ ;;
+(defwindow anime_sidebar
+  :monitor 0
+  :geometry (geometry
+              :x "20px"
+              :y "20px"
+              :width "380px"
+              :height "994px"
+              :anchor "top left")
+  :stacking "bottom"
+  :exclusive false
+  :focusable false
+  (anime-sidebar-widget))
