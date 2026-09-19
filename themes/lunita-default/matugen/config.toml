@@ -1,0 +1,69 @@
+[config]
+source_color_index = 0
+
+[templates.eww_colors]
+input_path = '/home/facuud2/.config/matugen/templates/eww-colors.scss'
+output_path = '/home/facuud2/.config/eww/colors.scss'
+
+[templates.ags_colors]
+input_path = '/home/facuud2/.config/matugen/templates/ags-colors.scss'
+output_path = '/home/facuud2/.config/ags/colors.scss'
+
+[templates.hyprland_colors]
+input_path = '/home/facuud2/.config/matugen/templates/hyprland-colors.lua'
+output_path = '/home/facuud2/.config/hypr/modules/colors.lua'
+post_hook = '/home/facuud2/.config/matugen/hooks/update-theme.sh'
+
+[templates.kitty_colors]
+input_path = '/home/facuud2/.config/matugen/templates/kitty-colors.conf'
+output_path = '/home/facuud2/.config/kitty/colors-matugen.conf'
+
+[templates.nvim_colors]
+input_path = '/home/facuud2/.config/matugen/templates/nvim-colors.lua'
+output_path = '/home/facuud2/.config/nvim/lua/colors.lua'
+
+[templates.zsh_colors]
+input_path = '/home/facuud2/.config/matugen/templates/zsh-colors.zsh'
+output_path = '/home/facuud2/.oh-my-zsh/custom/zsh-colors.zsh'
+
+[templates.hyprlock_colors]
+input_path = '/home/facuud2/.config/matugen/templates/hyprlock-colors.conf'
+output_path = '/home/facuud2/.config/hypr/hyprlock-colors.conf'
+
+[templates.prelock_palette]
+input_path = '/home/facuud2/.config/matugen/templates/prelock-palette.conf'
+output_path = '/home/facuud2/.config/prelock/palette.conf'
+
+[templates.vesktop_theme]
+input_path = '/home/facuud2/.config/matugen/templates/vesktop-theme.css'
+output_path = '/home/facuud2/.config/vesktop/themes/lunita.theme.css'
+
+[templates.kdeglobals]
+input_path = '/home/facuud2/.config/matugen/templates/kdeglobals'
+output_path = '/home/facuud2/.config/kdeglobals'
+
+[templates.lunita_colors]
+input_path = '/home/facuud2/.config/matugen/templates/kdeglobals'
+output_path = '/home/facuud2/.local/share/color-schemes/Lunita.colors'
+
+[templates.qt6ct_colors]
+input_path = '/home/facuud2/.config/matugen/templates/qt6ct-colors.conf'
+output_path = '/home/facuud2/.config/qt6ct/colors/lunita.conf'
+
+[templates.qt6ct_style]
+input_path = '/home/facuud2/.config/matugen/templates/qt6ct-style.qss'
+output_path = '/home/facuud2/.config/qt6ct/qss/lunita.qss'
+
+[templates.gtk3_css]
+input_path = '/home/facuud2/.config/matugen/templates/gtk-colors.css'
+output_path = '/home/facuud2/.config/gtk-3.0/gtk.css'
+
+[templates.gtk4_css]
+input_path = '/home/facuud2/.config/matugen/templates/gtk-colors.css'
+output_path = '/home/facuud2/.config/gtk-4.0/gtk.css'
+
+
+
+
+
+
