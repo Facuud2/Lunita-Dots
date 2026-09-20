@@ -2160,6 +2160,7 @@ window.notification-popup-window {
 
 @import "./widget/powermenu/powermenu.scss";
 @import "./widget/cliphist/cliphist.scss";
+@import "./widget/osd/osd.scss";
 
 // ── Virtual Keyboard Floating Trigger (Top-Right Corner) ────────────────────
 .vk-trigger-window {
@@ -2167,10 +2168,10 @@ window.notification-popup-window {
 }
 
 button.vk-trigger-btn {
-  min-height: 38px;
-  min-width: 48px;
+  min-height: 36px;
+  min-width: 46px;
   padding: 0 12px;
-  border-radius: 19px;
+  border-radius: 18px;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-subtle);
   transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -2226,4 +2227,5 @@ button.vk-trigger-btn {
     }
   }
 }
+
 

@@ -1,5 +1,7 @@
 node_modules/
 @girs/
+__pycache__/
+*.pyc
 
 
 # Backups y archivos temporales

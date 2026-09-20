@@ -186,8 +186,20 @@ export default function CliphistMenu(gdkmonitor: Gdk.Monitor) {
           <box class="cliphist-header" spacing={10} valign={Gtk.Align.CENTER}>
             {/* Píldora de estado con icono Nothing / Sonoma */}
             <box class="cliphist-title-pill" spacing={6} valign={Gtk.Align.CENTER}>
-              <label class="font-icon cliphist-pill-icon" label="content_paste" />
-              <label class="cliphist-pill-title" label="PORTAPAPELES" />
+              <label
+                class="font-icon cliphist-pill-icon"
+                label="content_paste"
+                valign={Gtk.Align.CENTER}
+                halign={Gtk.Align.CENTER}
+                xalign={0.5}
+                yalign={0.5}
+              />
+              <label
+                class="cliphist-pill-title"
+                label="PORTAPAPELES"
+                valign={Gtk.Align.CENTER}
+                yalign={0.5}
+              />
             </box>
 
             {/* Contador de elementos */}
@@ -203,32 +215,69 @@ export default function CliphistMenu(gdkmonitor: Gdk.Monitor) {
               {/* Botón para vaciar historial */}
               <button
                 class="cliphist-clear-btn"
-                canFocus={false}
-                focusable={false}
+                valign={Gtk.Align.CENTER}
+                halign={Gtk.Align.CENTER}
                 tooltipText="Vaciar todo el historial"
                 cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
-                onClicked={() => clearAllHistory()}
+                onClicked={() => {
+                  clearAllHistory()
+                }}
+                $={(self) => {
+                  const gesture = new Gtk.GestureClick()
+                  gesture.connect("pressed", () => {
+                    clearAllHistory()
+                  })
+                  self.add_controller(gesture)
+                }}
               >
-                <label class="font-icon cliphist-btn-icon" label="delete_sweep" />
+                <label
+                  class="font-icon cliphist-btn-icon"
+                  label="delete_sweep"
+                  valign={Gtk.Align.CENTER}
+                  halign={Gtk.Align.CENTER}
+                  xalign={0.5}
+                  yalign={0.5}
+                />
               </button>
 
               {/* Botón de cerrar */}
               <button
                 class="cliphist-close-btn"
-                canFocus={false}
-                focusable={false}
+                valign={Gtk.Align.CENTER}
+                halign={Gtk.Align.CENTER}
                 tooltipText="Cerrar (Esc)"
                 cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
                 onClicked={() => closeCliphist()}
+                $={(self) => {
+                  const gesture = new Gtk.GestureClick()
+                  gesture.connect("pressed", () => {
+                    closeCliphist()
+                  })
+                  self.add_controller(gesture)
+                }}
               >
-                <label class="font-icon cliphist-btn-icon" label="close" />
+                <label
+                  class="font-icon cliphist-btn-icon"
+                  label="close"
+                  valign={Gtk.Align.CENTER}
+                  halign={Gtk.Align.CENTER}
+                  xalign={0.5}
+                  yalign={0.5}
+                />
               </button>
             </box>
           </box>
 
           {/* ── 2. Barra de Búsqueda Interactiva ── */}
           <box class="cliphist-search-wrapper" spacing={8} valign={Gtk.Align.CENTER}>
-            <label class="font-icon cliphist-search-icon" label="search" />
+            <label
+              class="font-icon cliphist-search-icon"
+              label="search"
+              valign={Gtk.Align.CENTER}
+              halign={Gtk.Align.CENTER}
+              xalign={0.5}
+              yalign={0.5}
+            />
             <entry
               $={(self) => {
                 entryRef = self
@@ -345,13 +394,25 @@ export default function CliphistMenu(gdkmonitor: Gdk.Monitor) {
                             hexpand
                             canFocus={false}
                             focusable={false}
+                            valign={Gtk.Align.CENTER}
                             cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
                             onClicked={() => copyItem(item)}
                           >
                             <box spacing={10} valign={Gtk.Align.CENTER}>
-                              {/* Icono de tipo */}
-                              <box class={`cliphist-type-icon ${badgeClass}`} valign={Gtk.Align.CENTER}>
-                                <label class="font-icon" label={typeIcon} />
+                              {/* Icono de tipo perfectamente centrado */}
+                              <box
+                                class={`cliphist-type-icon ${badgeClass}`}
+                                valign={Gtk.Align.CENTER}
+                                halign={Gtk.Align.CENTER}
+                              >
+                                <label
+                                  class="font-icon"
+                                  label={typeIcon}
+                                  valign={Gtk.Align.CENTER}
+                                  halign={Gtk.Align.CENTER}
+                                  xalign={0.5}
+                                  yalign={0.5}
+                                />
                               </box>
 
                               {/* Contenido textual */}
@@ -385,27 +446,41 @@ export default function CliphistMenu(gdkmonitor: Gdk.Monitor) {
                           </button>
 
                           {/* Botones de acción agrupados: Copiar (dos papeles) y Eliminar (trash) */}
-                          <box class="cliphist-row-actions" spacing={4} valign={Gtk.Align.CENTER}>
+                          <box class="cliphist-row-actions" spacing={4} valign={Gtk.Align.CENTER} halign={Gtk.Align.END}>
                             <button
                               class="cliphist-action-btn cliphist-copy-btn"
-                              canFocus={false}
-                              focusable={false}
+                              valign={Gtk.Align.CENTER}
+                              halign={Gtk.Align.CENTER}
                               tooltipText="Copiar y Pegar"
                               cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
                               onClicked={() => copyItem(item)}
                             >
-                              <label class="font-icon" label="content_copy" />
+                              <label
+                                class="font-icon"
+                                label="content_copy"
+                                valign={Gtk.Align.CENTER}
+                                halign={Gtk.Align.CENTER}
+                                xalign={0.5}
+                                yalign={0.5}
+                              />
                             </button>
 
                             <button
                               class="cliphist-action-btn cliphist-del-btn"
-                              canFocus={false}
-                              focusable={false}
+                              valign={Gtk.Align.CENTER}
+                              halign={Gtk.Align.CENTER}
                               tooltipText="Eliminar del historial (Supr)"
                               cursor={Gdk.Cursor.new_from_name("pointer", null) as any}
                               onClicked={() => deleteItem(item)}
                             >
-                              <label class="font-icon" label="delete" />
+                              <label
+                                class="font-icon"
+                                label="delete"
+                                valign={Gtk.Align.CENTER}
+                                halign={Gtk.Align.CENTER}
+                                xalign={0.5}
+                                yalign={0.5}
+                              />
                             </button>
                           </box>
                         </box>

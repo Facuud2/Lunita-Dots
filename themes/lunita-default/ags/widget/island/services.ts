@@ -4,6 +4,7 @@ import { createState } from "ags"
 import { readFile } from "ags/file"
 import GLib from "gi://GLib?version=2.0"
 import Gio from "gi://Gio?version=2.0"
+import { showVolumeOSD } from "../osd/OSDState"
 
 // 1. Clock Service (HH:MM, SS, formatted date in Spanish uppercase)
 export const clock = createPoll(
@@ -54,6 +55,8 @@ export interface VolumeState {
 
 export const [volumeState, setVolumeState] = createState<VolumeState>({ volume: 50, muted: false })
 
+let hasInitializedVolume = false
+
 export async function fetchVolume() {
   // 1. Prioridad: wpctl (usado directamente por Hyprland en este sistema)
   try {
@@ -62,7 +65,14 @@ export async function fetchVolume() {
     const match = out.match(/Volume:\s*([0-9.]+)/)
     if (match) {
       const volume = Math.min(100, Math.max(0, Math.round(parseFloat(match[1]) * 100)))
+      const prev = volumeState.peek()
+      const changed = prev.volume !== volume || prev.muted !== muted
       setVolumeState({ volume, muted })
+      if (!hasInitializedVolume) {
+        hasInitializedVolume = true
+      } else if (changed) {
+        showVolumeOSD()
+      }
       return
     }
   } catch {}
@@ -74,7 +84,14 @@ export async function fetchVolume() {
     if (parts.length >= 2) {
       const muted = parts[0] === "true"
       const volume = parseInt(parts[1], 10) || 0
+      const prev = volumeState.peek()
+      const changed = prev.volume !== volume || prev.muted !== muted
       setVolumeState({ volume, muted })
+      if (!hasInitializedVolume) {
+        hasInitializedVolume = true
+      } else if (changed) {
+        showVolumeOSD()
+      }
       return
     }
   } catch {}
@@ -82,7 +99,12 @@ export async function fetchVolume() {
 
 export function setSystemVolume(percent: number) {
   const clamped = Math.max(0, Math.min(100, Math.round(percent)))
+  const prev = volumeState.peek()
+  const changed = prev.volume !== clamped
   setVolumeState({ ...volumeState.peek(), volume: clamped })
+  if (hasInitializedVolume && changed) {
+    showVolumeOSD()
+  }
   const frac = (clamped / 100).toFixed(2)
   execAsync(`wpctl set-volume @DEFAULT_AUDIO_SINK@ ${frac}`).catch(() => {
     execAsync(`pamixer --set-volume ${clamped}`).catch(() => {})
@@ -92,6 +114,9 @@ export function setSystemVolume(percent: number) {
 export function toggleSystemMute() {
   const next = !volumeState.peek().muted
   setVolumeState({ ...volumeState.peek(), muted: next })
+  if (hasInitializedVolume) {
+    showVolumeOSD()
+  }
   execAsync("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle").catch(() => {
     execAsync("pamixer -t").catch(() => {})
   })
@@ -143,6 +168,7 @@ export interface AudioSink {
 }
 
 export const [audioSinks, setAudioSinks] = createState<AudioSink[]>([])
+export const [currentAudioSink, setCurrentAudioSink] = createState<AudioSink | null>(null)
 
 export async function fetchAudioSinks() {
   try {
@@ -168,7 +194,14 @@ export async function fetchAudioSinks() {
 
           const lower = rawName.toLowerCase()
           let icon = "speaker"
-          if (lower.includes("headphone") || lower.includes("auricular") || lower.includes("headset")) {
+          if (
+            lower.includes("headphone") ||
+            lower.includes("auricular") ||
+            lower.includes("headset") ||
+            lower.includes("anc") ||
+            lower.includes("earphone") ||
+            lower.includes("buds")
+          ) {
             icon = "headphones"
           } else if (
             lower.includes("hdmi") ||
@@ -210,8 +243,11 @@ export async function fetchAudioSinks() {
       }
     }
     setAudioSinks(list)
+    const def = list.find((s) => s.isDefault) || list[0] || null
+    setCurrentAudioSink(def)
   } catch {
     setAudioSinks([])
+    setCurrentAudioSink(null)
   }
 }
 
@@ -219,8 +255,11 @@ export async function setAudioSink(id: number) {
   try {
     await execAsync(`wpctl set-default ${id}`)
   } catch {}
-  fetchAudioSinks()
-  fetchVolume()
+  await fetchAudioSinks()
+  await fetchVolume()
+  if (hasInitializedVolume) {
+    showVolumeOSD()
+  }
 }
 
 let volDebounce: number | null = null

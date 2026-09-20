@@ -20,7 +20,7 @@ export default function VirtualKeyboardTrigger(gdkmonitor: Gdk.Monitor) {
       layer={Astal.Layer.OVERLAY}
       application={app}
       marginTop={8}
-      marginRight={16}
+      marginRight={20}
     >
       <button
         class={keyboardVisible((vis) =>

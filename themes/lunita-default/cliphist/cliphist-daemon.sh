@@ -78,8 +78,11 @@ case "${1:-start}" in
                 kill -- -"$PID" 2>/dev/null || kill "$PID" 2>/dev/null || true
             fi
             rm -f "$PID_FILE"
-            echo "[cliphist-daemon] Demonio detenido."
         fi
+        # Limpiar historial de portapapeles al apagar o detener
+        cliphist wipe 2>/dev/null || true
+        rm -f "$DB_DIR/timestamps.tsv" 2>/dev/null || true
+        echo "[cliphist-daemon] Demonio detenido e historial purgado."
         exit 0
         ;;
     start|--start)
@@ -102,12 +105,19 @@ fi
 
 echo $$ > "$PID_FILE"
 
+# Limpiar historial de sesiones anteriores automáticamente al iniciar el PC / sesión
+cliphist wipe 2>/dev/null || true
+rm -f "$DB_DIR/timestamps.tsv" 2>/dev/null || true
+
 cleanup() {
     trap - SIGINT SIGTERM EXIT
-    echo "[cliphist-daemon] Terminando procesos observadores..."
+    echo "[cliphist-daemon] Terminando procesos observadores y purgando historial..."
     rm -f "$PID_FILE"
     [ -n "${PID_TEXT:-}" ] && kill "$PID_TEXT" 2>/dev/null || true
     [ -n "${PID_IMG:-}" ] && kill "$PID_IMG" 2>/dev/null || true
+    # Limpiar historial al apagar o reiniciar la PC
+    cliphist wipe 2>/dev/null || true
+    rm -f "$DB_DIR/timestamps.tsv" 2>/dev/null || true
     exit 0
 }
 trap cleanup SIGINT SIGTERM EXIT
@@ -122,7 +132,7 @@ PID_TEXT=$!
 wl-paste --type image --watch "$SCRIPT_DIR/store-wrapper.sh" &
 PID_IMG=$!
 
-echo "[cliphist-daemon] Observadores de texto (PID $PID_TEXT) e imagen (PID $PID_IMG) iniciados."
+echo "[cliphist-daemon] Historial reiniciado. Observadores de texto (PID $PID_TEXT) e imagen (PID $PID_IMG) iniciados."
 
 # 3. Bucle de monitoreo continuo de capacidad (cada 30 segundos)
 while true; do

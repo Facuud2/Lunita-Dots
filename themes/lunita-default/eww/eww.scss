@@ -1,6 +1,8 @@
 // ====================================================================
-// EWW ANIME SIDEBAR — Delicate Frosted Glass & Matugen Theme
-// Translucent surface with soft rounded borders dynamically shaded by Matugen
+// EWW UNIFIED STYLESHEET (DYNAMIC MATUGEN THEME)
+// Styles for:
+// 1. Anime Sidebar Widget (delicate frosted glass, rounded curves)
+// 2. Music Player Widget (cover art, cava visualizer, playback controls)
 // ====================================================================
 
 @import "colors.scss";
@@ -10,13 +12,17 @@
   font-family: "Adwaita Sans", "Inter", "CaskaydiaCove Nerd Font", "JetBrainsMono Nerd Font", sans-serif;
 }
 
-// ── Transparent Root Window (Prevents square window edges) ───────────
-window {
+// ── Transparent Root Window (Prevents square window edges & black boxes) ─
+window,
+window.background,
+.background {
   background-color: transparent;
   background: transparent;
 }
 
-// ── Main Outer Window Container (Delicate Translucent Surface) ───────
+// ====================================================================
+// 1. ANIME SIDEBAR STYLES
+// ====================================================================
 .anime-sidebar-container {
   background: linear-gradient(
     170deg,
@@ -33,7 +39,6 @@ window {
     inset 0 1px 1px rgba($primary, 0.18);
 }
 
-// ── Header Navigation Chips ──────────────────────────────────────────
 .sidebar-header {
   padding-bottom: 12px;
   margin-bottom: 4px;
@@ -73,7 +78,6 @@ window {
   font-size: 0.92rem;
 }
 
-// ── Scrollable Feed ──────────────────────────────────────────────────
 .cards-scroll-area {
   padding: 4px 2px 8px 2px;
 }
@@ -82,7 +86,6 @@ window {
   padding: 4px 0 10px 0;
 }
 
-// ── Card Widgets (Rounded Curves with Matugen Glow) ──────────────────
 .card-outer {
   background-color: rgba($surface_container, 0.35);
   border-radius: 20px;
@@ -120,7 +123,6 @@ window {
   border-color: $primary;
 }
 
-// ── Scroll Footer Pill Button ────────────────────────────────────────
 .scroll-footer-btn {
   margin-top: 6px;
   padding: 8px 20px;
@@ -146,7 +148,6 @@ window {
   font-weight: 600;
 }
 
-// ── Footer Command Bar (Soft Delicate Pill) ───────────────────────────
 .footer-cmd-bar {
   background-color: rgba($surface_container, 0.50);
   border: 1px solid rgba($outline, 0.16);
@@ -172,7 +173,6 @@ window {
   color: $primary;
 }
 
-// ── Footer Status & Control Bar ──────────────────────────────────────
 .footer-status-bar {
   padding: 4px 6px 2px 6px;
   font-size: 0.82rem;
@@ -236,4 +236,115 @@ window {
 .quick-cmd-btn:hover {
   color: $primary;
   background-color: rgba($primary, 0.12);
+}
+
+// ====================================================================
+// 2. MUSIC PLAYER STYLES
+// ====================================================================
+.music-player-window {
+  padding: 18px 20px;
+  min-width: 270px;
+  background: linear-gradient(
+    170deg,
+    rgba($surface, 0.52) 0%,
+    rgba($surface_container, 0.40) 100%
+  );
+  border: 1px solid rgba($primary, 0.18);
+  border-radius: 24px;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 1px rgba($primary, 0.18);
+}
+
+.header-section {
+  padding-bottom: 4px;
+}
+
+.cover-art-box {
+  border-radius: 14px;
+  background-color: rgba($surface_container, 0.5);
+  border: 1px solid rgba($primary, 0.3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.cover-art-img {
+  border-radius: 14px;
+}
+
+.meta-box {
+  padding-left: 2px;
+}
+
+.stream-badge {
+  background-color: rgba($primary, 0.2);
+  color: $primary;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba($primary, 0.35);
+}
+
+.stream-badge.offline {
+  background-color: rgba($on_surface_variant, 0.15);
+  color: $on_surface_variant;
+  border-color: rgba($on_surface_variant, 0.25);
+}
+
+.track-title {
+  color: $on_surface;
+  font-size: 1.08rem;
+  font-weight: 700;
+  padding-top: 2px;
+}
+
+.track-artist {
+  color: $on_surface_variant;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.cava-container {
+  padding: 14px 0;
+}
+
+.cava-bar {
+  font-family: "CaskaydiaCove Nerd Font", monospace;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: $primary;
+  letter-spacing: 4px;
+}
+
+.controls-container {
+  padding-top: 6px;
+  padding-bottom: 2px;
+}
+
+.ctrl-btn {
+  color: $on_surface_variant;
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.ctrl-btn:hover {
+  color: $on_surface;
+  background-color: rgba($on_surface, 0.14);
+}
+
+.play-btn {
+  font-size: 1.2rem;
+  color: $primary;
+  background-color: rgba($primary, 0.18);
+  border: 1px solid rgba($primary, 0.35);
+  padding: 8px 18px;
+  border-radius: 12px;
+}
+
+.play-btn:hover {
+  color: $on_surface;
+  background-color: rgba($primary, 0.35);
 }

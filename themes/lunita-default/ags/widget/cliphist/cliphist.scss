@@ -160,12 +160,16 @@
     border-radius: 50%;
     min-width: 28px;
     min-height: 28px;
+    padding: 0;
+    margin: 0;
     transition: all 160ms ease;
 
     .cliphist-btn-icon {
       font-family: $font-icons;
       font-size: 14px;
       color: var(--text-secondary);
+      padding: 0;
+      margin: 0;
     }
 
     &:hover {
@@ -312,11 +316,15 @@
   .cliphist-type-icon {
     min-width: 32px;
     min-height: 32px;
+    padding: 0;
+    margin: 0;
     border-radius: 10px;
 
     label {
       font-family: $font-icons;
       font-size: 16px;
+      padding: 0;
+      margin: 0;
     }
 
     &.badge-image {
@@ -369,6 +377,8 @@
     .cliphist-action-btn {
       min-width: 28px;
       min-height: 28px;
+      padding: 0;
+      margin: 0;
       border-radius: 8px;
       background-color: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.06);
@@ -378,6 +388,8 @@
         font-family: $font-icons;
         font-size: 15px;
         color: var(--text-faint);
+        padding: 0;
+        margin: 0;
       }
 
       &.cliphist-copy-btn:hover {

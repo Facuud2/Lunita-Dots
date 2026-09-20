@@ -242,9 +242,18 @@ cmd_apply() {
     echo "$target" > "$STATE_FILE"
     echo "$target" > "$USER_STATE_FILE"
 
-    # 3. Asegurar binario en PATH
-    mkdir -p "$HOME/.local/bin"
+    # 3. Asegurar binarios y desktop entry en PATH y XDG
+    mkdir -p "$HOME/.local/bin" "$HOME/.local/share/applications" "$HOME/.local/share/icons/hicolor/scalable/apps"
     ln -sf "$DOTS_DIR/scripts/lunita-theme.sh" "$HOME/.local/bin/lunita-theme"
+    if [ -f "$DOTS_DIR/scripts/lunita-theme-selector" ]; then
+        ln -sf "$DOTS_DIR/scripts/lunita-theme-selector" "$HOME/.local/bin/lunita-theme-selector"
+    fi
+    if [ -f "$DOTS_DIR/core/lunita-theme-selector.desktop" ]; then
+        ln -sf "$DOTS_DIR/core/lunita-theme-selector.desktop" "$HOME/.local/share/applications/lunita-theme-selector.desktop"
+    fi
+    if [ -f "$DOTS_DIR/core/lunita-theme-selector.svg" ]; then
+        ln -sf "$DOTS_DIR/core/lunita-theme-selector.svg" "$HOME/.local/share/icons/hicolor/scalable/apps/lunita-theme-selector.svg"
+    fi
 
     # 4. Recarga suave de componentes si están en ejecución
     info "Recargando entorno visual..."
@@ -361,6 +370,20 @@ MD
 }
 
 # ------------------------------------------------------------------------------
+# Comando: GUI (Lanzar selector gráfico)
+# ------------------------------------------------------------------------------
+cmd_gui() {
+    if command -v lunita-theme-selector &>/dev/null; then
+        lunita-theme-selector &
+    elif [ -f "$DOTS_DIR/scripts/lunita-theme-selector" ]; then
+        "$DOTS_DIR/scripts/lunita-theme-selector" &
+    else
+        error "No se encontró el ejecutable lunita-theme-selector"
+        exit 1
+    fi
+}
+
+# ------------------------------------------------------------------------------
 # Menú de Ayuda
 # ------------------------------------------------------------------------------
 cmd_help() {
@@ -369,6 +392,7 @@ cmd_help() {
     echo -e "${BOLD}Uso:${RESET} lunita-theme [COMANDO] [ARGUMENTOS]"
     echo ""
     echo -e "${BOLD}Comandos:${RESET}"
+    echo -e "  ${CYAN}gui${RESET}                       Abre el selector gráfico de temas (Theme Selector)."
     echo -e "  ${CYAN}list, ls${RESET}                  Lista todos los temas disponibles e indica el activo."
     echo -e "  ${CYAN}current${RESET}                   Muestra información y componentes del tema actual."
     echo -e "  ${CYAN}apply, set <tema>${RESET}         Aplica el tema indicado, enlazando configuraciones y recargando."
@@ -376,6 +400,7 @@ cmd_help() {
     echo -e "  ${CYAN}help, --help, -h${RESET}          Muestra este mensaje de ayuda."
     echo ""
     echo -e "${BOLD}Ejemplos:${RESET}"
+    echo "  lunita-theme gui"
     echo "  lunita-theme list"
     echo "  lunita-theme apply lunita-default"
     echo "  lunita-theme create tema-2"
@@ -385,6 +410,9 @@ cmd_help() {
 # Entrypoint
 # ------------------------------------------------------------------------------
 case "$1" in
+    gui)
+        cmd_gui
+        ;;
     list|ls)
         cmd_list
         ;;

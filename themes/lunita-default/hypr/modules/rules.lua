@@ -176,6 +176,15 @@ function M.setup()
         workspace = 5,
         float     = true,
     })
+
+    -- Theme Selector GUI (Flotante y centrado)
+    hl.window_rule({
+        name      = "lunita-theme-selector",
+        match     = { class = "^(io\\.lunita\\.ThemeSelector)$" },
+        float     = true,
+        center    = true,
+        size      = "960 660",
+    })
 end
 
 return M
