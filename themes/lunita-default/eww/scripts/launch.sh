@@ -1,32 +1,50 @@
 #!/usr/bin/env bash
+# ====================================================================
+# EWW LAUNCHER & AUTOSTART SCRIPT
+# Starts eww daemon and opens both anime sidebar and music player
+# ====================================================================
 
-# Start eww daemon if not already running
-if ! pgrep -x "eww" > /dev/null; then
-    eww daemon
-    sleep 0.5
+# 1. Start eww daemon if not already running
+if ! eww ping >/dev/null 2>&1; then
+    eww daemon &
+    # Wait for daemon to respond (up to 5 seconds)
+    for i in {1..25}; do
+        if eww ping >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.2
+    done
 fi
 
-# Ensure colors are generated from current wallpaper
+# 2. Ensure dynamic Matugen colors exist
 if [ ! -f "$HOME/.config/eww/colors.scss" ] || ! grep -q '\$primary' "$HOME/.config/eww/colors.scss" 2>/dev/null; then
     "$HOME/.local/bin/wall-change" >/dev/null 2>&1 || true
 fi
 
-# Reload configuration
-eww reload
-sleep 0.2
+# 3. Reload configuration
+eww reload >/dev/null 2>&1 || true
+sleep 0.3
 
 ACTIVE=$(eww active-windows 2>/dev/null || true)
 
-# Open music player on both monitors if not already open
+# 4. Open Anime Sidebar
+if ! echo "$ACTIVE" | grep -q "anime_sidebar"; then
+    eww open anime_sidebar >/dev/null 2>&1 || true
+fi
+
+# 5. Open Music Player on primary monitor
 if ! echo "$ACTIVE" | grep -q "music_player_0"; then
-    eww open music_player_0 2>/dev/null || true
+    eww open music_player_0 >/dev/null 2>&1 || true
 fi
 
-if ! echo "$ACTIVE" | grep -q "music_player_1"; then
-    eww open music_player_1 2>/dev/null || true
+# 6. Open Music Player on secondary monitor if connected
+if hyprctl monitors 2>/dev/null | grep -q "Monitor HDMI-A-1"; then
+    if ! echo "$ACTIVE" | grep -q "music_player_1"; then
+        eww open music_player_1 >/dev/null 2>&1 || true
+    fi
 fi
 
-# Start wallpaper watcher in background if not already running
+# 7. Start wallpaper watcher in background if not already running
 if ! pgrep -f "watch_wallpaper.sh" > /dev/null; then
-    nohup "$HOME/.config/eww/scripts/watch_wallpaper.sh" >/dev/null 2>"$HOME/.config/eww/scripts/watch_wallpaper.sh" >/dev/null 2>&1 &1 &
+    nohup "$HOME/.config/eww/scripts/watch_wallpaper.sh" >/dev/null 2>&1 &
 fi

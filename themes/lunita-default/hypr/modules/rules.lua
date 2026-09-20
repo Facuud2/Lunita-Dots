@@ -47,13 +47,12 @@ function M.setup()
         no_focus = true,
     })
 
-    -- Layer rules also return a handle.
-    -- local overlayLayerRule = hl.layer_rule({
-    --     name  = "no-anim-overlay",
-    --     match = { namespace = "^my-overlay$" },
-    --     no_anim = true,
-    -- })
-    -- overlayLayerRule:set_enabled(false)
+    -- Teclado virtual wvkbd
+    hl.layer_rule({
+        name  = "wvkbd-blur",
+        match = { namespace = "^wvkbd$" },
+        blur  = true,
+    })
 
     -- Hyprland-run windowrule
     hl.window_rule({
@@ -176,6 +175,15 @@ function M.setup()
         match     = { class = "^(blueman-manager|blueman-adapters|blueman-assistant|blueberry.*)$" },
         workspace = 5,
         float     = true,
+    })
+
+    -- Theme Selector GUI (Flotante y centrado)
+    hl.window_rule({
+        name      = "lunita-theme-selector",
+        match     = { class = "^(io\\.lunita\\.ThemeSelector)$" },
+        float     = true,
+        center    = true,
+        size      = "960 660",
     })
 end
 

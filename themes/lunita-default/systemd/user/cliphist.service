@@ -6,6 +6,7 @@ PartOf=graphical-session.target
 [Service]
 Type=simple
 ExecStart=%h/.config/cliphist/cliphist-daemon.sh start
+ExecStop=%h/.config/cliphist/cliphist-daemon.sh --stop
 Restart=on-failure
 RestartSec=3
 

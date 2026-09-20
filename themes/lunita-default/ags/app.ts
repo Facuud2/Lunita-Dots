@@ -9,7 +9,17 @@ import { toggleLauncher } from "./widget/launcher/LauncherState"
 import PowerMenu from "./widget/PowerMenu"
 import { togglePowerMenu, openPowerMenu, closePowerMenu } from "./widget/powermenu/PowerMenuState"
 import CliphistMenu from "./widget/CliphistMenu"
-import { toggleCliphist, openCliphist, closeCliphist } from "./widget/cliphist/CliphistState"
+import { toggleCliphist, openCliphist, closeCliphist, clearAllHistory } from "./widget/cliphist/CliphistState"
+import VirtualKeyboardTrigger from "./widget/VirtualKeyboardTrigger"
+import {
+  initVirtualKeyboardDaemon,
+  toggleVirtualKeyboard,
+  openVirtualKeyboard,
+  closeVirtualKeyboard,
+  keyboardVisible,
+} from "./widget/virtualkeyboard/VirtualKeyboardState"
+import VolumeOSD from "./widget/osd/VolumeOSD"
+
 
 // Suppress unhandled promise rejections from GLib.MainLoop.runAsync internals
 globalThis.addEventListener?.("unhandledrejection", (event: PromiseRejectionEvent) => {
@@ -91,6 +101,8 @@ app.start({
     } else if (argv[0] === "close-cliphist") {
       closeCliphist()
       res("ok")
+    } else if (argv[0] === "clear-cliphist") {
+      clearAllHistory().then(() => res("ok")).catch((err) => res("error: " + err))
     } else if (argv[0] === "dump-media-state") {
       import("./widget/island/services").then((m) => {
         res(JSON.stringify(m.mediaState.peek()))
@@ -107,6 +119,19 @@ app.start({
       import("./widget/island/services").then((m) => {
         res(JSON.stringify(m.audioSinks.peek()))
       })
+    } else if (argv[0] === "toggle-virtual-keyboard") {
+      toggleVirtualKeyboard().then(() => res("ok")).catch((err) => res("error: " + err))
+    } else if (argv[0] === "open-virtual-keyboard") {
+      openVirtualKeyboard().then(() => res("ok")).catch((err) => res("error: " + err))
+    } else if (argv[0] === "close-virtual-keyboard") {
+      closeVirtualKeyboard().then(() => res("ok")).catch((err) => res("error: " + err))
+    } else if (argv[0] === "dump-keyboard-state") {
+      res(JSON.stringify({ visible: keyboardVisible.peek() }))
+    } else if (argv[0] === "test-volume-osd") {
+      import("./widget/osd/OSDState").then((m) => {
+        m.showVolumeOSD()
+        res("ok")
+      })
     } else {
       res("unknown request: " + argv[0])
     }
@@ -116,9 +141,17 @@ app.start({
     // ── Demonio DBus de Notificaciones ──
     safeMount("NotificationDaemon", () => initNotificationDaemon())
 
+    // ── Demonio de Teclado Virtual ──
+    safeMount("VirtualKeyboardDaemon", () => initVirtualKeyboardDaemon())
+
     // ── Popups de Notificaciones (flotantes, todos los monitores) ──
     app.get_monitors().map((monitor) =>
       safeMount("NotificationPopup", () => NotificationPopup(monitor))
+    )
+
+    // ── Popups OSD de Volumen (flotantes estilo GNOME, todos los monitores) ──
+    app.get_monitors().map((monitor) =>
+      safeMount("VolumeOSD", () => VolumeOSD(monitor))
     )
 
     // ── DynamicIsland (siempre montado, todos los monitores) ──
@@ -140,6 +173,26 @@ app.start({
     app.get_monitors().map((monitor) =>
       safeMount("CliphistMenu", () => CliphistMenu(monitor))
     )
+
+    // ── Virtual Keyboard Trigger (esquina superior derecha, todos los monitores) ──
+    const mountedVK = new Set<Gdk.Monitor>()
+    const mountVK = (monitor: Gdk.Monitor) => {
+      if (mountedVK.has(monitor)) return
+      mountedVK.add(monitor)
+      safeMount("VirtualKeyboardTrigger", () => VirtualKeyboardTrigger(monitor))
+    }
+
+    app.get_monitors().forEach(mountVK)
+    const display = Gdk.Display.get_default()
+    const monitorsModel = display?.get_monitors()
+    if (monitorsModel) {
+      monitorsModel.connect("items-changed", (_m, pos, _rem, added) => {
+        for (let i = 0; i < added; i++) {
+          const mon = monitorsModel.get_item(pos + i) as Gdk.Monitor | null
+          if (mon) mountVK(mon)
+        }
+      })
+    }
   },
 })
 

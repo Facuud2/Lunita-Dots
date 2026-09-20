@@ -256,15 +256,16 @@ export async function deleteItem(item: ClipItem) {
 // Limpiar todo el historial
 export async function clearAllHistory() {
   try {
-    await execAsync("cliphist wipe")
+    await execAsync(["bash", "-c", "cliphist wipe; wl-copy --clear || true"])
     const cacheDir = GLib.get_user_cache_dir()
-    await execAsync(`rm -f ${cacheDir}/cliphist/timestamps.tsv`)
+    await execAsync(["bash", "-c", `rm -f "${cacheDir}/cliphist/timestamps.tsv"`])
+  } catch (err) {
+    console.warn("[CliphistState] Error al vaciar historial:", err)
+  } finally {
     setClipItems([])
     updateFiltered()
     setSelectedIndex(0)
     setSearchQuery("")
-  } catch (err) {
-    console.warn("[CliphistState] Error al vaciar historial:", err)
   }
 }
 
