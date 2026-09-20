@@ -1,0 +1,14 @@
+[Unit]
+Description=Demonio de portapapeles cliphist con auto-purga para Hyprland
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.config/cliphist/cliphist-daemon.sh start
+ExecStop=%h/.config/cliphist/cliphist-daemon.sh --stop
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target

@@ -1,0 +1,24 @@
+{
+  "id": "macOS-Theme",
+  "name": "macOS Theme (Golden Gate)",
+  "version": "1.0.0",
+  "author": "Facuud2",
+  "description": "Tema inspirado en la elegancia visual de macOS 27 Golden Gate. Incluye Dock flotante con efecto cristal frosted glass, squircle icons, indicador de aplicaciones activas, separador dinámico y reglas de superposición en Wayland.",
+  "components": {
+    "dock": "ags-macos-dock",
+    "bar": "ags-macos-menubar",
+    "launcher": "ags-launchpad",
+    "widgets": "macos-control-center",
+    "color_engine": "matugen",
+    "terminal": "kitty",
+    "file_manager": "dolphin"
+  },
+  "features": [
+    "Dock flotante de cristal con hairline de 1px y desenfoque profundo",
+    "Contenedor Platter con radios concéntricos (24px base, 14px squircles)",
+    "Status Indicators reactivos en tiempo real vía socket2 de Hyprland",
+    "Separador Divider dinámico entre apps ancladas y apps en ejecución",
+    "Papelera reactiva con monitoreo de ~/.local/share/Trash",
+    "Ventana de Wayland no intrusiva con Exclusivity IGNORE y Layer TOP"
+  ]
+}

@@ -28,12 +28,31 @@ local programs = {
 -----------------
 ---- MODULES ----
 -----------------
-require("modules.env").setup(programs)
-require("modules.monitors").setup()
-require("modules.general").setup()
-require("modules.animations").setup()
-require("modules.rules").setup()
-require("modules.autostart").setup()
+local function safe_setup(mod_name, ...)
+    local ok, mod = pcall(require, mod_name)
+    if ok and type(mod) == "table" and type(mod.setup) == "function" then
+        mod.setup(...)
+    else
+        if mod_name == "modules.monitors" then
+            -- Fallback seguro para monitores si el módulo está ausente o vacío
+            hl.monitor({
+                output   = "",
+                mode     = "preferred",
+                position = "auto",
+                scale    = "1",
+            })
+        end
+    end
+end
 
-local keybinds = require("modules.keybinds")
-keybinds.setup(programs)
+safe_setup("modules.env", programs)
+safe_setup("modules.monitors")
+safe_setup("modules.general")
+safe_setup("modules.animations")
+safe_setup("modules.rules")
+safe_setup("modules.autostart")
+
+local ok_key, keybinds = pcall(require, "modules.keybinds")
+if ok_key and type(keybinds) == "table" and type(keybinds.setup) == "function" then
+    keybinds.setup(programs)
+end

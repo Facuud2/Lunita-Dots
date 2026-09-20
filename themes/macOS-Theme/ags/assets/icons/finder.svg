@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="f-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3eb3f8"/>
+      <stop offset="100%" stop-color="#1467db"/>
+    </linearGradient>
+    <linearGradient id="f-left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b6e3fe"/>
+      <stop offset="100%" stop-color="#6bb8f6"/>
+    </linearGradient>
+    <linearGradient id="f-right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4aa7f7"/>
+      <stop offset="100%" stop-color="#1b72e2"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="116" height="116" rx="26" fill="url(#f-bg)"/>
+  <rect x="6" y="6" width="116" height="116" rx="26" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+  <path d="M6 32 C6 18 18 6 32 6 L64 6 L64 122 L32 122 C18 122 6 110 6 96 Z" fill="url(#f-left)"/>
+  <path d="M64 6 L96 6 C110 6 122 18 122 32 L122 96 C122 110 110 122 96 122 L64 122 Z" fill="url(#f-right)"/>
+  <!-- Central dividing line / nose -->
+  <path d="M64 12 C64 46 54 58 54 72 C54 78 58 82 64 82 C70 82 74 78 74 72 C74 58 64 46 64 12" fill="none" stroke="#0e3875" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- Left Eye -->
+  <ellipse cx="38" cy="48" rx="4.5" ry="7" fill="#0e3875"/>
+  <!-- Right Eye -->
+  <ellipse cx="90" cy="48" rx="4.5" ry="7" fill="#0e3875"/>
+  <!-- Smile -->
+  <path d="M30 76 C30 100 98 100 98 76" fill="none" stroke="#0e3875" stroke-width="4.5" stroke-linecap="round"/>
+</svg>
