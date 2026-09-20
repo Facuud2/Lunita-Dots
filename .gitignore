@@ -11,4 +11,5 @@ node_modules/
 # Configuración exclusiva de hardware del usuario y archivos generados en caliente
 **/hypr/modules/monitors.lua
 **/hypr/current_wallpaper.png
+**/hypr/scripts/wvkbd-colors.env
 core/hypr/monitors.lua

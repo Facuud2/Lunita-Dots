@@ -25,6 +25,7 @@ function M.setup(opts_or_terminal, fileManager, menu, browser, ide, mainMod)
     -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
     hl.bind(mod .. " + SPACE", hl.dsp.exec_cmd("ags request toggle-island"))
     hl.bind(mod .. " + A",     hl.dsp.exec_cmd("ags request toggle-launcher"))
+    hl.bind(mod .. " + K",     hl.dsp.exec_cmd("ags request toggle-virtual-keyboard"))
     hl.bind(mod .. " + Q", hl.dsp.exec_cmd(terminal))
     local closeWindowBind = hl.bind(mod .. " + C", hl.dsp.window.close())
     -- closeWindowBind:set_enabled(false)

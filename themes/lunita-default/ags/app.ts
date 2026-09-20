@@ -10,6 +10,14 @@ import PowerMenu from "./widget/PowerMenu"
 import { togglePowerMenu, openPowerMenu, closePowerMenu } from "./widget/powermenu/PowerMenuState"
 import CliphistMenu from "./widget/CliphistMenu"
 import { toggleCliphist, openCliphist, closeCliphist } from "./widget/cliphist/CliphistState"
+import VirtualKeyboardTrigger from "./widget/VirtualKeyboardTrigger"
+import {
+  initVirtualKeyboardDaemon,
+  toggleVirtualKeyboard,
+  openVirtualKeyboard,
+  closeVirtualKeyboard,
+  keyboardVisible,
+} from "./widget/virtualkeyboard/VirtualKeyboardState"
 
 // Suppress unhandled promise rejections from GLib.MainLoop.runAsync internals
 globalThis.addEventListener?.("unhandledrejection", (event: PromiseRejectionEvent) => {
@@ -107,6 +115,14 @@ app.start({
       import("./widget/island/services").then((m) => {
         res(JSON.stringify(m.audioSinks.peek()))
       })
+    } else if (argv[0] === "toggle-virtual-keyboard") {
+      toggleVirtualKeyboard().then(() => res("ok")).catch((err) => res("error: " + err))
+    } else if (argv[0] === "open-virtual-keyboard") {
+      openVirtualKeyboard().then(() => res("ok")).catch((err) => res("error: " + err))
+    } else if (argv[0] === "close-virtual-keyboard") {
+      closeVirtualKeyboard().then(() => res("ok")).catch((err) => res("error: " + err))
+    } else if (argv[0] === "dump-keyboard-state") {
+      res(JSON.stringify({ visible: keyboardVisible.peek() }))
     } else {
       res("unknown request: " + argv[0])
     }
@@ -115,6 +131,9 @@ app.start({
   main() {
     // ── Demonio DBus de Notificaciones ──
     safeMount("NotificationDaemon", () => initNotificationDaemon())
+
+    // ── Demonio de Teclado Virtual ──
+    safeMount("VirtualKeyboardDaemon", () => initVirtualKeyboardDaemon())
 
     // ── Popups de Notificaciones (flotantes, todos los monitores) ──
     app.get_monitors().map((monitor) =>
@@ -139,6 +158,11 @@ app.start({
     // ── CliphistMenu Overlay (independiente, todos los monitores) ──
     app.get_monitors().map((monitor) =>
       safeMount("CliphistMenu", () => CliphistMenu(monitor))
+    )
+
+    // ── Virtual Keyboard Trigger (esquina superior derecha, todos los monitores) ──
+    app.get_monitors().map((monitor) =>
+      safeMount("VirtualKeyboardTrigger", () => VirtualKeyboardTrigger(monitor))
     )
   },
 })
