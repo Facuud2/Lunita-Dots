@@ -1,4 +1,5 @@
 import { Gtk, Gdk } from "ags/gtk4"
+import GObject from "gi://GObject"
 import {
   type PinnedApp,
   type RunningApp,
@@ -10,6 +11,7 @@ import {
   setHoveredAppId,
   getIconAssetPath,
   openAddAppModal,
+  reorderPinnedApp,
 } from "./DockState"
 import { createDockContextMenu } from "./DockContextMenu"
 
@@ -118,6 +120,34 @@ export default function DockItem({
         })
         self.add_controller(motion)
 
+        // Drag & Drop Reordering for Pinned Apps
+        if (app) {
+          try {
+            const dragSource = new Gtk.DragSource({
+              actions: Gdk.DragAction.MOVE,
+            })
+            dragSource.connect("prepare", () => {
+              const val = new GObject.Value()
+              val.init(GObject.TYPE_STRING)
+              val.set_string(app.id)
+              return Gdk.ContentProvider.new_for_value(val)
+            })
+            self.add_controller(dragSource)
+
+            const dropTarget = Gtk.DropTarget.new(GObject.TYPE_STRING, Gdk.DragAction.MOVE)
+            dropTarget.connect("drop", (_target, value) => {
+              if (typeof value === "string" && value !== app.id) {
+                reorderPinnedApp(value, app.id)
+                return true
+              }
+              return false
+            })
+            self.add_controller(dropTarget)
+          } catch (e) {
+            console.warn("[DockItem] Error al registrar DnD:", e)
+          }
+        }
+
         // Right-click context menu gesture (except for '+' button)
         if (!isAdd) {
           const clickGesture = new Gtk.GestureClick()
@@ -151,7 +181,7 @@ export default function DockItem({
             <image
               class="dock-app-icon"
               file={iconFile}
-              pixelSize={48}
+              pixelSize={54}
               halign={Gtk.Align.CENTER}
               valign={Gtk.Align.CENTER}
             />
@@ -159,7 +189,7 @@ export default function DockItem({
             <image
               class="dock-app-icon"
               iconName={fallbackIcon}
-              pixelSize={48}
+              pixelSize={54}
               halign={Gtk.Align.CENTER}
               valign={Gtk.Align.CENTER}
             />

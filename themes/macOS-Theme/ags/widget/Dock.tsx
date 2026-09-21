@@ -16,7 +16,7 @@ export default function Dock(gdkmonitor: Gdk.Monitor) {
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
       layer={Astal.Layer.TOP}
       application={app}
-      marginBottom={10}
+      marginBottom={6}
     >
       <box halign={Gtk.Align.CENTER} valign={Gtk.Align.END}>
         <Platter />

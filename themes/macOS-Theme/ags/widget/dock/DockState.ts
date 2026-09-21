@@ -328,6 +328,31 @@ export function isAppPinned(appId: string): boolean {
   return pinnedApps.peek().some((p) => p.id === appId)
 }
 
+export function reorderPinnedApp(sourceId: string, targetId: string) {
+  const current = [...pinnedApps.peek()]
+  const fromIdx = current.findIndex((p) => p.id === sourceId)
+  const toIdx = current.findIndex((p) => p.id === targetId)
+  if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return
+
+  const [moved] = current.splice(fromIdx, 1)
+  current.splice(toIdx, 0, moved)
+  setPinnedApps(current)
+  savePinnedApps(current)
+}
+
+export function movePinnedApp(appId: string, direction: -1 | 1) {
+  const current = [...pinnedApps.peek()]
+  const idx = current.findIndex((p) => p.id === appId)
+  if (idx === -1) return
+  const newIdx = idx + direction
+  if (newIdx < 0 || newIdx >= current.length) return
+
+  const [moved] = current.splice(idx, 1)
+  current.splice(newIdx, 0, moved)
+  setPinnedApps(current)
+  savePinnedApps(current)
+}
+
 export function pinRunningApp(running: RunningApp) {
   const newPinned: PinnedApp = {
     id: running.class.toLowerCase().replace(/[^a-z0-9_-]/g, "-") || `app-${Date.now()}`,

@@ -15,6 +15,8 @@ import {
   emptyTrash,
   getMatchingClients,
   trashCount,
+  pinnedApps,
+  movePinnedApp,
 } from "./DockState"
 
 interface DockContextMenuProps {
@@ -179,8 +181,26 @@ export function createDockContextMenu({
 
   menuBox.append(createSeparator())
 
-  // Options section: Pin / Unpin
+  // Options section: Reorder & Pin / Unpin
   if (app) {
+    const allPinned = pinnedApps.peek()
+    const appIdx = allPinned.findIndex((p) => p.id === app.id)
+
+    if (appIdx > 0) {
+      menuBox.append(
+        createMenuItem("Mover a la izquierda", "go-previous-symbolic", () => {
+          movePinnedApp(app.id, -1)
+        })
+      )
+    }
+    if (appIdx !== -1 && appIdx < allPinned.length - 1) {
+      menuBox.append(
+        createMenuItem("Mover a la derecha", "go-next-symbolic", () => {
+          movePinnedApp(app.id, 1)
+        })
+      )
+    }
+
     menuBox.append(
       createMenuItem("Quitar del Dock", "list-remove-symbolic", () => {
         unpinApp(app.id)

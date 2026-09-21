@@ -195,19 +195,19 @@ function M.setup()
     })
 
     -- Configuración de plugin Hyprgrass (para pantalla táctil / iPad)
-    hl.config({
-        plugin = {
-            hyprgrass = {
-                sensitivity = 4.0,
-                long_press_delay = 400,
-                resize_on_border_long_press = false,
-                edge_margin = 10,
-            },
-        },
-        gestures = {
-            workspace_swipe_touch = true,
-        },
-    })
+--    hl.config({
+ --       plugin = {
+ --           hyprgrass = {
+ --               sensitivity = 4.0,
+ --               long_press_delay = 400,
+ --               resize_on_border_long_press = false,
+ --               edge_margin = 10,
+ --           },
+ --       },
+ --       gestures = {
+ --           workspace_swipe_touch = true,
+ --       },
+ --   })
 
     -- Example per-device config
     -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Devices/ for more
