@@ -54,6 +54,13 @@ function M.setup()
         blur  = true,
     })
 
+    -- macOS Dock Blur & Frosted Glass Layer Rule
+    hl.layer_rule({
+        name  = "macos-dock-blur",
+        match = { namespace = "^(macos-dock|gtk4-layer-shell)$" },
+        blur  = true,
+    })
+
     -- Hyprland-run windowrule
     hl.window_rule({
         name  = "move-hyprland-run",
