@@ -32,7 +32,7 @@ export interface HyprlandClient {
 export interface PinnedApp {
   id: string
   name: string
-  iconFile: string
+  iconFile?: string
   fallbackIcon: string
   cmd: string
   matchClasses: string[]
@@ -48,7 +48,19 @@ export interface RunningApp {
   count: number
 }
 
-// ── Complete Pinned Applications (Matching Reference Image 1:1) ─────────────
+export interface InstalledAppItem {
+  id: string
+  name: string
+  displayName: string
+  description: string
+  executable: string
+  iconName: string
+  iconFile?: string
+  cmd: string
+  matchClasses: string[]
+}
+
+// ── Complete Pinned Applications (Defaults) ───────────────────────────────────
 export const DEFAULT_PINNED_APPS: PinnedApp[] = [
   {
     id: "finder",
@@ -224,11 +236,109 @@ export const RIGHT_STACK_APPS: PinnedApp[] = [
   },
 ]
 
+// ── Persistence: Load & Save Pinned Apps ──────────────────────────────────────
+const CONFIG_DIR = `${GLib.get_user_config_dir()}/lunita`
+const CONFIG_FILE = `${CONFIG_DIR}/dock-pinned.json`
+
+function loadPinnedApps(): PinnedApp[] {
+  try {
+    const file = Gio.File.new_for_path(CONFIG_FILE)
+    if (file.query_exists(null)) {
+      const [, contents] = file.load_contents(null)
+      const decoder = new TextDecoder("utf-8")
+      const json = JSON.parse(decoder.decode(contents))
+      if (Array.isArray(json) && json.length > 0) {
+        return json
+      }
+    }
+  } catch (e) {
+    console.warn("[DockState] No se pudo leer la configuración de apps ancladas:", e)
+  }
+  return DEFAULT_PINNED_APPS
+}
+
+export function savePinnedApps(apps: PinnedApp[]) {
+  try {
+    const dir = Gio.File.new_for_path(CONFIG_DIR)
+    if (!dir.query_exists(null)) {
+      dir.make_directory_with_parents(null)
+    }
+    const file = Gio.File.new_for_path(CONFIG_FILE)
+    const jsonStr = JSON.stringify(apps, null, 2)
+    file.replace_contents(
+      new TextEncoder().encode(jsonStr),
+      null,
+      false,
+      Gio.FileCreateFlags.REPLACE_DESTINATION,
+      null
+    )
+  } catch (e) {
+    console.error("[DockState] Error al guardar apps ancladas:", e)
+  }
+}
+
 // ── Reactive States ──────────────────────────────────────────────────────────
+export const [pinnedApps, setPinnedApps] = createState<PinnedApp[]>(loadPinnedApps())
 export const [clients, setClients] = createState<HyprlandClient[]>([])
 export const [activeWindowAddress, setActiveWindowAddress] = createState<string>("")
 export const [trashCount, setTrashCount] = createState<number>(0)
 export const [hoveredAppId, setHoveredAppId] = createState<string | null>(null)
+
+// ── Add App Modal States ──────────────────────────────────────────────────────
+export const [isAddAppModalOpen, setAddAppModalOpen] = createState<boolean>(false)
+export const [addAppSearchQuery, setAddAppSearchQuery] = createState<string>("")
+export const [addAppSelectedIndex, setAddAppSelectedIndex] = createState<number>(0)
+
+export function openAddAppModal() {
+  setAddAppSearchQuery("")
+  setAddAppSelectedIndex(0)
+  setAddAppModalOpen(true)
+}
+
+export function closeAddAppModal() {
+  setAddAppModalOpen(false)
+  setAddAppSearchQuery("")
+}
+
+export function toggleAddAppModal() {
+  if (isAddAppModalOpen.peek()) {
+    closeAddAppModal()
+  } else {
+    openAddAppModal()
+  }
+}
+
+// ── Dock Pin/Unpin Management ─────────────────────────────────────────────────
+export function pinApp(app: PinnedApp) {
+  const current = pinnedApps.peek()
+  if (current.some((p) => p.id === app.id)) return
+  const updated = [...current, app]
+  setPinnedApps(updated)
+  savePinnedApps(updated)
+}
+
+export function unpinApp(appId: string) {
+  const current = pinnedApps.peek()
+  const updated = current.filter((p) => p.id !== appId)
+  setPinnedApps(updated)
+  savePinnedApps(updated)
+}
+
+export function isAppPinned(appId: string): boolean {
+  return pinnedApps.peek().some((p) => p.id === appId)
+}
+
+export function pinRunningApp(running: RunningApp) {
+  const newPinned: PinnedApp = {
+    id: running.class.toLowerCase().replace(/[^a-z0-9_-]/g, "-") || `app-${Date.now()}`,
+    name: running.name || running.class,
+    iconFile: running.iconFile,
+    fallbackIcon: running.icon || "application-x-executable",
+    cmd: `gtk-launch ${running.class} || ${running.class}`,
+    matchClasses: [running.class.toLowerCase()],
+  }
+  pinApp(newPinned)
+}
 
 // ── Get Asset Path for an Icon ────────────────────────────────────────────────
 export function getIconAssetPath(filename: string): string {
@@ -243,6 +353,9 @@ export function getIconAssetPath(filename: string): string {
     }
   } catch {}
 
+  const candidate3 = `/mnt/Desarrollo/Lunita-Dots/themes/macOS-Theme/ags/assets/icons/${filename}`
+  if (GLib.file_test(candidate3, GLib.FileTest.EXISTS)) return candidate3
+
   return candidate1
 }
 
@@ -254,38 +367,58 @@ export function resolveAppIconInfo(appClass: string, fallbackIcon: string = "app
   const lower = appClass.toLowerCase()
   if (iconCache.has(lower)) return iconCache.get(lower)!
 
-  if (lower.includes("zen") || lower.includes("firefox") || lower.includes("chrome")) {
+  if (lower.includes("zen") || lower.includes("firefox") || lower.includes("chrome") || lower.includes("chromium") || lower.includes("brave")) {
     const res = { icon: "web-browser", iconFile: getIconAssetPath("safari.svg") }
     iconCache.set(lower, res)
     return res
   }
-  if (lower.includes("kitty") || lower.includes("terminal") || lower.includes("alacritty") || lower.includes("foot")) {
+  if (lower.includes("kitty") || lower.includes("terminal") || lower.includes("alacritty") || lower.includes("foot") || lower.includes("wezterm")) {
     const res = { icon: "utilities-terminal", iconFile: getIconAssetPath("terminal.svg") }
     iconCache.set(lower, res)
     return res
   }
-  if (lower.includes("dolphin") || lower.includes("nautilus") || lower.includes("thunar")) {
+  if (lower.includes("dolphin") || lower.includes("nautilus") || lower.includes("thunar") || lower.includes("nemo") || lower.includes("pcmanfm")) {
     const res = { icon: "system-file-manager", iconFile: getIconAssetPath("finder.svg") }
     iconCache.set(lower, res)
     return res
   }
-  if (lower.includes("code") || lower.includes("antigravity") || lower.includes("cursor")) {
+  if (lower.includes("code") || lower.includes("antigravity") || lower.includes("cursor") || lower.includes("vscodium")) {
     const res = { icon: "visual-studio-code", iconFile: getIconAssetPath("code.svg") }
     iconCache.set(lower, res)
     return res
   }
-  if (lower.includes("spotify") || lower.includes("cider") || lower.includes("music")) {
+  if (lower.includes("spotify") || lower.includes("cider") || lower.includes("music") || lower.includes("amberol") || lower.includes("rhythmbox")) {
     const res = { icon: "spotify-client", iconFile: getIconAssetPath("music.svg") }
     iconCache.set(lower, res)
     return res
   }
-  if (lower.includes("telegram") || lower.includes("discord") || lower.includes("vesktop")) {
+  if (lower.includes("telegram") || lower.includes("discord") || lower.includes("vesktop") || lower.includes("signal") || lower.includes("slack")) {
     const res = { icon: "telegram", iconFile: getIconAssetPath("messages.svg") }
     iconCache.set(lower, res)
     return res
   }
-  if (lower.includes("setting") || lower.includes("pavucontrol")) {
+  if (lower.includes("setting") || lower.includes("pavucontrol") || lower.includes("control-center") || lower.includes("systemsettings")) {
     const res = { icon: "preferences-system", iconFile: getIconAssetPath("settings.svg") }
+    iconCache.set(lower, res)
+    return res
+  }
+  if (lower.includes("thunderbird") || lower.includes("mail") || lower.includes("evolution") || lower.includes("geary")) {
+    const res = { icon: "mail-client", iconFile: getIconAssetPath("mail.svg") }
+    iconCache.set(lower, res)
+    return res
+  }
+  if (lower.includes("obsidian") || lower.includes("notepad") || lower.includes("kate") || lower.includes("gedit") || lower.includes("text-editor")) {
+    const res = { icon: "accessories-text-editor", iconFile: getIconAssetPath("notes.svg") }
+    iconCache.set(lower, res)
+    return res
+  }
+  if (lower.includes("mpv") || lower.includes("vlc") || lower.includes("celluloid") || lower.includes("totem")) {
+    const res = { icon: "video-player", iconFile: getIconAssetPath("appletv.svg") }
+    iconCache.set(lower, res)
+    return res
+  }
+  if (lower.includes("gwenview") || lower.includes("loupe") || lower.includes("eog") || lower.includes("shotwell") || lower.includes("pix")) {
+    const res = { icon: "image-viewer", iconFile: getIconAssetPath("photos.svg") }
     iconCache.set(lower, res)
     return res
   }
@@ -325,6 +458,18 @@ export function isAppRunning(pinned: PinnedApp, clientList: HyprlandClient[]): b
   )
 }
 
+export function getMatchingClients(pinned: PinnedApp): HyprlandClient[] {
+  const currentClients = clients.peek()
+  if (!pinned.matchClasses || pinned.matchClasses.length === 0) return []
+  return currentClients.filter((c: HyprlandClient) =>
+    pinned.matchClasses.some(
+      (m: string) =>
+        c.class.toLowerCase().includes(m.toLowerCase()) ||
+        c.initialClass.toLowerCase().includes(m.toLowerCase())
+    )
+  )
+}
+
 // ── Get Running Unpinned Apps ─────────────────────────────────────────────────
 export function getRunningUnpinnedApps(
   pinnedList: PinnedApp[],
@@ -334,7 +479,7 @@ export function getRunningUnpinnedApps(
   const allPinned = [...pinnedList, ...RIGHT_STACK_APPS]
 
   for (const c of clientList) {
-    if (!c.mapped || c.class === "macos-dock" || c.class === "ags") continue
+    if (!c.mapped || c.class === "macos-dock" || c.class === "ags" || c.class === "hyprlock") continue
 
     const isPinned = allPinned.some((p: PinnedApp) =>
       p.matchClasses.some(
@@ -372,23 +517,35 @@ export function getRunningUnpinnedApps(
 
 // ── App Launch & Focus Dispatch ───────────────────────────────────────────────
 export function focusOrLaunchApp(pinned: PinnedApp) {
-  const currentClients = clients.peek()
-  const matchingClient = currentClients.find((c: HyprlandClient) =>
-    pinned.matchClasses.some(
-      (m: string) =>
-        c.class.toLowerCase().includes(m.toLowerCase()) ||
-        c.initialClass.toLowerCase().includes(m.toLowerCase())
-    )
-  )
-
-  if (matchingClient) {
-    execAsync(["hyprctl", "dispatch", "focuswindow", `address:${matchingClient.address}`]).catch(() => {
+  const matching = getMatchingClients(pinned)
+  if (matching.length > 0) {
+    execAsync(["hyprctl", "dispatch", "focuswindow", `address:${matching[0].address}`]).catch(() => {
       execAsync(["bash", "-c", `${pinned.cmd} &`]).catch(() => {})
     })
   } else {
     execAsync(["bash", "-c", `${pinned.cmd} &`]).catch((e: unknown) => {
       console.error(`[Dock] Error al ejecutar ${pinned.cmd}:`, e)
     })
+  }
+}
+
+export function launchNewInstance(pinned: PinnedApp) {
+  execAsync(["bash", "-c", `${pinned.cmd} &`]).catch((e: unknown) => {
+    console.error(`[Dock] Error al lanzar nueva instancia de ${pinned.cmd}:`, e)
+  })
+}
+
+export function closeAppWindows(pinned?: PinnedApp, runningAddress?: string) {
+  if (runningAddress) {
+    execAsync(["hyprctl", "dispatch", "closewindow", `address:${runningAddress}`]).catch(() => {})
+    return
+  }
+
+  if (pinned) {
+    const matching = getMatchingClients(pinned)
+    for (const c of matching) {
+      execAsync(["hyprctl", "dispatch", "closewindow", `address:${c.address}`]).catch(() => {})
+    }
   }
 }
 
@@ -404,6 +561,16 @@ export function openDownloads() {
 
 export function openTrash() {
   execAsync(["bash", "-c", "dolphin trash:/// || nautilus trash:/// || xdg-open trash:/// &"]).catch(() => {})
+}
+
+export function emptyTrash() {
+  execAsync(["bash", "-c", "rm -rf ~/.local/share/Trash/files/* ~/.local/share/Trash/info/* 2>/dev/null || true"])
+    .then(() => {
+      updateTrashCount()
+    })
+    .catch(() => {
+      updateTrashCount()
+    })
 }
 
 // ── Trash Monitor ─────────────────────────────────────────────────────────────
@@ -424,6 +591,80 @@ export function updateTrashCount() {
   } catch {
     setTrashCount(0)
   }
+}
+
+// ── Installed Apps for Add App Modal ──────────────────────────────────────────
+let cachedInstalledApps: InstalledAppItem[] | null = null
+
+export function getInstalledApps(): InstalledAppItem[] {
+  if (cachedInstalledApps) return cachedInstalledApps
+  try {
+    const all = Gio.AppInfo.get_all()
+    cachedInstalledApps = all
+      .filter((app) => app.should_show())
+      .map((app) => {
+        const id = app.get_id() || ""
+        const name = app.get_name() || ""
+        const displayName = app.get_display_name() || name
+        const description = app.get_description() || ""
+        const executable = app.get_executable() || ""
+        const iconName = app.get_icon()?.to_string() || "application-x-executable"
+        const iconInfo = resolveAppIconInfo(executable || name, iconName)
+
+        let cmd = ""
+        if (id) {
+          const desktopId = id.endsWith(".desktop") ? id : `${id}.desktop`
+          cmd = `gtk-launch ${desktopId}`
+        } else {
+          cmd = executable
+        }
+
+        const matchClass1 = id.replace(".desktop", "").toLowerCase()
+        const matchClass2 = executable.toLowerCase()
+        const matchClass3 = name.toLowerCase()
+
+        return {
+          id: id || name.toLowerCase().replace(/\s+/g, "-"),
+          name,
+          displayName,
+          description,
+          executable,
+          iconName: iconInfo.icon,
+          iconFile: iconInfo.iconFile,
+          cmd,
+          matchClasses: Array.from(new Set([matchClass1, matchClass2, matchClass3].filter(Boolean))),
+        }
+      })
+      .sort((a, b) => a.displayName.localeCompare(b.displayName))
+    return cachedInstalledApps
+  } catch {
+    return []
+  }
+}
+
+export function getFilteredInstalledApps(query: string): InstalledAppItem[] {
+  const apps = getInstalledApps()
+  const q = query.trim().toLowerCase()
+  if (!q) return apps
+  return apps.filter(
+    (a) =>
+      a.displayName.toLowerCase().includes(q) ||
+      a.name.toLowerCase().includes(q) ||
+      a.executable.toLowerCase().includes(q) ||
+      a.description.toLowerCase().includes(q)
+  )
+}
+
+export function pinInstalledApp(item: InstalledAppItem) {
+  const pinned: PinnedApp = {
+    id: item.id,
+    name: item.displayName || item.name,
+    iconFile: item.iconFile ? item.iconFile.split("/").pop() : undefined,
+    fallbackIcon: item.iconName,
+    cmd: item.cmd,
+    matchClasses: item.matchClasses,
+  }
+  pinApp(pinned)
 }
 
 // ── Hyprland Socket2 & Clients Sync ───────────────────────────────────────────

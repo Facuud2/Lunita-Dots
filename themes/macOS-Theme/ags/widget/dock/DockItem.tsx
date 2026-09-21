@@ -9,16 +9,20 @@ import {
   hoveredAppId,
   setHoveredAppId,
   getIconAssetPath,
+  openAddAppModal,
 } from "./DockState"
+import { createDockContextMenu } from "./DockContextMenu"
 
 interface DockItemProps {
   app?: PinnedApp
   runningApp?: RunningApp
   isTrash?: boolean
   isFolder?: boolean
+  isAdd?: boolean
   trashCount?: number
   onTrashClick?: () => void
   onFolderClick?: () => void
+  onAddClick?: () => void
 }
 
 export default function DockItem({
@@ -26,14 +30,18 @@ export default function DockItem({
   runningApp,
   isTrash,
   isFolder,
+  isAdd,
   trashCount = 0,
   onTrashClick,
   onFolderClick,
+  onAddClick,
 }: DockItemProps) {
   const id = isTrash
     ? "trash"
     : isFolder
     ? "folder-downloads"
+    : isAdd
+    ? "dock-add"
     : app?.id || runningApp?.id || "dock-item"
 
   const name = isTrash
@@ -42,6 +50,8 @@ export default function DockItem({
       : "Papelera"
     : isFolder
     ? "Descargas"
+    : isAdd
+    ? "Añadir aplicación al Dock"
     : app?.name || runningApp?.name || ""
 
   let iconFile: string | undefined = undefined
@@ -51,6 +61,8 @@ export default function DockItem({
     iconFile = getIconAssetPath(trashCount > 0 ? "trash-full.svg" : "trash-empty.svg")
   } else if (isFolder) {
     iconFile = getIconAssetPath("folder.svg")
+  } else if (isAdd) {
+    iconFile = getIconAssetPath("add.svg")
   } else if (app?.iconFile) {
     iconFile = getIconAssetPath(app.iconFile)
   } else if (runningApp?.iconFile) {
@@ -60,6 +72,11 @@ export default function DockItem({
   }
 
   const handleClick = () => {
+    if (isAdd) {
+      if (onAddClick) onAddClick()
+      else openAddAppModal()
+      return
+    }
     if (isTrash) {
       if (onTrashClick) onTrashClick()
       return
@@ -78,6 +95,8 @@ export default function DockItem({
     }
   }
 
+  let popoverInstance: Gtk.Popover | null = null
+
   return (
     <button
       class="dock-item-btn"
@@ -87,6 +106,7 @@ export default function DockItem({
       tooltipText={name}
       onClicked={handleClick}
       $={(self) => {
+        // Hover motion controller
         const motion = new Gtk.EventControllerMotion()
         motion.connect("enter", () => {
           setHoveredAppId(id)
@@ -97,6 +117,27 @@ export default function DockItem({
           }
         })
         self.add_controller(motion)
+
+        // Right-click context menu gesture (except for '+' button)
+        if (!isAdd) {
+          const clickGesture = new Gtk.GestureClick()
+          clickGesture.set_button(3) // Secondary / Right-click
+          clickGesture.connect("pressed", (_gesture, _n, _x, _y) => {
+            if (popoverInstance) {
+              popoverInstance.unparent()
+              popoverInstance = null
+            }
+            popoverInstance = createDockContextMenu({
+              app,
+              runningApp,
+              isTrash,
+              isFolder,
+              parentWidget: self,
+            })
+            popoverInstance.popup()
+          })
+          self.add_controller(clickGesture)
+        }
       }}
     >
       <box orientation={Gtk.Orientation.VERTICAL} class="dock-item-container" spacing={0} halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER}>
@@ -126,7 +167,7 @@ export default function DockItem({
         </box>
 
         {/* Status Indicator Dot (glowing white dot centered underneath) */}
-        {isTrash || isFolder ? (
+        {isTrash || isFolder || isAdd ? (
           <box class="dock-status-dot empty" />
         ) : app ? (
           <box
