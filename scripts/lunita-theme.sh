@@ -171,8 +171,12 @@ cmd_apply() {
     # Enlazar Eww
     link_component "$target_dir/eww" "$HOME/.config/eww"
 
-    # Enlazar Hyprland
-    link_component "$target_dir/hypr" "$HOME/.config/hypr"
+    # Enlazar Hyprland (Carpeta maestra en core/hypr)
+    if [ -d "$DOTS_DIR/core/hypr" ]; then
+        link_component "$DOTS_DIR/core/hypr" "$HOME/.config/hypr"
+    elif [ -d "$target_dir/hypr" ]; then
+        link_component "$target_dir/hypr" "$HOME/.config/hypr"
+    fi
 
     # Enlazar Matugen
     link_component "$target_dir/matugen" "$HOME/.config/matugen"

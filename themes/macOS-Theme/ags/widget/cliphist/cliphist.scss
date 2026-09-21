@@ -1,0 +1,459 @@
+// =============================================================================
+// LUNITA-DOTS CLIPHIST MENU (macOS Sonoma / Nothing OS Aesthetic)
+// Despliegue fluido en posición del cursor con curvas Bezier elásticas
+// =============================================================================
+
+.cliphist-window {
+  background-color: transparent;
+}
+
+.cliphist-fullscreen-root {
+  background-color: rgba(0, 0, 0, 0.22);
+}
+
+// ── Contenedor Base Flotante ──────────────────────────────────────────────────
+.cliphist-panel {
+  min-width: 450px;
+  background-color: rgba(18, 18, 18, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 22px;
+  padding: 16px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 4px 14px rgba(0, 0, 0, 0.4);
+  transform-origin: center center;
+
+  // ── Animaciones de despliegue desde las 4 direcciones del cursor ───────────
+  &.cliphist-open-left-top {
+    transform-origin: top left;
+    animation: cliphist-unfold-top-left 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  &.cliphist-open-right-top {
+    transform-origin: top right;
+    animation: cliphist-unfold-top-right 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  &.cliphist-open-left-bottom {
+    transform-origin: bottom left;
+    animation: cliphist-unfold-bottom-left 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  &.cliphist-open-right-bottom {
+    transform-origin: bottom right;
+    animation: cliphist-unfold-bottom-right 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  &.cliphist-closing {
+    animation: cliphist-unfold-close 150ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+}
+
+// ── Keyframes estilo macOS (Físicas elásticas orgánicas) ─────────────────────
+@keyframes cliphist-unfold-top-left {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translate(-8px, -8px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.02) translate(1px, 1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0) translate(0, 0);
+  }
+}
+
+@keyframes cliphist-unfold-top-right {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translate(8px, -8px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.02) translate(-1px, 1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0) translate(0, 0);
+  }
+}
+
+@keyframes cliphist-unfold-bottom-left {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translate(-8px, 8px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.02) translate(1px, -1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0) translate(0, 0);
+  }
+}
+
+@keyframes cliphist-unfold-bottom-right {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translate(8px, 8px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.02) translate(-1px, -1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.0) translate(0, 0);
+  }
+}
+
+@keyframes cliphist-unfold-close {
+  0% {
+    opacity: 1;
+    transform: scale(1.0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92) translateY(-4px);
+  }
+}
+
+// ── Cabecera ─────────────────────────────────────────────────────────────────
+.cliphist-header {
+  margin-bottom: 12px;
+
+  .cliphist-title-pill {
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 4px 12px;
+
+    .cliphist-pill-icon {
+      font-family: $font-icons;
+      color: var(--accent-red);
+      font-size: 15px;
+    }
+
+    .cliphist-pill-title {
+      font-family: $font-dots;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+  }
+
+  .cliphist-info-badge {
+    font-family: $font-ui;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 3px 8px;
+  }
+
+  .cliphist-clear-btn,
+  .cliphist-close-btn {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 50%;
+    min-width: 28px;
+    min-height: 28px;
+    padding: 0;
+    margin: 0;
+    transition: all 160ms ease;
+
+    .cliphist-btn-icon {
+      font-family: $font-icons;
+      font-size: 14px;
+      color: var(--text-secondary);
+      padding: 0;
+      margin: 0;
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
+
+      .cliphist-btn-icon {
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  .cliphist-clear-btn:hover {
+    background-color: rgba(215, 25, 33, 0.25);
+    border-color: rgba(215, 25, 33, 0.4);
+
+    .cliphist-btn-icon {
+      color: var(--accent-red);
+    }
+  }
+}
+
+// ── Barra de Búsqueda ────────────────────────────────────────────────────────
+.cliphist-search-wrapper {
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 4px 12px;
+  outline: none;
+  box-shadow: none;
+
+  &:hover,
+  &:focus,
+  &:focus-within {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(0, 0, 0, 0.35);
+    outline: none;
+    box-shadow: none;
+  }
+
+  .cliphist-search-icon {
+    font-family: $font-icons;
+    font-size: 16px;
+    color: var(--text-secondary);
+  }
+
+  .cliphist-search-entry,
+  entry {
+    font-family: $font-ui;
+    font-size: 13px;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    padding: 4px 0;
+
+    &:hover,
+    &:focus,
+    &:focus-within {
+      background: transparent;
+      border: none;
+      outline: none;
+      box-shadow: none;
+    }
+
+    text {
+      background: transparent;
+      border: none;
+      outline: none;
+      box-shadow: none;
+
+      &:hover,
+      &:focus {
+        border: none;
+        outline: none;
+        box-shadow: none;
+      }
+    }
+  }
+
+  .cliphist-search-clear {
+    opacity: 0;
+    min-width: 20px;
+    min-height: 20px;
+    border-radius: 50%;
+    transition: opacity 140ms ease;
+
+    label {
+      font-family: $font-icons;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    &.visible {
+      opacity: 1;
+    }
+
+    &:hover label {
+      color: var(--text-primary);
+    }
+  }
+}
+
+// ── Separador ────────────────────────────────────────────────────────────────
+.cliphist-separator {
+  min-height: 1px;
+  background-color: rgba(255, 255, 255, 0.06);
+  margin: 10px 0;
+}
+
+// ── Área de Desplazamiento y Filas ───────────────────────────────────────────
+.cliphist-scroll-area {
+  min-height: 320px;
+}
+
+.cliphist-list {
+  padding: 2px 4px 2px 0;
+}
+
+.cliphist-row {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 6px 10px;
+  transition: all 140ms ease;
+
+  &.selected {
+    background-color: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .cliphist-row-main {
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .cliphist-type-icon {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    margin: 0;
+    border-radius: 10px;
+
+    label {
+      font-family: $font-icons;
+      font-size: 16px;
+      padding: 0;
+      margin: 0;
+    }
+
+    &.badge-image {
+      background-color: rgba(186, 104, 200, 0.18);
+      label { color: #CE93D8; }
+    }
+
+    &.badge-code {
+      background-color: rgba(100, 181, 246, 0.18);
+      label { color: #90CAF9; }
+    }
+
+    &.badge-link {
+      background-color: rgba(129, 199, 132, 0.18);
+      label { color: #A5D6A7; }
+    }
+
+    &.badge-text {
+      background-color: rgba(255, 255, 255, 0.07);
+      label { color: var(--text-primary); }
+    }
+  }
+
+  .cliphist-tag {
+    font-family: $font-dots;
+    font-size: 9px;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+
+    &.badge-image { color: #CE93D8; }
+    &.badge-code { color: #90CAF9; }
+    &.badge-link { color: #A5D6A7; }
+    &.badge-text { color: var(--text-secondary); }
+  }
+
+  .cliphist-time-label {
+    font-family: $font-ui;
+    font-size: 10px;
+    color: var(--text-faint);
+    letter-spacing: 0.2px;
+  }
+
+  .cliphist-item-text {
+    font-family: $font-ui;
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+
+  .cliphist-row-actions {
+    .cliphist-action-btn {
+      min-width: 28px;
+      min-height: 28px;
+      padding: 0;
+      margin: 0;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 140ms ease;
+
+      label {
+        font-family: $font-icons;
+        font-size: 15px;
+        color: var(--text-faint);
+        padding: 0;
+        margin: 0;
+      }
+
+      &.cliphist-copy-btn:hover {
+        background-color: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.25);
+
+        label {
+          color: var(--text-primary);
+        }
+      }
+
+      &.cliphist-del-btn:hover {
+        background-color: rgba(215, 25, 33, 0.22);
+        border-color: rgba(215, 25, 33, 0.4);
+
+        label {
+          color: var(--accent-red);
+        }
+      }
+    }
+  }
+}
+
+// ── Estado Vacío ─────────────────────────────────────────────────────────────
+.cliphist-empty-box {
+  padding: 48px 16px;
+
+  .cliphist-empty-icon {
+    font-family: $font-icons;
+    font-size: 38px;
+    color: var(--text-faint);
+  }
+
+  .cliphist-empty-text {
+    font-family: $font-ui;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .cliphist-empty-sub {
+    font-family: $font-ui;
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+}
+
+// ── Pie de Contenedor (Atajos) ───────────────────────────────────────────────
+.cliphist-footer {
+  margin-top: 10px;
+  padding: 6px 4px 2px 4px;
+
+  .cliphist-key-pill {
+    font-family: $font-dots;
+    font-size: 9px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    padding: 2px 5px;
+    color: var(--text-secondary);
+  }
+
+  .cliphist-key-label {
+    font-family: $font-ui;
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+}
