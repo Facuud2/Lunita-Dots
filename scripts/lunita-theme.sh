@@ -127,6 +127,15 @@ link_component() {
     local dest="$2"
 
     if [ ! -e "$src" ]; then
+        # Si el componente no existe en el tema pero el enlace actual apunta a themes/, desenlazarlo
+        if [ -L "$dest" ]; then
+            local current_target
+            current_target="$(readlink -f "$dest" 2>/dev/null || true)"
+            if [[ "$current_target" == "$THEMES_DIR"* ]]; then
+                rm -f "$dest"
+                info "Componente no presente en '$target': desenlazado $dest"
+            fi
+        fi
         return 0
     fi
 
@@ -171,11 +180,11 @@ cmd_apply() {
     # Enlazar Eww
     link_component "$target_dir/eww" "$HOME/.config/eww"
 
-    # Enlazar Hyprland (Carpeta maestra en core/hypr)
-    if [ -d "$DOTS_DIR/core/hypr" ]; then
-        link_component "$DOTS_DIR/core/hypr" "$HOME/.config/hypr"
-    elif [ -d "$target_dir/hypr" ]; then
+    # Enlazar Hyprland (Tema específico o carpeta maestra en core/hypr)
+    if [ -d "$target_dir/hypr" ]; then
         link_component "$target_dir/hypr" "$HOME/.config/hypr"
+    elif [ -d "$DOTS_DIR/core/hypr" ]; then
+        link_component "$DOTS_DIR/core/hypr" "$HOME/.config/hypr"
     fi
 
     # Enlazar Matugen
@@ -195,41 +204,36 @@ cmd_apply() {
 
     # Enlazar Dolphin
     link_component "$target_dir/dolphin/dolphinrc" "$HOME/.config/dolphinrc"
-    if [ -f "$target_dir/dolphin/user-places.xbel" ]; then
-        link_component "$target_dir/dolphin/user-places.xbel" "$HOME/.local/share/user-places.xbel"
-    fi
+    link_component "$target_dir/dolphin/user-places.xbel" "$HOME/.local/share/user-places.xbel"
 
     # Enlazar Qt6ct
-    if [ -f "$target_dir/qt6ct/qt6ct.conf" ]; then
-        link_component "$target_dir/qt6ct/qt6ct.conf" "$HOME/.config/qt6ct/qt6ct.conf"
-    fi
+    link_component "$target_dir/qt6ct/qt6ct.conf" "$HOME/.config/qt6ct/qt6ct.conf"
 
     # Enlazar ajustes de cursor y GTK
     link_component "$target_dir/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
-    if [ -f "$target_dir/gtk-3.0/bookmarks" ]; then
-        link_component "$target_dir/gtk-3.0/bookmarks" "$HOME/.config/gtk-3.0/bookmarks"
-    fi
+    link_component "$target_dir/gtk-3.0/bookmarks" "$HOME/.config/gtk-3.0/bookmarks"
     link_component "$target_dir/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
     link_component "$target_dir/icons/default/index.theme" "$HOME/.icons/default/index.theme"
     link_component "$target_dir/xresources/.Xresources" "$HOME/.Xresources"
 
     # Enlazar Zsh prompt
-    if [ -d "$HOME/.oh-my-zsh/custom/themes" ] && [ -f "$target_dir/zsh/pills.zsh-theme" ]; then
-        ln -sf "$target_dir/zsh/pills.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme"
-        success "Prompt Zsh enlazado en ~/.oh-my-zsh/custom/themes/pills.zsh-theme"
+    if [ -d "$HOME/.oh-my-zsh/custom/themes" ]; then
+        if [ -f "$target_dir/zsh/pills.zsh-theme" ]; then
+            ln -sf "$target_dir/zsh/pills.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme"
+            success "Prompt Zsh enlazado en ~/.oh-my-zsh/custom/themes/pills.zsh-theme"
+        elif [ -L "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme" ]; then
+            rm -f "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme"
+        fi
     fi
 
     # Enlazar wrapper de Dolphin
     if [ -f "$DOTS_DIR/scripts/dolphin" ]; then
         mkdir -p "$HOME/.local/bin"
         ln -sf "$DOTS_DIR/scripts/dolphin" "$HOME/.local/bin/dolphin"
-        success "Wrapper Dolphin enlazado en ~/.local/bin/dolphin"
     fi
 
     # Enlazar Cliphist
-    if [ -d "$target_dir/cliphist" ]; then
-        link_component "$target_dir/cliphist" "$HOME/.config/cliphist"
-    fi
+    link_component "$target_dir/cliphist" "$HOME/.config/cliphist"
 
     # Enlazar servicios systemd de usuario
     if [ -d "$target_dir/systemd/user" ]; then
@@ -259,13 +263,24 @@ cmd_apply() {
         ln -sf "$DOTS_DIR/core/lunita-theme-selector.svg" "$HOME/.local/share/icons/hicolor/scalable/apps/lunita-theme-selector.svg"
     fi
 
-    # 4. Recarga suave de componentes si están en ejecución
-    info "Recargando entorno visual..."
+    # 4. Sincronización y recarga/detención de componentes en ejecución
+    info "Sincronizando componentes visuales..."
 
-    # Recargar Eww
-    if pgrep -x eww > /dev/null; then
-        eww reload 2>/dev/null || true
-        success "Eww recargado."
+    # Gestión de Eww
+    if [ -d "$target_dir/eww" ]; then
+        if pgrep -x eww > /dev/null; then
+            eww reload 2>/dev/null || true
+            success "Eww recargado."
+        elif [ -x "$target_dir/eww/scripts/launch.sh" ]; then
+            "$target_dir/eww/scripts/launch.sh" &
+            success "Eww iniciado."
+        fi
+    else
+        if pgrep -x eww > /dev/null; then
+            eww kill 2>/dev/null || true
+            pkill -x eww 2>/dev/null || true
+            info "Eww cerrado (no configurado en '$target')."
+        fi
     fi
 
     # Recargar Hyprland y aplicar cursor
@@ -295,20 +310,31 @@ cmd_apply() {
         success "Terminales Kitty recargadas."
     fi
 
-    # Recargar AGS
-    if pgrep -x ags > /dev/null; then
-        ags quit 2>/dev/null || true
-        sleep 0.3
+    # Gestión de AGS
+    if [ -d "$target_dir/ags" ]; then
+        if pgrep -x ags > /dev/null; then
+            ags quit 2>/dev/null || true
+            sleep 0.3
+        fi
         hyprctl dispatch 'hl.dsp.exec_cmd("env PATH=$HOME/.local/bin:$PATH ags run")' >/dev/null 2>&1 || true
-        success "AGS reiniciado con los nuevos componentes."
+        success "AGS iniciado/reiniciado con los nuevos componentes."
+    else
+        if pgrep -x ags > /dev/null; then
+            ags quit 2>/dev/null || true
+            sleep 0.2
+            pkill -x ags 2>/dev/null || true
+            info "AGS detenido (no configurado en '$target')."
+        fi
     fi
 
-    # Disparar Matugen con el fondo actual si existe
-    local curr_wall
-    curr_wall="$(awww query 2>/dev/null | awk -F 'image: ' '{print $2}' | head -n 1)"
-    if [ -n "$curr_wall" ] && [ -f "$curr_wall" ] && command -v matugen &>/dev/null; then
-        info "Sincronizando colores Matugen con el fondo actual..."
-        matugen image "$curr_wall" --source-color-index 0 >/dev/null 2>&1 || true
+    # Disparar Matugen con el fondo actual solo si el tema define matugen
+    if [ -d "$target_dir/matugen" ]; then
+        local curr_wall
+        curr_wall="$(awww query 2>/dev/null | awk -F 'image: ' '{print $2}' | head -n 1)"
+        if [ -n "$curr_wall" ] && [ -f "$curr_wall" ] && command -v matugen &>/dev/null; then
+            info "Sincronizando colores Matugen con el fondo actual..."
+            matugen image "$curr_wall" --source-color-index 0 >/dev/null 2>&1 || true
+        fi
     fi
 
     echo ""
