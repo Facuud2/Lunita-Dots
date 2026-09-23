@@ -7,6 +7,7 @@ Item {
     id: root
 
     property var dockState: null
+    property var panelWindow: null
     property var app: null
     property var runningApp: null
     property bool isTrash: false
@@ -176,9 +177,14 @@ Item {
 
             if (mouse.button === Qt.RightButton) {
                 // Map center of the icon to the screen window
+                let screenW = (panelWindow && panelWindow.screen) ? panelWindow.screen.width : 1920
+                let winW = panelWindow ? panelWindow.width : 540
+                let dockScreenX = (screenW - winW) / 2
                 let mapped = root.mapToItem(null, root.width / 2, root.height / 2)
+                let globalX = dockScreenX + mapped.x
+
                 if (dockState) {
-                    dockState.openContextMenu(root.app, root.runningApp, root.isTrash, root.isFolder, mapped.x, mapped.y)
+                    dockState.openContextMenu(root.app, root.runningApp, root.isTrash, root.isFolder, globalX, mapped.y)
                 }
             } else {
                 if (dockState) dockState.closeContextMenu()

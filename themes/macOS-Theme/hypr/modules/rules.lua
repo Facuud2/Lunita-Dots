@@ -57,7 +57,7 @@ function M.setup()
     -- macOS Dock Blur & Frosted Glass Layer Rule
     hl.layer_rule({
         name  = "macos-dock-blur",
-        match = { namespace = "^(macos-dock|gtk4-layer-shell)$" },
+        match = { namespace = "^(macos-dock|dock|quickshell|gtk4-layer-shell)$" },
         blur  = true,
     })
 

@@ -6,6 +6,7 @@ import Quickshell
 Item {
     id: root
     required property var dockState
+    property var panelWindow: null
 
     implicitWidth: platterBg.width
     implicitHeight: platterBg.height
@@ -19,27 +20,27 @@ Item {
         width: contentRow.implicitWidth + 20
         radius: 18
 
-        // Translucent liquid glass material
-        color: "#24ffffff"
-        border.color: "#44ffffff"
+        // Multi-layer frosted liquid glass material
+        color: "#30ffffff"
+        border.color: "#52ffffff"
         border.width: 1
 
         layer.enabled: true
         layer.effect: DropShadow {
-            color: "#66000000"
-            radius: 24
-            samples: 28
+            color: "#59000000"
+            radius: 20
+            samples: 24
             horizontalOffset: 0
-            verticalOffset: 10
+            verticalOffset: 6
         }
 
-        // Inner specular highlight
+        // Inner specular highlight & glass sheen
         Rectangle {
             anchors.fill: parent
             anchors.margins: 1
             radius: 17
-            color: "transparent"
-            border.color: "#33ffffff"
+            color: "#0dffffff"
+            border.color: "#38ffffff"
             border.width: 1
         }
 
@@ -54,6 +55,7 @@ Item {
                 model: dockState.pinnedList
                 DockItem {
                     dockState: root.dockState
+                    panelWindow: root.panelWindow
                     app: modelData
                     itemIndex: index
                 }
@@ -64,6 +66,7 @@ Item {
                 model: dockState.runningList
                 DockItem {
                     dockState: root.dockState
+                    panelWindow: root.panelWindow
                     runningApp: modelData
                 }
             }
@@ -71,6 +74,7 @@ Item {
             // 3. Add App (+) Button
             DockItem {
                 dockState: root.dockState
+                panelWindow: root.panelWindow
                 isAdd: true
             }
 
@@ -92,6 +96,7 @@ Item {
                 model: dockState.rightStackApps
                 DockItem {
                     dockState: root.dockState
+                    panelWindow: root.panelWindow
                     app: modelData
                 }
             }
@@ -99,12 +104,14 @@ Item {
             // 6. Downloads Folder
             DockItem {
                 dockState: root.dockState
+                panelWindow: root.panelWindow
                 isFolder: true
             }
 
             // 7. Trash Can
             DockItem {
                 dockState: root.dockState
+                panelWindow: root.panelWindow
                 isTrash: true
             }
         }

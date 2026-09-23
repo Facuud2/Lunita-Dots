@@ -1,13 +1,12 @@
 [CompactMode]
-FontFamily=JetBrainsMono Nerd Font
 FontSize=10
-IconSize=22
-PreviewSize=22
+IconSize=16
+PreviewSize=48
 
 [ContextMenu]
 ShowAddToPlaces=true
 ShowCopyLocation=true
-ShowCopyMoveMenu=false
+ShowCopyMoveMenu=true
 ShowCopyToOtherSplitView=true
 ShowDuplicateHere=true
 ShowMoveToOtherSplitView=true
@@ -21,50 +20,48 @@ ShowViewMode=true
 [DetailsMode]
 ColumnPositions=0,1,2,3,4,5,6,7,8
 ExpandableFolders=true
-FontFamily=JetBrainsMono Nerd Font
 FontSize=10
 HighlightEntireRow=true
-IconSize=48
+IconSize=16
 LeftPadding=16
 PreviewSize=48
 RightPadding=16
 UseSystemFont=true
 
-
 [General]
 AutoExpandFolders=false
-BrowseThroughArchives=true
-ConfirmClosingMultipleTabs=false
+BrowseThroughArchives=false
+ConfirmClosingMultipleTabs=true
 ConfirmClosingTerminalRunningProgram=true
 DoubleClickViewAction=edit_select_all
 EditableUrl=false
 FilterBar=false
 GlobalViewProps=true
 LockPanels=true
-ModifiedStartupSettings=true
-OpenExternallyCalledFolderInNewTab=true
+ModifiedStartupSettings=false
+OpenExternallyCalledFolderInNewTab=false
 OpenNewTabAfterLastTab=false
 RememberOpenedTabs=true
 RenameInline=true
 ShowCloseButtonOnTabs=true
-ShowFullPath=true
-ShowFullPathInTitlebar=true
+ShowFullPath=false
+ShowFullPathInTitlebar=false
 ShowPasteBarAfterCopying=true
 ShowSelectionToggle=true
 ShowStatusBar=Small
-ShowToolTips=true
+ShowToolTips=false
 ShowZoomSlider=false
 SortingChoice=0
 SplitView=false
 TabStyle=AutoSize
 UrlCompletionMode=KCompletion::CompletionPopupAuto
 Version=202
+ViewPropsTimestamp=2026,9,22,21,30,35.687
 
 [IconsMode]
-FontFamily=JetBrainsMono Nerd Font
 FontSize=10
-IconSize=48
-MaximumTextLines=2
+IconSize=32
+MaximumTextLines=3
 PreviewSize=64
 TextWidthIndex=1
 UseSystemFont=true
@@ -81,5 +78,4 @@ IconSize=32
 
 [PreviewSettings]
 MaximumSize=0
-Plugins=appimagethumbnail,audiothumbnail,blenderthumbnail,comicbookthumbnail,cursorthumbnail,directorythumbnail,djvuthumbnail,dvrthumbnail,ebookthumbnail,exrthumbnail,ffmpegthumbs,fontthumbnail,imagethumbnail,jpegthumbnail,kraimagethumbnail,opendocumentthumbnail,svgthumbnail,textthumbnail,videothumbnail,windowsexethumbnail,windowsimagethumbnail
-
+Plugins=appimagethumbnail,blenderthumbnail,cursorthumbnail,mobithumbnail,audiothumbnail,textthumbnail,ffmpegthumbs,djvuthumbnail,gsthumbnail,rawthumbnail,directorythumbnail,kraorathumbnail,opendocumentthumbnail,windowsexethumbnail,glycin-heif,glycin-image-rs,glycin-jxl,glycin-svg,imagethumbnail,windowsimagethumbnail,exrthumbnail,jpegthumbnail,svgthumbnail,comicbookthumbnail,ebookthumbnail

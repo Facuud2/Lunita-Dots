@@ -23,27 +23,24 @@ Scope {
                 id: dockWindow
                 screen: screenScope.modelData
                 color: "transparent"
-                implicitHeight: 74
+                implicitWidth: platter.implicitWidth
+                implicitHeight: 68
 
                 anchors {
                     bottom: true
-                    left: true
-                    right: true
-                }
-
-                mask: Region {
-                    item: platter
                 }
 
                 WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.namespace: "macos-dock"
                 WlrLayershell.exclusiveZone: 62
 
                 DockPlatter {
                     id: platter
                     dockState: globalDockState
+                    panelWindow: dockWindow
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 4
+                    anchors.bottomMargin: 2
                 }
             }
 
@@ -62,6 +59,8 @@ Scope {
                 }
 
                 WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.namespace: "macos-dock-overlay"
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
                 WlrLayershell.keyboardFocus: globalDockState.addModalVisible
                     ? WlrKeyboardFocus.Exclusive
                     : WlrKeyboardFocus.OnDemand

@@ -1,35 +1,35 @@
 -- Generated automatically by matugen for Neovim
 local colors = {
-    background             = "#1a1111",
-    background_alt         = "#271d1d",
-    surface                = "#322827",
-    surface_container      = "#271d1d",
-    surface_container_low  = "#231919",
-    surface_container_high = "#322827",
-    foreground             = "#f1dedd",
-    foreground_alt         = "#d8c2c0",
+    background             = "#1a1112",
+    background_alt         = "#271d1e",
+    surface                = "#322828",
+    surface_container      = "#271d1e",
+    surface_container_low  = "#22191a",
+    surface_container_high = "#322828",
+    foreground             = "#f0dede",
+    foreground_alt         = "#d7c1c2",
 
-    primary                = "#ffb3af",
-    on_primary             = "#571d1d",
-    primary_container      = "#733331",
-    on_primary_container   = "#ffdad7",
+    primary                = "#ffb2b7",
+    on_primary             = "#561d24",
+    primary_container      = "#723339",
+    on_primary_container   = "#ffdadb",
 
-    secondary              = "#e7bdba",
-    on_secondary           = "#442928",
-    secondary_container    = "#5d3f3d",
-    on_secondary_container = "#ffdad7",
+    secondary              = "#e6bdbe",
+    on_secondary           = "#44292b",
+    secondary_container    = "#5c3f41",
+    on_secondary_container = "#ffdadb",
 
-    tertiary               = "#e2c28c",
-    on_tertiary            = "#402d05",
-    tertiary_container     = "#594319",
-    on_tertiary_container  = "#ffdea8",
+    tertiary               = "#e7c08e",
+    on_tertiary            = "#432c06",
+    tertiary_container     = "#5c421a",
+    on_tertiary_container  = "#ffddb3",
 
     error                  = "#ffb4ab",
     on_error               = "#690005",
     error_container        = "#93000a",
 
-    outline                = "#a08c8b",
-    outline_variant        = "#534342",
+    outline                = "#9f8c8d",
+    outline_variant        = "#524344",
 }
 
 return colors

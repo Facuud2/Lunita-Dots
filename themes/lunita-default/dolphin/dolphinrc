@@ -1,5 +1,4 @@
 [CompactMode]
-FontFamily=JetBrainsMono Nerd Font
 FontSize=10
 IconSize=22
 PreviewSize=22
@@ -21,7 +20,6 @@ ShowViewMode=true
 [DetailsMode]
 ColumnPositions=0,1,2,3,4,5,6,7,8
 ExpandableFolders=true
-FontFamily=JetBrainsMono Nerd Font
 FontSize=10
 HighlightEntireRow=true
 IconSize=48
@@ -29,7 +27,6 @@ LeftPadding=16
 PreviewSize=48
 RightPadding=16
 UseSystemFont=true
-
 
 [General]
 AutoExpandFolders=false
@@ -59,13 +56,13 @@ SplitView=false
 TabStyle=AutoSize
 UrlCompletionMode=KCompletion::CompletionPopupAuto
 Version=202
+ViewPropsTimestamp=2026,9,22,21,26,32.287
 
 [IconsMode]
-FontFamily=JetBrainsMono Nerd Font
 FontSize=10
 IconSize=48
 MaximumTextLines=2
-PreviewSize=64
+PreviewSize=112
 TextWidthIndex=1
 UseSystemFont=true
 
@@ -81,5 +78,4 @@ IconSize=32
 
 [PreviewSettings]
 MaximumSize=0
-Plugins=appimagethumbnail,audiothumbnail,blenderthumbnail,comicbookthumbnail,cursorthumbnail,directorythumbnail,djvuthumbnail,dvrthumbnail,ebookthumbnail,exrthumbnail,ffmpegthumbs,fontthumbnail,imagethumbnail,jpegthumbnail,kraimagethumbnail,opendocumentthumbnail,svgthumbnail,textthumbnail,videothumbnail,windowsexethumbnail,windowsimagethumbnail
-
+Plugins=appimagethumbnail,audiothumbnail,blenderthumbnail,comicbookthumbnail,cursorthumbnail,directorythumbnail,djvuthumbnail,ebookthumbnail,exrthumbnail,ffmpegthumbs,imagethumbnail,jpegthumbnail,kraorathumbnail,mobithumbnail,opendocumentthumbnail,rawthumbnail,svgthumbnail,textthumbnail,windowsexethumbnail,windowsimagethumbnail,gsthumbnail

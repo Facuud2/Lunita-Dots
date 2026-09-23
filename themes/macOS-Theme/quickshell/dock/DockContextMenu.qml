@@ -24,22 +24,22 @@ Item {
         width: 210
         height: menuLayout.implicitHeight + 16
         radius: 14
-        color: "#ea1c1e26"
-        border.color: "#38ffffff"
+        color: "#eb181a24"
+        border.color: "#47ffffff"
         border.width: 1
 
-        // Position clamped right above the clicked icon at the bottom of the screen
+        // Position clamped right on top of the dock and clicked icon
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 74
+        anchors.bottomMargin: 72
         x: dockState ? Math.max(12, Math.min(parent.width - width - 12, dockState.contextMenuX - width / 2)) : 12
 
         layer.enabled: true
         layer.effect: DropShadow {
             color: "#80000000"
-            radius: 22
-            samples: 25
+            radius: 18
+            samples: 22
             horizontalOffset: 0
-            verticalOffset: 8
+            verticalOffset: 6
         }
 
         // Smooth fade / pop animation

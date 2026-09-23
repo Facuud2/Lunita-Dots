@@ -364,11 +364,60 @@ Item {
         }
     }
 
+    // ── Ignored Background Daemons & Applets ──
+    readonly property var ignoredClasses: [
+        "macos-dock",
+        "ags",
+        "quickshell",
+        "waybar",
+        "eww",
+        "hyprlock",
+        "blueman-applet",
+        "blueman-tray",
+        "nm-applet",
+        "xembedsniproxy",
+        "pasystray",
+        "awww-daemon",
+        "swaybg",
+        "hyprpaper",
+        "hyprpolkitagent",
+        "polkit-gnome-authentication-agent-1",
+        "polkit-kde-authentication-agent-1",
+        "org.kde.polkit-kde-authentication-agent-1",
+        "polkit-agent",
+        "gcr-prompter",
+        "pinentry-qt",
+        "pinentry-gtk-2",
+        "pinentry-gnome3",
+        "flameshot"
+    ]
+
+    function isClientIgnored(c) {
+        if (!c || !c.mapped || c.hidden) return true
+        if (c.size && (c.size[0] <= 1 || c.size[1] <= 1)) return true
+        let cls = (c.class || "").toLowerCase()
+        let icls = (c.initialClass || "").toLowerCase()
+
+        for (let i = 0; i < root.ignoredClasses.length; i++) {
+            let ign = root.ignoredClasses[i].toLowerCase()
+            if (cls === ign || icls === ign) return true
+        }
+
+        if (cls.endsWith("-applet") || icls.endsWith("-applet") ||
+            cls.endsWith("-tray") || icls.endsWith("-tray") ||
+            cls.endsWith("-daemon") || icls.endsWith("-daemon") ||
+            cls.endsWith("applet") || icls.endsWith("applet")) {
+            return true
+        }
+
+        return false
+    }
+
     function isAppRunning(pinned) {
-        if (!pinned.matchClasses || pinned.matchClasses.length === 0) return false
+        if (!pinned || !pinned.matchClasses || pinned.matchClasses.length === 0) return false
         for (let i = 0; i < root.hyprClients.length; i++) {
             let c = root.hyprClients[i]
-            if (!c.mapped || c.class === "macos-dock" || c.class === "ags") continue
+            if (root.isClientIgnored(c)) continue
             let cls = (c.class || "").toLowerCase()
             let icls = (c.initialClass || "").toLowerCase()
             for (let j = 0; j < pinned.matchClasses.length; j++) {
@@ -384,7 +433,7 @@ Item {
         if (!pinned || !pinned.matchClasses || pinned.matchClasses.length === 0) return res
         for (let i = 0; i < root.hyprClients.length; i++) {
             let c = root.hyprClients[i]
-            if (!c.mapped || c.class === "macos-dock" || c.class === "ags") continue
+            if (root.isClientIgnored(c)) continue
             let cls = (c.class || "").toLowerCase()
             let icls = (c.initialClass || "").toLowerCase()
             for (let j = 0; j < pinned.matchClasses.length; j++) {
@@ -405,7 +454,7 @@ Item {
 
         for (let i = 0; i < clientList.length; i++) {
             let c = clientList[i]
-            if (!c.mapped || c.class === "macos-dock" || c.class === "ags" || c.class === "hyprlock") continue
+            if (root.isClientIgnored(c)) continue
 
             let cls = (c.class || "").toLowerCase()
             let icls = (c.initialClass || "").toLowerCase()
@@ -444,17 +493,46 @@ Item {
     }
 
     // ── Window & Action Dispatch ──
-    function focusOrLaunch(pinned) {
-        let matching = root.getMatchingClients(pinned)
-        if (matching.length > 0) {
-            Quickshell.execDetached(["hyprctl", "dispatch", "focuswindow", "address:" + matching[0].address])
-        } else {
-            Quickshell.execDetached(["bash", "-c", pinned.cmd + " &"])
+    function focusClient(c) {
+        if (!c) return
+        let wsCmd = ""
+        if (c.workspace) {
+            if (typeof c.workspace.id === "number" && c.workspace.id > 0) {
+                wsCmd = "hyprctl dispatch 'hl.dsp.focus({ workspace = " + c.workspace.id + " })' 2>/dev/null || hyprctl dispatch workspace " + c.workspace.id + " 2>/dev/null; "
+            } else if (c.workspace.name) {
+                wsCmd = "hyprctl dispatch 'hl.dsp.focus({ workspace = \"" + c.workspace.name + "\" })' 2>/dev/null || hyprctl dispatch workspace name:" + c.workspace.name + " 2>/dev/null; "
+            }
         }
+        let addr = c.address || ""
+        let focusCmd = wsCmd + "hyprctl dispatch 'hl.dsp.focus({ window = \"address:" + addr + "\" })' 2>/dev/null || hyprctl dispatch focuswindow address:" + addr
+        Quickshell.execDetached(["bash", "-c", focusCmd])
     }
 
     function focusAddress(address) {
-        Quickshell.execDetached(["hyprctl", "dispatch", "focuswindow", "address:" + address])
+        if (!address) return
+        let found = null
+        for (let i = 0; i < root.hyprClients.length; i++) {
+            if (root.hyprClients[i].address === address) {
+                found = root.hyprClients[i]
+                break
+            }
+        }
+        if (found) {
+            root.focusClient(found)
+        } else {
+            let cmd = "hyprctl dispatch 'hl.dsp.focus({ window = \"address:" + address + "\" })' 2>/dev/null || hyprctl dispatch focuswindow address:" + address
+            Quickshell.execDetached(["bash", "-c", cmd])
+        }
+    }
+
+    function focusOrLaunch(pinned) {
+        if (!pinned) return
+        let matching = root.getMatchingClients(pinned)
+        if (matching.length > 0) {
+            root.focusClient(matching[0])
+        } else {
+            Quickshell.execDetached(["bash", "-c", pinned.cmd + " &"])
+        }
     }
 
     function launchNew(cmd) {
@@ -463,13 +541,16 @@ Item {
 
     function closeApp(pinned, runningAddress) {
         if (runningAddress) {
-            Quickshell.execDetached(["hyprctl", "dispatch", "closewindow", "address:" + runningAddress])
+            let cmd = "hyprctl dispatch 'hl.dsp.window.close({ address = \"" + runningAddress + "\" })' 2>/dev/null || hyprctl dispatch closewindow address:" + runningAddress
+            Quickshell.execDetached(["bash", "-c", cmd])
             return
         }
         if (pinned) {
             let matching = root.getMatchingClients(pinned)
             for (let i = 0; i < matching.length; i++) {
-                Quickshell.execDetached(["hyprctl", "dispatch", "closewindow", "address:" + matching[i].address])
+                let addr = matching[i].address
+                let cmd = "hyprctl dispatch 'hl.dsp.window.close({ address = \"" + addr + "\" })' 2>/dev/null || hyprctl dispatch closewindow address:" + addr
+                Quickshell.execDetached(["bash", "-c", cmd])
             }
         }
     }
