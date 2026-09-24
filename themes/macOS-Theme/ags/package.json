@@ -1,0 +1,12 @@
+{
+  "name": "macos-theme-ags",
+  "version": "1.0.0",
+  "dependencies": {
+    "ags": "*",
+    "gnim": "*"
+  },
+  "prettier": {
+    "semi": false,
+    "tabWidth": 2
+  }
+}

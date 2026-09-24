@@ -199,12 +199,25 @@ cmd_apply() {
     # Enlazar Wlogout
     link_component "$target_dir/wlogout" "$HOME/.config/wlogout"
 
-    # Enlazar HyprQuickPaper en Quickshell
-    link_component "$target_dir/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
+    # Enlazar Quickshell (dock y hyprquickpaper)
+    if [ -d "$target_dir/quickshell/dock" ]; then
+        link_component "$target_dir/quickshell/dock" "$HOME/.config/quickshell/dock"
+    elif [ -L "$HOME/.config/quickshell/dock" ]; then
+        rm -f "$HOME/.config/quickshell/dock"
+    fi
+    if [ -d "$target_dir/quickshell/hyprquickpaper" ]; then
+        link_component "$target_dir/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
+    elif [ -L "$HOME/.config/quickshell/hyprquickpaper" ]; then
+        rm -f "$HOME/.config/quickshell/hyprquickpaper"
+    fi
 
     # Enlazar Dolphin
     link_component "$target_dir/dolphin/dolphinrc" "$HOME/.config/dolphinrc"
     link_component "$target_dir/dolphin/user-places.xbel" "$HOME/.local/share/user-places.xbel"
+
+    # Enlazar propiedades de vista de Dolphin (previews habilitados)
+    mkdir -p "$HOME/.local/share/dolphin/view_properties/global"
+    link_component "$target_dir/dolphin/view_properties/global/.directory" "$HOME/.local/share/dolphin/view_properties/global/.directory"
 
     # Enlazar Qt6ct
     link_component "$target_dir/qt6ct/qt6ct.conf" "$HOME/.config/qt6ct/qt6ct.conf"
@@ -324,6 +337,21 @@ cmd_apply() {
             sleep 0.2
             pkill -x ags 2>/dev/null || true
             info "AGS detenido (no configurado en '$target')."
+        fi
+    fi
+
+    # Gestión de Quickshell Dock
+    if [ -d "$target_dir/quickshell/dock" ]; then
+        if pgrep -f "quickshell.*dock" > /dev/null; then
+            pkill -f "quickshell.*dock" 2>/dev/null || true
+            sleep 0.2
+        fi
+        quickshell -d -n -c dock >/dev/null 2>&1 &
+        success "Quickshell Dock iniciado."
+    else
+        if pgrep -f "quickshell.*dock" > /dev/null; then
+            pkill -f "quickshell.*dock" 2>/dev/null || true
+            info "Quickshell Dock detenido (no configurado en '$target')."
         fi
     fi
 
