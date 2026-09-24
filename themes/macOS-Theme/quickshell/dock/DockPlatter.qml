@@ -13,6 +13,16 @@ Item {
     width: implicitWidth
     height: implicitHeight
 
+    // Platter Shadow Glow
+    RectangularGlow {
+        anchors.fill: platterBg
+        anchors.topMargin: 4
+        glowRadius: 16
+        spread: 0.1
+        color: "#59000000"
+        cornerRadius: platterBg.radius + glowRadius
+    }
+
     // ── Glass Capsule Platter Background ──
     Rectangle {
         id: platterBg
@@ -24,15 +34,6 @@ Item {
         color: "#30ffffff"
         border.color: "#52ffffff"
         border.width: 1
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            color: "#59000000"
-            radius: 20
-            samples: 24
-            horizontalOffset: 0
-            verticalOffset: 6
-        }
 
         // Inner specular highlight & glass sheen
         Rectangle {

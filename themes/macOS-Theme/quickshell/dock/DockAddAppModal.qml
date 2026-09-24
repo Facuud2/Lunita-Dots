@@ -22,6 +22,16 @@ Item {
         }
     }
 
+    // Shadow Glow behind Modal Panel
+    RectangularGlow {
+        anchors.fill: modalPanel
+        anchors.topMargin: 12
+        glowRadius: 28
+        spread: 0.1
+        color: "#99000000"
+        cornerRadius: modalPanel.radius + glowRadius
+    }
+
     // Centered Liquid Glass Modal Panel
     Rectangle {
         id: modalPanel
@@ -32,15 +42,6 @@ Item {
         color: "#f01c1e28"
         border.color: "#38ffffff"
         border.width: 1
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            color: "#80000000"
-            radius: 36
-            samples: 35
-            horizontalOffset: 0
-            verticalOffset: 16
-        }
 
         // Inner specular border
         Rectangle {

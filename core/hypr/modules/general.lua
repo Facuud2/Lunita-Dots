@@ -66,7 +66,7 @@ function M.setup()
 
             -- Sombras profundas adaptadas dinámicamente (suaves y difusas)
             shadow = {
-                enabled        = true,
+                enabled        = false,
                 range          = 30,
                 render_power   = 4,
                 color          = colors.shadow or "rgba(00000066)",

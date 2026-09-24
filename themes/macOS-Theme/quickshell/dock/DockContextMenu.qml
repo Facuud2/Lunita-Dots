@@ -18,6 +18,18 @@ Item {
         onPressed: if (dockState) dockState.closeContextMenu()
     }
 
+    // Shadow Glow behind Context Menu
+    RectangularGlow {
+        anchors.fill: menuBox
+        anchors.topMargin: 4
+        glowRadius: 16
+        spread: 0.1
+        color: "#99000000"
+        cornerRadius: menuBox.radius + glowRadius
+        scale: menuBox.scale
+        opacity: menuBox.opacity
+    }
+
     // Context Menu Capsule Container
     Rectangle {
         id: menuBox
@@ -32,15 +44,6 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 72
         x: dockState ? Math.max(12, Math.min(parent.width - width - 12, dockState.contextMenuX - width / 2)) : 12
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            color: "#80000000"
-            radius: 18
-            samples: 22
-            horizontalOffset: 0
-            verticalOffset: 6
-        }
 
         // Smooth fade / pop animation
         scale: root.visible ? 1.0 : 0.94

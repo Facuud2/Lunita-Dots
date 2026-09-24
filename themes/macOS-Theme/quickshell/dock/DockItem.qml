@@ -50,6 +50,17 @@ Item {
     z: mouseArea.isDragging ? 999 : 1
 
     // ── Tooltip Pill ──
+    RectangularGlow {
+        visible: tooltipPill.visible
+        z: 998
+        anchors.fill: tooltipPill
+        anchors.topMargin: 2
+        glowRadius: 8
+        spread: 0.1
+        color: "#66000000"
+        cornerRadius: tooltipPill.radius + glowRadius
+    }
+
     Rectangle {
         id: tooltipPill
         visible: mouseArea.containsMouse && !mouseArea.isDragging && (dockState ? !dockState.contextMenuVisible : true)
@@ -63,15 +74,6 @@ Item {
         color: "#ea1c1e26"
         border.color: "#33ffffff"
         border.width: 1
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            color: "#66000000"
-            radius: 8
-            samples: 14
-            horizontalOffset: 0
-            verticalOffset: 3
-        }
 
         Text {
             id: tooltipText
@@ -109,15 +111,6 @@ Item {
         Behavior on border.color { ColorAnimation { duration: 140 } }
         Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutBack } }
 
-        layer.enabled: true
-        layer.effect: DropShadow {
-            color: mouseArea.isDragging ? "#73000000" : (mouseArea.containsMouse ? "#4d000000" : "#26000000")
-            radius: mouseArea.isDragging ? 16 : (mouseArea.containsMouse ? 10 : 5)
-            samples: 16
-            horizontalOffset: 0
-            verticalOffset: mouseArea.isDragging ? 8 : (mouseArea.containsMouse ? 4 : 2)
-        }
-
         // App Icon Image
         Image {
             id: iconImg
@@ -147,15 +140,6 @@ Item {
         color: "#ffffff"
 
         Behavior on opacity { NumberAnimation { duration: 200 } }
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            color: "#ccffffff"
-            radius: 4
-            samples: 8
-            horizontalOffset: 0
-            verticalOffset: 0
-        }
     }
 
     // ── Interactive Mouse Area & DnD ──
