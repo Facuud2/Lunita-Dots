@@ -47,7 +47,7 @@ ShowCloseButtonOnTabs=true
 ShowFullPath=false
 ShowFullPathInTitlebar=false
 ShowPasteBarAfterCopying=true
-ShowSelectionToggle=true
+ShowSelectionToggle=false
 ShowStatusBar=Small
 ShowToolTips=false
 ShowZoomSlider=false
@@ -56,25 +56,24 @@ SplitView=false
 TabStyle=AutoSize
 UrlCompletionMode=KCompletion::CompletionPopupAuto
 Version=202
-ViewPropsTimestamp=2026,9,22,21,30,35.687
 
 [IconsMode]
 FontSize=10
-IconSize=32
-MaximumTextLines=3
+IconSize=48
+MaximumTextLines=2
 PreviewSize=64
 TextWidthIndex=1
 UseSystemFont=true
 
 [KFileDialog Settings]
 Places Icons Auto-resize=false
-Places Icons Static Size=32
+Places Icons Static Size=22
 
 [MainWindow]
 MenuBar=Disabled
 
 [PlacesPanel]
-IconSize=32
+IconSize=22
 
 [PreviewSettings]
 MaximumSize=0

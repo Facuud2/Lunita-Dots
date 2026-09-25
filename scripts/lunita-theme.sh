@@ -224,9 +224,12 @@ cmd_apply() {
         rm -f "$HOME/.config/quickshell/hyprquickpaper"
     fi
 
-    # Enlazar Dolphin
+    # Enlazar Dolphin y KDE Globals
     link_component "$target_dir/dolphin/dolphinrc" "$HOME/.config/dolphinrc"
     link_component "$target_dir/dolphin/user-places.xbel" "$HOME/.local/share/user-places.xbel"
+    if [ -f "$target_dir/kdeglobals" ]; then
+        link_component "$target_dir/kdeglobals" "$HOME/.config/kdeglobals"
+    fi
 
     # Enlazar propiedades de vista de Dolphin (previews habilitados)
     mkdir -p "$HOME/.local/share/dolphin/view_properties/global"
@@ -250,7 +253,9 @@ cmd_apply() {
     # Enlazar ajustes de cursor y GTK
     link_component "$target_dir/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
     link_component "$target_dir/gtk-3.0/bookmarks" "$HOME/.config/gtk-3.0/bookmarks"
+    link_component "$target_dir/gtk-3.0/gtk.css" "$HOME/.config/gtk-3.0/gtk.css"
     link_component "$target_dir/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
+    link_component "$target_dir/gtk-4.0/gtk.css" "$HOME/.config/gtk-4.0/gtk.css"
     link_component "$target_dir/icons/default/index.theme" "$HOME/.icons/default/index.theme"
     link_component "$target_dir/xresources/.Xresources" "$HOME/.Xresources"
 
@@ -335,9 +340,16 @@ cmd_apply() {
     if command -v gsettings &>/dev/null; then
         gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice' 2>/dev/null || true
         gsettings set org.gnome.desktop.interface cursor-size 40 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface icon-theme 'BeautyLine' 2>/dev/null || true
+        local color_scheme="prefer-dark"
+        local icon_theme="WhiteSur"
+        if [ -f "$target_dir/gtk-3.0/settings.ini" ]; then
+            if grep -q 'gtk-application-prefer-dark-theme=0' "$target_dir/gtk-3.0/settings.ini"; then
+                color_scheme="prefer-light"
+            fi
+            icon_theme="$(grep '^gtk-icon-theme-name=' "$target_dir/gtk-3.0/settings.ini" | cut -d= -f2 | tr -d ' ' || echo 'WhiteSur')"
+        fi
+        gsettings set org.gnome.desktop.interface color-scheme "$color_scheme" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
     fi
 
     # Reiniciar portal GTK para aplicar estilos CSS actualizados
