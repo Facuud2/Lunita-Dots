@@ -55,22 +55,22 @@ function M.setup()
         },
 
         decoration = {
-            rounding       = 16,
+            rounding       = 18,
             rounding_power = 2,
 
             -- Transparencia global estilo macOS Frosted Acrylic:
-            active_opacity   = 0.92,
-            inactive_opacity = 0.80,
+            active_opacity   = 0.94,
+            inactive_opacity = 0.82,
 
-            -- Sombras Apple difusas y profundas
+            -- Sombras Apple difusas, amplias y profundas (Efecto flotante sobre el dock)
             shadow = {
                 enabled        = true,
-                range          = 35,
+                range          = 42,
                 render_power   = 4,
-                color          = colors.shadow or "rgba(00000055)",
-                color_inactive = colors.shadow_inactive or "rgba(00000030)",
-                offset         = { 0, 10 },
-                scale          = 0.98,
+                color          = colors.shadow or "rgba(00000066)",
+                color_inactive = colors.shadow_inactive or "rgba(00000035)",
+                offset         = { 0, 12 },
+                scale          = 0.99,
             },
 
             -- Efectos de atenuación (dimming)
@@ -82,13 +82,13 @@ function M.setup()
             -- Blur calibrado para Liquid Glass / Frosted Acrylic:
             blur = {
                 enabled           = true,
-                size              = 6,
+                size              = 8,
                 passes            = 3,
-                vibrancy          = 0.35,
+                vibrancy          = 0.40,
                 vibrancy_darkness = 0.5,
                 noise             = 0.015,
-                contrast          = 0.95,
-                brightness        = 0.90,
+                contrast          = 0.98,
+                brightness        = 0.92,
                 xray              = false,
                 new_optimizations = true,
             },

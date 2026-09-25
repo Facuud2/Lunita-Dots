@@ -202,7 +202,7 @@ cmd_apply() {
     # Enlazar Wlogout
     link_component "$target_dir/wlogout" "$HOME/.config/wlogout"
 
-    # Enlazar Quickshell (dock, bar y hyprquickpaper)
+    # Enlazar Quickshell (dock, bar, launcher y hyprquickpaper)
     if [ -d "$target_dir/quickshell/dock" ]; then
         link_component "$target_dir/quickshell/dock" "$HOME/.config/quickshell/dock"
     elif [ -L "$HOME/.config/quickshell/dock" ]; then
@@ -213,15 +213,23 @@ cmd_apply() {
     elif [ -L "$HOME/.config/quickshell/bar" ]; then
         rm -f "$HOME/.config/quickshell/bar"
     fi
+    if [ -d "$target_dir/quickshell/launcher" ]; then
+        link_component "$target_dir/quickshell/launcher" "$HOME/.config/quickshell/launcher"
+    elif [ -L "$HOME/.config/quickshell/launcher" ]; then
+        rm -f "$HOME/.config/quickshell/launcher"
+    fi
     if [ -d "$target_dir/quickshell/hyprquickpaper" ]; then
         link_component "$target_dir/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
     elif [ -L "$HOME/.config/quickshell/hyprquickpaper" ]; then
         rm -f "$HOME/.config/quickshell/hyprquickpaper"
     fi
 
-    # Enlazar Dolphin
+    # Enlazar Dolphin y KDE Globals
     link_component "$target_dir/dolphin/dolphinrc" "$HOME/.config/dolphinrc"
     link_component "$target_dir/dolphin/user-places.xbel" "$HOME/.local/share/user-places.xbel"
+    if [ -f "$target_dir/kdeglobals" ]; then
+        link_component "$target_dir/kdeglobals" "$HOME/.config/kdeglobals"
+    fi
 
     # Enlazar propiedades de vista de Dolphin (previews habilitados)
     mkdir -p "$HOME/.local/share/dolphin/view_properties/global"
@@ -245,7 +253,9 @@ cmd_apply() {
     # Enlazar ajustes de cursor y GTK
     link_component "$target_dir/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
     link_component "$target_dir/gtk-3.0/bookmarks" "$HOME/.config/gtk-3.0/bookmarks"
+    link_component "$target_dir/gtk-3.0/gtk.css" "$HOME/.config/gtk-3.0/gtk.css"
     link_component "$target_dir/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
+    link_component "$target_dir/gtk-4.0/gtk.css" "$HOME/.config/gtk-4.0/gtk.css"
     link_component "$target_dir/icons/default/index.theme" "$HOME/.icons/default/index.theme"
     link_component "$target_dir/xresources/.Xresources" "$HOME/.Xresources"
 
@@ -289,6 +299,9 @@ cmd_apply() {
     if [ -f "$DOTS_DIR/scripts/lunita-theme-selector" ]; then
         ln -sf "$DOTS_DIR/scripts/lunita-theme-selector" "$HOME/.local/bin/lunita-theme-selector"
     fi
+    if [ -f "$DOTS_DIR/scripts/lunita-launcher" ]; then
+        ln -sf "$DOTS_DIR/scripts/lunita-launcher" "$HOME/.local/bin/lunita-launcher"
+    fi
     if [ -f "$DOTS_DIR/core/lunita-theme-selector.desktop" ]; then
         ln -sf "$DOTS_DIR/core/lunita-theme-selector.desktop" "$HOME/.local/share/applications/lunita-theme-selector.desktop"
     fi
@@ -327,9 +340,16 @@ cmd_apply() {
     if command -v gsettings &>/dev/null; then
         gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice' 2>/dev/null || true
         gsettings set org.gnome.desktop.interface cursor-size 40 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark' 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface icon-theme 'BeautyLine' 2>/dev/null || true
+        local color_scheme="prefer-dark"
+        local icon_theme="WhiteSur"
+        if [ -f "$target_dir/gtk-3.0/settings.ini" ]; then
+            if grep -q 'gtk-application-prefer-dark-theme=0' "$target_dir/gtk-3.0/settings.ini"; then
+                color_scheme="prefer-light"
+            fi
+            icon_theme="$(grep '^gtk-icon-theme-name=' "$target_dir/gtk-3.0/settings.ini" | cut -d= -f2 | tr -d ' ' || echo 'WhiteSur')"
+        fi
+        gsettings set org.gnome.desktop.interface color-scheme "$color_scheme" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
     fi
 
     # Reiniciar portal GTK para aplicar estilos CSS actualizados
@@ -387,6 +407,21 @@ cmd_apply() {
         if pgrep -f "quickshell.*bar" > /dev/null; then
             pkill -f "quickshell.*bar" 2>/dev/null || true
             info "Quickshell Bar detenida (no configurado en '$target')."
+        fi
+    fi
+
+    # Gestión de Quickshell Launcher
+    if [ -d "$target_dir/quickshell/launcher" ]; then
+        if pgrep -f "quickshell.*launcher" > /dev/null; then
+            pkill -f "quickshell.*launcher" 2>/dev/null || true
+            sleep 0.2
+        fi
+        quickshell -d -n -p "$HOME/.config/quickshell/launcher"
+        success "Quickshell Launcher iniciado."
+    else
+        if pgrep -f "quickshell.*launcher" > /dev/null; then
+            pkill -f "quickshell.*launcher" 2>/dev/null || true
+            info "Quickshell Launcher detenido (no configurado en '$target')."
         fi
     fi
 

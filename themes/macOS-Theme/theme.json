@@ -7,7 +7,7 @@
   "components": {
     "bar": "quickshell-macos-statusbar (Light & Dark)",
     "dock": "dock-macos-liquid-glass",
-    "launcher": "ags-app-launcher",
+    "launcher": "quickshell-macos-app-library",
     "powermenu": "wlogout-macos-glass",
     "notifications": "ags-notifications",
     "widgets": "eww-cava-player",
