@@ -21,15 +21,12 @@ if [[ "$(hyprctl locked 2>/dev/null)" == "true" ]]; then
     exit 0
 fi
 
-# Auto-sync wallpaper and matugen colors if wallpaper changed
+# Auto-sync wallpaper if changed
 if command -v awww >/dev/null 2>&1; then
     curr_wall=$(awww query 2>/dev/null | awk -F 'image: ' '{print $2}' | head -n 1)
     if [ -n "$curr_wall" ] && [ -f "$curr_wall" ]; then
         if [ ! -f "$HOME/.config/hypr/current_wallpaper.png" ] || [ "$curr_wall" -nt "$HOME/.config/hypr/current_wallpaper.png" ]; then
             cp "$curr_wall" "$HOME/.config/hypr/current_wallpaper.png"
-            if command -v matugen >/dev/null 2>&1; then
-                matugen image "$curr_wall" --source-color-index 0 >/dev/null 2>&1
-            fi
         fi
     fi
 fi

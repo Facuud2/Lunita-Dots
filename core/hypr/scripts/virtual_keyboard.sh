@@ -5,25 +5,19 @@
 
 ENV_FILE="$HOME/.config/hypr/scripts/wvkbd-colors.env"
 
-# Cargar colores dinámicos generados por Matugen si existen
-if [ -f "$ENV_FILE" ]; then
-    # shellcheck disable=SC1090
-    source "$ENV_FILE"
-fi
-
-# Paleta estética por defecto (NothingOS / Lunita Dark Glass)
-BG_COLOR="${WVKBD_BG:-0b0b0bee}"
-FG_COLOR="${WVKBD_FG:-1a1a1aff}"
-FG_SP_COLOR="${WVKBD_FG_SP:-262626ff}"
-TEXT_COLOR="${WVKBD_TEXT:-ffffffff}"
-TEXT_SP_COLOR="${WVKBD_TEXT_SP:-d7c1c2ff}"
-PRESS_COLOR="${WVKBD_PRESS:-d71921ff}"
-PRESS_SP_COLOR="${WVKBD_PRESS_SP:-d71921ff}"
+# Paleta estética macOS (Apple Cupertino Glass)
+BG_COLOR="${WVKBD_BG:-161618ee}"
+FG_COLOR="${WVKBD_FG:-2c2c2eff}"
+FG_SP_COLOR="${WVKBD_FG_SP:-3a3a3cff}"
+TEXT_COLOR="${WVKBD_TEXT:-f5f5f7ff}"
+TEXT_SP_COLOR="${WVKBD_TEXT_SP:-8e8e93ff}"
+PRESS_COLOR="${WVKBD_PRESS:-007affff}"
+PRESS_SP_COLOR="${WVKBD_PRESS_SP:-007affff}"
 TEXT_PRESS_COLOR="${WVKBD_TEXT_PRESS:-ffffffff}"
 TEXT_PRESS_SP_COLOR="${WVKBD_TEXT_PRESS_SP:-ffffffff}"
 ALPHA="${WVKBD_ALPHA:-245}"
-FONT="${WVKBD_FONT:-Space Grotesk 14}"
-RADIUS="${WVKBD_RADIUS:-12}"
+FONT="${WVKBD_FONT:-SF Pro Display 14}"
+RADIUS="${WVKBD_RADIUS:-14}"
 HEIGHT="${WVKBD_HEIGHT:-300}"
 
 # Buscar binario disponible de wvkbd

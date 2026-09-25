@@ -1,52 +1,52 @@
--- Generated automatically by matugen for Hyprland
+-- macOS 27 / Cupertino Color Palette for Hyprland
 local colors = {
-    -- Base Palette
-    primary                = "rgba(d5bbfcee)",
-    on_primary             = "rgba(3a255bff)",
-    primary_container      = "rgba(513c73ee)",
-    on_primary_container   = "rgba(ecdcffff)",
+    -- Base Palette (Apple System Colors)
+    primary                = "rgba(007affee)",      -- System Blue
+    on_primary             = "rgba(ffffffff)",
+    primary_container      = "rgba(007aff33)",
+    on_primary_container   = "rgba(007affff)",
 
-    secondary              = "rgba(cec2dbee)",
-    secondary_container    = "rgba(4b4357ee)",
-    on_secondary_container = "rgba(eadef7ff)",
+    secondary              = "rgba(5856d6ee)",      -- System Indigo
+    secondary_container    = "rgba(5856d633)",
+    on_secondary_container = "rgba(ffffffff)",
 
-    tertiary               = "rgba(f1b7c3ee)",
-    tertiary_container     = "rgba(643b45ee)",
-    on_tertiary_container  = "rgba(ffd9e0ff)",
+    tertiary               = "rgba(af52deee)",      -- System Purple
+    tertiary_container     = "rgba(af52de33)",
+    on_tertiary_container  = "rgba(ffffffff)",
 
-    error                  = "rgba(ffb4abee)",
-    error_container        = "rgba(93000aee)",
+    error                  = "rgba(ff3b30ee)",      -- System Red
+    error_container        = "rgba(ff3b3033)",
 
-    surface                = "rgba(151218ee)",
-    surface_container      = "rgba(211e24ee)",
-    surface_container_high = "rgba(2c292fee)",
-    surface_container_low  = "rgba(1d1a20ee)",
-    on_surface             = "rgba(e7e0e8ff)",
-    on_surface_variant     = "rgba(cbc4cfbb)",
+    surface                = "rgba(161618ee)",
+    surface_container      = "rgba(222224ee)",
+    surface_container_high = "rgba(2c2c2eee)",
+    surface_container_low  = "rgba(1c1c1eee)",
+    on_surface             = "rgba(f5f5f7ff)",
+    on_surface_variant     = "rgba(8e8e93ff)",
 
-    outline                = "rgba(958e99ee)",
-    outline_variant        = "rgba(49454e44)",
+    outline                = "rgba(8e8e9388)",
+    outline_variant        = "rgba(ffffff1f)",
 
-    -- Shadow colors
-    shadow                 = "rgba(00000066)",
-    shadow_inactive        = "rgba(00000033)",
+    -- Shadow colors (Apple signature diffuse ambient shadow)
+    shadow                 = "rgba(00000055)",
+    shadow_inactive        = "rgba(00000030)",
 
-    -- Gradient borders
-    active_border_1        = "rgba(d5bbfcee)",
-    active_border_2        = "rgba(f1b7c3ee)",
-    inactive_border        = "rgba(49454e2b)",
+    -- Liquid Glass / macOS Gradient borders
+    active_border_1        = "rgba(007affcc)",
+    active_border_2        = "rgba(5856d6aa)",
+    inactive_border        = "rgba(ffffff18)",
 
     -- Tabbed windows / Groups
-    group_border_active          = "rgba(d5bbfcee)",
-    group_border_inactive        = "rgba(49454e2b)",
-    group_border_locked_active   = "rgba(cec2dbee)",
-    group_border_locked_inactive = "rgba(49454e1f)",
+    group_border_active          = "rgba(007affee)",
+    group_border_inactive        = "rgba(ffffff18)",
+    group_border_locked_active   = "rgba(ff9500ee)",
+    group_border_locked_inactive = "rgba(ff950033)",
 
-    groupbar_active          = "rgba(513c73cc)",
-    groupbar_inactive        = "rgba(211e2488)",
-    groupbar_locked_active   = "rgba(4b4357cc)",
-    groupbar_locked_inactive = "rgba(1d1a2088)",
-    groupbar_text            = "rgba(ecdcffff)",
+    groupbar_active          = "rgba(007affcc)",
+    groupbar_inactive        = "rgba(2c2c2e88)",
+    groupbar_locked_active   = "rgba(ff9500cc)",
+    groupbar_locked_inactive = "rgba(3a3a3c88)",
+    groupbar_text            = "rgba(ffffffff)",
 }
 
 return colors

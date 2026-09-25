@@ -38,19 +38,19 @@ def get_current_theme_id() -> str:
             pass
     return "lunita-default"
 
-def load_matugen_colors():
+def load_theme_colors():
     colors = {
-        "primary": "#d5bbfc",
-        "on_primary": "#3a255b",
-        "primary_container": "#513c73",
-        "surface": "#151218",
-        "surface_container": "#211e24",
-        "surface_container_high": "#2c292f",
-        "surface_container_highest": "#37333a",
-        "on_surface": "#e7e0e8",
-        "on_surface_variant": "#cbc4cf",
-        "outline": "#958e99",
-        "outline_variant": "#49454e",
+        "primary": "#007aff",
+        "on_primary": "#ffffff",
+        "primary_container": "#007aff33",
+        "surface": "#161618",
+        "surface_container": "#222224",
+        "surface_container_high": "#2c2c2e",
+        "surface_container_highest": "#3a3a3c",
+        "on_surface": "#f5f5f7",
+        "on_surface_variant": "#8e8e93",
+        "outline": "#8e8e93",
+        "outline_variant": "#3a3a3c",
     }
     
     # Try reading from ags colors.scss if present
@@ -118,7 +118,7 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
         self.load_themes()
 
     def setup_css(self):
-        colors = load_matugen_colors()
+        colors = load_theme_colors()
         css = f"""
         window.theme-selector {{
             background-color: {colors["surface"]};
