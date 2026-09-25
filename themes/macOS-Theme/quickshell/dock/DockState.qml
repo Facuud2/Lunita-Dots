@@ -41,7 +41,7 @@ Item {
             name: "Launchpad",
             iconFile: "launchpad.svg",
             fallbackIcon: "view-app-grid-symbolic",
-            cmd: "rofi -show drun",
+            cmd: "lunita-launcher",
             matchClasses: []
         },
         {

@@ -202,7 +202,7 @@ cmd_apply() {
     # Enlazar Wlogout
     link_component "$target_dir/wlogout" "$HOME/.config/wlogout"
 
-    # Enlazar Quickshell (dock, bar y hyprquickpaper)
+    # Enlazar Quickshell (dock, bar, launcher y hyprquickpaper)
     if [ -d "$target_dir/quickshell/dock" ]; then
         link_component "$target_dir/quickshell/dock" "$HOME/.config/quickshell/dock"
     elif [ -L "$HOME/.config/quickshell/dock" ]; then
@@ -212,6 +212,11 @@ cmd_apply() {
         link_component "$target_dir/quickshell/bar" "$HOME/.config/quickshell/bar"
     elif [ -L "$HOME/.config/quickshell/bar" ]; then
         rm -f "$HOME/.config/quickshell/bar"
+    fi
+    if [ -d "$target_dir/quickshell/launcher" ]; then
+        link_component "$target_dir/quickshell/launcher" "$HOME/.config/quickshell/launcher"
+    elif [ -L "$HOME/.config/quickshell/launcher" ]; then
+        rm -f "$HOME/.config/quickshell/launcher"
     fi
     if [ -d "$target_dir/quickshell/hyprquickpaper" ]; then
         link_component "$target_dir/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
@@ -288,6 +293,9 @@ cmd_apply() {
     ln -sf "$DOTS_DIR/scripts/lunita-theme.sh" "$HOME/.local/bin/lunita-theme"
     if [ -f "$DOTS_DIR/scripts/lunita-theme-selector" ]; then
         ln -sf "$DOTS_DIR/scripts/lunita-theme-selector" "$HOME/.local/bin/lunita-theme-selector"
+    fi
+    if [ -f "$DOTS_DIR/scripts/lunita-launcher" ]; then
+        ln -sf "$DOTS_DIR/scripts/lunita-launcher" "$HOME/.local/bin/lunita-launcher"
     fi
     if [ -f "$DOTS_DIR/core/lunita-theme-selector.desktop" ]; then
         ln -sf "$DOTS_DIR/core/lunita-theme-selector.desktop" "$HOME/.local/share/applications/lunita-theme-selector.desktop"
@@ -387,6 +395,21 @@ cmd_apply() {
         if pgrep -f "quickshell.*bar" > /dev/null; then
             pkill -f "quickshell.*bar" 2>/dev/null || true
             info "Quickshell Bar detenida (no configurado en '$target')."
+        fi
+    fi
+
+    # Gestión de Quickshell Launcher
+    if [ -d "$target_dir/quickshell/launcher" ]; then
+        if pgrep -f "quickshell.*launcher" > /dev/null; then
+            pkill -f "quickshell.*launcher" 2>/dev/null || true
+            sleep 0.2
+        fi
+        quickshell -d -n -p "$HOME/.config/quickshell/launcher"
+        success "Quickshell Launcher iniciado."
+    else
+        if pgrep -f "quickshell.*launcher" > /dev/null; then
+            pkill -f "quickshell.*launcher" 2>/dev/null || true
+            info "Quickshell Launcher detenido (no configurado en '$target')."
         fi
     fi
 
