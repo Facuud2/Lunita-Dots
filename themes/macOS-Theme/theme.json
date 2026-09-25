@@ -1,30 +1,30 @@
 {
   "id": "macOS-Theme",
-  "name": "macOS Sonoma",
-  "version": "1.0.0",
+  "name": "macOS 27",
+  "version": "2.0.0",
   "author": "Facuud2",
-  "description": "Tema réplica inspirado en la elegancia y ergonomía de macOS Sonoma/Sequoia para Lunita-Dots. Barra de menú superior, dock inferior, curvas fluidas estilo Apple y estética frosted glass.",
+  "description": "Tema réplica inspirado en la elegancia y ergonomía de macOS para Lunita-Dots. Barra de menú superior con soporte nativo para Tema Claro y Oscuro, dock liquid glass, curvas fluidas SwiftUI/Core Animation y estética frosted acrylic.",
   "components": {
-    "bar": "ags-macos-bar (base)",
-    "dock": "dock-macos (en desarrollo)",
+    "bar": "quickshell-macos-statusbar (Light & Dark)",
+    "dock": "dock-macos-liquid-glass",
     "launcher": "ags-app-launcher",
-    "powermenu": "ags-powermenu",
+    "powermenu": "wlogout-macos-glass",
     "notifications": "ags-notifications",
     "widgets": "eww-cava-player",
-    "color_engine": "matugen",
+    "color_engine": "macos-cupertino",
     "wallpaper_picker": "hyprquickpaper",
     "lockscreen": "prelock-hyprlock",
-    "terminal": "kitty",
+    "terminal": "kitty-macos",
     "file_manager": "dolphin-lunita",
     "clipboard": "ags-cliphist",
     "cursor": "bibata-modern-ice-40px",
     "shell": "zsh-pills"
   },
   "features": [
-    "Estética refinada inspirada en macOS Sonoma/Sequoia",
-    "Curvas Bezier estilo macOS para animaciones ultra suaves en Hyprland",
-    "Efectos de desenfoque y translucidez frosted glass",
-    "Compatibilidad total con Matugen y recargas dinámicas",
-    "Arquitectura modular lista para componentes dedicados de macOS"
+    "Barra superior de menú adaptable a Tema Claro y Oscuro con conmutador en Control Center",
+    "Físicas elásticas SwiftUI y Core Animation para transiciones ultra fluidas en Hyprland",
+    "Bordes de 16px y efectos de desenfoque Liquid Glass / Frosted Acrylic",
+    "Paleta oficial de Cupertino (System Blue, Indigo, Purple, Red, Green)",
+    "Arquitectura modular lista y libre de dependencias de matugen"
   ]
 }

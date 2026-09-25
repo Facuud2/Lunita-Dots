@@ -174,21 +174,24 @@ cmd_apply() {
     # 1. Enlazar componentes del tema hacia ~/.config
     mkdir -p "$HOME/.config" "$USER_STATE_DIR"
 
-    # Enlazar AGS
-    link_component "$target_dir/ags" "$HOME/.config/ags"
-
-    # Enlazar Eww
-    link_component "$target_dir/eww" "$HOME/.config/eww"
-
-    # Enlazar Hyprland (Tema específico o carpeta maestra en core/hypr)
-    if [ -d "$target_dir/hypr" ]; then
-        link_component "$target_dir/hypr" "$HOME/.config/hypr"
-    elif [ -d "$DOTS_DIR/core/hypr" ]; then
-        link_component "$DOTS_DIR/core/hypr" "$HOME/.config/hypr"
+    # Enlazar AGS (si existe en el tema, ej: lunita-default)
+    if [ -d "$target_dir/ags" ]; then
+        link_component "$target_dir/ags" "$HOME/.config/ags"
+    elif [ -L "$HOME/.config/ags" ] || [ -d "$HOME/.config/ags" ]; then
+        rm -rf "$HOME/.config/ags"
     fi
 
-    # Enlazar Matugen
-    link_component "$target_dir/matugen" "$HOME/.config/matugen"
+    # Enlazar Eww (si existe en el tema)
+    if [ -d "$target_dir/eww" ]; then
+        link_component "$target_dir/eww" "$HOME/.config/eww"
+    elif [ -L "$HOME/.config/eww" ] || [ -d "$HOME/.config/eww" ]; then
+        rm -rf "$HOME/.config/eww"
+    fi
+
+    # Enlazar Hyprland (Siempre apuntar a core/hypr que es la base maestra real del sistema)
+    if [ -d "$DOTS_DIR/core/hypr" ]; then
+        link_component "$DOTS_DIR/core/hypr" "$HOME/.config/hypr"
+    fi
 
     # Enlazar Kitty
     link_component "$target_dir/kitty" "$HOME/.config/kitty"
@@ -199,11 +202,16 @@ cmd_apply() {
     # Enlazar Wlogout
     link_component "$target_dir/wlogout" "$HOME/.config/wlogout"
 
-    # Enlazar Quickshell (dock y hyprquickpaper)
+    # Enlazar Quickshell (dock, bar y hyprquickpaper)
     if [ -d "$target_dir/quickshell/dock" ]; then
         link_component "$target_dir/quickshell/dock" "$HOME/.config/quickshell/dock"
     elif [ -L "$HOME/.config/quickshell/dock" ]; then
         rm -f "$HOME/.config/quickshell/dock"
+    fi
+    if [ -d "$target_dir/quickshell/bar" ]; then
+        link_component "$target_dir/quickshell/bar" "$HOME/.config/quickshell/bar"
+    elif [ -L "$HOME/.config/quickshell/bar" ]; then
+        rm -f "$HOME/.config/quickshell/bar"
     fi
     if [ -d "$target_dir/quickshell/hyprquickpaper" ]; then
         link_component "$target_dir/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
@@ -219,8 +227,20 @@ cmd_apply() {
     mkdir -p "$HOME/.local/share/dolphin/view_properties/global"
     link_component "$target_dir/dolphin/view_properties/global/.directory" "$HOME/.local/share/dolphin/view_properties/global/.directory"
 
-    # Enlazar Qt6ct
+    # Enlazar Qt6ct (config, colors y qss)
     link_component "$target_dir/qt6ct/qt6ct.conf" "$HOME/.config/qt6ct/qt6ct.conf"
+    if [ -d "$target_dir/qt6ct/colors" ]; then
+        mkdir -p "$HOME/.config/qt6ct/colors"
+        for c in "$target_dir/qt6ct/colors"/*; do
+            [ -f "$c" ] && ln -sf "$c" "$HOME/.config/qt6ct/colors/$(basename "$c")"
+        done
+    fi
+    if [ -d "$target_dir/qt6ct/qss" ]; then
+        mkdir -p "$HOME/.config/qt6ct/qss"
+        for q in "$target_dir/qt6ct/qss"/*; do
+            [ -f "$q" ] && ln -sf "$q" "$HOME/.config/qt6ct/qss/$(basename "$q")"
+        done
+    fi
 
     # Enlazar ajustes de cursor y GTK
     link_component "$target_dir/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
@@ -346,7 +366,7 @@ cmd_apply() {
             pkill -f "quickshell.*dock" 2>/dev/null || true
             sleep 0.2
         fi
-        quickshell -d -n -c dock >/dev/null 2>&1 &
+        quickshell -d -n -p "$HOME/.config/quickshell/dock"
         success "Quickshell Dock iniciado."
     else
         if pgrep -f "quickshell.*dock" > /dev/null; then
@@ -355,13 +375,18 @@ cmd_apply() {
         fi
     fi
 
-    # Disparar Matugen con el fondo actual solo si el tema define matugen
-    if [ -d "$target_dir/matugen" ]; then
-        local curr_wall
-        curr_wall="$(awww query 2>/dev/null | awk -F 'image: ' '{print $2}' | head -n 1)"
-        if [ -n "$curr_wall" ] && [ -f "$curr_wall" ] && command -v matugen &>/dev/null; then
-            info "Sincronizando colores Matugen con el fondo actual..."
-            matugen image "$curr_wall" --source-color-index 0 >/dev/null 2>&1 || true
+    # Gestión de Quickshell Bar (Status Bar)
+    if [ -d "$target_dir/quickshell/bar" ]; then
+        if pgrep -f "quickshell.*bar" > /dev/null; then
+            pkill -f "quickshell.*bar" 2>/dev/null || true
+            sleep 0.2
+        fi
+        quickshell -d -n -p "$HOME/.config/quickshell/bar"
+        success "Quickshell Bar iniciada."
+    else
+        if pgrep -f "quickshell.*bar" > /dev/null; then
+            pkill -f "quickshell.*bar" 2>/dev/null || true
+            info "Quickshell Bar detenida (no configurado en '$target')."
         fi
     fi
 

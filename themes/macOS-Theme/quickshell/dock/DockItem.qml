@@ -40,6 +40,27 @@ Item {
         if (isFolder) return Qt.resolvedUrl("assets/icons/folder.svg")
         if (isAdd) return Qt.resolvedUrl("assets/icons/add.svg")
         if (app && app.iconFile) return Qt.resolvedUrl("assets/icons/" + app.iconFile)
+        if (app && app.id) {
+            let id = app.id.toLowerCase()
+            if (id === "zen" || id === "safari" || id === "firefox" || id === "browser" || id === "chrome") return Qt.resolvedUrl("assets/icons/safari.svg")
+            if (id === "code" || id === "vscodium" || id === "vscode" || id === "editor" || id === "antigravity" || id === "cursor") return Qt.resolvedUrl("assets/icons/code.svg")
+            if (id === "terminal" || id === "kitty" || id === "alacritty" || id === "term" || id === "foot" || id === "ghostty" || id === "wezterm") return Qt.resolvedUrl("assets/icons/terminal.svg")
+            if (id === "finder" || id === "dolphin" || id === "files" || id === "nautilus" || id === "thunar") return Qt.resolvedUrl("assets/icons/finder.svg")
+            if (id === "launchpad" || id === "launcher" || id === "rofi" || id === "apps") return Qt.resolvedUrl("assets/icons/launchpad.svg")
+            if (id === "settings" || id === "systemsettings") return Qt.resolvedUrl("assets/icons/settings.svg")
+            if (id === "music" || id === "spotify") return Qt.resolvedUrl("assets/icons/music.svg")
+            if (id === "messages" || id === "telegram" || id === "discord" || id === "vesktop") return Qt.resolvedUrl("assets/icons/messages.svg")
+            if (id === "mail" || id === "thunderbird") return Qt.resolvedUrl("assets/icons/mail.svg")
+            if (id === "photos" || id === "gwenview" || id === "loupe") return Qt.resolvedUrl("assets/icons/photos.svg")
+            if (id === "facetime" || id === "camera") return Qt.resolvedUrl("assets/icons/facetime.svg")
+            if (id === "phone" || id === "whatsapp") return Qt.resolvedUrl("assets/icons/phone.svg")
+            if (id === "calendar") return Qt.resolvedUrl("assets/icons/calendar.svg")
+            if (id === "contacts") return Qt.resolvedUrl("assets/icons/contacts.svg")
+            if (id === "reminders") return Qt.resolvedUrl("assets/icons/reminders.svg")
+            if (id === "notes") return Qt.resolvedUrl("assets/icons/notes.svg")
+            if (id === "shortcuts") return Qt.resolvedUrl("assets/icons/shortcuts.svg")
+            if (id === "keychain") return Qt.resolvedUrl("assets/icons/keychain.svg")
+        }
         if (app && app.fallbackIcon) return "image://icon/" + app.fallbackIcon
         if (runningApp && runningApp.icon) return "image://icon/" + runningApp.icon
         return "image://icon/application-x-executable"

@@ -1,23 +1,23 @@
 local M = {}
 
 function M.setup()
-    -- Cargar colores dinámicos generados por Matugen (con fallback seguro)
+    -- Cargar paleta oficial macOS 27 / Cupertino
     local has_colors, colors = pcall(require, "modules.colors")
     if not has_colors or type(colors) ~= "table" then
         colors = {
-            active_border_1          = "rgba(33ccffee)",
-            active_border_2          = "rgba(00ff99ee)",
+            active_border_1          = "rgba(007affcc)",
+            active_border_2          = "rgba(5856d6aa)",
             inactive_border          = "rgba(ffffff18)",
-            shadow                   = "rgba(00000066)",
-            shadow_inactive          = "rgba(00000033)",
-            group_border_active      = "rgba(33ccffee)",
+            shadow                   = "rgba(00000055)",
+            shadow_inactive          = "rgba(00000030)",
+            group_border_active      = "rgba(007affee)",
             group_border_inactive    = "rgba(ffffff18)",
-            group_border_locked_active   = "rgba(ff5555ee)",
-            group_border_locked_inactive = "rgba(775555aa)",
-            groupbar_active          = "rgba(33ccffcc)",
-            groupbar_inactive        = "rgba(22222288)",
-            groupbar_locked_active   = "rgba(ff5555cc)",
-            groupbar_locked_inactive = "rgba(44222288)",
+            group_border_locked_active   = "rgba(ff9500ee)",
+            group_border_locked_inactive = "rgba(ff950033)",
+            groupbar_active          = "rgba(007affcc)",
+            groupbar_inactive        = "rgba(2c2c2e88)",
+            groupbar_locked_active   = "rgba(ff9500cc)",
+            groupbar_locked_inactive = "rgba(3a3a3c88)",
             groupbar_text            = "rgba(ffffffff)",
         }
     end
@@ -25,8 +25,8 @@ function M.setup()
     -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
     hl.config({
         general = {
-            gaps_in  = 5,
-            gaps_out = 20,
+            gaps_in  = 6,
+            gaps_out = 16,
 
             border_size = 2,
 
@@ -55,44 +55,40 @@ function M.setup()
         },
 
         decoration = {
-            rounding       = 12,
+            rounding       = 16,
             rounding_power = 2,
 
-            -- Transparencia global:
-            --   · Ventana activa al 88% para permitir ver widgets oscuros al fondo manteniendo legibilidad
-            --   · Ventanas inactivas al 75% para jerarquía y profundidad
-            active_opacity   = 0.88,
-            inactive_opacity = 0.75,
+            -- Transparencia global estilo macOS Frosted Acrylic:
+            active_opacity   = 0.92,
+            inactive_opacity = 0.80,
 
-            -- Sombras profundas adaptadas dinámicamente (suaves y difusas)
+            -- Sombras Apple difusas y profundas
             shadow = {
-                enabled        = false,
-                range          = 30,
+                enabled        = true,
+                range          = 35,
                 render_power   = 4,
-                color          = colors.shadow or "rgba(00000066)",
-                color_inactive = colors.shadow_inactive or "rgba(00000033)",
-                offset         = { 0, 8 },
-                scale          = 0.97,
+                color          = colors.shadow or "rgba(00000055)",
+                color_inactive = colors.shadow_inactive or "rgba(00000030)",
+                offset         = { 0, 10 },
+                scale          = 0.98,
             },
 
             -- Efectos de atenuación (dimming)
             dim_inactive = true,
-            dim_strength = 0.18,
+            dim_strength = 0.12,
             dim_special  = 0.30,
             dim_around   = 0.40,
 
-            -- Blur calibrado:
-            --   · passes=2 y size=4 para mantener estética frosted glass
-            --     sin difuminar por completo el widget de eww o cava en el fondo
+            -- Blur calibrado para Liquid Glass / Frosted Acrylic:
             blur = {
                 enabled           = true,
-                size              = 4,
-                passes            = 2,
-                vibrancy          = 0.25,
+                size              = 6,
+                passes            = 3,
+                vibrancy          = 0.35,
                 vibrancy_darkness = 0.5,
-                noise             = 0.02,
-                contrast          = 0.9,
-                brightness        = 0.85,
+                noise             = 0.015,
+                contrast          = 0.95,
+                brightness        = 0.90,
                 xray              = false,
                 new_optimizations = true,
             },

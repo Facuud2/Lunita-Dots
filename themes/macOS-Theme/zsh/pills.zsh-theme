@@ -42,11 +42,11 @@ _pills_precmd() {
     _pills_last_duration=0
   fi
 
-  # Source dynamic matugen colors if available
-  local pill_bg="#f0dede"
-  local pill_fg="#1a1112"
-  local accent="#ffb2b7"
-  local err_color="#ffb4ab"
+  # macOS Cupertino colors
+  local pill_bg="#F5F5F7"
+  local pill_fg="#1D1D1F"
+  local accent="#007AFF"
+  local err_color="#FF3B30"
 
   if [[ -f "$HOME/.oh-my-zsh/custom/zsh-colors.zsh" ]]; then
     source "$HOME/.oh-my-zsh/custom/zsh-colors.zsh" 2>/dev/null

@@ -1,0 +1,236 @@
+/* 🍎 macOS 27 (Liquid Glass / Cupertino) Styling for Qt6 & Dolphin */
+
+* {
+    font-family: "SF Pro Text", "SF Pro Display", "Inter", "Cantarell", sans-serif;
+    font-size: 13px;
+}
+
+/* ── Main Window & Dialogs ── */
+QMainWindow, QDialog {
+    background-color: #1C1C1E;
+    color: #F5F5F7;
+}
+
+/* ── Dolphin Finder Sidebar (Places Panel) ── */
+QDockWidget {
+    background-color: #141416;
+    border: none;
+    titlebar-close-icon: none;
+    titlebar-normal-icon: none;
+}
+
+QDockWidget::title {
+    background-color: #141416;
+    padding: 6px;
+    font-weight: 600;
+    color: #8E8E93;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ── Tree Views & List Views (Sidebar & Files) ── */
+QTreeView, QListView, QTableView {
+    background-color: #18181A;
+    border: none;
+    outline: none;
+    color: #F5F5F7;
+    selection-background-color: #007AFF;
+    selection-color: #FFFFFF;
+    show-decoration-selected: 1;
+    padding: 4px;
+}
+
+QTreeView::item, QListView::item {
+    height: 28px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin: 1px 4px;
+}
+
+QTreeView::item:hover, QListView::item:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    color: #FFFFFF;
+}
+
+QTreeView::item:selected, QListView::item:selected {
+    background-color: #007AFF;
+    color: #FFFFFF;
+    font-weight: 500;
+}
+
+QTreeView::item:selected:!active, QListView::item:selected:!active {
+    background-color: rgba(0, 122, 255, 0.45);
+    color: #FFFFFF;
+}
+
+/* ── Header Views (Column Details in Finder) ── */
+QHeaderView::section {
+    background-color: #1C1C1E;
+    color: #8E8E93;
+    padding: 4px 8px;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QHeaderView::section:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #F5F5F7;
+}
+
+/* ── Finder Toolbar & Buttons ── */
+QToolBar {
+    background-color: #1C1C1E;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    spacing: 4px;
+    padding: 4px 8px;
+}
+
+QToolButton {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: #F5F5F7;
+}
+
+QToolButton:hover {
+    background-color: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+QToolButton:pressed {
+    background-color: rgba(255, 255, 255, 0.16);
+}
+
+QToolButton:checked {
+    background-color: rgba(0, 122, 255, 0.25);
+    border-color: #007AFF;
+    color: #0A84FF;
+}
+
+/* ── Input Fields & URL Navigator (Pill style) ── */
+QLineEdit {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 4px 10px;
+    color: #F5F5F7;
+    selection-background-color: #007AFF;
+}
+
+QLineEdit:focus {
+    background-color: rgba(255, 255, 255, 0.12);
+    border: 1px solid #007AFF;
+}
+
+/* ── Status Bar ── */
+QStatusBar {
+    background-color: #1C1C1E;
+    color: #8E8E93;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 11px;
+}
+
+/* ── Tab Bar (macOS Segmented Tabs) ── */
+QTabWidget::pane {
+    border: none;
+    background-color: #18181A;
+}
+
+QTabBar::tab {
+    background-color: #141416;
+    color: #8E8E93;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: none;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    padding: 6px 14px;
+    margin-right: 2px;
+}
+
+QTabBar::tab:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #F5F5F7;
+}
+
+QTabBar::tab:selected {
+    background-color: #18181A;
+    color: #0A84FF;
+    font-weight: 600;
+}
+
+/* ── Scrollbars (macOS Overlay Thin Style) ── */
+QScrollBar:vertical {
+    background-color: transparent;
+    width: 8px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background-color: rgba(255, 255, 255, 0.20);
+    border-radius: 4px;
+    min-height: 24px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: rgba(255, 255, 255, 0.40);
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+    border: none;
+}
+
+QScrollBar:horizontal {
+    background-color: transparent;
+    height: 8px;
+    margin: 0;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: rgba(255, 255, 255, 0.20);
+    border-radius: 4px;
+    min-width: 24px;
+    margin: 2px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: rgba(255, 255, 255, 0.40);
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
+    border: none;
+}
+
+/* ── Menus & Popups ── */
+QMenu {
+    background-color: rgba(30, 30, 32, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 4px;
+}
+
+QMenu::item {
+    color: #F5F5F7;
+    padding: 6px 20px;
+    border-radius: 5px;
+}
+
+QMenu::item:selected {
+    background-color: #007AFF;
+    color: #FFFFFF;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.10);
+    margin: 4px 6px;
+}

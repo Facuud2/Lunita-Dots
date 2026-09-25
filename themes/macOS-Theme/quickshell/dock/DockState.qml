@@ -224,7 +224,7 @@ Item {
     // Instant initial load via Process
     Process {
         id: initFileLoader
-        command: ["bash", "-c", "cat ~/.config/lunita/dock-pinned.json 2>/dev/null || echo ''"]
+        command: ["bash", "-c", "cat ~/.config/lunita/dock-pinned.json 2>/dev/null | tr '\\n' ' ' || echo ''"]
         stdout: SplitParser {
             onRead: function(text) {
                 root.parseAndApplyPinned(text)
