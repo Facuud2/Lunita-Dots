@@ -110,6 +110,18 @@
    🌙 Lunita-Dots Solid Styling & Eye-Catching Effects
    ========================================================= */
 
+/* Ensure proper top padding for the whole app container so nothing clips at Y=0 */
+#app-mount .base__5e434,
+.base__5e434 {
+    padding-top: 10px !important;
+    box-sizing: border-box !important;
+}
+
+/* Server List Scroller: Proper top padding for DM / Moon Icon */
+.scroller_ef3116 {
+    padding-top: 6px !important;
+}
+
 /* Ensure completely solid, non-transparent background layers */
 html, body, #app-mount, .app_a01200, .bg__960e4 {
     background-color: var(--bg-deep) !important;
@@ -145,12 +157,27 @@ html, body, #app-mount, .app_a01200, .bg__960e4 {
 }
 
 /* Top Header Bar with Accent Border */
-.title_f75fb0,
-[class*="subtitleContainer"],
-[class*="toolbar"] {
+.chat_f75fb0 > .subtitleContainer_f75fb0,
+.container__133bf > .container__9293f,
+.title_f75fb0 {
     background-color: var(--bg-surface) !important;
     border-bottom: 1px solid #{{colors.primary.default.hex_stripped}}33 !important;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+    min-height: 48px !important;
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Header Avatar and Action Icons Alignment */
+.title_f75fb0 .avatar__37e49,
+.title_f75fb0 .avatar_f75fb0,
+.title_f75fb0 [class*="avatar_"] {
+    margin-top: 0 !important;
+    align-self: center !important;
 }
 
 /* Top Friends Tabs (En línea, Todos, Pendientes) */

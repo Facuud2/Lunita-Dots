@@ -18,7 +18,8 @@
     "file_manager": "dolphin-lunita",
     "clipboard": "ags-cliphist",
     "cursor": "bibata-modern-ice-40px",
-    "shell": "zsh-pills"
+    "shell": "zsh-pills",
+    "discord": "vesktop-macos-cupertino"
   },
   "features": [
     "Barra superior de menú adaptable a Tema Claro y Oscuro con conmutador en Control Center",
