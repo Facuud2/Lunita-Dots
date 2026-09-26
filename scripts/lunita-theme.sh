@@ -278,6 +278,12 @@ cmd_apply() {
     # Enlazar Cliphist
     link_component "$target_dir/cliphist" "$HOME/.config/cliphist"
 
+    # Enlazar Vesktop (Discord)
+    if [ -f "$target_dir/vesktop/themes/lunita.theme.css" ]; then
+        mkdir -p "$HOME/.config/vesktop/themes"
+        link_component "$target_dir/vesktop/themes/lunita.theme.css" "$HOME/.config/vesktop/themes/lunita.theme.css"
+    fi
+
     # Enlazar servicios systemd de usuario
     if [ -d "$target_dir/systemd/user" ]; then
         mkdir -p "$HOME/.config/systemd/user"
