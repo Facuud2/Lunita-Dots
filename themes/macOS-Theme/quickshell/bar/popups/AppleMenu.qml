@@ -73,7 +73,7 @@ Item {
         MenuItem {
             text: "App Store..."
             onClicked: {
-                root.barState.launchCommand("pamac-manager || bauh || pacseek || rofi -show drun");
+                root.barState.launchCommand("pamac-manager || bauh || pacseek || lunita-launcher toggle");
             }
         }
 

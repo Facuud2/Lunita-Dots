@@ -549,7 +549,7 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        barState.openSpotlight();
+                        barState.openAppLauncher();
                     }
                 }
             }
