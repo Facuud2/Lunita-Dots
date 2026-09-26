@@ -223,6 +223,11 @@ cmd_apply() {
     elif [ -L "$HOME/.config/quickshell/spotlight" ]; then
         rm -f "$HOME/.config/quickshell/spotlight"
     fi
+    if [ -d "$target_dir/quickshell/notifications" ]; then
+        link_component "$target_dir/quickshell/notifications" "$HOME/.config/quickshell/notifications"
+    elif [ -L "$HOME/.config/quickshell/notifications" ]; then
+        rm -f "$HOME/.config/quickshell/notifications"
+    fi
     if [ -d "$target_dir/quickshell/hyprquickpaper" ]; then
         link_component "$target_dir/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
     elif [ -L "$HOME/.config/quickshell/hyprquickpaper" ]; then
@@ -316,6 +321,9 @@ cmd_apply() {
     if [ -f "$DOTS_DIR/scripts/lunita-spotlight" ]; then
         ln -sf "$DOTS_DIR/scripts/lunita-spotlight" "$HOME/.local/bin/lunita-spotlight"
     fi
+    if [ -f "$DOTS_DIR/scripts/lunita-notify" ]; then
+        ln -sf "$DOTS_DIR/scripts/lunita-notify" "$HOME/.local/bin/lunita-notify"
+    fi
     if [ -f "$DOTS_DIR/core/lunita-theme-selector.desktop" ]; then
         ln -sf "$DOTS_DIR/core/lunita-theme-selector.desktop" "$HOME/.local/share/applications/lunita-theme-selector.desktop"
     fi
@@ -343,25 +351,35 @@ cmd_apply() {
         fi
     fi
 
+    # Obtener configuración de cursor, tema e iconos del tema actual
+    local cursor_theme="Bibata-Modern-Ice"
+    local cursor_size="40"
+    local color_scheme="prefer-dark"
+    local icon_theme="WhiteSur"
+
+    if [ -f "$target_dir/gtk-3.0/settings.ini" ]; then
+        local ct="$(grep '^gtk-cursor-theme-name=' "$target_dir/gtk-3.0/settings.ini" | cut -d= -f2 | tr -d ' ' || true)"
+        local cs="$(grep '^gtk-cursor-theme-size=' "$target_dir/gtk-3.0/settings.ini" | cut -d= -f2 | tr -d ' ' || true)"
+        [ -n "$ct" ] && cursor_theme="$ct"
+        [ -n "$cs" ] && cursor_size="$cs"
+
+        if grep -q 'gtk-application-prefer-dark-theme=0' "$target_dir/gtk-3.0/settings.ini"; then
+            color_scheme="prefer-light"
+        fi
+        icon_theme="$(grep '^gtk-icon-theme-name=' "$target_dir/gtk-3.0/settings.ini" | cut -d= -f2 | tr -d ' ' || echo 'WhiteSur')"
+    fi
+
     # Recargar Hyprland y aplicar cursor
     if pgrep -x Hyprland > /dev/null; then
-        hyprctl setcursor Bibata-Modern-Ice 40 >/dev/null 2>&1 || true
+        hyprctl setcursor "$cursor_theme" "$cursor_size" >/dev/null 2>&1 || true
         hyprctl reload >/dev/null 2>&1 || true
-        success "Hyprland recargado."
+        success "Hyprland recargado con cursor '$cursor_theme' ($cursor_size px)."
     fi
 
     # Sincronizar tema de cursor, GTK e iconos en GSettings / dconf
     if command -v gsettings &>/dev/null; then
-        gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice' 2>/dev/null || true
-        gsettings set org.gnome.desktop.interface cursor-size 40 2>/dev/null || true
-        local color_scheme="prefer-dark"
-        local icon_theme="WhiteSur"
-        if [ -f "$target_dir/gtk-3.0/settings.ini" ]; then
-            if grep -q 'gtk-application-prefer-dark-theme=0' "$target_dir/gtk-3.0/settings.ini"; then
-                color_scheme="prefer-light"
-            fi
-            icon_theme="$(grep '^gtk-icon-theme-name=' "$target_dir/gtk-3.0/settings.ini" | cut -d= -f2 | tr -d ' ' || echo 'WhiteSur')"
-        fi
+        gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface cursor-size "$cursor_size" 2>/dev/null || true
         gsettings set org.gnome.desktop.interface color-scheme "$color_scheme" 2>/dev/null || true
         gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
     fi
@@ -451,6 +469,21 @@ cmd_apply() {
         if pgrep -f "quickshell.*spotlight" > /dev/null; then
             pkill -f "quickshell.*spotlight" 2>/dev/null || true
             info "Quickshell Spotlight detenido (no configurado en '$target')."
+        fi
+    fi
+
+    # Gestión de Quickshell Notifications
+    if [ -d "$target_dir/quickshell/notifications" ]; then
+        if pgrep -f "quickshell.*notifications" > /dev/null; then
+            pkill -f "quickshell.*notifications" 2>/dev/null || true
+            sleep 0.2
+        fi
+        quickshell -d -n -p "$HOME/.config/quickshell/notifications"
+        success "Quickshell Notifications iniciado."
+    else
+        if pgrep -f "quickshell.*notifications" > /dev/null; then
+            pkill -f "quickshell.*notifications" 2>/dev/null || true
+            info "Quickshell Notifications detenido (no configurado en '$target')."
         fi
     fi
 

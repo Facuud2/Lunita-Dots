@@ -9,7 +9,7 @@
     "dock": "dock-macos-liquid-glass",
     "launcher": "quickshell-macos-app-library",
     "powermenu": "wlogout-macos-glass",
-    "notifications": "ags-notifications",
+    "notifications": "quickshell-macos-notifications",
     "widgets": "eww-cava-player",
     "color_engine": "macos-cupertino",
     "wallpaper_picker": "hyprquickpaper",
@@ -17,7 +17,7 @@
     "terminal": "kitty-macos",
     "file_manager": "dolphin-lunita",
     "clipboard": "ags-cliphist",
-    "cursor": "bibata-modern-ice-40px",
+    "cursor": "apple-macos-32px",
     "shell": "zsh-pills",
     "discord": "vesktop-macos-cupertino"
   },
@@ -26,6 +26,7 @@
     "Físicas elásticas SwiftUI y Core Animation para transiciones ultra fluidas en Hyprland",
     "Bordes de 16px y efectos de desenfoque Liquid Glass / Frosted Acrylic",
     "Paleta oficial de Cupertino (System Blue, Indigo, Purple, Red, Green)",
+    "Paquete oficial de cursores macOS (Apple Cursors) de alta resolución a 32px",
     "Arquitectura modular lista y libre de dependencias de matugen"
   ]
 }

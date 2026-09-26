@@ -189,7 +189,7 @@ sudo pacman -S hyprland hyprlock hyprpolkitagent xdg-desktop-portal-hyprland \
                brightnessctl playerctl jq imagemagick ffmpeg
 
 # AUR (Fondo dinámico, cursores y utilidades)
-yay -S awww bibata-cursor-theme-bin
+yay -S awww bibata-cursor-theme-bin apple_cursor
 ```
 
 > [!NOTE]

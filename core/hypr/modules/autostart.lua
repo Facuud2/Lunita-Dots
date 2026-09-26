@@ -15,18 +15,17 @@ function M.setup()
         -- 2. Iniciar el agente de Polkit
         hl.exec_cmd("systemctl --user start hyprpolkitagent || /usr/lib/hyprpolkitagent/hyprpolkitagent &")
 
-        -- 3. Cursor y tema de sistema
-        hl.exec_cmd("hyprctl setcursor Bibata-Modern-Ice 40")
-        hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice'")
-        hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-size 40")
+        -- 3. Cursor y tema de sistema (dinámico según el tema activo)
+        hl.exec_cmd("sh -c 'CT=$(grep -s \"^gtk-cursor-theme-name=\" ~/.config/gtk-3.0/settings.ini | cut -d= -f2 | tr -d \" \"); CS=$(grep -s \"^gtk-cursor-theme-size=\" ~/.config/gtk-3.0/settings.ini | cut -d= -f2 | tr -d \" \"); CT=${CT:-Bibata-Modern-Ice}; CS=${CS:-40}; hyprctl setcursor \"$CT\" \"$CS\"; gsettings set org.gnome.desktop.interface cursor-theme \"$CT\"; gsettings set org.gnome.desktop.interface cursor-size \"$CS\"'")
 
         -- 4. Demonio de fondo de pantalla y restauración
         hl.exec_cmd("pgrep -x awww-daemon >/dev/null || awww-daemon")
         hl.exec_cmd("sh -c 'sleep 0.5 && if [ -f \"" .. home .. "/.cache/hyprquickpaper/current_wallpaper\" ]; then awww img \"$(cat \"" .. home .. "/.cache/hyprquickpaper/current_wallpaper\")\"; elif [ -f \"" .. home .. "/.config/hypr/current_wallpaper.png\" ]; then awww img \"" .. home .. "/.config/hypr/current_wallpaper.png\"; fi'")
 
-        -- 5. Quickshell Dock y Barra Superior
+        -- 5. Quickshell Dock, Barra Superior y Notificaciones
         hl.exec_cmd("[ -d " .. home .. "/.config/quickshell/dock ] && quickshell -d -n -p " .. home .. "/.config/quickshell/dock")
         hl.exec_cmd("[ -d " .. home .. "/.config/quickshell/bar ] && quickshell -d -n -p " .. home .. "/.config/quickshell/bar")
+        hl.exec_cmd("[ -d " .. home .. "/.config/quickshell/notifications ] && quickshell -d -n -p " .. home .. "/.config/quickshell/notifications")
 
         -- 6. AGS Dynamic Widgets (si está presente)
         hl.exec_cmd("[ -d " .. home .. "/.config/ags ] && env PATH=" .. home .. "/.local/bin:$PATH ags run")
