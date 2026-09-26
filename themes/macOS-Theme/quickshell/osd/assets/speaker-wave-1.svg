@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <!-- macOS SF Symbols Speaker Body -->
+  <path d="M 12 24 L 20 24 L 34 12 L 34 52 L 20 40 L 12 40 C 10.343 40 9 38.657 9 37 L 9 27 C 9 25.343 10.343 24 12 24 Z" fill="#FFFFFF" fill-opacity="0.95" />
+  <!-- Wave 1 (Inner) -->
+  <path d="M 41 23 C 44.5 26 46.5 28.8 46.5 32 C 46.5 35.2 44.5 38 41 41" stroke="#FFFFFF" stroke-opacity="0.95" stroke-width="4.5" stroke-linecap="round" />
+</svg>

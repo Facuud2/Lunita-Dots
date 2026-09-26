@@ -22,10 +22,11 @@ function M.setup()
         hl.exec_cmd("pgrep -x awww-daemon >/dev/null || awww-daemon")
         hl.exec_cmd("sh -c 'sleep 0.5 && if [ -f \"" .. home .. "/.cache/hyprquickpaper/current_wallpaper\" ]; then awww img \"$(cat \"" .. home .. "/.cache/hyprquickpaper/current_wallpaper\")\"; elif [ -f \"" .. home .. "/.config/hypr/current_wallpaper.png\" ]; then awww img \"" .. home .. "/.config/hypr/current_wallpaper.png\"; fi'")
 
-        -- 5. Quickshell Dock, Barra Superior y Notificaciones
+        -- 5. Quickshell Dock, Barra Superior, Notificaciones y Volume OSD
         hl.exec_cmd("[ -d " .. home .. "/.config/quickshell/dock ] && quickshell -d -n -p " .. home .. "/.config/quickshell/dock")
         hl.exec_cmd("[ -d " .. home .. "/.config/quickshell/bar ] && quickshell -d -n -p " .. home .. "/.config/quickshell/bar")
         hl.exec_cmd("[ -d " .. home .. "/.config/quickshell/notifications ] && quickshell -d -n -p " .. home .. "/.config/quickshell/notifications")
+        hl.exec_cmd("[ -d " .. home .. "/.config/quickshell/osd ] && quickshell -d -n -p " .. home .. "/.config/quickshell/osd")
 
         -- 6. AGS Dynamic Widgets (si está presente)
         hl.exec_cmd("[ -d " .. home .. "/.config/ags ] && env PATH=" .. home .. "/.local/bin:$PATH ags run")

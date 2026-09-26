@@ -228,6 +228,11 @@ cmd_apply() {
     elif [ -L "$HOME/.config/quickshell/notifications" ]; then
         rm -f "$HOME/.config/quickshell/notifications"
     fi
+    if [ -d "$target_dir/quickshell/osd" ]; then
+        link_component "$target_dir/quickshell/osd" "$HOME/.config/quickshell/osd"
+    elif [ -L "$HOME/.config/quickshell/osd" ]; then
+        rm -f "$HOME/.config/quickshell/osd"
+    fi
     if [ -d "$target_dir/quickshell/hyprquickpaper" ]; then
         link_component "$target_dir/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
     elif [ -L "$HOME/.config/quickshell/hyprquickpaper" ]; then
@@ -323,6 +328,9 @@ cmd_apply() {
     fi
     if [ -f "$DOTS_DIR/scripts/lunita-notify" ]; then
         ln -sf "$DOTS_DIR/scripts/lunita-notify" "$HOME/.local/bin/lunita-notify"
+    fi
+    if [ -f "$DOTS_DIR/scripts/lunita-osd" ]; then
+        ln -sf "$DOTS_DIR/scripts/lunita-osd" "$HOME/.local/bin/lunita-osd"
     fi
     if [ -f "$DOTS_DIR/core/lunita-theme-selector.desktop" ]; then
         ln -sf "$DOTS_DIR/core/lunita-theme-selector.desktop" "$HOME/.local/share/applications/lunita-theme-selector.desktop"
@@ -484,6 +492,21 @@ cmd_apply() {
         if pgrep -f "quickshell.*notifications" > /dev/null; then
             pkill -f "quickshell.*notifications" 2>/dev/null || true
             info "Quickshell Notifications detenido (no configurado en '$target')."
+        fi
+    fi
+
+    # Gestión de Quickshell OSD (Volume / Brightness HUD)
+    if [ -d "$target_dir/quickshell/osd" ]; then
+        if pgrep -f "quickshell.*osd" > /dev/null; then
+            pkill -f "quickshell.*osd" 2>/dev/null || true
+            sleep 0.2
+        fi
+        quickshell -d -n -p "$HOME/.config/quickshell/osd"
+        success "Quickshell Volume OSD clásico iniciado."
+    else
+        if pgrep -f "quickshell.*osd" > /dev/null; then
+            pkill -f "quickshell.*osd" 2>/dev/null || true
+            info "Quickshell OSD detenido (no configurado en '$target')."
         fi
     fi
 

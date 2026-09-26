@@ -13,15 +13,6 @@ Item {
     width: implicitWidth
     height: implicitHeight
 
-    // Platter Shadow Glow
-    RectangularGlow {
-        anchors.fill: platterBg
-        anchors.topMargin: 4
-        glowRadius: 16
-        spread: 0.1
-        color: "#59000000"
-        cornerRadius: platterBg.radius + glowRadius
-    }
 
     // ── Glass Capsule Platter Background ──
     Rectangle {
@@ -29,6 +20,7 @@ Item {
         height: 64
         width: contentRow.implicitWidth + 20
         radius: 18
+        clip: true
 
         // Multi-layer frosted liquid glass material
         color: "#30ffffff"
