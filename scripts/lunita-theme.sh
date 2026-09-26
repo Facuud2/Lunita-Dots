@@ -238,6 +238,11 @@ cmd_apply() {
     elif [ -L "$HOME/.config/quickshell/hyprquickpaper" ]; then
         rm -f "$HOME/.config/quickshell/hyprquickpaper"
     fi
+    if [ -d "$target_dir/quickshell/lockscreen" ]; then
+        link_component "$target_dir/quickshell/lockscreen" "$HOME/.config/quickshell/lockscreen"
+    elif [ -L "$HOME/.config/quickshell/lockscreen" ]; then
+        rm -f "$HOME/.config/quickshell/lockscreen"
+    fi
 
     # Enlazar Dolphin y KDE Globals
     link_component "$target_dir/dolphin/dolphinrc" "$HOME/.config/dolphinrc"
@@ -331,6 +336,9 @@ cmd_apply() {
     fi
     if [ -f "$DOTS_DIR/scripts/lunita-osd" ]; then
         ln -sf "$DOTS_DIR/scripts/lunita-osd" "$HOME/.local/bin/lunita-osd"
+    fi
+    if [ -f "$DOTS_DIR/scripts/lunita-quickshell" ]; then
+        ln -sf "$DOTS_DIR/scripts/lunita-quickshell" "$HOME/.local/bin/lunita-quickshell"
     fi
     if [ -f "$DOTS_DIR/core/lunita-theme-selector.desktop" ]; then
         ln -sf "$DOTS_DIR/core/lunita-theme-selector.desktop" "$HOME/.local/share/applications/lunita-theme-selector.desktop"

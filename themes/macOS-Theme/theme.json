@@ -13,7 +13,7 @@
     "widgets": "eww-cava-player",
     "color_engine": "macos-cupertino",
     "wallpaper_picker": "hyprquickpaper",
-    "lockscreen": "prelock-hyprlock",
+    "lockscreen": "quickshell-macos-lockscreen",
     "terminal": "kitty-macos",
     "file_manager": "dolphin-lunita",
     "clipboard": "ags-cliphist",
