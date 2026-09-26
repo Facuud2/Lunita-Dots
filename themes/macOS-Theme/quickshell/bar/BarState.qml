@@ -646,7 +646,7 @@ Item {
 
     function openSpotlight() {
         closePopups();
-        Quickshell.execDetached(["bash", "-c", "rofi -show drun"]);
+        Quickshell.execDetached(["bash", "-c", "lunita-spotlight toggle"]);
     }
 
     function openAppLauncher() {

@@ -23,7 +23,7 @@ function M.setup(opts_or_terminal, fileManager, menu, browser, ide, mainMod)
     local mod         = opts.mainMod     or "SUPER"
 
     -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
-    hl.bind(mod .. " + SPACE", hl.dsp.exec_cmd("ags request toggle-island"))
+    hl.bind(mod .. " + SPACE", hl.dsp.exec_cmd("command -v lunita-spotlight >/dev/null 2>&1 && lunita-spotlight || ags request toggle-island"))
     hl.bind(mod .. " + A",     hl.dsp.exec_cmd("command -v lunita-launcher >/dev/null 2>&1 && lunita-launcher || ags request toggle-launcher"))
     hl.bind(mod .. " + K",     hl.dsp.exec_cmd("ags request toggle-virtual-keyboard"))
     hl.bind(mod .. " + Q", hl.dsp.exec_cmd(terminal))
