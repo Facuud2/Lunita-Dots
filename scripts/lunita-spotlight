@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🔍 LUNITA SPOTLIGHT WRAPPER
+# Gestor e invocador reactivo para el Spotlight de macOS en Quickshell
+# ==============================================================================
+
+set -e
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+DOTS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+ACTION="${1:-toggle}"
+
+SPOTLIGHT_PATH="$HOME/.config/quickshell/spotlight"
+if [ ! -d "$SPOTLIGHT_PATH" ]; then
+    SPOTLIGHT_PATH="$DOTS_DIR/themes/macOS-Theme/quickshell/spotlight"
+fi
+
+# 1. Si Spotlight ya está en ejecución, enviar comando IPC directamente
+if pgrep -f "quickshell.*spotlight" >/dev/null 2>&1; then
+    quickshell -p "$SPOTLIGHT_PATH" ipc call spotlight "$ACTION" 2>/dev/null || quickshell ipc call spotlight "$ACTION" 2>/dev/null || true
+    exit 0
+fi
+
+# 2. Si no está en ejecución, iniciarlo en modo daemon
+quickshell -d -n -p "$SPOTLIGHT_PATH"
+
+# Pequeña espera para inicializar socket IPC y abrir
+sleep 0.15
+quickshell -p "$SPOTLIGHT_PATH" ipc call spotlight "$ACTION" 2>/dev/null || quickshell ipc call spotlight "$ACTION" 2>/dev/null || true

@@ -218,6 +218,11 @@ cmd_apply() {
     elif [ -L "$HOME/.config/quickshell/launcher" ]; then
         rm -f "$HOME/.config/quickshell/launcher"
     fi
+    if [ -d "$target_dir/quickshell/spotlight" ]; then
+        link_component "$target_dir/quickshell/spotlight" "$HOME/.config/quickshell/spotlight"
+    elif [ -L "$HOME/.config/quickshell/spotlight" ]; then
+        rm -f "$HOME/.config/quickshell/spotlight"
+    fi
     if [ -d "$target_dir/quickshell/hyprquickpaper" ]; then
         link_component "$target_dir/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
     elif [ -L "$HOME/.config/quickshell/hyprquickpaper" ]; then
@@ -307,6 +312,9 @@ cmd_apply() {
     fi
     if [ -f "$DOTS_DIR/scripts/lunita-launcher" ]; then
         ln -sf "$DOTS_DIR/scripts/lunita-launcher" "$HOME/.local/bin/lunita-launcher"
+    fi
+    if [ -f "$DOTS_DIR/scripts/lunita-spotlight" ]; then
+        ln -sf "$DOTS_DIR/scripts/lunita-spotlight" "$HOME/.local/bin/lunita-spotlight"
     fi
     if [ -f "$DOTS_DIR/core/lunita-theme-selector.desktop" ]; then
         ln -sf "$DOTS_DIR/core/lunita-theme-selector.desktop" "$HOME/.local/share/applications/lunita-theme-selector.desktop"
@@ -428,6 +436,21 @@ cmd_apply() {
         if pgrep -f "quickshell.*launcher" > /dev/null; then
             pkill -f "quickshell.*launcher" 2>/dev/null || true
             info "Quickshell Launcher detenido (no configurado en '$target')."
+        fi
+    fi
+
+    # Gestión de Quickshell Spotlight
+    if [ -d "$target_dir/quickshell/spotlight" ]; then
+        if pgrep -f "quickshell.*spotlight" > /dev/null; then
+            pkill -f "quickshell.*spotlight" 2>/dev/null || true
+            sleep 0.2
+        fi
+        quickshell -d -n -p "$HOME/.config/quickshell/spotlight"
+        success "Quickshell Spotlight iniciado."
+    else
+        if pgrep -f "quickshell.*spotlight" > /dev/null; then
+            pkill -f "quickshell.*spotlight" 2>/dev/null || true
+            info "Quickshell Spotlight detenido (no configurado en '$target')."
         fi
     fi
 
