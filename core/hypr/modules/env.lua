@@ -5,10 +5,25 @@ function M.setup(programs)
     -- Environment Variables
     -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Environment-variables/
     hl.env("PATH", os.getenv("HOME") .. "/.local/bin:" .. (os.getenv("PATH") or "/usr/local/bin:/usr/bin"))
-    hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
-    hl.env("XCURSOR_SIZE", "40")
-    hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Ice")
-    hl.env("HYPRCURSOR_SIZE", "40")
+    
+    -- Cursor configuration
+    local cursor_theme = "Bibata-Modern-Ice"
+    local cursor_size = "40"
+    local gtk_file = io.open(os.getenv("HOME") .. "/.config/gtk-3.0/settings.ini", "r")
+    if gtk_file then
+        for line in gtk_file:lines() do
+            local ct = line:match("^gtk%-cursor%-theme%-name=(.+)$")
+            local cs = line:match("^gtk%-cursor%-theme%-size=(.+)$")
+            if ct then cursor_theme = ct:gsub("%s+", "") end
+            if cs then cursor_size = cs:gsub("%s+", "") end
+        end
+        gtk_file:close()
+    end
+
+    hl.env("XCURSOR_THEME", cursor_theme)
+    hl.env("XCURSOR_SIZE", cursor_size)
+    hl.env("HYPRCURSOR_THEME", cursor_theme)
+    hl.env("HYPRCURSOR_SIZE", cursor_size)
 
     -- Qt Styling & Wayland Integration (Lunita Rice)
     hl.env("QT_QPA_PLATFORM", "wayland;xcb")

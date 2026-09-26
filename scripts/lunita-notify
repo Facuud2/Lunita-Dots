@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🌙 LUNITA NOTIFICATIONS CLI
+# ==============================================================================
+
+ACTION="${1:-test}"
+
+case "$ACTION" in
+    test|sample)
+        TYPE="${2:-brunch}"
+        if [ -f "$HOME/.config/quickshell/notifications/scripts/test_notification.sh" ]; then
+            bash "$HOME/.config/quickshell/notifications/scripts/test_notification.sh" "$TYPE"
+        else
+            notify-send "Test Notification" "macOS notification testing"
+        fi
+        ;;
+    clear|clear-all)
+        quickshell-ipc notifications clear 2>/dev/null || true
+        ;;
+    *)
+        echo "Uso: lunita-notify [test <brunch|facetime|fitness|medication|messages|mail> | clear]"
+        ;;
+esac

@@ -18,7 +18,9 @@ Tema réplica ultra-fiel inspirado en el sistema de diseño **macOS 27 (Liquid G
 | :--- | :--- | :--- |
 | **Barra Superior** | Quickshell (QML) | Frosted Glass adaptativo Claro/Oscuro con tintado SVG |
 | **Centro de Control** | Quickshell (QML) | Controles interactivos con toggle Dark Mode |
+| **Notificaciones** | Quickshell (QML) | Banners macOS Glass con botón "Options ▾", dropdown interactivo y auto-dismiss |
 | **Dock** | Quickshell (QML) | Dock con magnificación fluida |
+| **Spotlight** | Quickshell (QML) | Búsqueda global, calculadora y lanzador rápido |
 | **Compositor** | Hyprland (Lua) | Físicas Apple SwiftUI, bordes 16px, sombras difusas |
 | **Terminal** | Kitty | Paleta Cupertino macOS con soporte claro/oscuro |
 | **Pantalla de Bloqueo** | Hyprlock / Prelock | Acabado Apple Glass con tipografía SF Pro |

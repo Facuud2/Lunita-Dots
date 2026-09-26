@@ -1,16 +1,18 @@
-// ── Volume OSD Floating Popup (Estilo GNOME / Nothing OS) ────────────────────
+// ── Volume OSD Floating Popup (Estilo macOS Clásico 16 Segmentos) ─────────────
 
 window.volume-osd-window {
   background: transparent;
 }
 
 .volume-osd-card {
-  background-color: rgba(18, 18, 20, 0.90);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  padding: 12px 18px;
-  min-width: 320px;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.60), 0 2px 10px rgba(0, 0, 0, 0.40);
+  background-color: rgba(28, 28, 32, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  padding: 18px 16px 16px 16px;
+  min-width: 190px;
+  max-width: 190px;
+  min-height: 185px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
   opacity: 1;
   transition: opacity 180ms ease, transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -21,62 +23,46 @@ window.volume-osd-window {
 
   &.osd-hide {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.92);
   }
 
-  .osd-top-row {
-    .osd-device-icon {
-      font-size: 16px;
-      color: var(--text-secondary);
-    }
+  .osd-icon-container {
+    min-height: 68px;
 
-    .osd-device-name {
-      font-family: $font-ui;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.2px;
-      color: var(--text-primary);
-    }
-
-    .osd-vol-value {
-      font-family: $font-dots;
-      font-size: 13px;
-      color: var(--text-primary);
-      letter-spacing: 0.5px;
+    .osd-main-icon {
+      font-size: 54px;
+      color: rgba(255, 255, 255, 0.95);
 
       &.muted {
-        color: var(--accent-red);
-        font-weight: 700;
+        color: rgba(255, 255, 255, 0.70);
       }
     }
   }
 
-  .osd-bottom-row {
-    .osd-vol-icon {
-      font-size: 20px;
-      color: var(--text-primary);
-      min-width: 24px;
+  .osd-device-name {
+    font-family: $font-ui;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: -4px;
+  }
 
-      &.muted {
-        color: var(--accent-red);
-      }
-    }
+  .osd-segments-row {
+    margin-top: 10px;
+    margin-bottom: 2px;
 
-    .osd-bar-track {
-      min-width: 260px;
-      min-height: 8px;
-      border-radius: 4px;
-      background-color: rgba(255, 255, 255, 0.12);
+    .osd-segment {
+      min-width: 7.5px;
+      min-height: 6.5px;
+      border-radius: 1.5px;
+      background-color: rgba(0, 0, 0, 0.40);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      transition: background-color 40ms linear, border-color 40ms linear;
 
-      .osd-bar-fill {
-        min-height: 8px;
-        border-radius: 4px;
-        background-color: var(--text-primary);
-        transition: min-width 80ms cubic-bezier(0.1, 0.9, 0.2, 1.0);
-
-        &.muted {
-          background-color: var(--accent-red);
-        }
+      &.active {
+        background-color: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(255, 255, 255, 1.0);
       }
     }
   }

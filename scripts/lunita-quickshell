@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🚀 LUNITA QUICKSHELL DAEMON & PROCESS MANAGER
+# Control unificado de procesos e inicio de componentes Quickshell para Lunita-Dots
+# ==============================================================================
+
+set -e
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+DOTS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Colores y estilo
+BOLD="\033[1m"
+GREEN="\033[32m"
+BLUE="\033[34m"
+CYAN="\033[36m"
+YELLOW="\033[33m"
+RED="\033[31m"
+MAGENTA="\033[35m"
+RESET="\033[0m"
+
+info() { echo -e "${CYAN}ℹ${RESET} $1"; }
+success() { echo -e "${GREEN}✓${RESET} $1"; }
+warn() { echo -e "${YELLOW}⚠${RESET} $1"; }
+error() { echo -e "${RED}✗${RESET} $1" >&2; }
+
+# Componentes Quickshell en modo daemon continuo
+DAEMON_COMPONENTS=("bar" "dock" "notifications" "osd" "spotlight" "launcher")
+
+get_qs_bin() {
+    if command -v quickshell &>/dev/null; then
+        echo "quickshell"
+    elif command -v qs &>/dev/null; then
+        echo "qs"
+    else
+        echo ""
+    fi
+}
+
+start_component() {
+    local comp="$1"
+    local config_dir="$HOME/.config/quickshell/$comp"
+    local qs_bin
+    qs_bin="$(get_qs_bin)"
+
+    if [ -z "$qs_bin" ]; then
+        error "Quickshell no está instalado en el sistema."
+        return 1
+    fi
+
+    if [ ! -d "$config_dir" ]; then
+        return 0
+    fi
+
+    if pgrep -f "quickshell.*$comp" >/dev/null 2>&1; then
+        info "Quickshell [$comp] ya está en ejecución."
+        return 0
+    fi
+
+    # Iniciar con bandera -d (daemonize), -n (no-duplicate) y -p (ruta canónica)
+    "$qs_bin" -d -n -p "$config_dir" >/dev/null 2>&1 &
+    success "Iniciado Quickshell [$comp]"
+}
+
+stop_component() {
+    local comp="$1"
+    if pgrep -f "quickshell.*$comp" >/dev/null 2>&1; then
+        pkill -f "quickshell.*$comp" 2>/dev/null || true
+        success "Detenido Quickshell [$comp]"
+    fi
+}
+
+cmd_start() {
+    local qs_bin
+    qs_bin="$(get_qs_bin)"
+
+    if [ -z "$qs_bin" ]; then
+        error "Quickshell no está instalado en el sistema."
+        exit 1
+    fi
+
+    for comp in "${DAEMON_COMPONENTS[@]}"; do
+        start_component "$comp"
+    done
+}
+
+cmd_stop() {
+    info "Deteniendo todas las instancias de Quickshell..."
+    for comp in "${DAEMON_COMPONENTS[@]}"; do
+        stop_component "$comp"
+    done
+    pkill -x quickshell 2>/dev/null || true
+    pkill -x qs 2>/dev/null || true
+    success "Instancias de Quickshell finalizadas."
+}
+
+cmd_restart() {
+    cmd_stop
+    sleep 0.3
+    cmd_start
+}
+
+cmd_status() {
+    echo -e "${BOLD}${MAGENTA}🌙 Estado de Procesos Quickshell (Lunita-Dots)${RESET}"
+    echo "=================================================="
+    for comp in "${DAEMON_COMPONENTS[@]}"; do
+        local config_dir="$HOME/.config/quickshell/$comp"
+        if [ -d "$config_dir" ]; then
+            if pgrep -f "quickshell.*$comp" >/dev/null 2>&1; then
+                local pids
+                pids="$(pgrep -f "quickshell.*$comp" | tr '\n' ' ')"
+                echo -e "  ${GREEN}●${RESET} ${BOLD}$comp${RESET}: ${GREEN}Activo${RESET} (PID: ${pids% })"
+            else
+                echo -e "  ${RED}○${RESET} ${BOLD}$comp${RESET}: ${RED}Inactivo${RESET}"
+            fi
+        else
+            echo -e "  ${YELLOW}−${RESET} $comp: No configurado en este tema"
+        fi
+    done
+}
+
+case "$1" in
+    start|autostart|launch)
+        cmd_start
+        ;;
+    stop|kill)
+        cmd_stop
+        ;;
+    restart|reload)
+        cmd_restart
+        ;;
+    status|list)
+        cmd_status
+        ;;
+    *)
+        if [ -n "$1" ] && [[ " ${DAEMON_COMPONENTS[*]} " =~ " $1 " ]]; then
+            start_component "$1"
+        else
+            echo "Uso: lunita-quickshell {start|stop|restart|status|<component>}"
+            exit 1
+        fi
+        ;;
+esac

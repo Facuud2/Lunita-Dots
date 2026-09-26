@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🔊 LUNITA OSD WRAPPER
+# Gestor e invocador reactivo para el OSD clásico estilo macOS
+# ==============================================================================
+
+set -e
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+DOTS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+ACTION="${1:-show}"
+TYPE="${2:-volume}"
+
+OSD_PATH="$HOME/.config/quickshell/osd"
+if [ ! -d "$OSD_PATH" ]; then
+    OSD_PATH="$DOTS_DIR/themes/macOS-Theme/quickshell/osd"
+fi
+
+# 1. Si el OSD de Quickshell ya está en ejecución, enviar comando IPC
+if pgrep -f "quickshell.*osd" >/dev/null 2>&1; then
+    quickshell -p "$OSD_PATH" ipc call osd "$ACTION" "$TYPE" 2>/dev/null || quickshell ipc call osd "$ACTION" "$TYPE" 2>/dev/null || true
+    exit 0
+fi
+
+# 2. Si no está en ejecución, iniciarlo en modo daemon
+if [ -d "$OSD_PATH" ]; then
+    quickshell -d -n -p "$OSD_PATH"
+    sleep 0.15
+    quickshell -p "$OSD_PATH" ipc call osd "$ACTION" "$TYPE" 2>/dev/null || true
+fi

@@ -12,6 +12,10 @@ smallestReadableFont=SF Pro Display,8,-1,5,50,0,0,0,0,0
 [Icons]
 Theme=WhiteSur
 
+[Mouse]
+cursorTheme=macOS
+cursorSize=32
+
 [KDE]
 ShowDeleteCommand=true
 SingleClick=false

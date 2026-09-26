@@ -1,0 +1,284 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🌅🌙 LUNITA TIME-BASED DYNAMIC WALLPAPER
+# Cambia automáticamente el wallpaper según la hora del día (Morning, Afternoon, Night)
+# ==============================================================================
+
+set -e
+
+# Configuración por defecto de horarios (formato 24h, solo hora entera)
+# Morning:   06:00 - 12:59
+# Afternoon: 13:00 - 19:59
+# Night:     20:00 - 05:59
+MORNING_HOUR="${MORNING_HOUR:-6}"
+AFTERNOON_HOUR="${AFTERNOON_HOUR:-13}"
+NIGHT_HOUR="${NIGHT_HOUR:-20}"
+
+# Preset por defecto (ej: 'apple' -> apple_morning, apple_afternoon, apple_night)
+PRESET="${WALLPAPER_PRESET:-apple}"
+
+# Transición por defecto para awww
+TRANSITION_TYPE="${TRANSITION_TYPE:-fade}"
+TRANSITION_DURATION="${TRANSITION_DURATION:-2.0}"
+TRANSITION_FPS="${TRANSITION_FPS:-60}"
+
+# Colores para CLI
+BOLD="\033[1m"
+GREEN="\033[32m"
+BLUE="\033[34m"
+CYAN="\033[36m"
+YELLOW="\033[33m"
+RED="\033[31m"
+MAGENTA="\033[35m"
+RESET="\033[0m"
+
+# Directorio de wallpapers: busca en varias ubicaciones estándar
+find_wallpaper_dir() {
+    if [ -n "$WALLPAPER_DIR" ] && [ -d "$WALLPAPER_DIR" ]; then
+        echo "$WALLPAPER_DIR"
+        return 0
+    fi
+
+    local candidate_dirs=(
+        "$HOME/Imagenes/Wallpapers"
+        "$HOME/Imágenes/Wallpapers"
+        "$HOME/Pictures/Wallpapers"
+        "$HOME/Imágenes"
+        "$HOME/Pictures"
+    )
+
+    for dir in "${candidate_dirs[@]}"; do
+        if [ -d "$dir" ]; then
+            echo "$dir"
+            return 0
+        fi
+    done
+
+    echo "$HOME/Imagenes/Wallpapers"
+}
+
+WALLPAPER_DIR="$(find_wallpaper_dir)"
+
+# Determinar el período según la hora actual
+get_current_slot() {
+    local hour
+    hour=$(date +%-H)
+
+    if [ "$hour" -ge "$MORNING_HOUR" ] && [ "$hour" -lt "$AFTERNOON_HOUR" ]; then
+        echo "morning"
+    elif [ "$hour" -ge "$AFTERNOON_HOUR" ] && [ "$hour" -lt "$NIGHT_HOUR" ]; then
+        echo "afternoon"
+    else
+        echo "night"
+    fi
+}
+
+# Encontrar el archivo de wallpaper correspondiente a un slot y preset
+get_wallpaper_file() {
+    local slot="$1"
+    local preset="$2"
+    local extensions=("jpg" "jpeg" "png" "webp" "jxl" "avif")
+
+    # 1. Buscar coincidencia exacta con preset: ej. apple_morning.jpg
+    for ext in "${extensions[@]}"; do
+        local target="$WALLPAPER_DIR/${preset}_${slot}.${ext}"
+        if [ -f "$target" ]; then
+            echo "$target"
+            return 0
+        fi
+    done
+
+    # 2. Buscar por nombre que contenga el slot: ej. morning.jpg o *_morning*.jpg
+    for ext in "${extensions[@]}"; do
+        local target="$WALLPAPER_DIR/${slot}.${ext}"
+        if [ -f "$target" ]; then
+            echo "$target"
+            return 0
+        fi
+    done
+
+    # 3. Búsqueda con glob / find case-insensitive
+    local found
+    found=$(find "$WALLPAPER_DIR" -maxdepth 2 -type f \( -iname "*${preset}*${slot}*" -o -iname "*${slot}*" \) 2>/dev/null | head -n 1)
+    if [ -n "$found" ] && [ -f "$found" ]; then
+        echo "$found"
+        return 0
+    fi
+
+    echo ""
+}
+
+# Aplicar el wallpaper al sistema
+apply_wallpaper() {
+    local wall_path="$1"
+    local force="${2:-false}"
+
+    if [ -z "$wall_path" ] || [ ! -f "$wall_path" ]; then
+        echo -e "${RED}✗ Error:${RESET} No se encontró archivo de fondo de pantalla en: '$wall_path'" >&2
+        return 1
+    fi
+
+    # Verificar si ya está activo para evitar repeticiones innecesarias
+    local current_active=""
+    if [ -f "$HOME/.cache/hyprquickpaper/current_wallpaper" ]; then
+        current_active="$(cat "$HOME/.cache/hyprquickpaper/current_wallpaper" 2>/dev/null || true)"
+    fi
+
+    if [ "$current_active" = "$wall_path" ] && [ "$force" != "true" ]; then
+        return 0
+    fi
+
+    # Aplicar con awww / swww si están disponibles
+    if command -v awww &>/dev/null; then
+        awww img "$wall_path" \
+            --transition-type "$TRANSITION_TYPE" \
+            --transition-duration "$TRANSITION_DURATION" \
+            --transition-fps "$TRANSITION_FPS" 2>/dev/null || true
+    elif command -v swww &>/dev/null; then
+        swww img "$wall_path" \
+            --transition-type "$TRANSITION_TYPE" \
+            --transition-duration "$TRANSITION_DURATION" \
+            --transition-fps "$TRANSITION_FPS" 2>/dev/null || true
+    elif command -v hyprctl &>/dev/null && pgrep -x hyprpaper &>/dev/null; then
+        hyprctl hyprpaper preload "$wall_path" 2>/dev/null || true
+        hyprctl hyprpaper wallpaper ",$wall_path" 2>/dev/null || true
+    fi
+
+    # Guardar en la caché de Hyprquickpaper y sincronizar para hyprlock/smart_lock
+    mkdir -p "$HOME/.cache/hyprquickpaper"
+    echo "$wall_path" > "$HOME/.cache/hyprquickpaper/current_wallpaper"
+
+    mkdir -p "$HOME/.config/hypr"
+    cp "$wall_path" "$HOME/.config/hypr/current_wallpaper.png" 2>/dev/null || true
+
+    return 0
+}
+
+# Modo de un solo disparo (One-shot apply)
+cmd_apply() {
+    local force="${1:-false}"
+    local slot
+    slot="$(get_current_slot)"
+    local wall_file
+    wall_file="$(get_wallpaper_file "$slot" "$PRESET")"
+
+    if [ -z "$wall_file" ]; then
+        echo -e "${RED}✗ No se encontró wallpaper para el slot '${slot}' con preset '${PRESET}' en ${WALLPAPER_DIR}${RESET}" >&2
+        exit 1
+    fi
+
+    apply_wallpaper "$wall_file" "$force"
+    echo -e "${GREEN}✓ Wallpaper dinámico (${slot}):${RESET} $(basename "$wall_file")"
+}
+
+# Modo prueba para forzar un slot específico
+cmd_test() {
+    local target_slot="$1"
+    if [[ ! "$target_slot" =~ ^(morning|afternoon|night)$ ]]; then
+        echo -e "${RED}Uso:${RESET} lunita-dynamic-wallpaper test <morning|afternoon|night>"
+        exit 1
+    fi
+
+    local wall_file
+    wall_file="$(get_wallpaper_file "$target_slot" "$PRESET")"
+    if [ -z "$wall_file" ]; then
+        echo -e "${RED}✗ No se encontró wallpaper para el slot '${target_slot}' con preset '${PRESET}' en ${WALLPAPER_DIR}${RESET}" >&2
+        exit 1
+    fi
+
+    apply_wallpaper "$wall_file" "true"
+    echo -e "${GREEN}✓ Test aplicado para slot [${target_slot}]:${RESET} $(basename "$wall_file")"
+}
+
+# Estado actual
+cmd_status() {
+    local current_slot
+    current_slot="$(get_current_slot)"
+    local now_hour
+    now_hour=$(date +"%H:%M")
+
+    echo -e "${BOLD}${MAGENTA}🌙 Lunita-Dots — Dynamic Wallpaper Status${RESET}"
+    echo "=================================================="
+    echo -e "${CYAN}Hora actual:${RESET}      $now_hour"
+    echo -e "${CYAN}Período activo:${RESET}   ${BOLD}${current_slot}${RESET}"
+    echo -e "${CYAN}Preset:${RESET}           $PRESET"
+    echo -e "${CYAN}Directorio:${RESET}       $WALLPAPER_DIR"
+    echo ""
+    echo -e "${BOLD}Esquema horario:${RESET}"
+    echo -e "  🌅 Morning   ($MORNING_HOUR:00 - $((AFTERNOON_HOUR - 1)):59) -> $(get_wallpaper_file "morning" "$PRESET" || echo "No encontrado")"
+    echo -e "  ☀️  Afternoon ($AFTERNOON_HOUR:00 - $((NIGHT_HOUR - 1)):59) -> $(get_wallpaper_file "afternoon" "$PRESET" || echo "No encontrado")"
+    echo -e "  🌙 Night     ($NIGHT_HOUR:00 - $((MORNING_HOUR - 1)):59) -> $(get_wallpaper_file "night" "$PRESET" || echo "No encontrado")"
+    echo ""
+    if [ -f "$HOME/.cache/hyprquickpaper/current_wallpaper" ]; then
+        echo -e "${YELLOW}Wallpaper en caché:${RESET} $(cat "$HOME/.cache/hyprquickpaper/current_wallpaper")"
+    fi
+}
+
+# Modo demonio (Daemon continuo)
+cmd_daemon() {
+    echo -e "${GREEN}🚀 Iniciando demonio de Wallpaper Dinámico...${RESET}"
+    local last_slot=""
+
+    while true; do
+        local slot
+        slot="$(get_current_slot)"
+
+        if [ "$slot" != "$last_slot" ]; then
+            local wall_file
+            wall_file="$(get_wallpaper_file "$slot" "$PRESET")"
+            if [ -n "$wall_file" ]; then
+                apply_wallpaper "$wall_file" "false"
+                last_slot="$slot"
+                echo -e "[$(date +'%H:%M:%S')] ${GREEN}✓ Cambiado a ${slot}:${RESET} $(basename "$wall_file")"
+            fi
+        fi
+
+        # Comprobar cada 60 segundos
+        sleep 60
+    done
+}
+
+# Menú de ayuda
+cmd_help() {
+    echo -e "${BOLD}Uso:${RESET} lunita-dynamic-wallpaper [comando] [opciones]"
+    echo ""
+    echo -e "${BOLD}Comandos:${RESET}"
+    echo "  apply, now              Aplica el fondo de pantalla correspondiente a la hora actual (por defecto)"
+    echo "  daemon, loop            Ejecuta en segundo plano supervisando y alternando automáticamente"
+    echo "  test <morning|afternoon|night>  Fuerza la visualización de un período específico"
+    echo "  status                  Muestra información sobre los slots y fondos configurados"
+    echo "  help, -h, --help        Muestra esta ayuda"
+    echo ""
+    echo -e "${BOLD}Variables de entorno:${RESET}"
+    echo "  WALLPAPER_DIR           Directorio de fondos (defecto: ~/Imagenes/Wallpapers)"
+    echo "  WALLPAPER_PRESET        Prefijo de fondo (defecto: apple)"
+    echo "  MORNING_HOUR            Hora inicio mañana (defecto: 6)"
+    echo "  AFTERNOON_HOUR          Hora inicio tarde (defecto: 13)"
+    echo "  NIGHT_HOUR              Hora inicio noche (defecto: 20)"
+}
+
+# Dispatcher principal
+ACTION="${1:-apply}"
+
+case "$ACTION" in
+    apply|now|"")
+        cmd_apply "${2:-false}"
+        ;;
+    daemon|loop|watch)
+        cmd_daemon
+        ;;
+    test)
+        cmd_test "$2"
+        ;;
+    status|info)
+        cmd_status
+        ;;
+    help|-h|--help)
+        cmd_help
+        ;;
+    *)
+        echo -e "${RED}Comando desconocido:${RESET} $ACTION"
+        cmd_help
+        exit 1
+        ;;
+esac

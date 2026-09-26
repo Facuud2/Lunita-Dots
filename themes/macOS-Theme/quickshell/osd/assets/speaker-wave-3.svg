@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <!-- macOS SF Symbols Speaker Body -->
+  <path d="M 8 24 L 16 24 L 29 12 L 29 52 L 16 40 L 8 40 C 6.343 40 5 38.657 5 37 L 5 27 C 5 25.343 6.343 24 8 24 Z" fill="#FFFFFF" fill-opacity="0.95" />
+  <!-- Wave 1 (Inner) -->
+  <path d="M 36 23 C 39.5 26 41.5 28.8 41.5 32 C 41.5 35.2 39.5 38 36 41" stroke="#FFFFFF" stroke-opacity="0.95" stroke-width="4.2" stroke-linecap="round" />
+  <!-- Wave 2 (Middle) -->
+  <path d="M 43 16 C 48.5 21 51 26.2 51 32 C 51 37.8 48.5 43 43 48" stroke="#FFFFFF" stroke-opacity="0.95" stroke-width="4.2" stroke-linecap="round" />
+  <!-- Wave 3 (Outer) -->
+  <path d="M 50 9 C 57.5 16 60.5 23.5 60.5 32 C 60.5 40.5 57.5 48 50 55" stroke="#FFFFFF" stroke-opacity="0.95" stroke-width="4.2" stroke-linecap="round" />
+</svg>
