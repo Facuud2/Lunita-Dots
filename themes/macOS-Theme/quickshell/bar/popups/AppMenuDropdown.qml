@@ -123,7 +123,7 @@ Item {
     function getMenuItems(title) {
         if (title === "File") {
             return [
-                { text: "New Window / Launch App...", shortcut: "⌘N", cmd: "rofi -show drun" },
+                { text: "New Window / Launch App...", shortcut: "⌘N", cmd: "lunita-launcher toggle" },
                 { text: "New Terminal Window", shortcut: "⌘T", cmd: "kitty || alacritty" },
                 { text: "New File Manager Window", shortcut: "⌘O", cmd: "dolphin" },
                 { separator: true },

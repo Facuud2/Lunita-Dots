@@ -648,4 +648,9 @@ Item {
         closePopups();
         Quickshell.execDetached(["bash", "-c", "rofi -show drun"]);
     }
+
+    function openAppLauncher() {
+        closePopups();
+        Quickshell.execDetached(["bash", "-c", "lunita-launcher toggle"]);
+    }
 }
