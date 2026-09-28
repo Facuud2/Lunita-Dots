@@ -1,0 +1,347 @@
+;; ====================================================================
+;; 🌙 LUNITA-DOTS — macOS Desktop Widgets
+;; High-fidelity interactive desktop widgets replica for eww
+;; Supporting macOS Dynamic Light & Dark Mode + Frosted Glass Translucency
+;; ====================================================================
+
+;; ── Streams & Data Sources ───────────────────────────────────────────
+(deflisten theme_mode
+  :initial "dark"
+  "python3 scripts/theme_mode.py watch")
+
+(deflisten calendar_data
+  :initial '{"month_name":"SEPTIEMBRE","year":"2026","today":"28","weekday":"LUNES","weekdays":["D","L","M","M","J","V","S"],"weeks":[]}'
+  "python3 scripts/calendar_info.py watch")
+
+(deflisten system_stats
+  :initial '{"cpu":22,"ram":79,"ram_used":"5.8 GB","ram_total":"16.0 GB","disk":26,"disk_used":"120 GB","disk_total":"500 GB"}'
+  "python3 scripts/system_stats.py watch")
+
+(deflisten network_data
+  :initial '{"down_val":"0","down_unit":"KB/s","up_val":"1","up_unit":"KB/s","status":"UP","status_class":"online","interface":"Ethernet","iface_name":"eth0","ip":"192.168.1.100"}'
+  "python3 scripts/network_stats.py watch")
+
+(deflisten photo_data
+  :initial '{"path":"","title":"Cupertino Nature","subtitle":"Featured Photo","index":1,"total":4}'
+  "python3 scripts/photo_widget.py watch")
+
+(deflisten clock_data
+  :initial '{"time":"9:41","hours":"09","minutes":"41","seconds":"00","ampm":"AM","city":"CUPERTINO","weekday":"LUN","day":"28","mode":"12h"}'
+  "python3 scripts/clock_info.py watch")
+
+;; ====================================================================
+;; 1. CALENDAR MONTH GRID WIDGET (Small Square 1x1)
+;; ====================================================================
+(defwidget calendar_month_widget []
+  (box :class "cal-month-card"
+       :orientation "vertical"
+       :space-evenly false
+       :spacing 6
+    ;; Month Name Header (Uppercase & Clean)
+    (box :class "cal-header-row"
+         :orientation "horizontal"
+         :space-evenly false
+      (label :class "cal-month-title"
+             :halign "start"
+             :text {calendar_data.month_name})
+      (box :hexpand true)
+      (label :class "cal-year-subtitle"
+             :halign "end"
+             :text {calendar_data.year}))
+
+    ;; Weekdays Header Row: D L M M J V S
+    (box :class "cal-weekdays-row"
+         :orientation "horizontal"
+         :space-evenly true
+      (for day in {calendar_data.weekdays}
+        (label :class "cal-weekday-hdr" :text day)))
+
+    ;; Calendar Matrix (Weeks)
+    (box :class "cal-matrix-grid"
+         :orientation "vertical"
+         :space-evenly true
+         :spacing 3
+      (for week in {calendar_data.weeks}
+        (box :class "cal-week-row"
+             :orientation "horizontal"
+             :space-evenly true
+          (for d in week
+            (box :class "cal-day-cell ${d.is_today ? 'today-cell' : ''}"
+                 :halign "center"
+                 :valign "center"
+              (label :class "cal-day-label ${d.is_today ? 'today-label' : ''} ${!d.in_month ? 'empty-label' : ''}"
+                     :text {d.day}))))))))
+
+;; ====================================================================
+;; 2. SYSTEM ACTIVITY & RESOURCES WIDGET (Small Square 1x1)
+;; ====================================================================
+(defwidget system_resources_widget []
+  (box :class "sys-resources-card"
+       :orientation "vertical"
+       :space-evenly false
+       :spacing 8
+    ;; Top Row: CPU & RAM circular progress meters
+    (box :class "sys-gauges-row"
+         :orientation "horizontal"
+         :space-evenly true
+      ;; CPU Gauge
+      (box :class "gauge-container" :halign "center" :valign "center"
+        (circular-progress :value {system_stats.cpu}
+                           :thickness 5
+                           :start-at 75
+                           :clockwise true
+                           :class "gauge-cpu"
+          (box :class "gauge-content"
+               :orientation "vertical"
+               :space-evenly false
+               :valign "center"
+               :halign "center"
+            (label :class "gauge-label" :text "CPU")
+            (label :class "gauge-val" :text "${system_stats.cpu}%"))))
+
+      ;; RAM Gauge
+      (box :class "gauge-container" :halign "center" :valign "center"
+        (circular-progress :value {system_stats.ram}
+                           :thickness 5
+                           :start-at 75
+                           :clockwise true
+                           :class "gauge-ram"
+          (box :class "gauge-content"
+               :orientation "vertical"
+               :space-evenly false
+               :valign "center"
+               :halign "center"
+            (label :class "gauge-label" :text "RAM")
+            (label :class "gauge-val" :text "${system_stats.ram}%")))))
+
+    ;; Bottom Row: Disk Gauge + Macintosh HD label
+    (box :class "sys-gauges-bottom-row"
+         :orientation "horizontal"
+         :space-evenly false
+         :spacing 10
+         :valign "center"
+      ;; Disk Gauge
+      (box :class "gauge-container" :halign "start" :valign "center"
+        (circular-progress :value {system_stats.disk}
+                           :thickness 5
+                           :start-at 75
+                           :clockwise true
+                           :class "gauge-disk"
+          (box :class "gauge-content"
+               :orientation "vertical"
+               :space-evenly false
+               :valign "center"
+               :halign "center"
+            (label :class "gauge-label" :text "Disk")
+            (label :class "gauge-val" :text "${system_stats.disk}%"))))
+      ;; Disk Info
+      (box :class "disk-info-col"
+           :orientation "vertical"
+           :space-evenly false
+           :valign "center"
+           :halign "start"
+           :spacing 2
+        (label :class "disk-target-name" :halign "start" :text "Macintosh HD")
+        (label :class "disk-usage-sub" :halign "start" :text "${system_stats.disk_used} / ${system_stats.disk_total}")))))
+
+;; ====================================================================
+;; 3. NETWORK TRAFFIC & CONNECTIVITY WIDGET (Small Square 1x1)
+;; ====================================================================
+(defwidget network_widget []
+  (box :class "network-card"
+       :orientation "vertical"
+       :space-evenly false
+       :spacing 6
+    ;; Speed Stats (Download & Upload)
+    (box :class "net-speed-row"
+         :orientation "horizontal"
+         :space-evenly true
+      ;; Download
+      (box :class "net-metric-col"
+           :orientation "vertical"
+           :space-evenly false
+           :halign "center"
+        (label :class "net-speed-digit" :text {network_data.down_val})
+        (label :class "net-speed-unit" :text {network_data.down_unit})
+        (label :class "net-metric-title" :text "Download"))
+      ;; Upload
+      (box :class "net-metric-col"
+           :orientation "vertical"
+           :space-evenly false
+           :halign "center"
+        (label :class "net-speed-digit" :text {network_data.up_val})
+        (label :class "net-speed-unit" :text {network_data.up_unit})
+        (label :class "net-metric-title" :text "Upload")))
+
+    ;; Horizontal Divider
+    (box :class "net-divider")
+
+    ;; Connection Details
+    (box :class "net-info-col"
+         :orientation "vertical"
+         :space-evenly false
+         :spacing 3
+      ;; Status
+      (box :class "net-row"
+           :orientation "horizontal"
+           :space-evenly false
+        (label :class "net-key" :halign "start" :text "Status")
+        (box :hexpand true)
+        (label :class "net-val-badge ${network_data.status_class}" :halign "end" :text {network_data.status}))
+      ;; Interface
+      (box :class "net-row"
+           :orientation "horizontal"
+           :space-evenly false
+        (label :class "net-key" :halign "start" :text "Interface")
+        (box :hexpand true)
+        (label :class "net-val-bold" :halign "end" :text {network_data.interface}))
+      ;; IP
+      (box :class "net-row"
+           :orientation "horizontal"
+           :space-evenly false
+        (label :class "net-key" :halign "start" :text "IP")
+        (box :hexpand true)
+        (label :class "net-val-mono" :halign "end" :limit-width 18 :text {network_data.ip})))))
+
+;; ====================================================================
+;; 4. CUPERTINO CLOCK WIDGET (Small Square 1x1)
+;; ====================================================================
+(defwidget clock_widget []
+  (box :class "clock-card"
+       :orientation "vertical"
+       :space-evenly false
+    (button :onclick "python3 scripts/clock_info.py toggle &"
+            :tooltip "Modo: ${clock_data.mode} | Clic para alternar formato"
+            :valign "center"
+            :halign "center"
+            :vexpand true
+            :hexpand true
+      (box :class "clock-inner"
+           :orientation "vertical"
+           :space-evenly false
+           :valign "center"
+           :halign "center"
+           :spacing 4
+        (label :class "clock-city" :text {clock_data.city})
+        (label :class "clock-digits" :text {clock_data.time})
+        (box :class "clock-date-row" :space-evenly false :spacing 6 :halign "center"
+          (label :class "clock-weekday" :text {clock_data.weekday})
+          (label :class "clock-day" :text {clock_data.day}))))))
+
+;; ====================================================================
+;; 5. PHOTO / WALLPAPER SHOWCASE WIDGET (Medium Wide 2x1)
+;; ====================================================================
+(defwidget photo_showcase_widget []
+  (box :class "photo-card"
+       :orientation "vertical"
+       :space-evenly false
+    (overlay
+      ;; Background Image
+      (image :path {photo_data.path != "" ? photo_data.path : "${EWW_CONFIG_DIR}/assets/photos/wallpaper_wide.jpg"}
+             :image-width 354
+             :image-height 172
+             :class "photo-img")
+      
+      ;; Subtle Vignette & Frosted Gradient
+      (box :class "photo-gradient-layer")
+
+      ;; Header & Footer Info Overlay
+      (box :class "photo-overlay-content"
+           :orientation "vertical"
+           :space-evenly false
+           :valign "fill"
+        ;; Top Header Badge + Cycle Button
+        (box :class "photo-top-bar"
+             :orientation "horizontal"
+             :space-evenly false
+          (box :class "photo-pill-badge"
+               :space-evenly false
+               :spacing 4
+            (label :class "photo-badge-icon" :text "🖼")
+            (label :class "photo-badge-label" :text {photo_data.subtitle}))
+          (box :hexpand true)
+          (button :class "photo-cycle-btn"
+                  :onclick "python3 scripts/photo_widget.py next &"
+                  :tooltip "Siguiente foto"
+            "󰒭"))
+
+        ;; Push title to bottom
+        (box :vexpand true)
+
+        ;; Bottom Title and Counter
+        (box :class "photo-bottom-row"
+             :orientation "horizontal"
+             :space-evenly false
+          (box :orientation "vertical" :space-evenly false :spacing 2 :halign "start"
+            (label :class "photo-title-text" :halign "start" :text {photo_data.title})
+            (label :class "photo-index-text" :halign "start" :text "${photo_data.index} de ${photo_data.total}")))))))
+
+;; ====================================================================
+;; 6. EDIT WIDGETS PILL FOOTER
+;; ====================================================================
+(defwidget edit_widgets_pill []
+  (box :class "edit-widgets-container"
+       :halign "center"
+    (button :class "edit-widgets-btn"
+            :onclick "python3 scripts/photo_widget.py next &"
+            :tooltip "Personalizar Widgets del Escritorio"
+      (box :space-evenly false :spacing 6 :halign "center"
+        (label :class "edit-btn-icon" :text "󰏫")
+        (label :class "edit-btn-text" :text "Edit Widgets")))))
+
+;; ====================================================================
+;; COMBINED DESKTOP WIDGETS CONTAINER
+;; ====================================================================
+(defwidget macos_desktop_widgets []
+  (box :class "macos-widgets-root ${theme_mode}"
+       :orientation "vertical"
+       :space-evenly false
+       :spacing 14
+    ;; Row 1: Calendar 1x1 + Network 1x1
+    (box :class "widgets-square-row"
+         :orientation "horizontal"
+         :space-evenly true
+         :spacing 14
+      (calendar_month_widget)
+      (network_widget))
+
+    ;; Row 2: Resources 1x1 + Clock 1x1
+    (box :class "widgets-square-row"
+         :orientation "horizontal"
+         :space-evenly true
+         :spacing 14
+      (system_resources_widget)
+      (clock_widget))
+
+    ;; Row 3: Photo Banner 2x1
+    (photo_showcase_widget)
+
+    ;; Row 4: Edit Widgets Pill
+    (edit_widgets_pill)))
+
+;; ====================================================================
+;; WINDOW DEFINITIONS (Desktop Layer)
+;; ====================================================================
+(defwindow desktop_widgets_0
+  :monitor 0
+  :geometry (geometry
+              :x "24px"
+              :y "48px"
+              :width "360px"
+              :anchor "top right")
+  :stacking "bottom"
+  :exclusive false
+  :focusable false
+  (macos_desktop_widgets))
+
+(defwindow desktop_widgets_1
+  :monitor 1
+  :geometry (geometry
+              :x "24px"
+              :y "48px"
+              :width "360px"
+              :anchor "top right")
+  :stacking "bottom"
+  :exclusive false
+  :focusable false
+  (macos_desktop_widgets))

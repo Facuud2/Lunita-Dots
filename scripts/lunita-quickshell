@@ -38,9 +38,71 @@ get_qs_bin() {
         echo "quickshell"
     elif command -v qs &>/dev/null; then
         echo "qs"
+    elif [ -x "/usr/bin/quickshell" ]; then
+        echo "/usr/bin/quickshell"
     else
         echo ""
     fi
+}
+
+wait_for_wayland() {
+    local max_attempts=40
+    local attempt=0
+    local runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+    while [ $attempt -lt $max_attempts ]; do
+        if [ -n "$WAYLAND_DISPLAY" ] && [ -S "$runtime_dir/$WAYLAND_DISPLAY" ]; then
+            return 0
+        fi
+
+        # Buscar socket activo wayland-*
+        local found_sock
+        found_sock=$(find "$runtime_dir" -maxdepth 1 -name "wayland-*" -type s 2>/dev/null | head -n 1 || true)
+        if [ -n "$found_sock" ]; then
+            export WAYLAND_DISPLAY="$(basename "$found_sock")"
+            return 0
+        fi
+
+        sleep 0.1
+        ((attempt++))
+    done
+}
+
+get_component_pid() {
+    local comp="$1"
+    local pid=""
+
+    # 1. Consultar IPC nativo de Quickshell
+    if command -v quickshell &>/dev/null; then
+        pid=$(quickshell list --all 2>/dev/null | awk -v c="$comp" '
+            /Instance/ { cur_pid="" }
+            /Process ID:/ { cur_pid=$3 }
+            /Config path:/ && $0 ~ "/quickshell/" c { print cur_pid; exit }
+        ')
+    fi
+
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        echo "$pid"
+        return 0
+    fi
+
+    # 2. Fallback inspeccionando /proc directamente (sin falsos positivos de pgrep)
+    local pids
+    pids=$(pgrep -u "$UID" -x quickshell 2>/dev/null || pgrep -u "$UID" -x qs 2>/dev/null || true)
+    for p in $pids; do
+        if [ -f "/proc/$p/cmdline" ] && tr '\0' ' ' < "/proc/$p/cmdline" | grep -q "quickshell.*[/-]$comp"; then
+            echo "$p"
+            return 0
+        fi
+    done
+    return 1
+}
+
+is_component_running() {
+    local comp="$1"
+    local pid
+    pid="$(get_component_pid "$comp" 2>/dev/null || true)"
+    [ -n "$pid" ]
 }
 
 start_component() {
@@ -58,21 +120,23 @@ start_component() {
         return 0
     fi
 
-    if pgrep -f "quickshell.*$comp" >/dev/null 2>&1; then
+    if is_component_running "$comp"; then
         info "Quickshell [$comp] ya está en ejecución."
         return 0
     fi
 
     # Iniciar con bandera -d (daemonize), -n (no-duplicate) y -p (ruta canónica)
-    "$qs_bin" -d -n -p "$config_dir" >/dev/null 2>&1 &
+    "$qs_bin" -d -n -p "$config_dir" >/dev/null 2>&1
     success "Iniciado Quickshell [$comp]"
 }
 
 stop_component() {
     local comp="$1"
-    if pgrep -f "quickshell.*$comp" >/dev/null 2>&1; then
-        pkill -f "quickshell.*$comp" 2>/dev/null || true
-        success "Detenido Quickshell [$comp]"
+    local pid
+    pid="$(get_component_pid "$comp" 2>/dev/null || true)"
+    if [ -n "$pid" ]; then
+        kill "$pid" 2>/dev/null || true
+        success "Detenido Quickshell [$comp] (PID: $pid)"
     fi
 }
 
@@ -85,6 +149,9 @@ cmd_start() {
         exit 1
     fi
 
+    # Esperar a que el compositor Wayland esté listo
+    wait_for_wayland
+
     for comp in "${DAEMON_COMPONENTS[@]}"; do
         start_component "$comp"
     done
@@ -95,14 +162,14 @@ cmd_stop() {
     for comp in "${DAEMON_COMPONENTS[@]}"; do
         stop_component "$comp"
     done
-    pkill -x quickshell 2>/dev/null || true
-    pkill -x qs 2>/dev/null || true
+    pkill -u "$UID" -x quickshell 2>/dev/null || true
+    pkill -u "$UID" -x qs 2>/dev/null || true
     success "Instancias de Quickshell finalizadas."
 }
 
 cmd_restart() {
     cmd_stop
-    sleep 0.3
+    sleep 0.4
     cmd_start
 }
 
@@ -112,10 +179,10 @@ cmd_status() {
     for comp in "${DAEMON_COMPONENTS[@]}"; do
         local config_dir="$HOME/.config/quickshell/$comp"
         if [ -d "$config_dir" ]; then
-            if pgrep -f "quickshell.*$comp" >/dev/null 2>&1; then
-                local pids
-                pids="$(pgrep -f "quickshell.*$comp" | tr '\n' ' ')"
-                echo -e "  ${GREEN}●${RESET} ${BOLD}$comp${RESET}: ${GREEN}Activo${RESET} (PID: ${pids% })"
+            local pid
+            pid="$(get_component_pid "$comp" 2>/dev/null || true)"
+            if [ -n "$pid" ]; then
+                echo -e "  ${GREEN}●${RESET} ${BOLD}$comp${RESET}: ${GREEN}Activo${RESET} (PID: $pid)"
             else
                 echo -e "  ${RED}○${RESET} ${BOLD}$comp${RESET}: ${RED}Inactivo${RESET}"
             fi
@@ -139,11 +206,7 @@ case "$1" in
         cmd_status
         ;;
     *)
-        if [ -n "$1" ] && [[ " ${DAEMON_COMPONENTS[*]} " =~ " $1 " ]]; then
-            start_component "$1"
-        else
-            echo "Uso: lunita-quickshell {start|stop|restart|status|<component>}"
-            exit 1
-        fi
+        echo "Uso: lunita-quickshell {start|stop|restart|status}"
+        exit 1
         ;;
 esac
