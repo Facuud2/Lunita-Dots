@@ -284,13 +284,25 @@ cmd_apply() {
     link_component "$target_dir/icons/default/index.theme" "$HOME/.icons/default/index.theme"
     link_component "$target_dir/xresources/.Xresources" "$HOME/.Xresources"
 
-    # Enlazar Zsh prompt
-    if [ -d "$HOME/.oh-my-zsh/custom/themes" ]; then
-        if [ -f "$target_dir/zsh/pills.zsh-theme" ]; then
-            ln -sf "$target_dir/zsh/pills.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme"
-            success "Prompt Zsh enlazado en ~/.oh-my-zsh/custom/themes/pills.zsh-theme"
-        elif [ -L "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme" ]; then
-            rm -f "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme"
+    # Enlazar Zsh prompt y configuraciones personalizadas del tema
+    if [ -d "$HOME/.oh-my-zsh/custom" ]; then
+        mkdir -p "$HOME/.oh-my-zsh/custom/themes"
+        for th in "$target_dir/zsh"/*.zsh-theme; do
+            if [ -f "$th" ]; then
+                local th_name="$(basename "$th")"
+                ln -sf "$th" "$HOME/.oh-my-zsh/custom/themes/$th_name"
+                success "Prompt Zsh ($th_name) enlazado en ~/.oh-my-zsh/custom/themes/"
+            fi
+        done
+        for zs in "$target_dir/zsh"/*.zsh; do
+            if [ -f "$zs" ]; then
+                local zs_name="$(basename "$zs")"
+                ln -sf "$zs" "$HOME/.oh-my-zsh/custom/$zs_name"
+                success "Script auxiliar Zsh ($zs_name) enlazado en ~/.oh-my-zsh/custom/"
+            fi
+        done
+        if [ ! -f "$target_dir/zsh/macos.zsh" ] && [ -L "$HOME/.oh-my-zsh/custom/macos.zsh" ]; then
+            rm -f "$HOME/.oh-my-zsh/custom/macos.zsh"
         fi
     fi
 

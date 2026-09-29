@@ -8,7 +8,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time Oh My Zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="pills"
+ZSH_THEME="macos"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -105,4 +105,24 @@ source $ZSH/oh-my-zsh.sh
 alias awww="$HOME/.local/bin/awww"
 alias vim="nvim"
 alias vi="nvim"
-alias ls="exa -la --icons always"
+alias c="clear"
+alias ..='cd ..'
+alias ...='cd ../..'
+alias .3='cd ../../..'
+
+if command -v eza &>/dev/null; then
+  alias ls='eza -la --icons=always'
+  alias l='eza -lh --icons=always'
+  alias ll='eza -lha --icons=always --sort=name --group-directories-first'
+  alias ld='eza -lhD --icons=always'
+  alias lt='eza --icons=always --tree'
+elif command -v exa &>/dev/null; then
+  alias ls='exa -la --icons always'
+  alias l='exa -lh --icons always'
+  alias ll='exa -lha --icons always --sort=name --group-directories-first'
+  alias ld='exa -lhD --icons always'
+  alias lt='exa --icons always --tree'
+fi
+
+alias fastfetch='fastfetch --logo Apple'
+alias macfetch='fastfetch --logo Apple'
