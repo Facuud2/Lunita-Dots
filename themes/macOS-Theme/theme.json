@@ -10,7 +10,7 @@
     "launcher": "quickshell-macos-app-library",
     "powermenu": "wlogout-macos-glass",
     "notifications": "quickshell-macos-notifications",
-    "widgets": "eww-cava-player",
+    "widgets": "quickshell-macos-widgets",
     "color_engine": "macos-cupertino",
     "wallpaper_picker": "hyprquickpaper",
     "lockscreen": "quickshell-macos-lockscreen",

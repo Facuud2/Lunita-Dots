@@ -6,11 +6,16 @@
     -gtk-secondary-caret-color: #007AFF;
 }
 
-/* ── Window & Dialog ── */
-window, dialog {
+/* ── Window & Dialog (excluding transparent desktop layer surfaces) ── */
+window:not(.background), dialog {
     background-color: #F5F7FB;
     color: #1D1D1F;
     border-radius: 12px;
+}
+
+window.background {
+    background-color: transparent;
+    background: transparent;
 }
 
 /* ── Ocultar botones de control de ventana (Hyprland rice) ── */
@@ -134,8 +139,9 @@ entry:focus {
     box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.20);
 }
 
-/* ── Buttons ── */
-button {
+/* ── Buttons (App windows & dialogs) ── */
+window:not(.background) button,
+dialog button {
     background-color: #FFFFFF;
     border: 1px solid rgba(0, 0, 0, 0.12);
     border-radius: 6px;
@@ -145,27 +151,36 @@ button {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-button:hover {
+window:not(.background) button:hover,
+dialog button:hover {
     background-color: #F5F7FB;
     border-color: rgba(0, 0, 0, 0.18);
 }
 
-button:active, button:checked {
+window:not(.background) button:active,
+window:not(.background) button:checked,
+dialog button:active,
+dialog button:checked {
     background-color: #E8EDF5;
 }
 
-button.suggested-action,
-button.default {
+window:not(.background) button.suggested-action,
+window:not(.background) button.default,
+dialog button.suggested-action,
+dialog button.default {
     background-color: #007AFF;
     border-color: #0062CC;
     color: #FFFFFF;
     font-weight: 600;
 }
 
-button.suggested-action:hover,
-button.default:hover {
+window:not(.background) button.suggested-action:hover,
+window:not(.background) button.default:hover,
+dialog button.suggested-action:hover,
+dialog button.default:hover {
     background-color: #006FE6;
 }
+
 
 /* ── macOS Overlay Scrollbar ── */
 scrollbar {

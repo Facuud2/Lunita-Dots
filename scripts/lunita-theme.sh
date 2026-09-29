@@ -243,6 +243,11 @@ cmd_apply() {
     elif [ -L "$HOME/.config/quickshell/lockscreen" ]; then
         rm -f "$HOME/.config/quickshell/lockscreen"
     fi
+    if [ -d "$target_dir/quickshell/widgets" ]; then
+        link_component "$target_dir/quickshell/widgets" "$HOME/.config/quickshell/widgets"
+    elif [ -L "$HOME/.config/quickshell/widgets" ]; then
+        rm -f "$HOME/.config/quickshell/widgets"
+    fi
 
     # Enlazar Dolphin y KDE Globals
     link_component "$target_dir/dolphin/dolphinrc" "$HOME/.config/dolphinrc"
@@ -279,13 +284,25 @@ cmd_apply() {
     link_component "$target_dir/icons/default/index.theme" "$HOME/.icons/default/index.theme"
     link_component "$target_dir/xresources/.Xresources" "$HOME/.Xresources"
 
-    # Enlazar Zsh prompt
-    if [ -d "$HOME/.oh-my-zsh/custom/themes" ]; then
-        if [ -f "$target_dir/zsh/pills.zsh-theme" ]; then
-            ln -sf "$target_dir/zsh/pills.zsh-theme" "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme"
-            success "Prompt Zsh enlazado en ~/.oh-my-zsh/custom/themes/pills.zsh-theme"
-        elif [ -L "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme" ]; then
-            rm -f "$HOME/.oh-my-zsh/custom/themes/pills.zsh-theme"
+    # Enlazar Zsh prompt y configuraciones personalizadas del tema
+    if [ -d "$HOME/.oh-my-zsh/custom" ]; then
+        mkdir -p "$HOME/.oh-my-zsh/custom/themes"
+        for th in "$target_dir/zsh"/*.zsh-theme; do
+            if [ -f "$th" ]; then
+                local th_name="$(basename "$th")"
+                ln -sf "$th" "$HOME/.oh-my-zsh/custom/themes/$th_name"
+                success "Prompt Zsh ($th_name) enlazado en ~/.oh-my-zsh/custom/themes/"
+            fi
+        done
+        for zs in "$target_dir/zsh"/*.zsh; do
+            if [ -f "$zs" ]; then
+                local zs_name="$(basename "$zs")"
+                ln -sf "$zs" "$HOME/.oh-my-zsh/custom/$zs_name"
+                success "Script auxiliar Zsh ($zs_name) enlazado en ~/.oh-my-zsh/custom/"
+            fi
+        done
+        if [ ! -f "$target_dir/zsh/macos.zsh" ] && [ -L "$HOME/.oh-my-zsh/custom/macos.zsh" ]; then
+            rm -f "$HOME/.oh-my-zsh/custom/macos.zsh"
         fi
     fi
 
@@ -503,20 +520,21 @@ cmd_apply() {
         fi
     fi
 
-    # Gestión de Quickshell OSD (Volume / Brightness HUD)
-    if [ -d "$target_dir/quickshell/osd" ]; then
-        if pgrep -f "quickshell.*osd" > /dev/null; then
-            pkill -f "quickshell.*osd" 2>/dev/null || true
+    # Gestión de Quickshell Widgets (Desktop Canvas)
+    if [ -d "$target_dir/quickshell/widgets" ]; then
+        if pgrep -f "quickshell.*widgets" > /dev/null; then
+            pkill -f "quickshell.*widgets" 2>/dev/null || true
             sleep 0.2
         fi
-        quickshell -d -n -p "$HOME/.config/quickshell/osd"
-        success "Quickshell Volume OSD clásico iniciado."
+        quickshell -d -n -p "$HOME/.config/quickshell/widgets"
+        success "Quickshell Widgets de escritorio iniciados."
     else
-        if pgrep -f "quickshell.*osd" > /dev/null; then
-            pkill -f "quickshell.*osd" 2>/dev/null || true
-            info "Quickshell OSD detenido (no configurado en '$target')."
+        if pgrep -f "quickshell.*widgets" > /dev/null; then
+            pkill -f "quickshell.*widgets" 2>/dev/null || true
+            info "Quickshell Widgets detenidos (no configurado en '$target')."
         fi
     fi
+
 
     echo ""
     success "${BOLD}¡Tema '$target' aplicado exitosamente!${RESET}"
