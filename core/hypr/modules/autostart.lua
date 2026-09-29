@@ -23,8 +23,7 @@ function M.setup()
     -- 5. Quickshell (Barra Superior, Dock, Notificaciones, OSD, Spotlight, Launcher)
     hl.exec_cmd("sh -c 'export PATH=\"" .. home .. "/.local/bin:$PATH\"; lunita-quickshell start'")
 
-    -- 6. Widgets de Escritorio (Eww / AGS)
-    hl.exec_cmd("sh -c 'export PATH=\"" .. home .. "/.local/bin:$PATH\"; [ -x \"" .. home .. "/.config/eww/scripts/launch.sh\" ] && \"" .. home .. "/.config/eww/scripts/launch.sh\"'")
+    -- 6. Componentes auxiliares (AGS si existe en el tema)
     hl.exec_cmd("sh -c '[ -d \"" .. home .. "/.config/ags\" ] && env PATH=\"" .. home .. "/.local/bin:$PATH\" ags run'")
 
     -- 7. Teclado Virtual, Portapapeles y Plugins

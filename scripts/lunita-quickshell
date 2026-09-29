@@ -31,7 +31,7 @@ warn() { echo -e "${YELLOW}⚠${RESET} $1"; }
 error() { echo -e "${RED}✗${RESET} $1" >&2; }
 
 # Componentes Quickshell en modo daemon continuo
-DAEMON_COMPONENTS=("bar" "dock" "notifications" "osd" "spotlight" "launcher")
+DAEMON_COMPONENTS=("bar" "dock" "notifications" "osd" "spotlight" "launcher" "widgets")
 
 get_qs_bin() {
     if command -v quickshell &>/dev/null; then

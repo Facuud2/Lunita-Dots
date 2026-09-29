@@ -109,8 +109,7 @@ Item {
         var gtkTheme = isDarkTheme ? "Adwaita-dark" : "Adwaita";
         var cmd = "gsettings set org.gnome.desktop.interface color-scheme '" + scheme + "' 2>/dev/null; " +
                   "gsettings set org.gnome.desktop.interface gtk-theme '" + gtkTheme + "' 2>/dev/null; " +
-                  "mkdir -p $HOME/.config/lunita && echo '" + (isDarkTheme ? "dark" : "light") + "' > $HOME/.config/lunita/color_scheme; " +
-                  "eww update theme_mode=" + (isDarkTheme ? "dark" : "light") + " 2>/dev/null || true";
+                  "mkdir -p $HOME/.config/lunita && echo '" + (isDarkTheme ? "dark" : "light") + "' > $HOME/.config/lunita/color_scheme";
         Quickshell.execDetached(["bash", "-c", cmd]);
     }
 

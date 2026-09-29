@@ -243,6 +243,11 @@ cmd_apply() {
     elif [ -L "$HOME/.config/quickshell/lockscreen" ]; then
         rm -f "$HOME/.config/quickshell/lockscreen"
     fi
+    if [ -d "$target_dir/quickshell/widgets" ]; then
+        link_component "$target_dir/quickshell/widgets" "$HOME/.config/quickshell/widgets"
+    elif [ -L "$HOME/.config/quickshell/widgets" ]; then
+        rm -f "$HOME/.config/quickshell/widgets"
+    fi
 
     # Enlazar Dolphin y KDE Globals
     link_component "$target_dir/dolphin/dolphinrc" "$HOME/.config/dolphinrc"
@@ -503,20 +508,21 @@ cmd_apply() {
         fi
     fi
 
-    # Gestión de Quickshell OSD (Volume / Brightness HUD)
-    if [ -d "$target_dir/quickshell/osd" ]; then
-        if pgrep -f "quickshell.*osd" > /dev/null; then
-            pkill -f "quickshell.*osd" 2>/dev/null || true
+    # Gestión de Quickshell Widgets (Desktop Canvas)
+    if [ -d "$target_dir/quickshell/widgets" ]; then
+        if pgrep -f "quickshell.*widgets" > /dev/null; then
+            pkill -f "quickshell.*widgets" 2>/dev/null || true
             sleep 0.2
         fi
-        quickshell -d -n -p "$HOME/.config/quickshell/osd"
-        success "Quickshell Volume OSD clásico iniciado."
+        quickshell -d -n -p "$HOME/.config/quickshell/widgets"
+        success "Quickshell Widgets de escritorio iniciados."
     else
-        if pgrep -f "quickshell.*osd" > /dev/null; then
-            pkill -f "quickshell.*osd" 2>/dev/null || true
-            info "Quickshell OSD detenido (no configurado en '$target')."
+        if pgrep -f "quickshell.*widgets" > /dev/null; then
+            pkill -f "quickshell.*widgets" 2>/dev/null || true
+            info "Quickshell Widgets detenidos (no configurado en '$target')."
         fi
     fi
+
 
     echo ""
     success "${BOLD}¡Tema '$target' aplicado exitosamente!${RESET}"
