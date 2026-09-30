@@ -1,10 +1,12 @@
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
+import Quickshell
 
 Item {
     id: root
     property var widgetsState
+    property bool contextMenuOpen: false
 
     // ── Outer Rounded Container with Glass Border ──
     Rectangle {
@@ -180,7 +182,19 @@ Item {
             }
         }
 
-        // ── 2. Overlay UI Content ──
+        // ── 2. Right-Click Area for Context Menu ──
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton
+            cursorShape: Qt.ArrowCursor
+            onClicked: (mouse) => {
+                if (mouse.button === Qt.RightButton) {
+                    root.contextMenuOpen = !root.contextMenuOpen;
+                }
+            }
+        }
+
+        // ── 3. Overlay UI Content ──
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 14
@@ -296,6 +310,311 @@ Item {
                     font.pixelSize: 10
                     font.weight: Font.Medium
                     color: Qt.rgba(1, 1, 1, 0.72)
+                }
+            }
+        }
+
+        // ── 4. Dismiss Overlay for Context Menu ──
+        MouseArea {
+            id: dismissOverlay
+            anchors.fill: parent
+            visible: root.contextMenuOpen
+            z: 99
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: root.contextMenuOpen = false
+        }
+
+        // ── 5. Native Context Menu (Right Click) ──
+        Rectangle {
+            id: contextMenu
+            visible: root.contextMenuOpen
+            z: 100
+            anchors.centerIn: parent
+            width: Math.min(parent.width - 24, 250)
+            height: menuColumn.implicitHeight + 16
+            radius: 14
+            color: root.widgetsState.isDarkTheme ? "#f2181a24" : "#f5ffffff"
+            border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.22)" : "rgba(0,0,0,0.15)"
+            border.width: 1
+
+            scale: root.contextMenuOpen ? 1.0 : 0.92
+            opacity: root.contextMenuOpen ? 1.0 : 0.0
+            Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+
+            Column {
+                id: menuColumn
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 8
+                spacing: 3
+
+                // Menu Header: Photo Name
+                Text {
+                    width: parent.width
+                    text: root.widgetsState.photoTitle || "Captura"
+                    font.family: "SF Pro Display"
+                    font.pixelSize: 11
+                    font.weight: Font.Bold
+                    color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.75)"
+                    elide: Text.ElideRight
+                    leftPadding: 6
+                    bottomPadding: 2
+                }
+
+                // Divider Line
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)"
+                }
+
+                Item { width: parent.width; height: 2 }
+
+                // 1. Establecer como fondo de pantalla
+                Rectangle {
+                    width: parent.width
+                    height: 22
+                    radius: 7
+                    color: btn1Ma.containsMouse
+                        ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)")
+                        : "transparent"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 6
+                        anchors.rightMargin: 6
+                        spacing: 6
+
+                        Text {
+                            text: "󰸉"
+                            font.family: "CaskaydiaCove Nerd Font"
+                            font.pixelSize: 11
+                            color: "#64D2FF"
+                        }
+                        Text {
+                            text: "Establecer como fondo de pantalla"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                            color: root.widgetsState.textColor
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    MouseArea {
+                        id: btn1Ma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            var p = root.widgetsState.photoPath;
+                            if (p) {
+                                var cmd = "swww img '" + p + "' --transition-type wipe --transition-angle 30 --transition-step 90 2>/dev/null || (hyprctl hyprpaper preload '" + p + "' 2>/dev/null && hyprctl hyprpaper wallpaper '," + p + "' 2>/dev/null) || true; cp '" + p + "' $HOME/.config/hypr/current_wallpaper.png 2>/dev/null; echo '" + p + "' > $HOME/.cache/hyprquickpaper/current_wallpaper 2>/dev/null; notify-send 'Fondo de pantalla' 'Fondo establecido correctamente' -i '" + p + "'";
+                                Quickshell.execDetached(["bash", "-c", cmd]);
+                            }
+                            root.contextMenuOpen = false;
+                        }
+                    }
+                }
+
+                // 2. Abrir ubicación de imagen
+                Rectangle {
+                    width: parent.width
+                    height: 22
+                    radius: 7
+                    color: btn2Ma.containsMouse
+                        ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)")
+                        : "transparent"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 6
+                        anchors.rightMargin: 6
+                        spacing: 6
+
+                        Text {
+                            text: "󰈟"
+                            font.family: "CaskaydiaCove Nerd Font"
+                            font.pixelSize: 11
+                            color: "#30D158"
+                        }
+                        Text {
+                            text: "Abrir ubicación de imagen"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                            color: root.widgetsState.textColor
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    MouseArea {
+                        id: btn2Ma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            var p = root.widgetsState.photoPath;
+                            if (p) {
+                                Quickshell.execDetached(["xdg-open", p]);
+                            }
+                            root.contextMenuOpen = false;
+                        }
+                    }
+                }
+
+                // 3. Abrir carpeta contenedora
+                Rectangle {
+                    width: parent.width
+                    height: 22
+                    radius: 7
+                    color: btn3Ma.containsMouse
+                        ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)")
+                        : "transparent"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 6
+                        anchors.rightMargin: 6
+                        spacing: 6
+
+                        Text {
+                            text: "󰉋"
+                            font.family: "CaskaydiaCove Nerd Font"
+                            font.pixelSize: 11
+                            color: "#FF9F0A"
+                        }
+                        Text {
+                            text: "Abrir carpeta contenedora"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                            color: root.widgetsState.textColor
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    MouseArea {
+                        id: btn3Ma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            var p = root.widgetsState.photoPath;
+                            if (p) {
+                                var cmd = "dolphin --select '" + p + "' 2>/dev/null || nautilus --select '" + p + "' 2>/dev/null || xdg-open \"$(dirname '" + p + "')\"";
+                                Quickshell.execDetached(["bash", "-c", cmd]);
+                            }
+                            root.contextMenuOpen = false;
+                        }
+                    }
+                }
+
+                // 4. Copiar imagen al portapapeles
+                Rectangle {
+                    width: parent.width
+                    height: 22
+                    radius: 7
+                    color: btn4Ma.containsMouse
+                        ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)")
+                        : "transparent"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 6
+                        anchors.rightMargin: 6
+                        spacing: 6
+
+                        Text {
+                            text: "󰆏"
+                            font.family: "CaskaydiaCove Nerd Font"
+                            font.pixelSize: 11
+                            color: "#0A84FF"
+                        }
+                        Text {
+                            text: "Copiar imagen al portapapeles"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                            color: root.widgetsState.textColor
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    MouseArea {
+                        id: btn4Ma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            var p = root.widgetsState.photoPath;
+                            if (p) {
+                                var cmd = "wl-copy -t image/png < '" + p + "' 2>/dev/null || wl-copy < '" + p + "' 2>/dev/null || xclip -selection clipboard -target image/png -i '" + p + "' 2>/dev/null; notify-send 'Galería' 'Imagen copiada al portapapeles' -i '" + p + "'";
+                                Quickshell.execDetached(["bash", "-c", cmd]);
+                            }
+                            root.contextMenuOpen = false;
+                        }
+                    }
+                }
+
+                // Divider Line before Destructive Action
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.10)"
+                }
+
+                // 5. Eliminar de galería (Acción Destructiva)
+                Rectangle {
+                    width: parent.width
+                    height: 22
+                    radius: 7
+                    color: btn5Ma.containsMouse
+                        ? "rgba(255, 69, 58, 0.22)"
+                        : "transparent"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 6
+                        anchors.rightMargin: 6
+                        spacing: 6
+
+                        Text {
+                            text: "󰩹"
+                            font.family: "CaskaydiaCove Nerd Font"
+                            font.pixelSize: 11
+                            color: "#FF453A"
+                        }
+                        Text {
+                            text: "Eliminar de galería"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                            color: "#FF453A"
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    MouseArea {
+                        id: btn5Ma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            var p = root.widgetsState.photoPath;
+                            var cmd = "python3 " + root.widgetsState.scriptsDir + "/photo_provider.py delete; notify-send 'Galería' 'Captura eliminada de la galería' -a 'Galería'";
+                            Quickshell.execDetached(["bash", "-c", cmd]);
+                            root.widgetsState.nextPhoto();
+                            root.contextMenuOpen = false;
+                        }
+                    }
                 }
             }
         }

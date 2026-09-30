@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2C2C2E"/>
+      <stop offset="100%" stop-color="#1C1C1E"/>
+    </linearGradient>
+
+    <!-- Glass Surface Gradient -->
+    <linearGradient id="glassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.04"/>
+    </linearGradient>
+
+    <!-- Calendar Tile Gradient -->
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A84FF"/>
+      <stop offset="100%" stop-color="#0066CC"/>
+    </linearGradient>
+
+    <!-- GitHub/Code Tile Gradient -->
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#BF5AF2"/>
+      <stop offset="100%" stop-color="#8944AB"/>
+    </linearGradient>
+
+    <!-- Health/Flame Tile Gradient -->
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF9F0A"/>
+      <stop offset="100%" stop-color="#FF453A"/>
+    </linearGradient>
+
+    <!-- Subtle Shadow -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- Base Squircle -->
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="url(#bgGrad)" filter="url(#shadow)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+
+  <!-- Inner Glass Overlay -->
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="url(#glassGrad)"/>
+
+  <!-- 4 Mini Widget Tiles Matrix inside Squircle -->
+  <!-- Top Left: Calendar Tile (Blue) -->
+  <rect x="22" y="22" width="38" height="38" rx="10" fill="url(#blueGrad)"/>
+  <!-- Calendar Icon Graphic -->
+  <rect x="29" y="31" width="24" height="20" rx="3" fill="#ffffff" fill-opacity="0.95"/>
+  <rect x="29" y="31" width="24" height="6" rx="2" fill="#D32F2F"/>
+  <circle cx="35" cy="44" r="1.5" fill="#0066CC"/>
+  <circle cx="41" cy="44" r="1.5" fill="#0066CC"/>
+  <circle cx="47" cy="44" r="1.5" fill="#0066CC"/>
+
+  <!-- Top Right: GitHub / Code Activity (Purple) -->
+  <rect x="68" y="22" width="38" height="38" rx="10" fill="url(#purpleGrad)"/>
+  <!-- Git Branch / Commits Graphic -->
+  <circle cx="78" cy="34" r="3" fill="#ffffff"/>
+  <circle cx="78" cy="48" r="3" fill="#ffffff"/>
+  <circle cx="95" cy="40" r="3" fill="#30D158"/>
+  <path d="M78 37 L78 45" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M78 40 Q86 40 92 40" stroke="#30D158" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- Bottom Left: Health / 75 Days Flame (Orange/Red) -->
+  <rect x="22" y="68" width="38" height="38" rx="10" fill="url(#orangeGrad)"/>
+  <!-- Flame Graphic -->
+  <path d="M41 76 C41 76 45 80 45 84 C45 88 42.5 91 39 91 C35.5 91 33 88 33 84 C33 80 37 77 37 77 C37 77 36 80 37.5 82 C39 84 41 82 41 76 Z" fill="#ffffff"/>
+
+  <!-- Bottom Right: Sliders / Control Toggles (Slate/Green) -->
+  <rect x="68" y="68" width="38" height="38" rx="10" fill="#242830" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+  <!-- Switch Capsule 1 -->
+  <rect x="74" y="75" width="26" height="10" rx="5" fill="#30D158"/>
+  <circle cx="95" cy="80" r="4" fill="#ffffff"/>
+  <!-- Switch Capsule 2 -->
+  <rect x="74" y="89" width="26" height="10" rx="5" fill="rgba(255,255,255,0.2)"/>
+  <circle cx="79" cy="94" r="4" fill="#ffffff"/>
+</svg>

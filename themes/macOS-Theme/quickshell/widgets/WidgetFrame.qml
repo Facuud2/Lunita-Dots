@@ -13,6 +13,11 @@ Item {
     width: widgetData ? widgetData.width : 170
     height: widgetData ? widgetData.height : 170
 
+    Behavior on x { enabled: !root.isDragging; NumberAnimation { duration: 340; easing.type: Easing.OutCubic } }
+    Behavior on y { enabled: !root.isDragging; NumberAnimation { duration: 340; easing.type: Easing.OutCubic } }
+    Behavior on width { enabled: !root.isResizing; NumberAnimation { duration: 340; easing.type: Easing.OutCubic } }
+    Behavior on height { enabled: !root.isResizing; NumberAnimation { duration: 340; easing.type: Easing.OutCubic } }
+
     // Visual State & Jiggle Animation
     property bool isDragging: dragArea.drag.active
     property bool isResizing: false
@@ -70,6 +75,7 @@ Item {
     Loader {
         id: contentLoader
         anchors.fill: parent
+        enabled: !root.widgetsState.isEditing
         sourceComponent: {
             if (!root.widgetData) return null;
             var t = root.widgetData.type;
@@ -78,6 +84,11 @@ Item {
             if (t === "network") return netComp;
             if (t === "clock") return clkComp;
             if (t === "photos") return phoComp;
+            if (t === "battery") return batComp;
+            if (t === "git") return gitComp;
+            if (t === "habits") return habComp;
+            if (t === "timetable") return ttbComp;
+            if (t === "media") return medComp;
             return calComp;
         }
     }
@@ -87,11 +98,17 @@ Item {
     Component { id: netComp; NetworkWidget { widgetsState: root.widgetsState } }
     Component { id: clkComp; ClockWidget { widgetsState: root.widgetsState } }
     Component { id: phoComp; PhotoWidget { widgetsState: root.widgetsState } }
+    Component { id: batComp; BatteryWidget { widgetsState: root.widgetsState } }
+    Component { id: gitComp; GitActivityWidget { widgetsState: root.widgetsState } }
+    Component { id: habComp; HabitTrackerWidget { widgetsState: root.widgetsState } }
+    Component { id: ttbComp; TimetableWidget { widgetsState: root.widgetsState } }
+    Component { id: medComp; MediaWidget { widgetsState: root.widgetsState } }
 
     // ── Drag & Reposition MouseArea (Whole Card in Edit Mode) ──
     MouseArea {
         id: dragArea
         anchors.fill: parent
+        z: 80
         enabled: root.widgetsState.isEditing
         drag.target: root
         drag.axis: Drag.XAndYAxis

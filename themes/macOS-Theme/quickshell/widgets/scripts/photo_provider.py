@@ -79,7 +79,31 @@ def main():
     cur_idx = state.get("index", 0)
 
     direction = 1
-    if action == "next":
+    if action == "delete":
+        if cur_idx < len(images):
+            target = images[cur_idx]["path"]
+            try:
+                import subprocess
+                subprocess.run(["gio", "trash", target], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                try:
+                    os.remove(target)
+                except Exception:
+                    pass
+        images = get_all_images()
+        if not images:
+            print(json.dumps({
+                "path": "",
+                "title": "Sin Fotos",
+                "subtitle": "Recuerdos",
+                "index": 1,
+                "total": 1,
+                "direction": 1
+            }))
+            return
+        cur_idx = cur_idx % len(images)
+        direction = 1
+    elif action == "next":
         cur_idx = (cur_idx + 1) % len(images)
         direction = 1
     elif action == "prev":

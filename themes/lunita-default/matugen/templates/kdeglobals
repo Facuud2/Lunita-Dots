@@ -22,7 +22,7 @@ widgetStyle=Breeze
 ColorScheme=Lunita
 
 [PreviewSettings]
-MaximumSize=0
+MaximumSize[$d]
 
 
 [Colors:Window]

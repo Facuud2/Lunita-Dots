@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Gestor de Widgets
+GenericName=Widgets Manager
+Comment=Gestor y configuración de widgets del escritorio para Lunita-Dots
+Exec=lunita-widgets-manager
+Icon=lunita-widgets-manager
+Terminal=false
+Categories=Settings;DesktopSettings;Utility;
+Keywords=widgets;desktop;calendar;github;health;habits;lunita;dots;quickshell;escritorio;
+StartupNotify=true

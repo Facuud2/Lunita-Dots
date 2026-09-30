@@ -61,6 +61,20 @@ function M.setup()
         blur  = true,
     })
 
+    hl.layer_rule({
+        name  = "macos-quickshell-blur",
+        match = { namespace = "^(macos-spotlight|macos-launcher|macos-notifications|macos-osd)$" },
+        blur  = true,
+        ignore_alpha = 0.01,
+    })
+
+    hl.layer_rule({
+        name  = "macos-clipboard-blur",
+        match = { namespace = "^macos-clipboard$" },
+        blur  = true,
+        ignore_alpha = 0.5,
+    })
+
     -- Hyprland-run windowrule
     hl.window_rule({
         name  = "move-hyprland-run",
@@ -191,6 +205,15 @@ function M.setup()
         float     = true,
         center    = true,
         size      = "960 660",
+    })
+
+    -- Widgets Manager GUI (Flotante y centrado)
+    hl.window_rule({
+        name      = "lunita-widgets-manager",
+        match     = { class = "^(org\\.lunita\\.WidgetsManager)$" },
+        float     = true,
+        center    = true,
+        size      = "960 700",
     })
 end
 

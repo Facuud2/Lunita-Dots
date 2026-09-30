@@ -248,6 +248,11 @@ cmd_apply() {
     elif [ -L "$HOME/.config/quickshell/widgets" ]; then
         rm -f "$HOME/.config/quickshell/widgets"
     fi
+    if [ -d "$target_dir/quickshell/clipboard" ]; then
+        link_component "$target_dir/quickshell/clipboard" "$HOME/.config/quickshell/clipboard"
+    elif [ -L "$HOME/.config/quickshell/clipboard" ]; then
+        rm -f "$HOME/.config/quickshell/clipboard"
+    fi
 
     # Enlazar Dolphin y KDE Globals
     link_component "$target_dir/dolphin/dolphinrc" "$HOME/.config/dolphinrc"
@@ -357,11 +362,23 @@ cmd_apply() {
     if [ -f "$DOTS_DIR/scripts/lunita-quickshell" ]; then
         ln -sf "$DOTS_DIR/scripts/lunita-quickshell" "$HOME/.local/bin/lunita-quickshell"
     fi
+    if [ -f "$DOTS_DIR/scripts/lunita-clipboard" ]; then
+        ln -sf "$DOTS_DIR/scripts/lunita-clipboard" "$HOME/.local/bin/lunita-clipboard"
+    fi
     if [ -f "$DOTS_DIR/core/lunita-theme-selector.desktop" ]; then
         ln -sf "$DOTS_DIR/core/lunita-theme-selector.desktop" "$HOME/.local/share/applications/lunita-theme-selector.desktop"
     fi
     if [ -f "$DOTS_DIR/core/lunita-theme-selector.svg" ]; then
         ln -sf "$DOTS_DIR/core/lunita-theme-selector.svg" "$HOME/.local/share/icons/hicolor/scalable/apps/lunita-theme-selector.svg"
+    fi
+    if [ -f "$DOTS_DIR/core/lunita-widgets-manager" ]; then
+        ln -sf "$DOTS_DIR/core/lunita-widgets-manager" "$HOME/.local/bin/lunita-widgets-manager"
+    fi
+    if [ -f "$DOTS_DIR/core/lunita-widgets-manager.desktop" ]; then
+        ln -sf "$DOTS_DIR/core/lunita-widgets-manager.desktop" "$HOME/.local/share/applications/lunita-widgets-manager.desktop"
+    fi
+    if [ -f "$DOTS_DIR/core/lunita-widgets-manager.svg" ]; then
+        ln -sf "$DOTS_DIR/core/lunita-widgets-manager.svg" "$HOME/.local/share/icons/hicolor/scalable/apps/lunita-widgets-manager.svg"
     fi
 
     # 4. Sincronización y recarga/detención de componentes en ejecución
@@ -532,6 +549,21 @@ cmd_apply() {
         if pgrep -f "quickshell.*widgets" > /dev/null; then
             pkill -f "quickshell.*widgets" 2>/dev/null || true
             info "Quickshell Widgets detenidos (no configurado en '$target')."
+        fi
+    fi
+
+    # Gestión de Quickshell Clipboard
+    if [ -d "$target_dir/quickshell/clipboard" ]; then
+        if pgrep -f "quickshell.*clipboard" > /dev/null; then
+            pkill -f "quickshell.*clipboard" 2>/dev/null || true
+            sleep 0.2
+        fi
+        quickshell -d -n -p "$HOME/.config/quickshell/clipboard"
+        success "Quickshell Clipboard iniciado."
+    else
+        if pgrep -f "quickshell.*clipboard" > /dev/null; then
+            pkill -f "quickshell.*clipboard" 2>/dev/null || true
+            info "Quickshell Clipboard detenido (no configurado en '$target')."
         fi
     fi
 
