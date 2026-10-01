@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-🌙 Lunita-Dots — University (UNaB) & Workspace Notes Provider
-Manages class schedules, university/work tasks, deadlines, and scratchpad notes.
-Fully customizable with JSON persistence at ~/.config/lunita/unab_timetable.json.
+🌙 Lunita-Dots — Notes & Calendar Agenda Provider
+Synchronizes calendar events and daily schedule with quick notes and tasks.
+Directly linked to ~/.config/lunita/calendar_events.json and ~/.config/lunita/notes.json.
 """
 
 import json
@@ -12,276 +12,250 @@ import time
 from datetime import datetime, timedelta
 
 CONFIG_DIR = os.path.expanduser("~/.config/lunita")
-TIMETABLE_FILE = os.path.join(CONFIG_DIR, "unab_timetable.json")
+CALENDAR_FILE = os.path.join(CONFIG_DIR, "calendar_events.json")
+NOTES_FILE = os.path.join(CONFIG_DIR, "notes.json")
 
-DEFAULT_DATA = {
-    "career": "Tecnicatura Universitaria en Programación",
-    "university": "UNaB",
-    "schedule": [
-        {
-            "day_index": 0,
-            "day_name": "Lunes",
-            "subject": "Algoritmos y Estructuras de Datos",
-            "start": "18:00",
-            "end": "22:00",
-            "room": "Aula 104",
-            "professor": "Prof. Martínez",
-            "code": "AED-102"
-        },
-        {
-            "day_index": 1,
-            "day_name": "Martes",
-            "subject": "Laboratorio de Computación I",
-            "start": "18:30",
-            "end": "21:30",
-            "room": "Lab 2",
-            "professor": "Prof. Gómez",
-            "code": "LAB-101"
-        },
-        {
-            "day_index": 2,
-            "day_name": "Miércoles",
-            "subject": "Bases de Datos Relacionales",
-            "start": "18:00",
-            "end": "22:00",
-            "room": "Aula 201",
-            "professor": "Prof. Rossi",
-            "code": "BDR-201"
-        },
-        {
-            "day_index": 3,
-            "day_name": "Jueves",
-            "subject": "Programación Web",
-            "start": "18:30",
-            "end": "22:00",
-            "room": "Lab 1",
-            "professor": "Prof. Fernández",
-            "code": "WEB-103"
-        },
-        {
-            "day_index": 4,
-            "day_name": "Viernes",
-            "subject": "Sistemas Operativos y Redes",
-            "start": "18:00",
-            "end": "21:00",
-            "room": "Aula 105",
-            "professor": "Prof. Díaz",
-            "code": "SOR-104"
-        }
-    ],
+DEFAULT_NOTES_DATA = {
     "tasks": [
         {
             "id": "t1",
-            "title": "TP2 Árboles y Grafos",
-            "tag": "UNaB",
+            "title": "Revisar entregas y agenda",
+            "tag": "Prioridad",
             "tag_color": "#007AFF",
             "done": False,
-            "due": "Viernes"
+            "due": "Hoy"
         },
         {
             "id": "t2",
-            "title": "Revisión Pull Request #14",
-            "tag": "Trabajo",
-            "tag_color": "#AF52DE",
+            "title": "Documentar cambios de Lunita-Dots",
+            "tag": "Desarrollo",
+            "tag_color": "#30D158",
             "done": True,
             "due": "Hoy"
         },
         {
             "id": "t3",
-            "title": "Estudiar Parcial BD",
-            "tag": "Examen",
-            "tag_color": "#FF9F0A",
-            "done": False,
-            "due": "Lunes"
-        },
-        {
-            "id": "t4",
-            "title": "Documentar API endpoints",
+            "title": "Planificar sprint de proyectos",
             "tag": "Trabajo",
             "tag_color": "#AF52DE",
             "done": False,
             "due": "Mañana"
         }
     ],
-    "notes": "• Llevar resumen de Algoritmos\n• Consultar índices en PostgreSQL\n• Deploy sprint 3 a staging"
+    "notes": "• Recordar sincronizar calendario y widgets\n• Revisar métricas de salud\n• Deploy de actualización"
 }
 
-def load_data():
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-    if not os.path.exists(TIMETABLE_FILE):
-        save_data(DEFAULT_DATA)
-        return DEFAULT_DATA.copy()
+def load_calendar_data():
+    if not os.path.exists(CALENDAR_FILE):
+        return {}
     try:
-        with open(TIMETABLE_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            # Ensure keys exist
-            if "tasks" not in data:
-                data["tasks"] = DEFAULT_DATA["tasks"]
-            if "notes" not in data:
-                data["notes"] = DEFAULT_DATA["notes"]
-            if "schedule" not in data:
-                data["schedule"] = DEFAULT_DATA["schedule"]
-            return data
+        with open(CALENDAR_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
     except Exception:
-        return DEFAULT_DATA.copy()
+        return {}
 
-def save_data(data):
+def save_calendar_data(data):
     os.makedirs(CONFIG_DIR, exist_ok=True)
     try:
-        with open(TIMETABLE_FILE, "w", encoding="utf-8") as f:
+        with open(CALENDAR_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception:
         pass
 
-def format_duration(minutes):
-    if minutes < 60:
-        return f"{int(minutes)}m"
-    hours = int(minutes // 60)
-    mins = int(minutes % 60)
-    if mins == 0:
-        return f"{hours}h"
-    return f"{hours}h {mins}m"
+def load_notes_data():
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    if not os.path.exists(NOTES_FILE):
+        save_notes_data(DEFAULT_NOTES_DATA)
+        return DEFAULT_NOTES_DATA.copy()
+    try:
+        with open(NOTES_FILE, "r", encoding="utf-8") as f:
+            d = json.load(f)
+            if "tasks" not in d:
+                d["tasks"] = DEFAULT_NOTES_DATA["tasks"]
+            if "notes" not in d:
+                d["notes"] = DEFAULT_NOTES_DATA["notes"]
+            return d
+    except Exception:
+        return DEFAULT_NOTES_DATA.copy()
+
+def save_notes_data(data):
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    try:
+        with open(NOTES_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
 
 def get_current_state():
-    data = load_data()
-    schedule = data.get("schedule", [])
+    cal_data = load_calendar_data()
+    notes_data = load_notes_data()
+
     now = datetime.now()
-    cur_weekday = now.weekday()  # 0 = Monday, 6 = Sunday
+    today_str = now.strftime("%Y-%m-%d")
+    tomorrow_str = (now + timedelta(days=1)).strftime("%Y-%m-%d")
 
-    days_map = {}
-    for item in schedule:
-        days_map[item["day_index"]] = item
+    today_events = list(cal_data.get(today_str, []))
+    
+    # Check for upcoming events in the next 14 days
+    upcoming_events = []
+    for d_offset in range(1, 15):
+        chk_dt = now + timedelta(days=d_offset)
+        chk_str = chk_dt.strftime("%Y-%m-%d")
+        if chk_str in cal_data:
+            day_label = "Mañana" if d_offset == 1 else chk_dt.strftime("%d/%m")
+            for ev in cal_data[chk_str]:
+                ev_copy = dict(ev)
+                ev_copy["date_str"] = chk_str
+                ev_copy["day_label"] = day_label
+                upcoming_events.append(ev_copy)
 
-    current_class = None
+    # Determine currently active or upcoming event
+    current_event = None
     is_active = False
     is_finishing_soon = False
-    time_left_str = ""
-    status_label = "Sin clases hoy"
-    progress_pct = 0
+    status_label = "Sin eventos hoy"
+    time_left_str = "Día libre"
 
-    # 1. Check if today has a class
-    today_class = days_map.get(cur_weekday)
-    if today_class:
-        try:
-            start_parts = [int(p) for p in today_class["start"].split(":")]
-            end_parts = [int(p) for p in today_class["end"].split(":")]
-            start_dt = now.replace(hour=start_parts[0], minute=start_parts[1], second=0, microsecond=0)
-            end_dt = now.replace(hour=end_parts[0], minute=end_parts[1], second=0, microsecond=0)
-
-            if start_dt <= now <= end_dt:
-                is_active = True
-                status_label = "En curso"
-                total_duration = (end_dt - start_dt).total_seconds() / 60
-                elapsed = (now - start_dt).total_seconds() / 60
-                rem = (end_dt - now).total_seconds() / 60
-                progress_pct = int(min(100, max(0, (elapsed / total_duration) * 100))) if total_duration > 0 else 0
-                time_left_str = f"Termina en {format_duration(rem)}"
-                if 0 < rem <= 15:
-                    is_finishing_soon = True
-                current_class = today_class
-            elif now < start_dt:
-                status_label = "Hoy más tarde"
-                rem = (start_dt - now).total_seconds() / 60
-                time_left_str = f"Comienza en {format_duration(rem)}"
-                current_class = today_class
-        except Exception:
-            pass
-
-    # 2. Upcoming class search
-    if not current_class:
-        for offset in range(1, 8):
-            target_day = (cur_weekday + offset) % 7
-            if target_day in days_map:
-                c = days_map[target_day]
-                day_name = c["day_name"]
-                if offset == 1:
-                    status_label = "Próxima: Mañana"
-                    time_left_str = f"Mañana a las {c['start']}"
-                else:
-                    status_label = f"Próxima: {day_name}"
-                    time_left_str = f"{day_name} a las {c['start']}"
-                current_class = c
-                break
-
-    if not current_class and schedule:
-        current_class = schedule[0]
-        status_label = f"Próxima: {current_class['day_name']}"
-        time_left_str = f"{current_class['day_name']} a las {current_class['start']}"
+    if today_events:
+        # Try finding current event by time
+        cur_min_now = now.hour * 60 + now.minute
+        for ev in today_events:
+            t_str = ev.get("time", "")
+            if "-" in t_str:
+                parts = t_str.split("-")
+                try:
+                    s_h, s_m = [int(x) for x in parts[0].strip().split(":")]
+                    e_h, e_m = [int(x) for x in parts[1].strip().split(":")]
+                    start_min = s_h * 60 + s_m
+                    end_min = e_h * 60 + e_m
+                    if start_min <= cur_min_now <= end_min:
+                        current_event = ev
+                        is_active = True
+                        rem = end_min - cur_min_now
+                        status_label = "En curso"
+                        time_left_str = f"Termina en {rem} min" if rem < 60 else f"Termina en {rem//60}h {rem%60}m"
+                        if rem <= 15:
+                            is_finishing_soon = True
+                        break
+                    elif cur_min_now < start_min and not current_event:
+                        rem = start_min - cur_min_now
+                        current_event = ev
+                        status_label = "Hoy más tarde"
+                        time_left_str = f"Comienza en {rem} min" if rem < 60 else f"En {rem//60}h {rem%60}m ({parts[0].strip()})"
+                except Exception:
+                    pass
+        if not current_event:
+            current_event = today_events[0]
+            status_label = "Hoy"
+            time_left_str = current_event.get("time", "Programado")
+    elif upcoming_events:
+        next_ev = upcoming_events[0]
+        status_label = f"Próximo: {next_ev.get('day_label', 'Pronto')}"
+        time_left_str = f"{next_ev.get('day_label')} · {next_ev.get('time', '')}"
+        current_event = next_ev
 
     return {
-        "university": data.get("university", "UNaB"),
-        "career": data.get("career", "Tecnicatura en Programación"),
-        "subject": current_class["subject"] if current_class else "Sin actividades",
-        "code": current_class.get("code", "") if current_class else "",
-        "room": current_class.get("room", "") if current_class else "",
-        "professor": current_class.get("professor", "") if current_class else "",
-        "start": current_class.get("start", "") if current_class else "",
-        "end": current_class.get("end", "") if current_class else "",
+        "title": "Notas",
+        "subject": current_event.get("title", "Sin eventos") if current_event else "Sin eventos",
+        "start": current_event.get("time", "") if current_event else "",
+        "end": "",
+        "room": current_event.get("category", "General") if current_event else "General",
+        "code": "",
+        "professor": "",
+        "color": current_event.get("color", "#0A84FF") if current_event else "#0A84FF",
         "status_label": status_label,
         "time_left_str": time_left_str,
         "is_active": is_active,
         "is_finishing_soon": is_finishing_soon,
-        "progress_pct": progress_pct,
-        "schedule": schedule,
-        "tasks": data.get("tasks", []),
-        "notes": data.get("notes", "")
+        "progress_pct": 50 if is_active else 0,
+        "today_events": today_events,
+        "upcoming_events": upcoming_events,
+        "schedule": today_events if today_events else upcoming_events[:5],
+        "tasks": notes_data.get("tasks", []),
+        "notes": notes_data.get("notes", "")
     }
 
 def main():
     action = sys.argv[1] if len(sys.argv) > 1 else "get"
-    data = load_data()
+    cal_data = load_calendar_data()
+    notes_data = load_notes_data()
 
     if action == "get":
         print(json.dumps(get_current_state(), ensure_ascii=False))
 
+    elif action == "add_calendar_event" and len(sys.argv) >= 3:
+        # python3 timetable_provider.py add_calendar_event "Title" "18:00 - 20:00" "Trabajo" "#0A84FF" [date]
+        title = sys.argv[2]
+        time_str = sys.argv[3] if len(sys.argv) > 3 else "Todo el día"
+        category = sys.argv[4] if len(sys.argv) > 4 else "General"
+        color = sys.argv[5] if len(sys.argv) > 5 else "#0A84FF"
+        target_date = sys.argv[6] if len(sys.argv) > 6 else datetime.now().strftime("%Y-%m-%d")
+
+        ev_id = f"ev_{int(time.time())}"
+        new_ev = {
+            "id": ev_id,
+            "title": title,
+            "time": time_str,
+            "category": category,
+            "color": color
+        }
+        if target_date not in cal_data:
+            cal_data[target_date] = []
+        cal_data[target_date].append(new_ev)
+        save_calendar_data(cal_data)
+        print(json.dumps(get_current_state(), ensure_ascii=False))
+
+    elif action == "delete_calendar_event" and len(sys.argv) >= 3:
+        ev_id = str(sys.argv[2])
+        for d, ev_list in cal_data.items():
+            cal_data[d] = [e for e in ev_list if str(e.get("id")) != ev_id]
+        save_calendar_data(cal_data)
+        print(json.dumps(get_current_state(), ensure_ascii=False))
+
     elif action == "toggle_task" and len(sys.argv) >= 3:
-        task_id = sys.argv[2]
-        tasks = data.get("tasks", [])
-        for t in tasks:
-            if str(t.get("id")) == str(task_id):
+        task_id = str(sys.argv[2])
+        for t in notes_data.get("tasks", []):
+            if str(t.get("id")) == task_id:
                 t["done"] = not t.get("done", False)
                 break
-        data["tasks"] = tasks
-        save_data(data)
+        save_notes_data(notes_data)
         print(json.dumps(get_current_state(), ensure_ascii=False))
 
     elif action == "add_task" and len(sys.argv) >= 3:
-        # python3 timetable_provider.py add_task "Title" "Tag" "Due"
         title = sys.argv[2]
-        tag = sys.argv[3] if len(sys.argv) > 3 else "UNaB"
+        tag = sys.argv[3] if len(sys.argv) > 3 else "General"
         due = sys.argv[4] if len(sys.argv) > 4 else "Pendiente"
-        
-        tag_colors = {
+        color_map = {
             "UNaB": "#007AFF",
             "Trabajo": "#AF52DE",
             "Examen": "#FF9F0A",
-            "Proyecto": "#30D158"
+            "General": "#30D158",
+            "Prioridad": "#FA114F"
         }
         new_task = {
             "id": f"t_{int(time.time() * 1000)}",
             "title": title,
             "tag": tag,
-            "tag_color": tag_colors.get(tag, "#007AFF"),
+            "tag_color": color_map.get(tag, "#007AFF"),
             "done": False,
             "due": due
         }
-        tasks = data.get("tasks", [])
-        tasks.insert(0, new_task)
-        data["tasks"] = tasks
-        save_data(data)
+        notes_data.setdefault("tasks", []).insert(0, new_task)
+        save_notes_data(notes_data)
         print(json.dumps(get_current_state(), ensure_ascii=False))
 
     elif action == "delete_task" and len(sys.argv) >= 3:
-        task_id = sys.argv[2]
-        tasks = [t for t in data.get("tasks", []) if str(t.get("id")) != str(task_id)]
-        data["tasks"] = tasks
-        save_data(data)
+        task_id = str(sys.argv[2])
+        notes_data["tasks"] = [t for t in notes_data.get("tasks", []) if str(t.get("id")) != task_id]
+        save_notes_data(notes_data)
         print(json.dumps(get_current_state(), ensure_ascii=False))
 
     elif action == "set_notes" and len(sys.argv) >= 3:
-        notes_text = sys.argv[2]
-        data["notes"] = notes_text
-        save_data(data)
+        notes_data["notes"] = sys.argv[2]
+        save_notes_data(notes_data)
+        print(json.dumps(get_current_state(), ensure_ascii=False))
+
+    else:
         print(json.dumps(get_current_state(), ensure_ascii=False))
 
 if __name__ == "__main__":

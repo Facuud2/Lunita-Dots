@@ -60,7 +60,7 @@ Item {
                         anchors.margins: 2
                         spacing: 2
 
-                        // Tab 0: Clases
+                        // Tab 0: Agenda
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -69,7 +69,7 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "Clases"
+                                text: "Agenda"
                                 font.family: "SF Pro Display"
                                 font.pixelSize: 8
                                 font.weight: Font.Bold
@@ -308,9 +308,9 @@ Item {
                         Layout.fillWidth: true
                         spacing: 4
 
-                        Text { text: "󰑴"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 11; color: isActive ? "#30D158" : "#007AFF" }
+                        Text { text: "󰸗"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 11; color: isActive ? "#30D158" : "#007AFF" }
                         Text {
-                            text: "UNaB"
+                            text: "AGENDA"
                             font.family: "SF Pro Display"
                             font.pixelSize: 9
                             font.weight: Font.Bold
@@ -323,12 +323,13 @@ Item {
                         Rectangle {
                             height: 14
                             radius: 7
-                            implicitWidth: 44
+                            implicitWidth: Math.max(44, statusText.implicitWidth + 8)
                             color: isActive ? Qt.rgba(0.19, 0.82, 0.35, 0.20) : Qt.rgba(0.0, 0.48, 1.0, 0.16)
 
                             Text {
+                                id: statusText
                                 anchors.centerIn: parent
-                                text: isActive ? "EN CURSO" : "CLASE"
+                                text: root.widgetsState && root.widgetsState.ttStatusLabel ? root.widgetsState.ttStatusLabel.toUpperCase() : (isActive ? "EN CURSO" : "AGENDA")
                                 font.family: "SF Pro Display"
                                 font.pixelSize: 7
                                 font.weight: Font.Bold
@@ -576,9 +577,9 @@ Item {
                 Layout.fillWidth: true
                 spacing: 6
 
-                Text { text: "󰑴"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 14; color: "#007AFF" }
+                Text { text: "󰠮"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 14; color: "#007AFF" }
                 Text {
-                    text: "UNaB & WORKSPACE"
+                    text: "NOTAS & AGENDA"
                     font.family: "SF Pro Display"
                     font.pixelSize: 11
                     font.weight: Font.Bold
@@ -598,7 +599,7 @@ Item {
                         anchors.centerIn: parent
                         spacing: 3
                         Text { text: "＋"; font.pixelSize: 10; font.weight: Font.Bold; color: "#FFFFFF" }
-                        Text { text: "Agregar Tarea"; font.family: "SF Pro Display"; font.pixelSize: 9; font.weight: Font.Bold; color: "#FFFFFF" }
+                        Text { text: "Agregar"; font.family: "SF Pro Display"; font.pixelSize: 9; font.weight: Font.Bold; color: "#FFFFFF" }
                     }
 
                     MouseArea {
@@ -610,7 +611,7 @@ Item {
                 }
             }
 
-            // Current Class Banner
+            // Current Class / Agenda Banner
             Rectangle {
                 Layout.fillWidth: true
                 height: 52
@@ -626,28 +627,31 @@ Item {
                         Layout.fillWidth: true
                         spacing: 2
                         Text {
-                            text: root.widgetsState && root.widgetsState.ttSubject ? root.widgetsState.ttSubject : "Laboratorio de Computación I"
+                            text: root.widgetsState && root.widgetsState.ttSubject ? root.widgetsState.ttSubject : "Sin eventos programados"
                             font.family: "SF Pro Display"
                             font.pixelSize: 11
                             font.weight: Font.Bold
                             color: "#FFFFFF"
+                            elide: Text.ElideRight
                         }
                         Text {
-                            text: (root.widgetsState && root.widgetsState.ttRoom ? root.widgetsState.ttRoom : "Lab 2") + " • " + (root.widgetsState && root.widgetsState.ttProfessor ? root.widgetsState.ttProfessor : "Prof. Gómez")
+                            text: (root.widgetsState && root.widgetsState.ttRoom ? root.widgetsState.ttRoom : "General") + " • " + (root.widgetsState && root.widgetsState.ttStart ? root.widgetsState.ttStart : "Todo el día")
                             font.family: "SF Pro Display"
                             font.pixelSize: 9
                             color: Qt.rgba(1, 1, 1, 0.6)
+                            elide: Text.ElideRight
                         }
                     }
 
                     Rectangle {
                         height: 20
                         radius: 10
-                        implicitWidth: 64
+                        implicitWidth: Math.max(50, largeTimeText.implicitWidth + 12)
                         color: isActive ? Qt.rgba(0.19, 0.82, 0.35, 0.20) : Qt.rgba(0.0, 0.48, 1.0, 0.20)
                         Text {
+                            id: largeTimeText
                             anchors.centerIn: parent
-                            text: root.widgetsState && root.widgetsState.ttStart ? root.widgetsState.ttStart : "18:30"
+                            text: root.widgetsState && root.widgetsState.ttTimeLeftStr ? root.widgetsState.ttTimeLeftStr : (root.widgetsState && root.widgetsState.ttStart ? root.widgetsState.ttStart : "Hoy")
                             font.family: "SF Pro Display"
                             font.pixelSize: 9
                             font.weight: Font.Bold
@@ -766,7 +770,7 @@ Item {
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 4. MODAL: AGREGAR NUEVA TAREA / NOTA ──
+        // ── 4. MODAL: AGREGAR NUEVO EVENTO DE AGENDA / TAREA ──
         // ═══════════════════════════════════════════════════════════════════
         Rectangle {
             anchors.fill: parent
@@ -775,23 +779,76 @@ Item {
             visible: root.addTaskModalOpen
             border.color: "#007AFF"
             border.width: 1.5
+            property int modalTab: 0
+            property string selectedTag: "UNaB"
+            property string selectedColor: "#007AFF"
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 8
+                spacing: 6
 
+                // Modal Header
                 RowLayout {
                     Layout.fillWidth: true
-                    Text { text: "＋"; font.pixelSize: 12; font.weight: Font.Bold; color: "#007AFF" }
-                    Text {
-                        text: "NUEVA TAREA / RECORDATORIO"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 10
-                        font.weight: Font.Bold
-                        color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                    spacing: 6
+
+                    // Segmented Selector: Agenda vs Tarea
+                    Rectangle {
+                        height: 20
+                        radius: 10
+                        implicitWidth: 130
+                        color: Qt.rgba(1, 1, 1, 0.08)
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 2
+                            spacing: 2
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                radius: 8
+                                color: parent.parent.parent.parent.modalTab === 0 ? "#007AFF" : "transparent"
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "Agenda / Horario"
+                                    font.family: "SF Pro Display"
+                                    font.pixelSize: 8
+                                    font.weight: Font.Bold
+                                    color: parent.parent.parent.parent.parent.modalTab === 0 ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.55)
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: parent.parent.parent.parent.modalTab = 0
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                radius: 8
+                                color: parent.parent.parent.parent.modalTab === 1 ? "#AF52DE" : "transparent"
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "Tarea"
+                                    font.family: "SF Pro Display"
+                                    font.pixelSize: 8
+                                    font.weight: Font.Bold
+                                    color: parent.parent.parent.parent.parent.modalTab === 1 ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.55)
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: parent.parent.parent.parent.modalTab = 1
+                                }
+                            }
+                        }
                     }
+
                     Item { Layout.fillWidth: true }
+
                     Text {
                         text: "✕"
                         font.pixelSize: 11
@@ -809,10 +866,15 @@ Item {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 2
-                    Text { text: "Descripción"; font.family: "SF Pro Display"; font.pixelSize: 9; color: Qt.rgba(1, 1, 1, 0.6) }
+                    Text {
+                        text: parent.parent.parent.modalTab === 0 ? "Título del Evento / Clase" : "Descripción de la Tarea"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 9
+                        color: Qt.rgba(1, 1, 1, 0.6)
+                    }
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 28
+                        height: 26
                         radius: 6
                         color: Qt.rgba(1, 1, 1, 0.08)
                         border.color: titleInput.activeFocus ? "#007AFF" : Qt.rgba(1, 1, 1, 0.15)
@@ -820,9 +882,35 @@ Item {
                         TextInput {
                             id: titleInput
                             anchors.fill: parent
-                            anchors.margins: 5
+                            anchors.margins: 4
                             font.family: "SF Pro Display"
-                            font.pixelSize: 11
+                            font.pixelSize: 10
+                            color: "#FFFFFF"
+                            verticalAlignment: TextInput.AlignVCenter
+                        }
+                    }
+                }
+
+                // Campo Horario (Solo visible en Agenda)
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+                    visible: parent.parent.modalTab === 0
+                    Text { text: "Horario (ej: 18:00 - 20:00)"; font.family: "SF Pro Display"; font.pixelSize: 9; color: Qt.rgba(1, 1, 1, 0.6) }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 24
+                        radius: 6
+                        color: Qt.rgba(1, 1, 1, 0.08)
+                        border.color: timeInput.activeFocus ? "#007AFF" : Qt.rgba(1, 1, 1, 0.15)
+                        border.width: 1
+                        TextInput {
+                            id: timeInput
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 10
+                            text: "18:00 - 20:00"
                             color: "#FFFFFF"
                             verticalAlignment: TextInput.AlignVCenter
                         }
@@ -830,23 +918,22 @@ Item {
                 }
 
                 // Selector de Categoría (Tag)
-                property string selectedTag: "UNaB"
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: 4
                     Repeater {
                         model: [
                             { tag: "UNaB", col: "#007AFF" },
                             { tag: "Trabajo", col: "#AF52DE" },
                             { tag: "Examen", col: "#FF9F0A" },
-                            { tag: "Proyecto", col: "#30D158" }
+                            { tag: "General", col: "#30D158" }
                         ]
 
                         Rectangle {
-                            height: 20
-                            radius: 10
-                            implicitWidth: 54
-                            color: parent.parent.selectedTag === modelData.tag ? modelData.col : Qt.rgba(1, 1, 1, 0.08)
+                            height: 18
+                            radius: 9
+                            implicitWidth: 44
+                            color: parent.parent.parent.parent.selectedTag === modelData.tag ? modelData.col : Qt.rgba(1, 1, 1, 0.08)
 
                             Text {
                                 anchors.centerIn: parent
@@ -854,13 +941,16 @@ Item {
                                 font.family: "SF Pro Display"
                                 font.pixelSize: 8
                                 font.weight: Font.Bold
-                                color: parent.parent.selectedTag === modelData.tag ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.6)
+                                color: parent.parent.parent.parent.parent.selectedTag === modelData.tag ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.6)
                             }
 
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: parent.parent.selectedTag = modelData.tag
+                                onClicked: {
+                                    parent.parent.parent.parent.selectedTag = modelData.tag;
+                                    parent.parent.parent.parent.selectedColor = modelData.col;
+                                }
                             }
                         }
                     }
@@ -868,18 +958,18 @@ Item {
 
                 Item { Layout.fillHeight: true }
 
-                // Botón Guardar Tarea
+                // Botón Guardar
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 28
-                    radius: 8
-                    color: "#007AFF"
+                    height: 26
+                    radius: 7
+                    color: parent.parent.modalTab === 0 ? "#007AFF" : "#AF52DE"
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Guardar Tarea"
+                        text: parent.parent.parent.modalTab === 0 ? "Guardar en Calendario y Agenda" : "Guardar Tarea"
                         font.family: "SF Pro Display"
-                        font.pixelSize: 10
+                        font.pixelSize: 9
                         font.weight: Font.Bold
                         color: "#FFFFFF"
                     }
@@ -888,8 +978,19 @@ Item {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            if (root.widgetsState && titleInput.text.trim() !== "") {
-                                root.widgetsState.addTimetableTask(titleInput.text.trim(), parent.parent.selectedTag, "Pendiente");
+                            if (titleInput.text.trim() !== "") {
+                                if (parent.parent.parent.modalTab === 0) {
+                                    var todayDate = new Date();
+                                    var dStr = (root.widgetsState && root.widgetsState.calSelectedDateStr) ? root.widgetsState.calSelectedDateStr : (todayDate.getFullYear() + "-" + ("0" + (todayDate.getMonth()+1)).slice(-2) + "-" + ("0" + todayDate.getDate()).slice(-2));
+                                    if (root.widgetsState) {
+                                        root.widgetsState.addCalendarEvent(dStr, timeInput.text.trim() || "Todo el día", titleInput.text.trim(), parent.parent.parent.selectedTag, parent.parent.parent.selectedColor);
+                                        root.widgetsState.refreshTimetable();
+                                    }
+                                } else {
+                                    if (root.widgetsState) {
+                                        root.widgetsState.addTimetableTask(titleInput.text.trim(), parent.parent.parent.selectedTag, "Pendiente");
+                                    }
+                                }
                                 titleInput.text = "";
                             }
                             root.addTaskModalOpen = false;

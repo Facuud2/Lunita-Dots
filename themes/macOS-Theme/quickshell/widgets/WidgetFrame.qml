@@ -7,11 +7,33 @@ Item {
     property var widgetsState
     property var widgetData: null
 
-    // Position and size properties bound to widgetData
+    // Position and size properties
     x: widgetData ? widgetData.x : 0
     y: widgetData ? widgetData.y : 0
     width: widgetData ? widgetData.width : 170
     height: widgetData ? widgetData.height : 170
+
+    function applyData(newData) {
+        if (!newData) return;
+        root.widgetData = newData;
+        if (!root.isDragging) {
+            if (root.x !== newData.x) root.x = newData.x;
+            if (root.y !== newData.y) root.y = newData.y;
+        }
+        if (!root.isResizing) {
+            if (root.width !== newData.width) root.width = newData.width;
+            if (root.height !== newData.height) root.height = newData.height;
+        }
+    }
+
+    Component.onCompleted: {
+        if (widgetData) {
+            root.x = widgetData.x;
+            root.y = widgetData.y;
+            root.width = widgetData.width;
+            root.height = widgetData.height;
+        }
+    }
 
     Behavior on x { enabled: !root.isDragging; NumberAnimation { duration: 340; easing.type: Easing.OutCubic } }
     Behavior on y { enabled: !root.isDragging; NumberAnimation { duration: 340; easing.type: Easing.OutCubic } }

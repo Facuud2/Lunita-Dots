@@ -309,6 +309,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
+                visible: root.activeDevices.length > 0
                 model: root.activeDevices
                 spacing: 8
 
@@ -375,6 +376,44 @@ Item {
                             font.weight: Font.Bold
                             color: "#FFFFFF"
                         }
+                    }
+                }
+            }
+
+            // Empty State
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: root.activeDevices.length === 0
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 8
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "󰂎"
+                        font.family: "CaskaydiaCove Nerd Font"
+                        font.pixelSize: 32
+                        color: Qt.rgba(1, 1, 1, 0.25)
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "Sin dispositivos vinculados"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 12
+                        font.weight: Font.Bold
+                        color: Qt.rgba(1, 1, 1, 0.6)
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "Los dispositivos Bluetooth o KDE Connect\nse mostrarán aquí automáticamente"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 10
+                        horizontalAlignment: Text.AlignHCenter
+                        color: Qt.rgba(1, 1, 1, 0.35)
                     }
                 }
             }

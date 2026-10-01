@@ -8,6 +8,9 @@ Item {
 
     // ── Edit Mode State ──
     property bool isEditing: false
+    onIsEditingChanged: {
+        Quickshell.execDetached(["bash", "-c", "echo " + (root.isEditing ? "1" : "0") + " > /tmp/lunita_widgets_editing"]);
+    }
 
     // ── Theme State (Synced with Lunita Color Scheme) ──
     property bool isDarkTheme: true
@@ -102,16 +105,17 @@ Item {
     property string gitCiRepo: "Comitas-App"
     property var gitLatestCommit: ({ repo: "Lunita-Dots", hash: "adf8df3", message: "Cargando...", author: "Facuud2", relative_time: "" })
     property var gitHeatmap: []
+    property var gitRecentCommits: []
     property string gitUpdatedAt: ""
 
     // ── 10. Health & Activity Tracker (macOS Health-Style) ──
-    property int healthCalories: 540
+    property int healthCalories: 0
     property int healthCaloriesGoal: 600
-    property int healthExercise: 35
+    property int healthExercise: 0
     property int healthExerciseGoal: 30
-    property int healthSteps: 8450
+    property int healthSteps: 0
     property int healthStepsGoal: 10000
-    property real healthWater: 2.1
+    property real healthWater: 0.0
     property real healthWaterGoal: 2.5
     property var healthHistory: []
     property int habitDay: 14
@@ -166,6 +170,31 @@ Item {
     Component.onCompleted: {
         loadLayout();
         refreshAllData();
+        Quickshell.execDetached(["bash", "-c", "echo 0 > /tmp/lunita_widgets_editing"]);
+    }
+
+    // ── Widget Edit Mode IPC Listener ──
+    Process {
+        id: widgetIpcProc
+        command: ["python3", "-u", root.scriptsDir + "/widget_ipc_listener.py"]
+        running: true
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: data => {
+                var cmd = data.trim();
+                if (cmd === "toggle_edit") {
+                    root.toggleEdit();
+                } else if (cmd === "edit_on") {
+                    root.isEditing = true;
+                } else if (cmd === "edit_off") {
+                    root.isEditing = false;
+                } else if (cmd === "reset") {
+                    root.resetLayout();
+                } else if (cmd === "toggle_clock") {
+                    root.toggleClockExpanded();
+                }
+            }
+        }
     }
 
     // ── Layout Persistence ──
@@ -280,6 +309,11 @@ Item {
     function resetLayout() {
         root.widgetsList = root.defaultWidgets();
         saveLayout();
+        resetHealthData();
+    }
+
+    function toggleClockExpanded() {
+        toggleClockExpansion();
     }
 
     function toggleClockExpansion() {
@@ -803,6 +837,7 @@ Item {
                     root.gitCiMessage = p.ci_message || "Pipelines OK";
                     root.gitCiRepo = p.ci_repo || "Comitas-App";
                     root.gitLatestCommit = p.latest_commit || {};
+                    root.gitRecentCommits = p.recent_commits || [];
                     root.gitHeatmap = p.heatmap || [];
                     root.gitUpdatedAt = p.updated_at || "";
                 } catch(e) {}
@@ -845,13 +880,13 @@ Item {
                 try {
                     var p = JSON.parse(data.trim());
                     // Health & Fitness metrics
-                    root.healthCalories = p.calories !== undefined ? p.calories : 540;
+                    root.healthCalories = p.calories !== undefined ? p.calories : 0;
                     root.healthCaloriesGoal = p.calories_goal || 600;
-                    root.healthExercise = p.exercise !== undefined ? p.exercise : 35;
+                    root.healthExercise = p.exercise !== undefined ? p.exercise : 0;
                     root.healthExerciseGoal = p.exercise_goal || 30;
-                    root.healthSteps = p.steps !== undefined ? p.steps : 8450;
+                    root.healthSteps = p.steps !== undefined ? p.steps : 0;
                     root.healthStepsGoal = p.steps_goal || 10000;
-                    root.healthWater = p.water !== undefined ? p.water : 2.1;
+                    root.healthWater = p.water !== undefined ? p.water : 0.0;
                     root.healthWaterGoal = p.water_goal || 2.5;
                     root.healthHistory = p.history || [];
 
@@ -867,6 +902,22 @@ Item {
                 } catch(e) {}
             }
         }
+    }
+
+    function saveHealthMetrics(cal, ex, steps, water) {
+        root.healthCalories = cal;
+        root.healthExercise = ex;
+        root.healthSteps = steps;
+        root.healthWater = water;
+        habitProc.command = ["python3", root.scriptsDir + "/health_tracker_provider.py", "set_metrics", cal.toString(), ex.toString(), steps.toString(), water.toString()];
+        habitProc.running = false;
+        habitProc.running = true;
+    }
+
+    function resetHealthData() {
+        habitProc.command = ["python3", root.scriptsDir + "/health_tracker_provider.py", "reset"];
+        habitProc.running = false;
+        habitProc.running = true;
     }
 
     // ── 11. Timetable UNaB & Workspace Notes ──
@@ -935,19 +986,43 @@ Item {
     }
 
     // ── 12. Media Player (Now Playing) ──
+    function parseMediaData(data) {
+        try {
+            var p = JSON.parse(data.trim());
+            root.mediaStatus = p.status || "Stopped";
+            root.mediaIsPlaying = !!p.is_playing;
+            root.mediaTitle = p.title || "Sin reproducción";
+            root.mediaArtist = p.artist || "Ningún reproductor activo";
+            root.mediaAlbum = p.album || "";
+            root.mediaArtUrl = p.art_url || "";
+            root.mediaPosition = p.position || 0;
+            root.mediaLength = p.length || 0;
+            root.mediaPositionStr = p.position_str || "0:00";
+            root.mediaLengthStr = p.length_str || "0:00";
+            root.mediaProgress = p.progress !== undefined ? p.progress : 0.0;
+            if (p.dominant_color) {
+                root.mediaDominantColor = p.dominant_color;
+            }
+        } catch(e) {}
+    }
+
     function mediaPlayPause() {
-        mediaProc.command = ["python3", root.scriptsDir + "/media_provider.py", "play-pause"];
-        mediaProc.running = true;
+        root.mediaIsPlaying = !root.mediaIsPlaying;
+        mediaActionProc.command = ["python3", root.scriptsDir + "/media_provider.py", "play-pause"];
+        mediaActionProc.running = false;
+        mediaActionProc.running = true;
     }
 
     function mediaNext() {
-        mediaProc.command = ["python3", root.scriptsDir + "/media_provider.py", "next"];
-        mediaProc.running = true;
+        mediaActionProc.command = ["python3", root.scriptsDir + "/media_provider.py", "next"];
+        mediaActionProc.running = false;
+        mediaActionProc.running = true;
     }
 
     function mediaPrevious() {
-        mediaProc.command = ["python3", root.scriptsDir + "/media_provider.py", "previous"];
-        mediaProc.running = true;
+        mediaActionProc.command = ["python3", root.scriptsDir + "/media_provider.py", "previous"];
+        mediaActionProc.running = false;
+        mediaActionProc.running = true;
     }
 
     Timer {
@@ -956,8 +1031,18 @@ Item {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            mediaProc.command = ["python3", root.scriptsDir + "/media_provider.py", "get"];
-            mediaProc.running = true;
+            if (!mediaProc.running) {
+                mediaProc.command = ["python3", root.scriptsDir + "/media_provider.py", "get"];
+                mediaProc.running = true;
+            }
+        }
+    }
+
+    Process {
+        id: mediaActionProc
+        command: ["python3", root.scriptsDir + "/media_provider.py", "get"]
+        stdout: SplitParser {
+            onRead: data => root.parseMediaData(data)
         }
     }
 
@@ -965,25 +1050,7 @@ Item {
         id: mediaProc
         command: ["python3", root.scriptsDir + "/media_provider.py", "get"]
         stdout: SplitParser {
-            onRead: data => {
-                try {
-                    var p = JSON.parse(data.trim());
-                    root.mediaStatus = p.status || "Stopped";
-                    root.mediaIsPlaying = !!p.is_playing;
-                    root.mediaTitle = p.title || "Sin reproducción";
-                    root.mediaArtist = p.artist || "Ningún reproductor activo";
-                    root.mediaAlbum = p.album || "";
-                    root.mediaArtUrl = p.art_url || "";
-                    root.mediaPosition = p.position || 0;
-                    root.mediaLength = p.length || 0;
-                    root.mediaPositionStr = p.position_str || "0:00";
-                    root.mediaLengthStr = p.length_str || "0:00";
-                    root.mediaProgress = p.progress !== undefined ? p.progress : 0.0;
-                    if (p.dominant_color) {
-                        root.mediaDominantColor = p.dominant_color;
-                    }
-                } catch(e) {}
-            }
+            onRead: data => root.parseMediaData(data)
         }
     }
 }

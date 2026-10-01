@@ -1,18 +1,71 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 
 Item {
     id: root
 
     property var widgetsState
 
-    // ── 1. Render All Active Desktop Widgets ──
-    Repeater {
-        model: root.widgetsState.widgetsList
-        delegate: WidgetFrame {
+    // ── 1. Persistent Dynamic Widgets Container (No flickering/recreation) ──
+    Item {
+        id: widgetsContainer
+        anchors.fill: parent
+    }
+
+    Component {
+        id: widgetFrameComp
+        WidgetFrame {
             widgetsState: root.widgetsState
-            widgetData: modelData
         }
+    }
+
+    property var framesMap: ({})
+
+    function syncFrames() {
+        if (!root.widgetsState) return;
+        var list = root.widgetsState.widgetsList;
+        if (!list || !Array.isArray(list)) return;
+
+        var newMap = Object.assign({}, framesMap);
+        var seen = {};
+
+        for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            if (!item || !item.id) continue;
+            seen[item.id] = true;
+
+            var existing = newMap[item.id];
+            if (!existing) {
+                var obj = widgetFrameComp.createObject(widgetsContainer, {
+                    widgetData: item
+                });
+                newMap[item.id] = obj;
+            } else {
+                existing.applyData(item);
+            }
+        }
+
+        for (var idKey in newMap) {
+            if (!seen[idKey]) {
+                if (newMap[idKey]) {
+                    newMap[idKey].destroy();
+                }
+                delete newMap[idKey];
+            }
+        }
+        framesMap = newMap;
+    }
+
+    Connections {
+        target: root.widgetsState
+        function onWidgetsListChanged() {
+            root.syncFrames();
+        }
+    }
+
+    Component.onCompleted: {
+        root.syncFrames();
     }
 
     // ── 2. Top Edit Mode Header Bar (Visible only when editing) ──
@@ -282,7 +335,7 @@ Item {
                     anchors.centerIn: parent
                     spacing: 4
                     Text { text: "+"; color: root.widgetsState.textColor; font.pixelSize: 12; font.weight: Font.Bold }
-                    Text { text: "UNaB / Notas"; color: root.widgetsState.textColor; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold }
+                    Text { text: "Notas"; color: root.widgetsState.textColor; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold }
                 }
 
                 MouseArea {
@@ -373,75 +426,5 @@ Item {
             }
         }
     }
-
-    // ── 3. Bottom "Edit Widgets" Pill Button (Visible when NOT editing) ──
-    Rectangle {
-        id: editPillBtn
-        visible: !root.widgetsState.isEditing
-        x: 1520 + (354 - width) / 2
-        y: 610
-        height: 36
-        implicitWidth: pillRow.implicitWidth + 24
-        radius: 18
-        color: root.widgetsState.isDarkTheme ? Qt.rgba(0.14, 0.16, 0.20, 0.85) : Qt.rgba(0.96, 0.96, 0.98, 0.88)
-        border.color: root.widgetsState.isDarkTheme ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(0, 0, 0, 0.10)
-        border.width: 1
-
-        RowLayout {
-            id: pillRow
-            anchors.centerIn: parent
-            spacing: 10
-
-            // Botón Editar
-            Rectangle {
-                height: 26
-                radius: 13
-                implicitWidth: editPartRow.implicitWidth + 12
-                color: editPartMa.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "transparent"
-
-                RowLayout {
-                    id: editPartRow
-                    anchors.centerIn: parent
-                    spacing: 5
-                    Text { text: "󰏫"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 12; color: root.widgetsState.textColor }
-                    Text { text: "Editar"; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold; color: root.widgetsState.textColor }
-                }
-
-                MouseArea {
-                    id: editPartMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.toggleEdit()
-                }
-            }
-
-            // Separador vertical sutil
-            Rectangle { width: 1; height: 16; color: Qt.rgba(1, 1, 1, 0.18) }
-
-            // Botón Ajustes / Gestor
-            Rectangle {
-                height: 26
-                radius: 13
-                implicitWidth: cfgPartRow.implicitWidth + 12
-                color: cfgPartMa.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "transparent"
-
-                RowLayout {
-                    id: cfgPartRow
-                    anchors.centerIn: parent
-                    spacing: 5
-                    Text { text: "󰒓"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 12; color: root.widgetsState.accentBlue }
-                    Text { text: "Ajustes"; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold; color: root.widgetsState.textColor }
-                }
-
-                MouseArea {
-                    id: cfgPartMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Quickshell.execDetached(["lunita-widgets-manager"])
-                }
-            }
-        }
-    }
 }
+

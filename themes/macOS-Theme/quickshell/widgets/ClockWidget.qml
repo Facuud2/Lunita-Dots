@@ -6,6 +6,8 @@ Item {
     id: root
     property var widgetsState
     property bool contextMenuOpen: false
+    property int forecastTab: 0 // 0 = 4 Horas, 1 = Días
+    readonly property real expandProgress: Math.max(0.0, Math.min(1.0, (root.width - 170.0) / (354.0 - 170.0)))
 
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
@@ -168,210 +170,340 @@ Item {
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 1. MODO PEQUEÑO (170 x 170): ESFERA EXACTA DE LA IMAGEN ──
+        // ── ESFERA ANALÓGICA UNIFICADA (Estable, sin parpadeos) ─────────────
         // ═══════════════════════════════════════════════════════════════════
-        Item {
-            anchors.fill: parent
-            visible: root.isSmall
+        AnalogClockFace {
+            id: mainClockFace
+            visible: !root.isLarge
+            dialSize: 138
+            x: 16
+            y: (parent.height - dialSize) / 2
+        }
 
-            AnalogClockFace {
+        // ═══════════════════════════════════════════════════════════════════
+        // ── MODO PEQUEÑO: PÍLDORA DE CLIMA Y BOTÓN DE EXPANSIÓN ─────────────
+        // ═══════════════════════════════════════════════════════════════════
+        Rectangle {
+            id: smallWeatherPill
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 8
+            x: 16 + (138 - width) / 2
+            height: 20
+            implicitWidth: weatherSmallRow.implicitWidth + 14
+            radius: 10
+            color: wSmMa.containsMouse ? Qt.rgba(0.12, 0.12, 0.18, 0.90) : Qt.rgba(0.08, 0.08, 0.12, 0.75)
+            border.color: wSmMa.containsMouse ? Qt.rgba(1, 1, 1, 0.35) : Qt.rgba(1, 1, 1, 0.18)
+            border.width: 1
+            z: 10
+
+            opacity: Math.max(0.0, 1.0 - root.expandProgress * 3.0)
+            visible: opacity > 0.01 && !root.isLarge
+
+            RowLayout {
+                id: weatherSmallRow
                 anchors.centerIn: parent
-                dialSize: Math.min(parent.width, parent.height) - 24
-            }
-
-            // Botón interactivo para expandir a pronóstico de días posteriores
-            Rectangle {
-                anchors.top: parent.top
-                anchors.right: parent.right
-                anchors.margins: 9
-                width: 22
-                height: 22
-                radius: 11
-                color: expMa.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : Qt.rgba(1, 1, 1, 0.12)
-                border.color: Qt.rgba(1, 1, 1, 0.20)
-                border.width: 1
-                z: 10
+                spacing: 4
 
                 Text {
-                    anchors.centerIn: parent
-                    anchors.horizontalCenterOffset: 0.5
-                    text: "›"
+                    text: root.widgetsState ? (root.widgetsState.weatherIcon || "󰖙") : "󰖙"
+                    font.family: "CaskaydiaCove Nerd Font"
+                    font.pixelSize: 11
+                    color: "#FF9F0A"
+                }
+                Text {
+                    text: root.widgetsState ? (root.widgetsState.weatherTemp || "--°C") : "--°C"
                     font.family: "SF Pro Display, Inter, sans-serif"
-                    font.pixelSize: 15
+                    font.pixelSize: 10
                     font.weight: Font.Bold
                     color: "#FFFFFF"
                 }
+            }
 
-                MouseArea {
-                    id: expMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (root.widgetsState) root.widgetsState.toggleClockExpanded();
-                    }
+            MouseArea {
+                id: wSmMa
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (root.widgetsState) root.widgetsState.toggleClockExpanded();
+                }
+            }
+        }
+
+        // Botón interactivo para expandir a pronóstico de días posteriores (›)
+        Rectangle {
+            id: smallExpandBtn
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 9
+            width: 22
+            height: 22
+            radius: 11
+            color: expMa.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : Qt.rgba(1, 1, 1, 0.12)
+            border.color: Qt.rgba(1, 1, 1, 0.20)
+            border.width: 1
+            z: 10
+
+            opacity: Math.max(0.0, 1.0 - root.expandProgress * 3.0)
+            visible: opacity > 0.01 && !root.isLarge
+
+            Text {
+                anchors.centerIn: parent
+                anchors.horizontalCenterOffset: 0.5
+                text: "›"
+                font.family: "SF Pro Display, Inter, sans-serif"
+                font.pixelSize: 15
+                font.weight: Font.Bold
+                color: "#FFFFFF"
+            }
+
+            MouseArea {
+                id: expMa
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (root.widgetsState) root.widgetsState.toggleClockExpanded();
                 }
             }
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 2. MODO MEDIANO (354 x 170): ESFERA + PRONÓSTICO DÍAS POSTERIORES ──
+        // ── 2. PANEL DE TEMPERATURAS Y CLIMA (DESPLIEGUE FLUIDO macOS) ────
         // ═══════════════════════════════════════════════════════════════════
         Item {
-            anchors.fill: parent
-            visible: root.isMedium || (!root.isSmall && !root.isLarge)
+            id: weatherExpandedPanel
+            x: 166
+            y: 8
+            width: 174
+            height: parent.height - 16
+            visible: opacity > 0.005 && !root.isLarge
+            z: 10
 
-            RowLayout {
+            // Animación fluida moderna estilo macOS (Fade-in + Slide-in armónico)
+            opacity: Math.max(0.0, Math.min(1.0, (root.expandProgress - 0.08) / 0.92))
+            transform: Translate {
+                x: (1.0 - root.expandProgress) * 26
+            }
+
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 14
-                spacing: 12
+                spacing: 2
 
-                // Lado Izquierdo: Reloj Analógico
-                AnalogClockFace {
-                    Layout.alignment: Qt.AlignVCenter
-                    dialSize: 138
-                }
-
-                // Lado Derecho: Pronóstico de Días Posteriores
-                ColumnLayout {
+                // ── Cabecera: Ubicación, Temperatura y Botón Contraer ──
+                RowLayout {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.topMargin: 10
-                    Layout.bottomMargin: 10
                     spacing: 4
 
-                    // Cabecera: Ciudad / Temperatura y Botón Contraer
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
+                        spacing: 0
 
-                        ColumnLayout {
-                            spacing: 1
-                            RowLayout {
-                                spacing: 4
-                                Text {
-                                    text: ""
-                                    font.family: "CaskaydiaCove Nerd Font"
-                                    font.pixelSize: 10
-                                    color: "#FF9F0A"
-                                }
-                                Text {
-                                    text: root.widgetsState ? root.widgetsState.clockCity : "BUENOS AIRES"
-                                    font.family: "SF Pro Display, Inter, sans-serif"
-                                    font.pixelSize: 10
-                                    font.weight: Font.Bold
-                                    color: "#FF9F0A"
-                                    elide: Text.ElideRight
-                                }
+                        RowLayout {
+                            spacing: 4
+                            Text {
+                                text: ""
+                                font.family: "CaskaydiaCove Nerd Font"
+                                font.pixelSize: 10
+                                color: "#FF9F0A"
                             }
                             Text {
-                                text: (root.widgetsState ? root.widgetsState.weatherTemp : "--°C") + " · " + (root.widgetsState ? root.widgetsState.weatherDesc : "Despejado")
+                                Layout.fillWidth: true
+                                text: root.widgetsState ? root.widgetsState.clockCity : "BUENOS AIRES"
                                 font.family: "SF Pro Display, Inter, sans-serif"
-                                font.pixelSize: 11
-                                font.weight: Font.DemiBold
-                                color: "#FFFFFF"
+                                font.pixelSize: 10
+                                font.weight: Font.Bold
+                                color: "#FF9F0A"
+                                elide: Text.ElideRight
                             }
                         }
 
-                        Item { Layout.fillWidth: true }
+                        Text {
+                            text: (root.widgetsState ? root.widgetsState.weatherTemp : "--°C") + " · " + (root.widgetsState ? root.widgetsState.weatherDesc : "Despejado")
+                            font.family: "SF Pro Display, Inter, sans-serif"
+                            font.pixelSize: 10
+                            font.weight: Font.DemiBold
+                            color: "#FFFFFF"
+                            elide: Text.ElideRight
+                        }
+                    }
 
-                        // Botón Contraer (‹)
-                        Rectangle {
-                            width: 20
-                            height: 20
-                            radius: 10
-                            color: colMa.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : Qt.rgba(1, 1, 1, 0.12)
-                            border.color: Qt.rgba(1, 1, 1, 0.20)
-                            border.width: 1
+                    // Botón Contraer (‹) con estilo macOS
+                    Rectangle {
+                        width: 20
+                        height: 20
+                        radius: 10
+                        color: colMa.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : Qt.rgba(1, 1, 1, 0.12)
+                        border.color: Qt.rgba(1, 1, 1, 0.20)
+                        border.width: 1
 
+                        Text {
+                            anchors.centerIn: parent
+                            anchors.horizontalCenterOffset: -0.5
+                            text: "‹"
+                            font.family: "SF Pro Display, Inter, sans-serif"
+                            font.pixelSize: 14
+                            font.weight: Font.Bold
+                            color: "#FFFFFF"
+                        }
+
+                        MouseArea {
+                            id: colMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (root.widgetsState) root.widgetsState.toggleClockExpanded();
+                            }
+                        }
+                    }
+                }
+
+                // ── Métricas Secundarias: Humedad y Viento ──
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Text {
+                        text: "󰖌 " + (root.widgetsState ? root.widgetsState.weatherHumidity : "--%")
+                        font.family: "CaskaydiaCove Nerd Font, SF Pro Display"
+                        font.pixelSize: 8
+                        color: Qt.rgba(1, 1, 1, 0.60)
+                    }
+                    Text {
+                        text: "󰖝 " + (root.widgetsState ? root.widgetsState.weatherWind : "-- km/h")
+                        font.family: "CaskaydiaCove Nerd Font, SF Pro Display"
+                        font.pixelSize: 8
+                        color: Qt.rgba(1, 1, 1, 0.60)
+                    }
+                }
+
+                // ── Selector Segmentado macOS [ 4 Horas | 3 Días ] ──
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 18
+                    radius: 9
+                    color: Qt.rgba(0, 0, 0, 0.25)
+                    border.color: Qt.rgba(1, 1, 1, 0.10)
+                    border.width: 1
+
+                    // Pastilla deslizante indicadora activa
+                    Rectangle {
+                        x: root.forecastTab === 0 ? 1 : (parent.width / 2)
+                        y: 1
+                        width: (parent.width / 2) - 1
+                        height: parent.height - 2
+                        radius: 8
+                        color: Qt.rgba(1, 1, 1, 0.20)
+
+                        Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 0
+
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
                             Text {
                                 anchors.centerIn: parent
-                                anchors.horizontalCenterOffset: -0.5
-                                text: "‹"
-                                font.family: "SF Pro Display, Inter, sans-serif"
-                                font.pixelSize: 15
+                                text: "4 Horas"
+                                font.family: "SF Pro Display"
+                                font.pixelSize: 8
+                                font.weight: root.forecastTab === 0 ? Font.Bold : Font.Normal
+                                color: root.forecastTab === 0 ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.60)
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.forecastTab = 0
+                            }
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Text {
+                                anchors.centerIn: parent
+                                text: "3 Días"
+                                font.family: "SF Pro Display"
+                                font.pixelSize: 8
+                                font.weight: root.forecastTab === 1 ? Font.Bold : Font.Normal
+                                color: root.forecastTab === 1 ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.60)
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.forecastTab = 1
+                            }
+                        }
+                    }
+                }
+
+                // ── Lista de Pronósticos con Entrada Escalonada macOS ──
+                ListView {
+                    id: forecastListView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    spacing: 2
+                    model: root.forecastTab === 0
+                        ? ((root.widgetsState && root.widgetsState.weatherHourly) ? root.widgetsState.weatherHourly : [])
+                        : ((root.widgetsState && root.widgetsState.weatherDaily) ? root.widgetsState.weatherDaily : [])
+
+                    delegate: Rectangle {
+                        id: forecastRow
+                        width: forecastListView.width
+                        height: 18
+                        radius: 5
+                        color: fRowMa.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.05)
+
+                        // Animación escalonada según índice al desplegarse
+                        transform: Translate {
+                            x: (1.0 - root.expandProgress) * (14 + index * 4)
+                        }
+                        opacity: Math.max(0.0, Math.min(1.0, (root.expandProgress - (0.20 + index * 0.07)) / 0.70))
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 6
+                            anchors.rightMargin: 6
+                            spacing: 4
+
+                            // Hora o Día
+                            Text {
+                                text: modelData.time || modelData.day || ""
+                                font.family: "SF Pro Display"
+                                font.pixelSize: 9
+                                font.weight: Font.Bold
+                                color: "#FFFFFF"
+                                Layout.preferredWidth: 42
+                            }
+
+                            // Icono
+                            Text {
+                                text: modelData.icon || "󰖙"
+                                font.family: "CaskaydiaCove Nerd Font"
+                                font.pixelSize: 11
+                                color: "#FF9F0A"
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            // Temperatura o Rango mín/máx
+                            Text {
+                                text: modelData.temp || (modelData.max ? (modelData.min + " / " + modelData.max) : "")
+                                font.family: "SF Pro Display"
+                                font.pixelSize: 9
                                 font.weight: Font.Bold
                                 color: "#FFFFFF"
                             }
-
-                            MouseArea {
-                                id: colMa
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (root.widgetsState) root.widgetsState.toggleClockExpanded();
-                                }
-                            }
                         }
-                    }
 
-                    // Separador sutil
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 1
-                        color: Qt.rgba(1, 1, 1, 0.10)
-                    }
-
-                    // Pronóstico de Días Posteriores
-                    ListView {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        clip: true
-                        spacing: 4
-                        model: root.widgetsState && root.widgetsState.weatherDaily && root.widgetsState.weatherDaily.length > 0
-                            ? root.widgetsState.weatherDaily
-                            : (root.widgetsState ? root.widgetsState.weatherHourly : [])
-
-                        delegate: Rectangle {
-                            width: parent ? parent.width : 180
-                            height: 26
-                            radius: 6
-                            color: Qt.rgba(1, 1, 1, 0.06)
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 8
-                                anchors.rightMargin: 8
-                                spacing: 6
-
-                                // Día (Hoy, Mañana, etc.)
-                                Text {
-                                    text: modelData.day || modelData.time || ""
-                                    font.family: "SF Pro Display"
-                                    font.pixelSize: 10
-                                    font.weight: Font.Bold
-                                    color: "#FFFFFF"
-                                    Layout.preferredWidth: 44
-                                }
-
-                                // Icono
-                                Text {
-                                    text: modelData.icon || "󰖙"
-                                    font.family: "CaskaydiaCove Nerd Font"
-                                    font.pixelSize: 12
-                                    color: "#FF9F0A"
-                                }
-
-                                // Descripción breve
-                                Text {
-                                    text: modelData.desc || ""
-                                    font.family: "SF Pro Display"
-                                    font.pixelSize: 9
-                                    color: Qt.rgba(1, 1, 1, 0.65)
-                                    elide: Text.ElideRight
-                                    Layout.fillWidth: true
-                                }
-
-                                // Min / Max
-                                Text {
-                                    text: modelData.max ? (modelData.min + " / " + modelData.max) : (modelData.temp || "")
-                                    font.family: "SF Pro Display"
-                                    font.pixelSize: 10
-                                    font.weight: Font.Bold
-                                    color: "#FFFFFF"
-                                }
-                            }
+                        MouseArea {
+                            id: fRowMa
+                            anchors.fill: parent
+                            hoverEnabled: true
                         }
                     }
                 }
@@ -465,17 +597,37 @@ Item {
         // ═══════════════════════════════════════════════════════════════════
         // ── MENÚ CONTEXTUAL FLOTANTE (CLIC DERECHO) ──
         // ═══════════════════════════════════════════════════════════════════
+        MouseArea {
+            id: contextMenuBackdrop
+            anchors.fill: parent
+            visible: root.contextMenuOpen
+            z: 199
+            onClicked: root.contextMenuOpen = false
+        }
+
         Rectangle {
             id: contextMenu
-            visible: root.contextMenuOpen
-            width: 190
+            width: 204
             height: menuCol.implicitHeight + 16
             anchors.centerIn: parent
-            radius: 12
-            color: root.widgetsState && root.widgetsState.isDarkTheme ? "#1E1E24" : "#FFFFFF"
-            border.color: root.widgetsState ? root.widgetsState.cardBorder : "rgba(255,255,255,0.2)"
+            radius: 14
+            color: root.widgetsState && root.widgetsState.isDarkTheme ? "#1C1C24" : "#FFFFFF"
+            border.color: root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.20)
             border.width: 1
             z: 200
+
+            // Animación emergente fluida estilo macOS (Spring/Pop & Fade)
+            scale: root.contextMenuOpen ? 1.0 : 0.88
+            opacity: root.contextMenuOpen ? 1.0 : 0.0
+            visible: opacity > 0.005
+            transformOrigin: Item.Center
+
+            Behavior on scale {
+                NumberAnimation { duration: 220; easing.type: Easing.OutBack }
+            }
+            Behavior on opacity {
+                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+            }
 
             ColumnLayout {
                 id: menuCol
@@ -483,13 +635,71 @@ Item {
                 anchors.margins: 8
                 spacing: 4
 
-                Text {
-                    text: "UBICACIÓN Y CLIMA"
-                    font.family: "SF Pro Display"
-                    font.pixelSize: 9
-                    font.weight: Font.Bold
-                    font.letterSpacing: 0.5
-                    color: root.widgetsState ? root.widgetsState.textDim : "#8E8E93"
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        text: "UBICACIÓN Y CLIMA"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 9
+                        font.weight: Font.Bold
+                        font.letterSpacing: 0.5
+                        color: root.widgetsState ? root.widgetsState.textDim : "#8E8E93"
+                    }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: "✕"
+                        font.pixelSize: 10
+                        color: Qt.rgba(1, 1, 1, 0.5)
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.contextMenuOpen = false
+                        }
+                    }
+                }
+
+                // Input para buscar cualquier ciudad
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 24
+                    radius: 6
+                    color: Qt.rgba(1, 1, 1, 0.08)
+                    border.color: cityInput.activeFocus ? "#007AFF" : Qt.rgba(1, 1, 1, 0.15)
+                    border.width: 1
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 6
+                        anchors.rightMargin: 6
+                        spacing: 4
+
+                        Text { text: ""; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 9; color: "#8E8E93" }
+
+                        TextInput {
+                            id: cityInput
+                            Layout.fillWidth: true
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 10
+                            color: "#FFFFFF"
+                            verticalAlignment: TextInput.AlignVCenter
+                            clip: true
+                            onAccepted: {
+                                if (text.trim() !== "" && root.widgetsState) {
+                                    root.widgetsState.setWeatherLocation(text.trim());
+                                    root.contextMenuOpen = false;
+                                }
+                            }
+
+                            Text {
+                                text: "Buscar ciudad..."
+                                font.family: "SF Pro Display"
+                                font.pixelSize: 10
+                                color: Qt.rgba(1, 1, 1, 0.35)
+                                visible: !cityInput.text && !cityInput.activeFocus
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                    }
                 }
 
                 Rectangle {
@@ -526,7 +736,7 @@ Item {
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Auto por IP"
+                        text: "Auto por IP (GeoIP)"
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Medium

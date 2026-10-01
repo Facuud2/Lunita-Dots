@@ -309,9 +309,9 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         page2 = self.view_stack.add_titled(health_page, "health", "Salud y Actividad")
         page2.set_icon_name("emblem-favorite-symbolic")
 
-        # 3. Universidad y Notas
+        # 3. Notas y Agenda
         tt_page = self.build_timetable_page()
-        page3 = self.view_stack.add_titled(tt_page, "timetable", "Universidad y Notas")
+        page3 = self.view_stack.add_titled(tt_page, "timetable", "Notas & Agenda")
         page3.set_icon_name("accessories-text-editor-symbolic")
 
         # 4. GitHub
@@ -606,7 +606,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.spin_cal = Adw.SpinRow.new_with_range(0, 5000, 25)
         self.spin_cal.set_title("Calorías Activas (kcal)")
         self.spin_cal.set_subtitle("Anillo Rojo • Energía consumida en movimiento")
-        self.spin_cal.set_value(float(health_data.get("calories", 540)))
+        self.spin_cal.set_value(float(health_data.get("calories", 0)))
         group_metrics.add(self.spin_cal)
 
         self.spin_cal_goal = Adw.SpinRow.new_with_range(100, 5000, 50)
@@ -618,7 +618,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.spin_ex = Adw.SpinRow.new_with_range(0, 720, 5)
         self.spin_ex.set_title("Tiempo de Ejercicio (minutos)")
         self.spin_ex.set_subtitle("Anillo Lima • Actividad física de alta intensidad")
-        self.spin_ex.set_value(float(health_data.get("exercise", 35)))
+        self.spin_ex.set_value(float(health_data.get("exercise", 0)))
         group_metrics.add(self.spin_ex)
 
         self.spin_ex_goal = Adw.SpinRow.new_with_range(10, 360, 5)
@@ -630,7 +630,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.spin_steps = Adw.SpinRow.new_with_range(0, 100000, 250)
         self.spin_steps.set_title("Pasos Totales")
         self.spin_steps.set_subtitle("Anillo Cian • Desplazamiento y caminata diaria")
-        self.spin_steps.set_value(float(health_data.get("steps", 8450)))
+        self.spin_steps.set_value(float(health_data.get("steps", 0)))
         group_metrics.add(self.spin_steps)
 
         self.spin_steps_goal = Adw.SpinRow.new_with_range(1000, 100000, 500)
@@ -642,7 +642,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.spin_water = Adw.SpinRow.new_with_range(0.0, 10.0, 0.1)
         self.spin_water.set_title("Hidratación (Litros de Agua)")
         self.spin_water.set_subtitle("Consumo diario de agua")
-        self.spin_water.set_value(float(health_data.get("water", 2.1)))
+        self.spin_water.set_value(float(health_data.get("water", 0.0)))
         group_metrics.add(self.spin_water)
 
         self.spin_water_goal = Adw.SpinRow.new_with_range(0.5, 10.0, 0.25)
@@ -695,13 +695,13 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
     def load_health_data(self) -> dict:
         default_data = {
             "date": datetime.now().strftime("%Y-%m-%d"),
-            "calories": 540,
+            "calories": 0,
             "calories_goal": 600,
-            "exercise": 35,
+            "exercise": 0,
             "exercise_goal": 30,
-            "steps": 8450,
+            "steps": 0,
             "steps_goal": 10000,
-            "water": 2.1,
+            "water": 0.0,
             "water_goal": 2.5
         }
         if HEALTH_FILE.exists():
@@ -718,7 +718,13 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.spin_ex.set_value(0)
         self.spin_steps.set_value(0)
         self.spin_water.set_value(0.0)
-        self.show_toast("Métricas de hoy puestas a 0")
+        try:
+            prov = SCRIPTS_DIR / "health_tracker_provider.py"
+            if prov.exists():
+                subprocess.run(["python3", str(prov), "reset"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+        self.show_toast("Métricas de salud reiniciadas a 0 para todos los días")
 
     def on_save_health_data(self, _):
         data = self.load_health_data()
@@ -749,7 +755,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             pass
 
     # =========================================================================
-    # 🎓 PÁGINA 3: UNIVERSIDAD (UNaB) y NOTAS DE TRABAJO
+    # 📝 PÁGINA 3: NOTAS Y AGENDA
     # =========================================================================
     def build_timetable_page(self) -> Gtk.Widget:
         scroll = Gtk.ScrolledWindow()
@@ -764,34 +770,34 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
         tt_data = self.load_timetable_data()
 
-        # ── Grupo 1: Datos de Carrera e Institución ──
+        # ── Grupo 1: Datos de Contexto o Institución ──
         group_meta = Adw.PreferencesGroup()
-        group_meta.set_title("Universidad e Institución")
-        group_meta.set_description("Personaliza el nombre de tu universidad y carrera.")
+        group_meta.set_title("Contexto o Institución")
+        group_meta.set_description("Personaliza el contexto, universidad o área de trabajo.")
 
         self.tt_uni_row = Adw.EntryRow()
-        self.tt_uni_row.set_title("Siglas / Nombre de Universidad")
-        self.tt_uni_row.set_text(tt_data.get("university", "UNaB"))
+        self.tt_uni_row.set_title("Siglas / Nombre")
+        self.tt_uni_row.set_text(tt_data.get("university", "Notas"))
         group_meta.add(self.tt_uni_row)
 
         self.tt_career_row = Adw.EntryRow()
-        self.tt_career_row.set_title("Carrera o Especialidad")
-        self.tt_career_row.set_text(tt_data.get("career", "Tecnicatura Universitaria en Programación"))
+        self.tt_career_row.set_title("Subtítulo / Especialidad")
+        self.tt_career_row.set_text(tt_data.get("career", "Agenda Diaria"))
         group_meta.add(self.tt_career_row)
 
         content.append(group_meta)
 
         # ── Grupo 2: Tareas de Estudio y Trabajo (To-Do) ──
         group_tasks = Adw.PreferencesGroup()
-        group_tasks.set_title("Tareas y Pendientes de Estudio / Trabajo")
-        group_tasks.set_description("Gestiona las entregas, parciales y tareas laborales que aparecen en el widget.")
+        group_tasks.set_title("Tareas y Pendientes")
+        group_tasks.set_description("Gestiona entregas, pendientes y tareas que aparecen en el widget de Notas.")
 
         self.tasks_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         group_tasks.add(self.tasks_list_box)
 
         # Añadir nueva tarea
         add_task_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        self.new_task_title = Gtk.Entry(placeholder_text="Nueva tarea (ej: Entrega TP2 Grafos)")
+        self.new_task_title = Gtk.Entry(placeholder_text="Nueva tarea (ej: Revisar entregas)")
         self.new_task_title.set_hexpand(True)
         self.new_task_tag_combo = Gtk.DropDown.new_from_strings([t[0] for t in TASK_TAGS])
         self.new_task_due = Gtk.Entry(placeholder_text="Vencimiento (ej: Viernes)")
@@ -810,10 +816,10 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.rebuild_tasks_list()
         content.append(group_tasks)
 
-        # ── Grupo 3: Horarios de Cursada Semanal ──
+        # ── Grupo 3: Horarios y Agenda ──
         group_schedule = Adw.PreferencesGroup()
-        group_schedule.set_title("Horario Semanal de Clases")
-        group_schedule.set_description("Configura las materias asignadas a cada día de la semana.")
+        group_schedule.set_title("Horarios y Agenda")
+        group_schedule.set_description("Configura los horarios o eventos que se muestran en el widget.")
 
         self.schedule_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         group_schedule.add(self.schedule_list_box)
@@ -837,7 +843,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         content.append(group_notes)
 
         # Botón Guardar
-        btn_save_tt = Gtk.Button(label="Guardar Todo y Sincronizar Widget de Universidad")
+        btn_save_tt = Gtk.Button(label="Guardar Todo y Sincronizar Widget de Notas & Agenda")
         btn_save_tt.add_css_class("wm-btn-primary")
         btn_save_tt.connect("clicked", self.on_save_timetable)
         content.append(btn_save_tt)
@@ -1390,6 +1396,13 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         ensure_config_dir()
         with open(LAYOUT_FILE, "w", encoding="utf-8") as f:
             json.dump(default_layout, f, ensure_ascii=False, indent=2)
+
+        try:
+            prov = SCRIPTS_DIR / "health_tracker_provider.py"
+            if prov.exists():
+                subprocess.run(["python3", str(prov), "reset"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
 
         # Update switches
         active = {i["type"] for i in default_layout}

@@ -653,4 +653,28 @@ Item {
         closePopups();
         Quickshell.execDetached(["bash", "-c", "lunita-launcher toggle"]);
     }
+
+    // ── Widgets State Tracking ──
+    property bool widgetsEditing: false
+
+    Timer {
+        interval: 350
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            checkWidgetsEditingProc.running = true;
+        }
+    }
+
+    Process {
+        id: checkWidgetsEditingProc
+        command: ["bash", "-c", "if [ -f /tmp/lunita_widgets_editing ]; then cat /tmp/lunita_widgets_editing; else echo 0; fi"]
+        stdout: SplitParser {
+            onRead: data => {
+                root.widgetsEditing = (data.trim() === "1");
+            }
+        }
+    }
 }
+

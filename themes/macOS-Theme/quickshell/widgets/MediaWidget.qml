@@ -489,33 +489,73 @@ Item {
                 border.width: 1
 
                 Image {
+                    id: albumArtLarge
                     anchors.fill: parent
                     source: root.widgetsState && root.widgetsState.mediaArtUrl ? root.widgetsState.mediaArtUrl : ""
                     fillMode: Image.PreserveAspectCrop
                     visible: source != "" && status === Image.Ready
+                    asynchronous: true
+                }
+
+                // Fallback Music/Video Icon
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    visible: !albumArtLarge.visible
+                    spacing: 6
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: (root.widgetsState && root.widgetsState.mediaArtist === "YouTube") ? "󰗃" : "󰎆"
+                        font.family: "CaskaydiaCove Nerd Font"
+                        font.pixelSize: 48
+                        color: domColor
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: (root.widgetsState && root.widgetsState.mediaArtist === "YouTube") ? "YouTube" : "Multimedia"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                        color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                    }
                 }
             }
 
             Text {
+                Layout.fillWidth: true
+                Layout.preferredWidth: parent.width - 32
+                Layout.maximumWidth: parent.width - 32
                 Layout.alignment: Qt.AlignHCenter
+                horizontalAlignment: Text.AlignHCenter
                 text: root.widgetsState && root.widgetsState.mediaTitle ? root.widgetsState.mediaTitle : "Sin reproducción"
                 font.family: "SF Pro Display"
                 font.pixelSize: 14
                 font.weight: Font.Bold
                 elide: Text.ElideRight
+                maximumLineCount: 1
                 color: "#FFFFFF"
             }
 
             Text {
+                Layout.fillWidth: true
+                Layout.preferredWidth: parent.width - 32
+                Layout.maximumWidth: parent.width - 32
                 Layout.alignment: Qt.AlignHCenter
+                horizontalAlignment: Text.AlignHCenter
                 text: root.widgetsState && root.widgetsState.mediaArtist ? root.widgetsState.mediaArtist : "Reproductor"
                 font.family: "SF Pro Display"
                 font.pixelSize: 11
+                font.weight: Font.Medium
+                elide: Text.ElideRight
+                maximumLineCount: 1
                 color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1,1,1,0.6)
             }
 
             // Spectrum
             SpectrumVisualizer {
+                Layout.fillWidth: true
+                Layout.preferredWidth: parent.width - 32
                 spectrumHeight: 36
                 barSpacing: 4
             }
@@ -523,15 +563,63 @@ Item {
             // Controls
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 20
+                spacing: 24
 
-                Text { text: "󰒮"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 20; color: "#FFFFFF"; MouseArea { anchors.fill: parent; onClicked: if (root.widgetsState) root.widgetsState.mediaPrevious(); } }
-                Rectangle {
-                    width: 36; height: 36; radius: 18; color: domColor
-                    Text { anchors.centerIn: parent; text: root.isPlaying ? "󰏤" : "󰐊"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 16; color: "#FFFFFF" }
-                    MouseArea { anchors.fill: parent; onClicked: if (root.widgetsState) root.widgetsState.mediaPlayPause(); }
+                Text {
+                    text: "󰒮"
+                    font.family: "CaskaydiaCove Nerd Font"
+                    font.pixelSize: 22
+                    color: prevLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : Qt.rgba(1,1,1,0.7)
+                    MouseArea {
+                        id: prevLargeMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: root.widgetsState ? !root.widgetsState.isEditing : true
+                        onClicked: if (root.widgetsState) root.widgetsState.mediaPrevious();
+                    }
                 }
-                Text { text: "󰒭"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 20; color: "#FFFFFF"; MouseArea { anchors.fill: parent; onClicked: if (root.widgetsState) root.widgetsState.mediaNext(); } }
+
+                Rectangle {
+                    width: 38
+                    height: 38
+                    radius: 19
+                    color: playLargeMa.containsMouse ? Qt.darker(domColor, 1.15) : domColor
+                    scale: playLargeMa.pressed ? 0.94 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 100 } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: root.isPlaying ? "󰏤" : "󰐊"
+                        font.family: "CaskaydiaCove Nerd Font"
+                        font.pixelSize: 16
+                        color: "#FFFFFF"
+                    }
+
+                    MouseArea {
+                        id: playLargeMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: root.widgetsState ? !root.widgetsState.isEditing : true
+                        onClicked: if (root.widgetsState) root.widgetsState.mediaPlayPause();
+                    }
+                }
+
+                Text {
+                    text: "󰒭"
+                    font.family: "CaskaydiaCove Nerd Font"
+                    font.pixelSize: 22
+                    color: nextLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : Qt.rgba(1,1,1,0.7)
+                    MouseArea {
+                        id: nextLargeMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: root.widgetsState ? !root.widgetsState.isEditing : true
+                        onClicked: if (root.widgetsState) root.widgetsState.mediaNext();
+                    }
+                }
             }
         }
     }

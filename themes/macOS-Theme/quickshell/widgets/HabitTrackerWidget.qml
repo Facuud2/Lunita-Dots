@@ -11,13 +11,13 @@ Item {
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
     // Health metrics from WidgetsState
-    readonly property int calories: root.widgetsState ? root.widgetsState.healthCalories : 540
+    readonly property int calories: root.widgetsState ? root.widgetsState.healthCalories : 0
     readonly property int caloriesGoal: root.widgetsState ? root.widgetsState.healthCaloriesGoal : 600
-    readonly property int exercise: root.widgetsState ? root.widgetsState.healthExercise : 35
+    readonly property int exercise: root.widgetsState ? root.widgetsState.healthExercise : 0
     readonly property int exerciseGoal: root.widgetsState ? root.widgetsState.healthExerciseGoal : 30
-    readonly property int steps: root.widgetsState ? root.widgetsState.healthSteps : 8450
+    readonly property int steps: root.widgetsState ? root.widgetsState.healthSteps : 0
     readonly property int stepsGoal: root.widgetsState ? root.widgetsState.healthStepsGoal : 10000
-    readonly property real water: root.widgetsState ? root.widgetsState.healthWater : 2.1
+    readonly property real water: root.widgetsState ? root.widgetsState.healthWater : 0.0
     readonly property real waterGoal: root.widgetsState ? root.widgetsState.healthWaterGoal : 2.5
     readonly property var history: root.widgetsState ? root.widgetsState.healthHistory : []
 
@@ -706,8 +706,8 @@ Item {
 
                 Repeater {
                     model: root.history.length > 0 ? root.history : [
-                        { day: "L", cal_pct: 95 }, { day: "M", cal_pct: 90 }, { day: "M", cal_pct: 80 },
-                        { day: "J", cal_pct: 105 }, { day: "V", cal_pct: 88 }, { day: "S", cal_pct: 110 }, { day: "D", cal_pct: 90 }
+                        { day: "L", cal_pct: 0 }, { day: "M", cal_pct: 0 }, { day: "M", cal_pct: 0 },
+                        { day: "J", cal_pct: 0 }, { day: "V", cal_pct: 0 }, { day: "S", cal_pct: 0 }, { day: "D", cal_pct: 0 }
                     ]
 
                     ColumnLayout {
@@ -952,10 +952,7 @@ Item {
                                 var s = parseInt(stepsInput.text) || 0;
                                 var w = parseFloat(waterInput.text) || 0.0;
 
-                                root.widgetsState.setHealthMetric("calories", c);
-                                root.widgetsState.setHealthMetric("exercise", e);
-                                root.widgetsState.setHealthMetric("steps", s);
-                                root.widgetsState.setHealthMetric("water", w);
+                                root.widgetsState.saveHealthMetrics(c, e, s, w);
                             }
                             root.editModalOpen = false;
                         }

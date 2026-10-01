@@ -165,6 +165,12 @@ def parse_weather_data(raw, custom_city=None):
             step_icon = get_icon(step_code, step_is_night)
             time_label = f"{target_hour:02d}:00"
 
+            hourly_forecast.append({
+                "time": time_label,
+                "temp": step_temp,
+                "icon": step_icon
+            })
+
         # Extraer pronóstico diario para días posteriores
         daily_forecast = []
         days_names_es = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"]

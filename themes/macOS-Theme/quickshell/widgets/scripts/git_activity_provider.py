@@ -34,6 +34,37 @@ def load_git_config():
             pass
     return DEFAULT_GIT_CONFIG.copy()
 
+def get_local_recent_commits(repo_dir=None, count=4):
+    if not repo_dir:
+        cfg = load_git_config()
+        repo_dir = cfg.get("local_repo", "/mnt/Desarrollo/Lunita-Dots")
+    commits = []
+    try:
+        if os.path.exists(os.path.join(repo_dir, ".git")):
+            out = subprocess.check_output(
+                ["git", "log", f"-{count}", "--format=%h|%s|%an|%ar|%at"],
+                cwd=repo_dir,
+                universal_newlines=True,
+                stderr=subprocess.DEVNULL
+            ).strip()
+            repo_name = os.path.basename(os.path.abspath(repo_dir))
+            for line in out.split("\n"):
+                if not line.strip():
+                    continue
+                parts = line.split("|")
+                if len(parts) >= 5:
+                    commits.append({
+                        "repo": repo_name,
+                        "hash": parts[0],
+                        "message": parts[1].split("\n")[0][:60],
+                        "author": parts[2],
+                        "relative_time": parts[3],
+                        "timestamp": int(parts[4])
+                    })
+    except Exception:
+        pass
+    return commits
+
 def get_local_git_info(repo_dir=None):
     if not repo_dir:
         cfg = load_git_config()
@@ -195,12 +226,17 @@ def fetch_github_data():
             "timestamp": int(time.time())
         }
 
+    recent_commits = get_local_recent_commits(local_repo, 5)
+    if not recent_commits and latest_commit:
+        recent_commits = [latest_commit]
+
     return {
         "user": github_user,
         "ci_status": ci_status,
         "ci_message": ci_message,
         "ci_repo": ci_repo,
         "latest_commit": latest_commit,
+        "recent_commits": recent_commits,
         "heatmap": days_data,
         "updated_at": datetime.now().strftime("%H:%M")
     }
