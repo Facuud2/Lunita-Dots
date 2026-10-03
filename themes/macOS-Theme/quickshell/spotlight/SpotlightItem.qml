@@ -68,7 +68,7 @@ Item {
                 color: root.isSelected ? root.spotlightState.selectedTextColor : root.spotlightState.textColor
                 font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                 font.pixelSize: 13
-                font.weight: root.isSelected ? Font.DemiBold : Font.Normal
+                font.weight: Font.DemiBold
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
@@ -79,6 +79,7 @@ Item {
                 color: root.isSelected ? root.spotlightState.selectedSubColor : root.spotlightState.textDimColor
                 font.family: "SF Pro Text, Inter, -apple-system, system-ui, sans-serif"
                 font.pixelSize: 11
+                font.weight: Font.Normal
                 elide: Text.ElideMiddle
                 Layout.fillWidth: true
             }

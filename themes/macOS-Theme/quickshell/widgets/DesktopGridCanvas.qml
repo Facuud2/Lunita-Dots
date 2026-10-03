@@ -1,18 +1,105 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 
 Item {
     id: root
 
     property var widgetsState
+    property string screenName: "default"
 
-    // ── 1. Render All Active Desktop Widgets ──
-    Repeater {
-        model: root.widgetsState.widgetsList
-        delegate: WidgetFrame {
+    // Helper forwarding methods for WidgetFrame and top bar
+    function addWidget(type) {
+        if (root.widgetsState) root.widgetsState.addWidget(root.screenName, type);
+    }
+    function resetLayout() {
+        if (root.widgetsState) root.widgetsState.resetLayout(root.screenName);
+    }
+    function updateWidgetPosition(id, x, y) {
+        if (root.widgetsState) root.widgetsState.updateWidgetPosition(root.screenName, id, x, y);
+    }
+    function updateWidgetSize(id, w, h, s) {
+        if (root.widgetsState) root.widgetsState.updateWidgetSize(root.screenName, id, w, h, s);
+    }
+    function removeWidget(id) {
+        if (root.widgetsState) root.widgetsState.removeWidget(root.screenName, id);
+    }
+    function toggleClockExpanded() {
+        if (root.widgetsState) root.widgetsState.toggleClockExpanded(root.screenName);
+    }
+    function toggleMediaExpanded() {
+        if (root.widgetsState) root.widgetsState.toggleMediaExpanded(root.screenName);
+    }
+    function toggleCalendarExpansion() {
+        if (root.widgetsState) root.widgetsState.toggleCalendarExpansion(root.screenName);
+    }
+
+    // ── 1. Persistent Dynamic Widgets Container (No flickering/recreation) ──
+    Item {
+        id: widgetsContainer
+        anchors.fill: parent
+    }
+
+    Component {
+        id: widgetFrameComp
+        WidgetFrame {
             widgetsState: root.widgetsState
-            widgetData: modelData
+            canvas: root
         }
+    }
+
+    property var framesMap: ({})
+
+    function syncFrames() {
+        if (!root.widgetsState) return;
+        var list = root.widgetsState.getScreenWidgets(root.screenName);
+        if (!list || !Array.isArray(list)) list = [];
+
+        var newMap = Object.assign({}, framesMap);
+        var seen = {};
+
+        for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            if (!item || !item.id) continue;
+            seen[item.id] = true;
+
+            var existing = newMap[item.id];
+            if (!existing) {
+                var obj = widgetFrameComp.createObject(widgetsContainer, {
+                    widgetData: item,
+                    canvas: root
+                });
+                newMap[item.id] = obj;
+            } else {
+                existing.applyData(item);
+            }
+        }
+
+        for (var idKey in newMap) {
+            if (!seen[idKey]) {
+                if (newMap[idKey]) {
+                    newMap[idKey].destroy();
+                }
+                delete newMap[idKey];
+            }
+        }
+        framesMap = newMap;
+    }
+
+    Connections {
+        target: root.widgetsState
+        function onScreensLayoutChanged() {
+            root.syncFrames();
+        }
+        function onScreenLayoutChanged(targetScreen) {
+            if (targetScreen === root.screenName || targetScreen === "all") {
+                root.syncFrames();
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        root.syncFrames();
     }
 
     // ── 2. Top Edit Mode Header Bar (Visible only when editing) ──
@@ -56,7 +143,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.resetLayout()
+                    onClicked: root.resetLayout()
                 }
             }
 
@@ -82,7 +169,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("photos")
+                    onClicked: root.addWidget("photos")
                 }
             }
 
@@ -108,7 +195,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("calendar")
+                    onClicked: root.addWidget("calendar")
                 }
             }
 
@@ -134,7 +221,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("resources")
+                    onClicked: root.addWidget("resources")
                 }
             }
 
@@ -160,7 +247,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("clock")
+                    onClicked: root.addWidget("clock")
                 }
             }
 
@@ -186,7 +273,163 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("network")
+                    onClicked: root.addWidget("network")
+                }
+            }
+
+            // Add Battery
+            Rectangle {
+                radius: 14
+                height: 28
+                implicitWidth: addBatText.implicitWidth + 16
+                color: addBatMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                border.width: 1
+
+                RowLayout {
+                    id: addBatText
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text { text: "+"; color: root.widgetsState.textColor; font.pixelSize: 12; font.weight: Font.Bold }
+                    Text { text: "Batería"; color: root.widgetsState.textColor; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold }
+                }
+
+                MouseArea {
+                    id: addBatMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.addWidget("battery")
+                }
+            }
+
+            // Add Git
+            Rectangle {
+                radius: 14
+                height: 28
+                implicitWidth: addGitText.implicitWidth + 16
+                color: addGitMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                border.width: 1
+
+                RowLayout {
+                    id: addGitText
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text { text: "+"; color: root.widgetsState.textColor; font.pixelSize: 12; font.weight: Font.Bold }
+                    Text { text: "Git"; color: root.widgetsState.textColor; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold }
+                }
+
+                MouseArea {
+                    id: addGitMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.addWidget("git")
+                }
+            }
+
+            // Add Habits
+            Rectangle {
+                radius: 14
+                height: 28
+                implicitWidth: addHabText.implicitWidth + 16
+                color: addHabMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                border.width: 1
+
+                RowLayout {
+                    id: addHabText
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text { text: "+"; color: root.widgetsState.textColor; font.pixelSize: 12; font.weight: Font.Bold }
+                    Text { text: "Salud"; color: root.widgetsState.textColor; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold }
+                }
+
+                MouseArea {
+                    id: addHabMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.addWidget("habits")
+                }
+            }
+
+            // Add Timetable
+            Rectangle {
+                radius: 14
+                height: 28
+                implicitWidth: addTtText.implicitWidth + 16
+                color: addTtMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                border.width: 1
+
+                RowLayout {
+                    id: addTtText
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text { text: "+"; color: root.widgetsState.textColor; font.pixelSize: 12; font.weight: Font.Bold }
+                    Text { text: "Notas"; color: root.widgetsState.textColor; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold }
+                }
+
+                MouseArea {
+                    id: addTtMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.addWidget("timetable")
+                }
+            }
+
+            // Add Media
+            Rectangle {
+                radius: 14
+                height: 28
+                implicitWidth: addMedText.implicitWidth + 16
+                color: addMedMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                border.width: 1
+
+                RowLayout {
+                    id: addMedText
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text { text: "+"; color: root.widgetsState.textColor; font.pixelSize: 12; font.weight: Font.Bold }
+                    Text { text: "Música"; color: root.widgetsState.textColor; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold }
+                }
+
+                MouseArea {
+                    id: addMedMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.addWidget("media")
+                }
+            }
+
+            // Settings "Ajustes" Button
+            Rectangle {
+                radius: 14
+                height: 28
+                implicitWidth: cfgText.implicitWidth + 20
+                color: cfgMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                border.width: 1
+
+                RowLayout {
+                    id: cfgText
+                    anchors.centerIn: parent
+                    spacing: 4
+                    Text { text: "󰒓"; font.family: "CaskaydiaCove Nerd Font"; color: root.widgetsState.accentBlue; font.pixelSize: 11 }
+                    Text { text: "Ajustes"; color: root.widgetsState.textColor; font.family: "SF Pro Display"; font.pixelSize: 11; font.weight: Font.Bold }
+                }
+
+                MouseArea {
+                    id: cfgMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: Quickshell.execDetached(["lunita-widgets-manager"])
                 }
             }
 
@@ -217,50 +460,5 @@ Item {
             }
         }
     }
-
-    // ── 3. Bottom "Edit Widgets" Pill Button (Visible when NOT editing) ──
-    Rectangle {
-        id: editPillBtn
-        visible: !root.widgetsState.isEditing
-        x: 1520 + (354 - width) / 2
-        y: 610
-        height: 36
-        implicitWidth: pillRow.implicitWidth + 32
-        radius: 18
-        color: pillMa.containsMouse
-            ? (root.widgetsState.isDarkTheme ? Qt.rgba(0.20, 0.22, 0.28, 0.90) : "#FFFFFF")
-            : (root.widgetsState.isDarkTheme ? Qt.rgba(0.14, 0.16, 0.20, 0.80) : Qt.rgba(0.96, 0.96, 0.98, 0.85))
-        border.color: root.widgetsState.isDarkTheme ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(0, 0, 0, 0.10)
-        border.width: 1
-
-        scale: pillMa.containsMouse ? 1.05 : 1.0
-        Behavior on scale { NumberAnimation { duration: 120 } }
-
-        RowLayout {
-            id: pillRow
-            anchors.centerIn: parent
-            spacing: 6
-            Text {
-                text: "󰏫"
-                font.family: "CaskaydiaCove Nerd Font"
-                font.pixelSize: 13
-                color: root.widgetsState.textColor
-            }
-            Text {
-                text: "Edit Widgets"
-                font.family: "SF Pro Display"
-                font.pixelSize: 12
-                font.weight: Font.Bold
-                color: root.widgetsState.textColor
-            }
-        }
-
-        MouseArea {
-            id: pillMa
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.widgetsState.toggleEdit()
-        }
-    }
 }
+

@@ -8,20 +8,10 @@ Item {
 
     required property var launcherState
 
-    implicitWidth: panelCard.width
-    implicitHeight: panelCard.height
+    implicitWidth: 580
+    implicitHeight: 640
     width: 580
     height: 640
-
-    // ── Deep Ambient Drop Shadow ──
-    RectangularGlow {
-        anchors.fill: panelCard
-        anchors.topMargin: 12
-        glowRadius: 36
-        spread: 0.12
-        color: launcherState.panelShadowColor
-        cornerRadius: panelCard.radius + glowRadius
-    }
 
     // ── Main Frosted Acrylic / Liquid Glass Card ──
     Rectangle {
@@ -32,34 +22,12 @@ Item {
         border.color: launcherState.panelBorderColor
         border.width: 1
 
-        // ── Emerging Motion Upward from the Bottom Dock ──
-        transformOrigin: Item.Bottom
-        scale: launcherState.isOpen ? 1.0 : 0.92
+        // Smooth Appearance Animation
         opacity: launcherState.isOpen ? 1.0 : 0.0
-        visible: opacity > 0.01
-
-        transform: Translate {
-            id: slideTransform
-            y: launcherState.isOpen ? 0 : 50
-
-            Behavior on y {
-                NumberAnimation {
-                    duration: launcherState.isOpen ? 260 : 180
-                    easing.type: launcherState.isOpen ? Easing.OutCubic : Easing.InCubic
-                }
-            }
-        }
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: launcherState.isOpen ? 260 : 180
-                easing.type: launcherState.isOpen ? Easing.OutCubic : Easing.InCubic
-            }
-        }
 
         Behavior on opacity {
             NumberAnimation {
-                duration: launcherState.isOpen ? 220 : 150
+                duration: launcherState.isOpen ? 180 : 140
                 easing.type: Easing.OutQuad
             }
         }

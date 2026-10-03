@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="photos-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0f2f5"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="url(#photos-bg)"/>
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+  <!-- 8 Colorful flower petals -->
+  <g transform="translate(64,64)">
+    <ellipse cx="0" cy="-22" rx="9" ry="18" fill="#ff2d55" opacity="0.85"/>
+    <ellipse cx="0" cy="-22" rx="9" ry="18" fill="#ff9500" opacity="0.85" transform="rotate(45)"/>
+    <ellipse cx="0" cy="-22" rx="9" ry="18" fill="#ffcc00" opacity="0.85" transform="rotate(90)"/>
+    <ellipse cx="0" cy="-22" rx="9" ry="18" fill="#4cd964" opacity="0.85" transform="rotate(135)"/>
+    <ellipse cx="0" cy="-22" rx="9" ry="18" fill="#5ac8fa" opacity="0.85" transform="rotate(180)"/>
+    <ellipse cx="0" cy="-22" rx="9" ry="18" fill="#007aff" opacity="0.85" transform="rotate(225)"/>
+    <ellipse cx="0" cy="-22" rx="9" ry="18" fill="#5856d6" opacity="0.85" transform="rotate(270)"/>
+    <ellipse cx="0" cy="-22" rx="9" ry="18" fill="#af52de" opacity="0.85" transform="rotate(315)"/>
+  </g>
+</svg>

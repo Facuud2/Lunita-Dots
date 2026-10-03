@@ -79,17 +79,21 @@ case "${1:-start}" in
             fi
             rm -f "$PID_FILE"
         fi
-        # Limpiar historial de portapapeles al apagar o detener
+        echo "[cliphist-daemon] Demonio detenido."
+        exit 0
+        ;;
+    --wipe|--clear)
         cliphist wipe 2>/dev/null || true
         rm -f "$DB_DIR/timestamps.tsv" 2>/dev/null || true
-        echo "[cliphist-daemon] Demonio detenido e historial purgado."
+        rm -rf "$DB_DIR/thumbs" 2>/dev/null || true
+        echo "[cliphist-daemon] Historial purgado."
         exit 0
         ;;
     start|--start)
         # Continuar con el bucle del demonio
         ;;
     *)
-        echo "Uso: $0 {start|--status|--check-capacity|--stop}"
+        echo "Uso: $0 {start|--status|--check-capacity|--stop|--wipe}"
         exit 1
         ;;
 esac
@@ -105,37 +109,71 @@ fi
 
 echo $$ > "$PID_FILE"
 
-# Limpiar historial de sesiones anteriores automáticamente al iniciar el PC / sesión
-cliphist wipe 2>/dev/null || true
-rm -f "$DB_DIR/timestamps.tsv" 2>/dev/null || true
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PID_TEXT=""
+PID_IMG=""
 
 cleanup() {
     trap - SIGINT SIGTERM EXIT
-    echo "[cliphist-daemon] Terminando procesos observadores y purgando historial..."
+    echo "[cliphist-daemon] Terminando procesos observadores..."
     rm -f "$PID_FILE"
-    [ -n "${PID_TEXT:-}" ] && kill "$PID_TEXT" 2>/dev/null || true
-    [ -n "${PID_IMG:-}" ] && kill "$PID_IMG" 2>/dev/null || true
-    # Limpiar historial al apagar o reiniciar la PC
-    cliphist wipe 2>/dev/null || true
-    rm -f "$DB_DIR/timestamps.tsv" 2>/dev/null || true
+    [ -n "$PID_TEXT" ] && kill "$PID_TEXT" 2>/dev/null || true
+    [ -n "$PID_IMG" ] && kill "$PID_IMG" 2>/dev/null || true
     exit 0
 }
 trap cleanup SIGINT SIGTERM EXIT
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Esperar a que Wayland esté disponible y operativo
+wait_for_wayland() {
+    local max_attempts=40
+    local attempt=0
+    local runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    while [ $attempt -lt $max_attempts ]; do
+        if [ -z "${WAYLAND_DISPLAY:-}" ]; then
+            local env_disp
+            env_disp=$(systemctl --user show-environment 2>/dev/null | grep '^WAYLAND_DISPLAY=' | cut -d= -f2- || true)
+            if [ -n "$env_disp" ]; then
+                export WAYLAND_DISPLAY="$env_disp"
+            elif [ -S "$runtime_dir/wayland-1" ]; then
+                export WAYLAND_DISPLAY="wayland-1"
+            elif [ -S "$runtime_dir/wayland-0" ]; then
+                export WAYLAND_DISPLAY="wayland-0"
+            fi
+        fi
 
-# 1. Observador para textos normales y enriquecidos
-wl-paste --watch "$SCRIPT_DIR/store-wrapper.sh" &
-PID_TEXT=$!
+        if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -S "$runtime_dir/$WAYLAND_DISPLAY" ]; then
+            return 0
+        fi
+        sleep 0.5
+        attempt=$((attempt + 1))
+    done
+    return 1
+}
 
-# 2. Observador para imágenes binarias (capturas de pantalla, fotos)
-wl-paste --type image --watch "$SCRIPT_DIR/store-wrapper.sh" &
-PID_IMG=$!
+ensure_watchers() {
+    if ! wait_for_wayland; then
+        return 1
+    fi
 
-echo "[cliphist-daemon] Historial reiniciado. Observadores de texto (PID $PID_TEXT) e imagen (PID $PID_IMG) iniciados."
+    if [ -z "$PID_TEXT" ] || ! kill -0 "$PID_TEXT" 2>/dev/null; then
+        wl-paste --watch "$SCRIPT_DIR/store-wrapper.sh" &
+        PID_TEXT=$!
+        echo "[cliphist-daemon] Observador de texto iniciado (PID $PID_TEXT)"
+    fi
 
-# 3. Bucle de monitoreo continuo de capacidad (cada 30 segundos)
+    if [ -z "$PID_IMG" ] || ! kill -0 "$PID_IMG" 2>/dev/null; then
+        wl-paste --type image --watch "$SCRIPT_DIR/store-wrapper.sh" &
+        PID_IMG=$!
+        echo "[cliphist-daemon] Observador de imagen iniciado (PID $PID_IMG)"
+    fi
+}
+
+echo "[cliphist-daemon] Iniciando demonio supervisado de portapapeles..."
+ensure_watchers || true
+
+# Bucle de supervisión y monitoreo continuo de capacidad (cada 5 segundos)
 while true; do
+    ensure_watchers || true
     prune_if_needed
-    sleep 30
+    sleep 5
 done

@@ -73,9 +73,10 @@ Item {
         // App Icon Squircle Container
         Rectangle {
             id: iconCard
-            width: 54
-            height: 54
-            radius: 14
+            width: 64
+            height: 64
+            radius: 14.4
+            clip: true
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
             color: "transparent"

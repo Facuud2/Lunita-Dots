@@ -61,7 +61,7 @@ Version=202
 FontSize=10
 IconSize=48
 MaximumTextLines=2
-PreviewSize=64
+PreviewSize=256
 TextWidthIndex=1
 UseSystemFont=true
 
@@ -76,5 +76,8 @@ MenuBar=Disabled
 IconSize=22
 
 [PreviewSettings]
-MaximumSize=0
+MaximumSize[$d]
 Plugins=appimagethumbnail,blenderthumbnail,cursorthumbnail,mobithumbnail,audiothumbnail,textthumbnail,ffmpegthumbs,djvuthumbnail,gsthumbnail,rawthumbnail,directorythumbnail,kraorathumbnail,opendocumentthumbnail,windowsexethumbnail,glycin-heif,glycin-image-rs,glycin-jxl,glycin-svg,imagethumbnail,windowsimagethumbnail,exrthumbnail,jpegthumbnail,svgthumbnail,comicbookthumbnail,ebookthumbnail
+
+[kuick-move]
+Paths[$e]=$HOME/Imgs

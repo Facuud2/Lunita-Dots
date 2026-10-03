@@ -298,6 +298,45 @@ Item {
                 }
             }
 
+            // ── 2.5 Widgets Modifier Icon (A la izquierda de Bluetooth) ──
+            Item {
+                id: widgetsBtnItem
+                implicitWidth: 24
+                implicitHeight: 22
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 4
+                    color: (widgetsMouseArea.containsMouse || barState.widgetsEditing)
+                        ? (barState.widgetsEditing ? Qt.rgba(0, 122/255, 255/255, 0.35) : barState.barActiveHoverColor)
+                        : "transparent"
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                }
+
+                BarIcon {
+                    anchors.centerIn: parent
+                    iconWidth: 14
+                    iconHeight: 14
+                    source: "assets/widgets.svg"
+                    iconColor: barState.widgetsEditing ? "#0A84FF" : barState.barTextColor
+                }
+
+                MouseArea {
+                    id: widgetsMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: mouse => {
+                        if (mouse.button === Qt.RightButton) {
+                            Quickshell.execDetached(["lunita-widgets-manager"]);
+                        } else {
+                            Quickshell.execDetached(["lunita-widgets-toggle"]);
+                        }
+                    }
+                }
+            }
+
             // ── 3. Bluetooth Indicator & Popover Trigger ──
             Item {
                 implicitWidth: (barState.bluetoothConnectedDevice !== "" ? 32 : 24)
@@ -455,6 +494,39 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         barState.togglePopup("controlcenter", panelWindow.width - 332, 28, panelWindow.screen);
+                    }
+                }
+            }
+
+            // ── 6.5. Virtual Keyboard (On-Screen Keyboard) ──
+            Item {
+                implicitWidth: 24
+                implicitHeight: 22
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 4
+                    color: (vkbMouseArea.containsMouse || barState.virtualKeyboardVisible)
+                        ? (barState.virtualKeyboardVisible ? Qt.rgba(0, 122/255, 255/255, 0.35) : barState.barActiveHoverColor)
+                        : "transparent"
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                }
+
+                BarIcon {
+                    anchors.centerIn: parent
+                    iconWidth: 15
+                    iconHeight: 15
+                    source: "assets/keyboard.svg"
+                    iconColor: barState.virtualKeyboardVisible ? "#0A84FF" : barState.barTextColor
+                }
+
+                MouseArea {
+                    id: vkbMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        barState.toggleVirtualKeyboard();
                     }
                 }
             }

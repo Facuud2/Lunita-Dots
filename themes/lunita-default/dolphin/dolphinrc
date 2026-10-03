@@ -77,5 +77,5 @@ MenuBar=Disabled
 IconSize=32
 
 [PreviewSettings]
-MaximumSize=0
+MaximumSize[$d]
 Plugins=appimagethumbnail,audiothumbnail,blenderthumbnail,comicbookthumbnail,cursorthumbnail,directorythumbnail,djvuthumbnail,ebookthumbnail,exrthumbnail,ffmpegthumbs,imagethumbnail,jpegthumbnail,kraorathumbnail,mobithumbnail,opendocumentthumbnail,rawthumbnail,svgthumbnail,textthumbnail,windowsexethumbnail,windowsimagethumbnail,gsthumbnail

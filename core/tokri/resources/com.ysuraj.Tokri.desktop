@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Tokri
+Exec=Tokri
+Icon=com.ysuraj.Tokri
+Categories=Utility;
+Terminal=false
+StartupWMClass=Tokri

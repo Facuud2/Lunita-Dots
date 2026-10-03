@@ -1,0 +1,1435 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# 🌙 LUNITA WIDGETS MANAGER (GUI)
+# Gestor gráfico y panel de control para widgets de escritorio en Lunita-Dots
+# Permite configurar Calendario, Salud y Actividad, Universidad y Notas, GitHub y Escritorio
+# ==============================================================================
+
+import os
+import sys
+import json
+import calendar
+import subprocess
+import threading
+from datetime import datetime, date, timedelta
+from pathlib import Path
+
+import gi
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+from gi.repository import Gtk, Adw, GLib, Gio, Gdk
+
+# ── Rutas de Configuración ───────────────────────────────────────────────────
+CONFIG_DIR = Path.home() / ".config/lunita"
+CALENDAR_FILE = CONFIG_DIR / "calendar_events.json"
+GIT_CONFIG_FILE = CONFIG_DIR / "git_config.json"
+HEALTH_FILE = CONFIG_DIR / "health_tracker.json"
+HABITS_FILE = CONFIG_DIR / "habits.json"
+LAYOUT_FILE = CONFIG_DIR / "widgets_layout_qml.json"
+TIMETABLE_FILE = CONFIG_DIR / "unab_timetable.json"
+WEATHER_LOCATION_FILE = CONFIG_DIR / "weather_location"
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+DOTS_DIR = SCRIPT_DIR.parent
+WIDGETS_DIR = DOTS_DIR / "themes/macOS-Theme/quickshell/widgets"
+SCRIPTS_DIR = WIDGETS_DIR / "scripts"
+
+# Colores sugeridos para eventos del calendario
+CALENDAR_COLORS = [
+    ("#0A84FF", "Azul"),
+    ("#30D158", "Verde"),
+    ("#FF9F0A", "Naranja"),
+    ("#BF5AF2", "Púrpura"),
+    ("#FF453A", "Rojo"),
+    ("#64D2FF", "Cian")
+]
+
+CATEGORIES = ["Trabajo", "Desarrollo", "Estudio", "Personal", "Salud", "General"]
+TASK_TAGS = [("UNaB", "#007AFF"), ("Trabajo", "#AF52DE"), ("Examen", "#FF9F0A"), ("Proyecto", "#30D158")]
+DAYS_OF_WEEK = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+
+WIDGET_DEFAULTS = {
+    "clock":     {"type": "clock",     "size": "small",  "width": 170, "height": 170, "x": 1704, "y": 234},
+    "calendar":  {"type": "calendar",  "size": "small",  "width": 170, "height": 170, "x": 1520, "y": 50},
+    "habits":    {"type": "habits",    "size": "small",  "width": 170, "height": 170, "x": 560,  "y": 324},
+    "timetable": {"type": "timetable", "size": "small",  "width": 170, "height": 170, "x": 744,  "y": 324},
+    "media":     {"type": "media",     "size": "medium", "width": 354, "height": 170, "x": 560,  "y": 508},
+    "battery":   {"type": "battery",   "size": "small",  "width": 170, "height": 170, "x": 560,  "y": 140},
+    "git":       {"type": "git",       "size": "small",  "width": 170, "height": 170, "x": 744,  "y": 140},
+    "resources": {"type": "resources", "size": "small",  "width": 170, "height": 170, "x": 1520, "y": 234},
+    "network":   {"type": "network",   "size": "small",  "width": 170, "height": 170, "x": 1704, "y": 50},
+    "photos":    {"type": "photos",    "size": "medium", "width": 354, "height": 176, "x": 1520, "y": 418}
+}
+
+def ensure_config_dir():
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+
+class WidgetsManagerApp(Adw.Application):
+    def __init__(self, initial_tab="calendar"):
+        super().__init__(
+            application_id="org.lunita.WidgetsManager",
+            flags=Gio.ApplicationFlags.NON_UNIQUE
+        )
+        self.initial_tab = initial_tab
+
+    def do_startup(self):
+        Adw.Application.do_startup(self)
+        style_mgr = self.get_style_manager()
+        style_mgr.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+
+    def do_activate(self):
+        Adw.Application.do_activate(self)
+        style_mgr = self.get_style_manager()
+        style_mgr.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        if not hasattr(self, "win") or not self.win:
+            self.win = WidgetsManagerWindow(application=self, initial_tab=self.initial_tab)
+        self.win.present()
+
+class WidgetsManagerWindow(Adw.ApplicationWindow):
+    def __init__(self, initial_tab="calendar", **kwargs):
+        super().__init__(**kwargs)
+        self.initial_tab = initial_tab
+        self.set_title("Gestor de Widgets")
+        self.set_default_size(1020, 740)
+        ensure_config_dir()
+
+        self.setup_css()
+        self.build_ui()
+        if self.initial_tab in ["calendar", "health", "timetable", "github", "desktop"]:
+            self.view_stack.set_visible_child_name(self.initial_tab)
+
+    def setup_css(self):
+        css = """
+        window.widgets-manager,
+        window.widgets-manager > contents,
+        .widgets-manager,
+        .widgets-manager .view-stack,
+        .widgets-manager paned,
+        .widgets-manager scrolledwindow,
+        .widgets-manager view {
+            background-color: #161618;
+            color: #f5f5f7;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Space Grotesk", sans-serif;
+        }
+
+        window.widgets-manager headerbar {
+            background-color: #1c1c1e;
+            color: #f5f5f7;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        window.widgets-manager headerbar button {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #f5f5f7;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        window.widgets-manager headerbar button:hover {
+            background-color: rgba(255, 255, 255, 0.16);
+        }
+
+        window.widgets-manager headerbar viewswitcher button:checked {
+            background-color: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+
+        calendar {
+            background-color: #202022;
+            color: #f5f5f7;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        entry, textview {
+            background-color: #242426;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 8px 12px;
+        }
+
+        entry:focus-within, textview:focus-within {
+            border-color: #0A84FF;
+            background-color: #2a2a2e;
+        }
+
+        entry > text > placeholder {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .wm-card {
+            background-color: #202022;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .wm-card-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+
+        .wm-event-row {
+            background-color: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            transition: all 180ms ease;
+        }
+
+        .wm-event-row:hover {
+            background-color: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .wm-pill {
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .wm-btn-primary {
+            background-color: #0A84FF;
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+        }
+
+        .wm-btn-primary:hover {
+            background-color: #0071E3;
+        }
+
+        .wm-btn-danger {
+            background-color: rgba(255, 69, 58, 0.15);
+            color: #FF453A;
+            border: 1px solid rgba(255, 69, 58, 0.3);
+            border-radius: 8px;
+            padding: 4px 10px;
+        }
+
+        .wm-btn-danger:hover {
+            background-color: #FF453A;
+            color: #ffffff;
+        }
+
+        button.wm-color-btn {
+            border-radius: 9999px;
+            min-width: 28px;
+            min-height: 28px;
+            padding: 0;
+            margin: 2px;
+            border: 2px solid transparent;
+            box-shadow: none;
+        }
+
+        button.wm-color-btn.selected {
+            border-color: #ffffff;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
+
+        button.wm-col-0 { background: #0A84FF; }
+        button.wm-col-1 { background: #30D158; }
+        button.wm-col-2 { background: #FF9F0A; }
+        button.wm-col-3 { background: #BF5AF2; }
+        button.wm-col-4 { background: #FF453A; }
+        button.wm-col-5 { background: #64D2FF; }
+
+        .wm-stats-pill {
+            background: linear-gradient(135deg, rgba(255, 159, 10, 0.15) 0%, rgba(255, 69, 58, 0.15) 100%);
+            border: 1px solid rgba(255, 159, 10, 0.3);
+            border-radius: 14px;
+            padding: 12px 18px;
+        }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_string(css)
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_USER + 100
+        )
+
+    def show_toast(self, message: str):
+        toast = Adw.Toast(title=message)
+        self.toast_overlay.add_toast(toast)
+
+    def build_ui(self):
+        self.add_css_class("widgets-manager")
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        main_box.set_vexpand(True)
+        main_box.set_hexpand(True)
+        self.set_content(main_box)
+
+        # ── HeaderBar ──
+        header = Adw.HeaderBar()
+        header.set_show_end_title_buttons(True)
+
+        self.view_stack = Adw.ViewStack()
+        switcher_title = Adw.ViewSwitcherTitle(
+            stack=self.view_stack,
+            title="Gestor de Widgets",
+            subtitle="Configuración y Personalización"
+        )
+        header.set_title_widget(switcher_title)
+
+        # Header action buttons
+        restart_btn = Gtk.Button(icon_name="view-refresh-symbolic")
+        restart_btn.set_tooltip_text("Reiniciar daemon de widgets (Quickshell)")
+        restart_btn.connect("clicked", self.on_restart_widgets)
+        header.pack_end(restart_btn)
+
+        main_box.append(header)
+
+        # ── Toast Overlay ──
+        self.toast_overlay = Adw.ToastOverlay()
+        self.toast_overlay.set_vexpand(True)
+        self.toast_overlay.set_hexpand(True)
+        main_box.append(self.toast_overlay)
+
+        # ── ViewStack Pages ──
+        self.toast_overlay.set_child(self.view_stack)
+        self.view_stack.set_vexpand(True)
+        self.view_stack.set_hexpand(True)
+
+        # 1. Calendario
+        cal_page = self.build_calendar_page()
+        page1 = self.view_stack.add_titled(cal_page, "calendar", "Calendario")
+        page1.set_icon_name("x-office-calendar")
+
+        # 2. Salud y Actividad
+        health_page = self.build_health_page()
+        page2 = self.view_stack.add_titled(health_page, "health", "Salud y Actividad")
+        page2.set_icon_name("emblem-favorite-symbolic")
+
+        # 3. Notas y Agenda
+        tt_page = self.build_timetable_page()
+        page3 = self.view_stack.add_titled(tt_page, "timetable", "Notas & Agenda")
+        page3.set_icon_name("accessories-text-editor-symbolic")
+
+        # 4. GitHub
+        git_page = self.build_github_page()
+        page4 = self.view_stack.add_titled(git_page, "github", "GitHub")
+        page4.set_icon_name("preferences-system-network-symbolic")
+
+        # 5. Escritorio y Control
+        desktop_page = self.build_desktop_page()
+        page5 = self.view_stack.add_titled(desktop_page, "desktop", "Escritorio")
+        page5.set_icon_name("user-desktop-symbolic")
+
+    # =========================================================================
+    # 📅 PÁGINA 1: CALENDARIO
+    # =========================================================================
+    def build_calendar_page(self) -> Gtk.Widget:
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_position(360)
+        paned.set_shrink_start_child(False)
+        paned.set_shrink_end_child(False)
+        paned.set_vexpand(True)
+        paned.set_hexpand(True)
+
+        # Columna Izquierda: Calendario y Navegación
+        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        left_box.set_vexpand(True)
+        left_box.set_margin_top(16)
+        left_box.set_margin_bottom(16)
+        left_box.set_margin_start(16)
+        left_box.set_margin_end(12)
+
+        self.gtk_calendar = Gtk.Calendar()
+        self.gtk_calendar.connect("day-selected", self.on_calendar_day_selected)
+        left_box.append(self.gtk_calendar)
+
+        quick_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        quick_box.set_halign(Gtk.Align.CENTER)
+
+        btn_today = Gtk.Button(label="Hoy")
+        btn_today.connect("clicked", lambda _: self.select_relative_day(0))
+        btn_tomorrow = Gtk.Button(label="Mañana")
+        btn_tomorrow.connect("clicked", lambda _: self.select_relative_day(1))
+        btn_in3 = Gtk.Button(label="+3 Días")
+        btn_in3.connect("clicked", lambda _: self.select_relative_day(3))
+
+        quick_box.append(btn_today)
+        quick_box.append(btn_tomorrow)
+        quick_box.append(btn_in3)
+        left_box.append(quick_box)
+
+        paned.set_start_child(left_box)
+
+        # Columna Derecha: Lista de Eventos y Añadir Nuevo
+        right_scroll = Gtk.ScrolledWindow()
+        right_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        right_scroll.set_vexpand(True)
+        right_scroll.set_hexpand(True)
+        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        right_box.set_vexpand(True)
+        right_box.set_margin_top(16)
+        right_box.set_margin_bottom(16)
+        right_box.set_margin_start(12)
+        right_box.set_margin_end(16)
+        right_scroll.set_child(right_box)
+
+        self.cal_date_label = Gtk.Label()
+        self.cal_date_label.set_css_classes(["title-2", "bold"])
+        self.cal_date_label.set_halign(Gtk.Align.START)
+        right_box.append(self.cal_date_label)
+
+        self.events_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        right_box.append(self.events_list_box)
+
+        # Formulario
+        add_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        add_card.add_css_class("wm-card")
+
+        add_title = Gtk.Label(label="Añadir Evento para esta fecha")
+        add_title.add_css_class("wm-card-title")
+        add_title.set_halign(Gtk.Align.START)
+        add_card.append(add_title)
+
+        self.ev_title_entry = Gtk.Entry(placeholder_text="Título del evento (ej: Parcial de Base de Datos)")
+        add_card.append(self.ev_title_entry)
+
+        row2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.ev_time_entry = Gtk.Entry(placeholder_text="Horario (ej: 18:30 - 20:30)")
+        self.ev_time_entry.set_hexpand(True)
+        row2.append(self.ev_time_entry)
+
+        self.ev_cat_combo = Gtk.DropDown.new_from_strings(CATEGORIES)
+        row2.append(self.ev_cat_combo)
+        add_card.append(row2)
+
+        # Color Selector
+        color_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        color_label = Gtk.Label(label="Color:")
+        color_label.set_halign(Gtk.Align.START)
+        color_row.append(color_label)
+
+        self.selected_color = CALENDAR_COLORS[0][0]
+        self.color_buttons = []
+
+        for i, (hex_col, name) in enumerate(CALENDAR_COLORS):
+            btn = Gtk.Button()
+            btn.add_css_class("wm-color-btn")
+            btn.add_css_class(f"wm-col-{i}")
+            if hex_col == self.selected_color:
+                btn.add_css_class("selected")
+            btn.set_tooltip_text(name)
+            btn.connect("clicked", lambda _, col=hex_col: self.set_calendar_color(col))
+            color_row.append(btn)
+            self.color_buttons.append((btn, hex_col))
+
+        add_card.append(color_row)
+
+        btn_add_ev = Gtk.Button(label="+ Guardar Evento")
+        btn_add_ev.add_css_class("wm-btn-primary")
+        btn_add_ev.connect("clicked", self.on_save_calendar_event)
+        add_card.append(btn_add_ev)
+
+        right_box.append(add_card)
+        paned.set_end_child(right_scroll)
+
+        self.selected_date_str = date.today().strftime("%Y-%m-%d")
+        self.load_calendar_events_for_date(self.selected_date_str)
+
+        return paned
+
+    def set_calendar_color(self, hex_col: str):
+        self.selected_color = hex_col
+        for btn, col in self.color_buttons:
+            if col == hex_col:
+                btn.add_css_class("selected")
+            else:
+                btn.remove_css_class("selected")
+
+    def select_relative_day(self, offset: int):
+        target = date.today() + timedelta(days=offset)
+        dt = GLib.DateTime.new_local(target.year, target.month, target.day, 0, 0, 0)
+        self.gtk_calendar.set_date(dt)
+        self.on_calendar_day_selected(self.gtk_calendar)
+
+    def on_calendar_day_selected(self, cal: Gtk.Calendar):
+        gdate = cal.get_date()
+        self.selected_date_str = gdate.format("%Y-%m-%d")
+        self.load_calendar_events_for_date(self.selected_date_str)
+
+    def load_calendar_events_for_date(self, date_str: str):
+        try:
+            d = datetime.strptime(date_str, "%Y-%m-%d")
+            dias_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+            meses_es = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+            fecha_bonita = f"{dias_es[d.weekday()]}, {d.day} de {meses_es[d.month - 1]} de {d.year}"
+        except Exception:
+            fecha_bonita = date_str
+
+        self.cal_date_label.set_text(fecha_bonita)
+
+        while child := self.events_list_box.get_first_child():
+            self.events_list_box.remove(child)
+
+        all_events = self.read_calendar_file()
+        day_events = all_events.get(date_str, [])
+
+        if not day_events:
+            empty_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            empty_box.set_margin_top(16)
+            empty_box.set_margin_bottom(16)
+
+            lbl = Gtk.Label(label="No hay eventos programados para este día")
+            lbl.set_css_classes(["dim-label"])
+            empty_box.append(lbl)
+            self.events_list_box.append(empty_box)
+            return
+
+        for ev in day_events:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.add_css_class("wm-event-row")
+
+            color_strip = Gtk.Box()
+            color_strip.set_size_request(4, 28)
+            col = ev.get("color", "#0A84FF")
+            color_strip.set_css_classes(["wm-pill"])
+            color_strip.set_name(f"strip_{ev.get('id')}")
+
+            css = f"#strip_{ev.get('id')} {{ background-color: {col}; }}"
+            p = Gtk.CssProvider()
+            p.load_from_string(css)
+            Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), p, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+            row.append(color_strip)
+
+            text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            text_box.set_hexpand(True)
+
+            title_lbl = Gtk.Label(label=ev.get("title", "Sin título"))
+            title_lbl.set_halign(Gtk.Align.START)
+            title_lbl.set_css_classes(["bold"])
+            text_box.append(title_lbl)
+
+            sub_lbl = Gtk.Label(label=f"⏰ {ev.get('time', 'Todo el día')}   •   🏷️ {ev.get('category', 'General')}")
+            sub_lbl.set_halign(Gtk.Align.START)
+            sub_lbl.set_css_classes(["dim-label"])
+            text_box.append(sub_lbl)
+
+            row.append(text_box)
+
+            del_btn = Gtk.Button(icon_name="user-trash-symbolic")
+            del_btn.add_css_class("wm-btn-danger")
+            del_btn.set_tooltip_text("Eliminar evento")
+            del_btn.connect("clicked", lambda _, eid=ev.get("id"), ds=date_str: self.on_delete_calendar_event(ds, eid))
+            row.append(del_btn)
+
+            self.events_list_box.append(row)
+
+    def on_save_calendar_event(self, _):
+        title = self.ev_title_entry.get_text().strip()
+        if not title:
+            self.show_toast("Por favor escribe un título para el evento")
+            return
+
+        time_str = self.ev_time_entry.get_text().strip() or "18:00"
+        cat_idx = self.ev_cat_combo.get_selected()
+        cat = CATEGORIES[cat_idx] if cat_idx < len(CATEGORIES) else "General"
+        color = self.selected_color
+
+        all_events = self.read_calendar_file()
+        if self.selected_date_str not in all_events:
+            all_events[self.selected_date_str] = []
+
+        new_id = f"ev_{int(datetime.now().timestamp())}_{len(all_events[self.selected_date_str])}"
+        all_events[self.selected_date_str].append({
+            "id": new_id,
+            "title": title,
+            "time": time_str,
+            "category": cat,
+            "color": color
+        })
+
+        self.write_calendar_file(all_events)
+        self.ev_title_entry.set_text("")
+        self.ev_time_entry.set_text("")
+        self.load_calendar_events_for_date(self.selected_date_str)
+        self.show_toast(f"Evento añadido para {self.selected_date_str}")
+
+    def on_delete_calendar_event(self, date_str: str, event_id: str):
+        all_events = self.read_calendar_file()
+        if date_str in all_events:
+            all_events[date_str] = [e for e in all_events[date_str] if e.get("id") != event_id]
+            if not all_events[date_str]:
+                del all_events[date_str]
+            self.write_calendar_file(all_events)
+            self.load_calendar_events_for_date(date_str)
+            self.show_toast("Evento eliminado")
+
+    def read_calendar_file(self) -> dict:
+        if not CALENDAR_FILE.exists():
+            return {}
+        try:
+            with open(CALENDAR_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+
+    def write_calendar_file(self, data: dict):
+        ensure_config_dir()
+        with open(CALENDAR_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    # =========================================================================
+    # 🏃 PÁGINA 2: SALUD y ACTIVIDAD (macOS Health-Style)
+    # =========================================================================
+    def build_health_page(self) -> Gtk.Widget:
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        content.set_margin_top(20)
+        content.set_margin_bottom(20)
+        content.set_margin_start(24)
+        content.set_margin_end(24)
+        scroll.set_child(content)
+
+        health_data = self.load_health_data()
+
+        # ── Grupo 1: Métricas Diarias y Metas de Anillos ──
+        group_metrics = Adw.PreferencesGroup()
+        group_metrics.set_title("Métricas de Salud y Actividad")
+        group_metrics.set_description("Ajusta tus pasos, calorías quemadas, minutos de ejercicio e hidratación diaria.")
+
+        # 1. Calorías Activas (Anillo Rojo)
+        self.spin_cal = Adw.SpinRow.new_with_range(0, 5000, 25)
+        self.spin_cal.set_title("Calorías Activas (kcal)")
+        self.spin_cal.set_subtitle("Anillo Rojo • Energía consumida en movimiento")
+        self.spin_cal.set_value(float(health_data.get("calories", 0)))
+        group_metrics.add(self.spin_cal)
+
+        self.spin_cal_goal = Adw.SpinRow.new_with_range(100, 5000, 50)
+        self.spin_cal_goal.set_title("Meta Diaria de Calorías")
+        self.spin_cal_goal.set_value(float(health_data.get("calories_goal", 600)))
+        group_metrics.add(self.spin_cal_goal)
+
+        # 2. Ejercicio (Anillo Verde)
+        self.spin_ex = Adw.SpinRow.new_with_range(0, 720, 5)
+        self.spin_ex.set_title("Tiempo de Ejercicio (minutos)")
+        self.spin_ex.set_subtitle("Anillo Lima • Actividad física de alta intensidad")
+        self.spin_ex.set_value(float(health_data.get("exercise", 0)))
+        group_metrics.add(self.spin_ex)
+
+        self.spin_ex_goal = Adw.SpinRow.new_with_range(10, 360, 5)
+        self.spin_ex_goal.set_title("Meta Diaria de Ejercicio")
+        self.spin_ex_goal.set_value(float(health_data.get("exercise_goal", 30)))
+        group_metrics.add(self.spin_ex_goal)
+
+        # 3. Pasos (Anillo Cian)
+        self.spin_steps = Adw.SpinRow.new_with_range(0, 100000, 250)
+        self.spin_steps.set_title("Pasos Totales")
+        self.spin_steps.set_subtitle("Anillo Cian • Desplazamiento y caminata diaria")
+        self.spin_steps.set_value(float(health_data.get("steps", 0)))
+        group_metrics.add(self.spin_steps)
+
+        self.spin_steps_goal = Adw.SpinRow.new_with_range(1000, 100000, 500)
+        self.spin_steps_goal.set_title("Meta Diaria de Pasos")
+        self.spin_steps_goal.set_value(float(health_data.get("steps_goal", 10000)))
+        group_metrics.add(self.spin_steps_goal)
+
+        # 4. Agua / Hidratación (Azul)
+        self.spin_water = Adw.SpinRow.new_with_range(0.0, 10.0, 0.1)
+        self.spin_water.set_title("Hidratación (Litros de Agua)")
+        self.spin_water.set_subtitle("Consumo diario de agua")
+        self.spin_water.set_value(float(health_data.get("water", 0.0)))
+        group_metrics.add(self.spin_water)
+
+        self.spin_water_goal = Adw.SpinRow.new_with_range(0.5, 10.0, 0.25)
+        self.spin_water_goal.set_title("Meta Diaria de Agua (Litros)")
+        self.spin_water_goal.set_value(float(health_data.get("water_goal", 2.5)))
+        group_metrics.add(self.spin_water_goal)
+
+        content.append(group_metrics)
+
+        # ── Grupo 2: Incrementos Rápidos ──
+        group_quick = Adw.PreferencesGroup()
+        group_quick.set_title("Ajustes y Registro Rápido")
+        group_quick.set_description("Suma cantidades directamente a las métricas de hoy.")
+
+        row_quick = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        row_quick.set_margin_top(4)
+
+        btn_q_step = Gtk.Button(label="+500 Pasos")
+        btn_q_step.connect("clicked", lambda _: self.spin_steps.set_value(self.spin_steps.get_value() + 500))
+        row_quick.append(btn_q_step)
+
+        btn_q_cal = Gtk.Button(label="+50 kcal")
+        btn_q_cal.connect("clicked", lambda _: self.spin_cal.set_value(self.spin_cal.get_value() + 50))
+        row_quick.append(btn_q_cal)
+
+        btn_q_ex = Gtk.Button(label="+15 min Ejercicio")
+        btn_q_ex.connect("clicked", lambda _: self.spin_ex.set_value(self.spin_ex.get_value() + 15))
+        row_quick.append(btn_q_ex)
+
+        btn_q_water = Gtk.Button(label="+0.25 L Agua")
+        btn_q_water.connect("clicked", lambda _: self.spin_water.set_value(round(self.spin_water.get_value() + 0.25, 2)))
+        row_quick.append(btn_q_water)
+
+        btn_reset_all = Gtk.Button(label="Reiniciar Métricas a 0")
+        btn_reset_all.add_css_class("wm-btn-danger")
+        btn_reset_all.connect("clicked", self.on_reset_health_metrics)
+        row_quick.append(btn_reset_all)
+
+        group_quick.add(row_quick)
+        content.append(group_quick)
+
+        # Botón Guardar
+        btn_save_health = Gtk.Button(label="Guardar y Actualizar Widget de Salud")
+        btn_save_health.add_css_class("wm-btn-primary")
+        btn_save_health.connect("clicked", self.on_save_health_data)
+        content.append(btn_save_health)
+
+        return scroll
+
+    def load_health_data(self) -> dict:
+        default_data = {
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "calories": 0,
+            "calories_goal": 600,
+            "exercise": 0,
+            "exercise_goal": 30,
+            "steps": 0,
+            "steps_goal": 10000,
+            "water": 0.0,
+            "water_goal": 2.5
+        }
+        if HEALTH_FILE.exists():
+            try:
+                with open(HEALTH_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    default_data.update(data)
+            except Exception:
+                pass
+        return default_data
+
+    def on_reset_health_metrics(self, _):
+        self.spin_cal.set_value(0)
+        self.spin_ex.set_value(0)
+        self.spin_steps.set_value(0)
+        self.spin_water.set_value(0.0)
+        try:
+            prov = SCRIPTS_DIR / "health_tracker_provider.py"
+            if prov.exists():
+                subprocess.run(["python3", str(prov), "reset"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+        self.show_toast("Métricas de salud reiniciadas a 0 para todos los días")
+
+    def on_save_health_data(self, _):
+        data = self.load_health_data()
+        data["calories"] = int(self.spin_cal.get_value())
+        data["calories_goal"] = int(self.spin_cal_goal.get_value())
+        data["exercise"] = int(self.spin_ex.get_value())
+        data["exercise_goal"] = int(self.spin_ex_goal.get_value())
+        data["steps"] = int(self.spin_steps.get_value())
+        data["steps_goal"] = int(self.spin_steps_goal.get_value())
+        data["water"] = round(float(self.spin_water.get_value()), 2)
+        data["water_goal"] = round(float(self.spin_water_goal.get_value()), 2)
+        data["date"] = datetime.now().strftime("%Y-%m-%d")
+
+        ensure_config_dir()
+        with open(HEALTH_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+        # Notify provider
+        threading.Thread(target=self._run_health_refresh, daemon=True).start()
+        self.show_toast("Métricas de salud sincronizadas con el widget")
+
+    def _run_health_refresh(self):
+        try:
+            prov = SCRIPTS_DIR / "health_tracker_provider.py"
+            if prov.exists():
+                subprocess.run(["python3", str(prov), "get"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+    # =========================================================================
+    # 📝 PÁGINA 3: NOTAS Y AGENDA
+    # =========================================================================
+    def build_timetable_page(self) -> Gtk.Widget:
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        content.set_margin_top(20)
+        content.set_margin_bottom(20)
+        content.set_margin_start(24)
+        content.set_margin_end(24)
+        scroll.set_child(content)
+
+        tt_data = self.load_timetable_data()
+
+        # ── Grupo 1: Datos de Contexto o Institución ──
+        group_meta = Adw.PreferencesGroup()
+        group_meta.set_title("Contexto o Institución")
+        group_meta.set_description("Personaliza el contexto, universidad o área de trabajo.")
+
+        self.tt_uni_row = Adw.EntryRow()
+        self.tt_uni_row.set_title("Siglas / Nombre")
+        self.tt_uni_row.set_text(tt_data.get("university", "Notas"))
+        group_meta.add(self.tt_uni_row)
+
+        self.tt_career_row = Adw.EntryRow()
+        self.tt_career_row.set_title("Subtítulo / Especialidad")
+        self.tt_career_row.set_text(tt_data.get("career", "Agenda Diaria"))
+        group_meta.add(self.tt_career_row)
+
+        content.append(group_meta)
+
+        # ── Grupo 2: Tareas de Estudio y Trabajo (To-Do) ──
+        group_tasks = Adw.PreferencesGroup()
+        group_tasks.set_title("Tareas y Pendientes")
+        group_tasks.set_description("Gestiona entregas, pendientes y tareas que aparecen en el widget de Notas.")
+
+        self.tasks_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        group_tasks.add(self.tasks_list_box)
+
+        # Añadir nueva tarea
+        add_task_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.new_task_title = Gtk.Entry(placeholder_text="Nueva tarea (ej: Revisar entregas)")
+        self.new_task_title.set_hexpand(True)
+        self.new_task_tag_combo = Gtk.DropDown.new_from_strings([t[0] for t in TASK_TAGS])
+        self.new_task_due = Gtk.Entry(placeholder_text="Vencimiento (ej: Viernes)")
+        self.new_task_due.set_size_request(100, -1)
+
+        btn_add_task = Gtk.Button(label="+ Añadir Tarea")
+        btn_add_task.connect("clicked", self.on_add_task)
+
+        add_task_box.append(self.new_task_title)
+        add_task_box.append(self.new_task_tag_combo)
+        add_task_box.append(self.new_task_due)
+        add_task_box.append(btn_add_task)
+        group_tasks.set_header_suffix(add_task_box)
+
+        self.current_tasks = list(tt_data.get("tasks", []))
+        self.rebuild_tasks_list()
+        content.append(group_tasks)
+
+        # ── Grupo 3: Horarios y Agenda ──
+        group_schedule = Adw.PreferencesGroup()
+        group_schedule.set_title("Horarios y Agenda")
+        group_schedule.set_description("Configura los horarios o eventos que se muestran en el widget.")
+
+        self.schedule_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        group_schedule.add(self.schedule_list_box)
+
+        self.current_schedule = list(tt_data.get("schedule", []))
+        self.rebuild_schedule_list()
+        content.append(group_schedule)
+
+        # ── Grupo 4: Apuntes y Scratchpad de Notas ──
+        group_notes = Adw.PreferencesGroup()
+        group_notes.set_title("Apuntes y Notas Rápidas")
+        group_notes.set_description("Texto libre de recordatorios rápidos que se sincronizan con el widget.")
+
+        notes_scroll = Gtk.ScrolledWindow()
+        notes_scroll.set_min_content_height(100)
+        self.notes_textview = Gtk.TextView()
+        self.notes_textview.set_wrap_mode(Gtk.WrapMode.WORD)
+        self.notes_textview.get_buffer().set_text(tt_data.get("notes", ""))
+        notes_scroll.set_child(self.notes_textview)
+        group_notes.add(notes_scroll)
+        content.append(group_notes)
+
+        # Botón Guardar
+        btn_save_tt = Gtk.Button(label="Guardar Todo y Sincronizar Widget de Notas & Agenda")
+        btn_save_tt.add_css_class("wm-btn-primary")
+        btn_save_tt.connect("clicked", self.on_save_timetable)
+        content.append(btn_save_tt)
+
+        return scroll
+
+    def load_timetable_data(self) -> dict:
+        default_data = {
+            "university": "UNaB",
+            "career": "Tecnicatura Universitaria en Programación",
+            "schedule": [],
+            "tasks": [],
+            "notes": ""
+        }
+        if TIMETABLE_FILE.exists():
+            try:
+                with open(TIMETABLE_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    default_data.update(data)
+            except Exception:
+                pass
+        return default_data
+
+    def rebuild_tasks_list(self):
+        while child := self.tasks_list_box.get_first_child():
+            self.tasks_list_box.remove(child)
+
+        for task in self.current_tasks:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.add_css_class("wm-event-row")
+
+            chk = Gtk.CheckButton()
+            chk.set_active(task.get("done", False))
+            chk.connect("toggled", lambda b, tid=task.get("id"): self.on_toggle_task(tid, b.get_active()))
+            row.append(chk)
+
+            title_entry = Gtk.Entry(text=task.get("title", ""))
+            title_entry.set_hexpand(True)
+            title_entry.connect("changed", lambda e, tid=task.get("id"): self.on_rename_task(tid, e.get_text()))
+            row.append(title_entry)
+
+            # Tag pill
+            tag_lbl = Gtk.Label(label=task.get("tag", "UNaB"))
+            tag_lbl.add_css_class("wm-pill")
+            col = task.get("tag_color", "#007AFF")
+            tag_lbl.set_name(f"pill_{task.get('id')}")
+            css = f"#pill_{task.get('id')} {{ background-color: rgba(255,255,255,0.08); color: {col}; }}"
+            p = Gtk.CssProvider()
+            p.load_from_string(css)
+            Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), p, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+            row.append(tag_lbl)
+
+            due_entry = Gtk.Entry(text=task.get("due", "Pendiente"))
+            due_entry.set_size_request(90, -1)
+            due_entry.connect("changed", lambda e, tid=task.get("id"): self.on_change_task_due(tid, e.get_text()))
+            row.append(due_entry)
+
+            del_btn = Gtk.Button(icon_name="user-trash-symbolic")
+            del_btn.add_css_class("wm-btn-danger")
+            del_btn.connect("clicked", lambda _, tid=task.get("id"): self.on_delete_task(tid))
+            row.append(del_btn)
+
+            self.tasks_list_box.append(row)
+
+    def on_toggle_task(self, task_id: str, is_done: bool):
+        for t in self.current_tasks:
+            if str(t.get("id")) == str(task_id):
+                t["done"] = is_done
+                break
+
+    def on_rename_task(self, task_id: str, new_title: str):
+        for t in self.current_tasks:
+            if str(t.get("id")) == str(task_id):
+                t["title"] = new_title
+                break
+
+    def on_change_task_due(self, task_id: str, new_due: str):
+        for t in self.current_tasks:
+            if str(t.get("id")) == str(task_id):
+                t["due"] = new_due
+                break
+
+    def on_delete_task(self, task_id: str):
+        self.current_tasks = [t for t in self.current_tasks if str(t.get("id")) != str(task_id)]
+        self.rebuild_tasks_list()
+        self.show_toast("Tarea eliminada")
+
+    def on_add_task(self, _):
+        title = self.new_task_title.get_text().strip()
+        if not title:
+            return
+        tag_idx = self.new_task_tag_combo.get_selected()
+        tag_name, tag_col = TASK_TAGS[tag_idx] if tag_idx < len(TASK_TAGS) else ("UNaB", "#007AFF")
+        due = self.new_task_due.get_text().strip() or "Pendiente"
+
+        self.current_tasks.insert(0, {
+            "id": f"t_{int(datetime.now().timestamp() * 1000)}",
+            "title": title,
+            "tag": tag_name,
+            "tag_color": tag_col,
+            "done": False,
+            "due": due
+        })
+        self.new_task_title.set_text("")
+        self.new_task_due.set_text("")
+        self.rebuild_tasks_list()
+        self.show_toast(f"Tarea '{title}' agregada")
+
+    def rebuild_schedule_list(self):
+        while child := self.schedule_list_box.get_first_child():
+            self.schedule_list_box.remove(child)
+
+        for i, item in enumerate(self.current_schedule):
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            row.add_css_class("wm-event-row")
+
+            day_lbl = Gtk.Label(label=item.get("day_name", "Día"))
+            day_lbl.set_css_classes(["bold"])
+            day_lbl.set_size_request(80, -1)
+            day_lbl.set_halign(Gtk.Align.START)
+            row.append(day_lbl)
+
+            sub_entry = Gtk.Entry(text=item.get("subject", ""))
+            sub_entry.set_hexpand(True)
+            sub_entry.connect("changed", lambda e, idx=i: self._update_schedule_field(idx, "subject", e.get_text()))
+            row.append(sub_entry)
+
+            time_entry = Gtk.Entry(text=f"{item.get('start', '18:00')} - {item.get('end', '22:00')}")
+            time_entry.set_size_request(110, -1)
+            time_entry.connect("changed", lambda e, idx=i: self._update_schedule_time(idx, e.get_text()))
+            row.append(time_entry)
+
+            room_entry = Gtk.Entry(text=item.get("room", "Aula 101"))
+            room_entry.set_size_request(85, -1)
+            room_entry.connect("changed", lambda e, idx=i: self._update_schedule_field(idx, "room", e.get_text()))
+            row.append(room_entry)
+
+            prof_entry = Gtk.Entry(text=item.get("professor", "Profesor"))
+            prof_entry.set_size_request(110, -1)
+            prof_entry.connect("changed", lambda e, idx=i: self._update_schedule_field(idx, "professor", e.get_text()))
+            row.append(prof_entry)
+
+            self.schedule_list_box.append(row)
+
+    def _update_schedule_field(self, idx: int, field: str, val: str):
+        if idx < len(self.current_schedule):
+            self.current_schedule[idx][field] = val
+
+    def _update_schedule_time(self, idx: int, time_str: str):
+        if idx < len(self.current_schedule):
+            parts = [p.strip() for p in time_str.split("-")]
+            if len(parts) >= 2:
+                self.current_schedule[idx]["start"] = parts[0]
+                self.current_schedule[idx]["end"] = parts[1]
+
+    def on_save_timetable(self, _):
+        buf = self.notes_textview.get_buffer()
+        start, end = buf.get_bounds()
+        notes_text = buf.get_text(start, end, True)
+
+        data = {
+            "university": self.tt_uni_row.get_text().strip() or "UNaB",
+            "career": self.tt_career_row.get_text().strip() or "Tecnicatura Universitaria en Programación",
+            "schedule": self.current_schedule,
+            "tasks": self.current_tasks,
+            "notes": notes_text
+        }
+        ensure_config_dir()
+        with open(TIMETABLE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+        threading.Thread(target=self._run_timetable_refresh, daemon=True).start()
+        self.show_toast("Horario y notas guardadas correctamente")
+
+    def _run_timetable_refresh(self):
+        try:
+            prov = SCRIPTS_DIR / "timetable_provider.py"
+            if prov.exists():
+                subprocess.run(["python3", str(prov), "get"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+    # =========================================================================
+    # 🐙 PÁGINA 4: GITHUB
+    # =========================================================================
+    def build_github_page(self) -> Gtk.Widget:
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        content.set_margin_top(20)
+        content.set_margin_bottom(20)
+        content.set_margin_start(24)
+        content.set_margin_end(24)
+        scroll.set_child(content)
+
+        git_cfg = self.load_git_config()
+
+        # ── Grupo 1: Cuenta y Autenticación ──
+        group_acc = Adw.PreferencesGroup()
+        group_acc.set_title("Cuenta y API de GitHub")
+        group_acc.set_description("Monitorea actividad, commits y pipelines de CI/CD de tu usuario.")
+
+        self.git_user_row = Adw.EntryRow()
+        self.git_user_row.set_title("Usuario de GitHub")
+        self.git_user_row.set_text(git_cfg.get("username", "Facuud2"))
+        group_acc.add(self.git_user_row)
+
+        self.git_token_row = Adw.PasswordEntryRow()
+        self.git_token_row.set_title("Token de Acceso Personal (PAT)")
+        self.git_token_row.set_text(git_cfg.get("token", ""))
+        group_acc.add(self.git_token_row)
+
+        content.append(group_acc)
+
+        # ── Grupo 2: Repositorios ──
+        group_repos = Adw.PreferencesGroup()
+        group_repos.set_title("Repositorios y Monitoreo")
+        group_repos.set_description("Configura la ruta local y los repositorios a seguir.")
+
+        self.git_local_row = Adw.EntryRow()
+        self.git_local_row.set_title("Ruta del Repositorio Local")
+        self.git_local_row.set_text(git_cfg.get("local_repo", "/mnt/Desarrollo/Lunita-Dots"))
+        group_repos.add(self.git_local_row)
+
+        self.git_ci_repo_row = Adw.EntryRow()
+        self.git_ci_repo_row.set_title("Repositorio Prioritario para CI/CD")
+        self.git_ci_repo_row.set_text(git_cfg.get("ci_repo", "Comitas-App"))
+        group_repos.add(self.git_ci_repo_row)
+
+        content.append(group_repos)
+
+        # Lista de Repositorios a seguir
+        self.group_tracked = Adw.PreferencesGroup()
+        self.group_tracked.set_title("Repositorios en Lista")
+        self.tracked_repos = list(git_cfg.get("repos", ["Lunita-Dots", "Comitas-App", "FocuseAR"]))
+
+        self.repos_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.group_tracked.add(self.repos_list_box)
+
+        add_repo_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.new_repo_entry = Gtk.Entry(placeholder_text="Nombre del repositorio (ej: FocuseAR)")
+        self.new_repo_entry.set_hexpand(True)
+        btn_add_repo = Gtk.Button(label="+ Añadir")
+        btn_add_repo.connect("clicked", self.on_add_tracked_repo)
+        add_repo_box.append(self.new_repo_entry)
+        add_repo_box.append(btn_add_repo)
+        self.group_tracked.set_header_suffix(add_repo_box)
+
+        self.rebuild_tracked_repos_ui()
+        content.append(self.group_tracked)
+
+        # ── Grupo 3: Visualización y Acciones ──
+        group_vis = Adw.PreferencesGroup()
+        group_vis.set_title("Opciones de Visualización")
+
+        self.git_show_ci_row = Adw.SwitchRow()
+        self.git_show_ci_row.set_title("Mostrar Estado de Pipelines de CI/CD")
+        self.git_show_ci_row.set_subtitle("Muestra la insignia verde ✓ PASS o roja ✗ FAIL en la cabecera")
+        self.git_show_ci_row.set_active(git_cfg.get("show_ci", True))
+        group_vis.add(self.git_show_ci_row)
+
+        content.append(group_vis)
+
+        btn_save_git = Gtk.Button(label="Guardar Configuración y Actualizar Datos")
+        btn_save_git.add_css_class("wm-btn-primary")
+        btn_save_git.connect("clicked", self.on_save_git_config)
+        content.append(btn_save_git)
+
+        return scroll
+
+    def load_git_config(self) -> dict:
+        default_cfg = {
+            "username": "Facuud2",
+            "token": "",
+            "repos": ["Lunita-Dots", "Comitas-App", "FocuseAR"],
+            "ci_repo": "Comitas-App",
+            "local_repo": "/mnt/Desarrollo/Lunita-Dots",
+            "show_ci": True
+        }
+        if GIT_CONFIG_FILE.exists():
+            try:
+                with open(GIT_CONFIG_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    default_cfg.update(data)
+            except Exception:
+                pass
+        return default_cfg
+
+    def rebuild_tracked_repos_ui(self):
+        while child := self.repos_list_box.get_first_child():
+            self.repos_list_box.remove(child)
+
+        for repo in self.tracked_repos:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.add_css_class("wm-event-row")
+
+            icon = Gtk.Image.new_from_icon_name("folder-symbolic")
+            row.append(icon)
+
+            lbl = Gtk.Label(label=repo)
+            lbl.set_css_classes(["bold"])
+            lbl.set_halign(Gtk.Align.START)
+            lbl.set_hexpand(True)
+            row.append(lbl)
+
+            del_btn = Gtk.Button(icon_name="user-trash-symbolic")
+            del_btn.add_css_class("wm-btn-danger")
+            del_btn.set_tooltip_text(f"Quitar {repo} de la lista")
+            del_btn.connect("clicked", lambda _, r=repo: self.on_delete_tracked_repo(r))
+            row.append(del_btn)
+
+            self.repos_list_box.append(row)
+
+    def on_delete_tracked_repo(self, repo_name: str):
+        if repo_name in self.tracked_repos:
+            self.tracked_repos.remove(repo_name)
+            self.rebuild_tracked_repos_ui()
+            self.show_toast(f"Repositorio '{repo_name}' quitado")
+
+    def on_add_tracked_repo(self, _):
+        name = self.new_repo_entry.get_text().strip()
+        if not name:
+            return
+        if name not in self.tracked_repos:
+            self.tracked_repos.append(name)
+            self.new_repo_entry.set_text("")
+            self.rebuild_tracked_repos_ui()
+            self.show_toast(f"Repositorio '{name}' añadido a la lista")
+
+    def on_save_git_config(self, _):
+        cfg = {
+            "username": self.git_user_row.get_text().strip() or "Facuud2",
+            "token": self.git_token_row.get_text().strip(),
+            "repos": self.tracked_repos,
+            "ci_repo": self.git_ci_repo_row.get_text().strip() or "Comitas-App",
+            "local_repo": self.git_local_row.get_text().strip() or "/mnt/Desarrollo/Lunita-Dots",
+            "show_ci": self.git_show_ci_row.get_active()
+        }
+        ensure_config_dir()
+        with open(GIT_CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+        cache_file = Path("/tmp/lunita_git_cache.json")
+        if cache_file.exists():
+            try:
+                cache_file.unlink()
+            except Exception:
+                pass
+
+        threading.Thread(target=self._run_git_refresh, daemon=True).start()
+        self.show_toast("Configuración de GitHub guardada correctamente")
+
+    def _run_git_refresh(self):
+        try:
+            prov_script = SCRIPTS_DIR / "git_activity_provider.py"
+            if prov_script.exists():
+                subprocess.run(["python3", str(prov_script), "refresh"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+    # =========================================================================
+    # 🖥️ PÁGINA 5: ESCRITORIO Y CONTROL DE WIDGETS
+    # =========================================================================
+    def build_desktop_page(self) -> Gtk.Widget:
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        content.set_margin_top(20)
+        content.set_margin_bottom(20)
+        content.set_margin_start(24)
+        content.set_margin_end(24)
+        scroll.set_child(content)
+
+        # ── Grupo 1: Servicio Quickshell ──
+        group_status = Adw.PreferencesGroup()
+        group_status.set_title("Servicio de Widgets")
+        group_status.set_description("Control del motor de renderizado y proceso en segundo plano.")
+
+        row_daemon = Adw.ActionRow()
+        row_daemon.set_title("Servicio de Widgets Quickshell")
+        row_daemon.set_subtitle("Gestiona los widgets dinámicos sobre el escritorio")
+
+        btn_restart = Gtk.Button(label="Reiniciar Servicio")
+        btn_restart.set_valign(Gtk.Align.CENTER)
+        btn_restart.connect("clicked", self.on_restart_widgets)
+        row_daemon.add_suffix(btn_restart)
+        group_status.add(row_daemon)
+        content.append(group_status)
+
+        # ── Grupo 2: Clima y Ubicación ──
+        group_weather = Adw.PreferencesGroup()
+        group_weather.set_title("Ubicación del Clima")
+        group_weather.set_description("Define la ciudad utilizada para el widget de reloj y pronóstico.")
+
+        self.weather_city_row = Adw.EntryRow()
+        self.weather_city_row.set_title("Ciudad / Región")
+        current_loc = "Buenos Aires"
+        if WEATHER_LOCATION_FILE.exists():
+            try:
+                current_loc = WEATHER_LOCATION_FILE.read_text(encoding="utf-8").strip() or "Buenos Aires"
+            except Exception:
+                pass
+        self.weather_city_row.set_text(current_loc)
+
+        btn_save_weather = Gtk.Button(label="Guardar Ciudad")
+        btn_save_weather.set_valign(Gtk.Align.CENTER)
+        btn_save_weather.add_css_class("wm-btn-primary")
+        btn_save_weather.connect("clicked", self.on_save_weather_location)
+        self.weather_city_row.add_suffix(btn_save_weather)
+
+        group_weather.add(self.weather_city_row)
+        content.append(group_weather)
+
+        # ── Grupo 3: Cuadrícula y Disposición ──
+        group_layout = Adw.PreferencesGroup()
+        group_layout.set_title("Cuadrícula y Posiciones")
+        group_layout.set_description("Restaura la distribución limpia de los 10 widgets en pantalla si se han movido.")
+
+        row_layout = Adw.ActionRow()
+        row_layout.set_title("Restaurar Disposición Óptima por Defecto")
+        row_layout.set_subtitle("Alinea todos los widgets a sus coordenadas limpias sin superposiciones")
+
+        btn_reset_grid = Gtk.Button(label="Restaurar Cuadrícula")
+        btn_reset_grid.set_valign(Gtk.Align.CENTER)
+        btn_reset_grid.connect("clicked", self.on_reset_layout_grid)
+        row_layout.add_suffix(btn_reset_grid)
+        group_layout.add(row_layout)
+        content.append(group_layout)
+
+        # ── Grupo 4: Widgets Visibles en Pantalla (Interruptores) ──
+        self.group_active_widgets = Adw.PreferencesGroup()
+        self.group_active_widgets.set_title("Widgets Activos en Pantalla")
+        self.group_active_widgets.set_description("Activa o desactiva qué widgets deben mostrarse en el escritorio.")
+
+        self.widget_switches = {}
+        widgets_info = [
+            ("clock", "Reloj y Clima", "Hora analógica, digital y pronóstico de días posteriores", "weather-clouds-symbolic"),
+            ("calendar", "Calendario Interactivo", "Eventos diarios, consulta de fechas y citas", "x-office-calendar"),
+            ("habits", "Salud y Actividad", "Anillos de actividad (Calorías, Ejercicio, Pasos y Agua)", "emblem-favorite-symbolic"),
+            ("timetable", "Universidad y Notas", "Horario UNaB, checklist de tareas de estudio/trabajo y notas", "alarm-symbolic"),
+            ("media", "Reproductor Multimedia", "Portada de álbum, controles y espectro visualizador Cava", "multimedia-audio-player-symbolic"),
+            ("battery", "Dispositivos y Batería", "Auriculares Bluetooth y ecosistema conectado con batería", "battery-symbolic"),
+            ("git", "Actividad de GitHub", "Heatmap semanal, últimos commits y pipelines CI/CD", "preferences-system-network-symbolic"),
+            ("resources", "Monitor de Recursos", "Anillos de uso para CPU, Memoria RAM y Almacenamiento", "utilities-system-monitor-symbolic"),
+            ("network", "Monitoreo de Red", "Sparkline de tráfico, velocidades de subida y bajada", "network-wireless-symbolic"),
+            ("photos", "Galería de Fotos", "Recuerdos fotográficos rotativos de tu carpeta personal", "camera-photo-symbolic")
+        ]
+
+        active_types = self.get_active_widget_types()
+
+        for w_type, w_title, w_desc, w_icon in widgets_info:
+            row = Adw.SwitchRow()
+            row.set_title(w_title)
+            row.set_subtitle(w_desc)
+            row.add_prefix(Gtk.Image.new_from_icon_name(w_icon))
+            row.set_active(w_type in active_types)
+            row.connect("notify::active", lambda r, _, wt=w_type: self.on_toggle_widget_active(wt, r.get_active()))
+            self.widget_switches[w_type] = row
+            self.group_active_widgets.add(row)
+
+        content.append(self.group_active_widgets)
+
+        return scroll
+
+    def on_save_weather_location(self, _):
+        city = self.weather_city_row.get_text().strip() or "Buenos Aires"
+        ensure_config_dir()
+        WEATHER_LOCATION_FILE.write_text(city, encoding="utf-8")
+
+        # Purge cache
+        cache_file = Path("/tmp/lunita_weather_cache.json")
+        if cache_file.exists():
+            try:
+                cache_file.unlink()
+            except Exception:
+                pass
+
+        # Trigger weather provider
+        def _prov():
+            try:
+                subprocess.run(["python3", str(SCRIPTS_DIR / "weather_provider.py"), "get"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
+        threading.Thread(target=_prov, daemon=True).start()
+        self.show_toast(f"Ubicación del clima actualizada a '{city}'")
+
+    def get_active_widget_types(self) -> set:
+        if not LAYOUT_FILE.exists():
+            return set()
+        try:
+            with open(LAYOUT_FILE, "r", encoding="utf-8") as f:
+                items = json.load(f)
+                return {item.get("type") for item in items if item.get("type")}
+        except Exception:
+            return set()
+
+    def on_toggle_widget_active(self, widget_type: str, is_active: bool):
+        if not LAYOUT_FILE.exists():
+            return
+        try:
+            with open(LAYOUT_FILE, "r", encoding="utf-8") as f:
+                items = json.load(f)
+        except Exception:
+            items = []
+
+        existing = [item for item in items if item.get("type") == widget_type]
+
+        if is_active and not existing:
+            # Add widget
+            def_item = WIDGET_DEFAULTS.get(widget_type, {"type": widget_type, "size": "small", "width": 170, "height": 170, "x": 1520, "y": 200})
+            new_item = dict(def_item)
+            new_item["id"] = f"{widget_type}_{int(datetime.now().timestamp() % 1000)}"
+            items.append(new_item)
+            self.show_toast(f"Widget '{widget_type}' activado")
+        elif not is_active and existing:
+            # Remove widget
+            items = [item for item in items if item.get("type") != widget_type]
+            self.show_toast(f"Widget '{widget_type}' ocultado")
+
+        ensure_config_dir()
+        with open(LAYOUT_FILE, "w", encoding="utf-8") as f:
+            json.dump(items, f, ensure_ascii=False, indent=2)
+
+        self.on_restart_widgets(None)
+
+    def on_restart_widgets(self, _):
+        def _restart():
+            subprocess.run(["pkill", "-f", "quickshell.*widgets"])
+            cfg_path = os.path.expanduser("~/.config/quickshell/widgets")
+            subprocess.Popen(["quickshell", "-d", "-n", "-p", cfg_path])
+
+        threading.Thread(target=_restart, daemon=True).start()
+        self.show_toast("Daemon de widgets reiniciado correctamente")
+
+    def on_reset_layout_grid(self, _):
+        default_layout = [
+            {"id": "battery_303", "type": "battery", "x": 560, "y": 140, "size": "small", "width": 170, "height": 170},
+            {"id": "git_90", "type": "git", "x": 744, "y": 140, "size": "small", "width": 170, "height": 170},
+            {"id": "habits_144", "type": "habits", "x": 560, "y": 324, "size": "small", "width": 170, "height": 170},
+            {"id": "timetable_122", "type": "timetable", "x": 744, "y": 324, "size": "small", "width": 170, "height": 170},
+            {"id": "media_612", "type": "media", "x": 560, "y": 508, "size": "medium", "width": 354, "height": 170},
+            {"id": "cal", "type": "calendar", "x": 1520, "y": 50, "size": "small", "width": 170, "height": 170},
+            {"id": "net", "type": "network", "x": 1704, "y": 50, "size": "small", "width": 170, "height": 170},
+            {"id": "sys", "type": "resources", "x": 1520, "y": 234, "size": "small", "width": 170, "height": 170},
+            {"id": "clk", "type": "clock", "x": 1704, "y": 234, "size": "small", "width": 170, "height": 170},
+            {"id": "pho", "type": "photos", "x": 1520, "y": 418, "size": "medium", "width": 354, "height": 176}
+        ]
+        ensure_config_dir()
+        with open(LAYOUT_FILE, "w", encoding="utf-8") as f:
+            json.dump(default_layout, f, ensure_ascii=False, indent=2)
+
+        try:
+            prov = SCRIPTS_DIR / "health_tracker_provider.py"
+            if prov.exists():
+                subprocess.run(["python3", str(prov), "reset"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+        # Update switches
+        active = {i["type"] for i in default_layout}
+        for wt, sw in self.widget_switches.items():
+            sw.set_active(wt in active)
+
+        self.on_restart_widgets(None)
+        self.show_toast("Cuadrícula restablecida y widgets alineados")
+
+def main():
+    initial_tab = "calendar"
+    filtered_args = [sys.argv[0]]
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if arg in ["--tab", "-t"] and i + 1 < len(sys.argv):
+            initial_tab = sys.argv[i + 1]
+            i += 2
+        elif arg.startswith("--tab="):
+            initial_tab = arg.split("=", 1)[1]
+            i += 1
+        else:
+            filtered_args.append(arg)
+            i += 1
+
+    app = WidgetsManagerApp(initial_tab=initial_tab)
+    return app.run(filtered_args)
+
+if __name__ == "__main__":
+    sys.exit(main())

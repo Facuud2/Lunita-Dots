@@ -109,7 +109,8 @@ Item {
         var gtkTheme = isDarkTheme ? "Adwaita-dark" : "Adwaita";
         var cmd = "gsettings set org.gnome.desktop.interface color-scheme '" + scheme + "' 2>/dev/null; " +
                   "gsettings set org.gnome.desktop.interface gtk-theme '" + gtkTheme + "' 2>/dev/null; " +
-                  "mkdir -p $HOME/.config/lunita && echo '" + (isDarkTheme ? "dark" : "light") + "' > $HOME/.config/lunita/color_scheme";
+                  "mkdir -p $HOME/.config/lunita && echo '" + (isDarkTheme ? "dark" : "light") + "' > $HOME/.config/lunita/color_scheme; " +
+                  "command -v lunita-tokri >/dev/null 2>&1 && lunita-tokri reload-theme >/dev/null 2>&1 || true";
         Quickshell.execDetached(["bash", "-c", cmd]);
     }
 
@@ -653,4 +654,63 @@ Item {
         closePopups();
         Quickshell.execDetached(["bash", "-c", "lunita-launcher toggle"]);
     }
+
+    function toggleVirtualKeyboard() {
+        closePopups();
+        var home = Quickshell.env("HOME") || "/home/facuud2";
+        Quickshell.execDetached(["bash", "-c", home + "/.config/hypr/scripts/virtual_keyboard.sh toggle"]);
+        checkVkbTimer.interval = 250;
+        checkVkbTimer.restart();
+    }
+
+    // ── Virtual Keyboard State Tracking ──
+    property bool virtualKeyboardVisible: false
+
+    Timer {
+        id: checkVkbTimer
+        interval: 1000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            checkVkbTimer.interval = 1000;
+            if (!checkVirtualKeyboardProc.running) {
+                checkVirtualKeyboardProc.running = true;
+            }
+        }
+    }
+
+    Process {
+        id: checkVirtualKeyboardProc
+        command: ["bash", "-c", "$HOME/.config/hypr/scripts/virtual_keyboard.sh status"]
+        stdout: SplitParser {
+            onRead: data => {
+                root.virtualKeyboardVisible = (data.trim() === "visible");
+            }
+        }
+    }
+
+    // ── Widgets State Tracking ──
+    property bool widgetsEditing: false
+
+    Timer {
+        interval: 350
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            checkWidgetsEditingProc.running = true;
+        }
+    }
+
+    Process {
+        id: checkWidgetsEditingProc
+        command: ["bash", "-c", "if [ -f /tmp/lunita_widgets_editing ]; then cat /tmp/lunita_widgets_editing; else echo 0; fi"]
+        stdout: SplitParser {
+            onRead: data => {
+                root.widgetsEditing = (data.trim() === "1");
+            }
+        }
+    }
 }
+

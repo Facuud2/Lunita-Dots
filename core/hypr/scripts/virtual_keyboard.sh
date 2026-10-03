@@ -4,21 +4,25 @@
 # ==============================================================================
 
 ENV_FILE="$HOME/.config/hypr/scripts/wvkbd-colors.env"
+[ -f "$ENV_FILE" ] && source "$ENV_FILE"
 
-# Paleta estética macOS (Apple Cupertino Glass)
-BG_COLOR="${WVKBD_BG:-161618ee}"
-FG_COLOR="${WVKBD_FG:-2c2c2eff}"
-FG_SP_COLOR="${WVKBD_FG_SP:-3a3a3cff}"
-TEXT_COLOR="${WVKBD_TEXT:-f5f5f7ff}"
-TEXT_SP_COLOR="${WVKBD_TEXT_SP:-8e8e93ff}"
-PRESS_COLOR="${WVKBD_PRESS:-007affff}"
-PRESS_SP_COLOR="${WVKBD_PRESS_SP:-007affff}"
-TEXT_PRESS_COLOR="${WVKBD_TEXT_PRESS:-ffffffff}"
-TEXT_PRESS_SP_COLOR="${WVKBD_TEXT_PRESS_SP:-ffffffff}"
-ALPHA="${WVKBD_ALPHA:-245}"
+# Paleta estética moderna macOS (Apple Cupertino Glass)
+BG_COLOR="${WVKBD_BG:-1e1e1e}"
+FG_COLOR="${WVKBD_FG:-2a2b30}"
+FG_SP_COLOR="${WVKBD_FG_SP:-1d1e22}"
+TEXT_COLOR="${WVKBD_TEXT:-f5f5f7}"
+TEXT_SP_COLOR="${WVKBD_TEXT_SP:-a1a1a6}"
+PRESS_COLOR="${WVKBD_PRESS:-007aff}"
+PRESS_SP_COLOR="${WVKBD_PRESS_SP:-007aff}"
+TEXT_PRESS_COLOR="${WVKBD_TEXT_PRESS:-ffffff}"
+TEXT_PRESS_SP_COLOR="${WVKBD_TEXT_PRESS_SP:-ffffff}"
+
+ALPHA="${WVKBD_ALPHA:-240}"
+BG_ALPHA="${WVKBD_BG_ALPHA:-165}"
 FONT="${WVKBD_FONT:-SF Pro Display 14}"
-RADIUS="${WVKBD_RADIUS:-14}"
-HEIGHT="${WVKBD_HEIGHT:-300}"
+KEY_RADIUS="${WVKBD_RADIUS:-10}"
+CORNER_RADIUS="${WVKBD_CORNER_RADIUS:-22}"
+HEIGHT="${WVKBD_HEIGHT:-310}"
 
 # Buscar binario disponible de wvkbd
 if command -v wvkbd-deskintl >/dev/null 2>&1; then
@@ -49,10 +53,13 @@ launch_wvkbd() {
     nohup "$WVKBD_BIN" \
         -H "$HEIGHT" \
         -L "$HEIGHT" \
-        -R "$RADIUS" \
+        -R "$KEY_RADIUS" \
+        --corner-radius "$CORNER_RADIUS" \
+        --bg-alpha "$BG_ALPHA" \
         --alpha "$ALPHA" \
         --fn "$FONT" \
         -l full,special \
+        --no-popup \
         --bg "$BG_COLOR" \
         --fg "$FG_COLOR" \
         --fg-sp "$FG_SP_COLOR" \
@@ -62,6 +69,7 @@ launch_wvkbd() {
         --press-sp "$PRESS_SP_COLOR" \
         --text-press "$TEXT_PRESS_COLOR" \
         --text-press-sp "$TEXT_PRESS_SP_COLOR" \
+        --wayland-layer overlay \
         "${extra_args[@]}" </dev/null >/dev/null 2>&1 &
     disown
 }

@@ -36,6 +36,7 @@ Scope {
 
                 DesktopGridCanvas {
                     anchors.fill: parent
+                    screenName: screenScope.modelData ? (screenScope.modelData.name || "default") : "default"
                     widgetsState: globalWidgetsState
                 }
             }

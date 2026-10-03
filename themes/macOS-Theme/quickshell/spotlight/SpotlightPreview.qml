@@ -295,6 +295,7 @@ Item {
                 // 3. Bottom Action Buttons
                 RowLayout {
                     Layout.fillWidth: true
+                    Layout.bottomMargin: 12
                     spacing: 8
 
                     // Primary Action Button (Enter)

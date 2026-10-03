@@ -112,9 +112,10 @@ Item {
         id: iconContainer
         width: 48
         height: 48
+        clip: true
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        radius: 13
+        radius: 10.8
 
         transform: Translate {
             id: iconTranslate

@@ -1,0 +1,170 @@
+/* ==============================================================================
+ * 🍎 Tokri — macOS 27 (Dark / Liquid Glass)
+ * Lunita-Dots · themes/macOS-Theme/tokri/tokri-dark.qss
+ *
+ * Cargado por `lunita-tokri` mediante el argumento nativo de Qt `-stylesheet`.
+ * La translucidez + blur la aporta Hyprland (ver core/hypr/modules/rules.lua),
+ * por eso los fondos aquí son opacos: Hyprland aplica la opacidad a la ventana.
+ * ============================================================================== */
+
+* {
+    font-family: "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+    outline: none;
+}
+
+/* ── Ventana principal (panel flotante tipo Dropover/Yoink) ── */
+QMainWindow,
+QMainWindow > QWidget#centralwidget,
+QWidget#centralwidget {
+    background: transparent;
+    background-color: transparent;
+    border: none;
+    color: #F5F5F7;
+}
+
+QWidget#centralwidget {
+    padding: 0px;
+}
+
+/* La barra de menús clásica no existe en un panel macOS: se oculta.
+   (F1 = atajos, el menú contextual y la bandeja siguen disponibles) */
+QMenuBar {
+    max-height: 0px;
+    min-height: 0px;
+    border: none;
+    background: transparent;
+}
+
+/* ── Lista de elementos (grilla de miniaturas) ── */
+QListView {
+    background-color: transparent;
+    color: #F5F5F7;                                /* texto de captions */
+    selection-color: #FFFFFF;                      /* caption seleccionado */
+    selection-background-color: rgba(10, 132, 255, 0.38);
+    border: none;
+    padding: 4px;
+    font-size: 9pt;
+}
+
+QListView::item {
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+}
+
+QListView::item:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+QListView::item:selected,
+QListView::item:selected:active,
+QListView::item:selected:!active {
+    background-color: rgba(10, 132, 255, 0.38);
+    border: 1px solid rgba(10, 132, 255, 0.65);
+}
+
+/* Campo de renombrado (F2) */
+QListView QLineEdit {
+    background-color: #2C2C30;
+    color: #FFFFFF;
+    border: 2px solid #0A84FF;
+    border-radius: 6px;
+    padding: 1px 4px;
+    selection-background-color: #0A84FF;
+}
+
+/* ── Scrollbar fina estilo overlay macOS ── */
+QScrollBar:vertical {
+    background: transparent;
+    width: 8px;
+    margin: 6px 2px 6px 0px;
+}
+QScrollBar::handle:vertical {
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 3px;
+    min-height: 32px;
+}
+QScrollBar::handle:vertical:hover {
+    background: rgba(255, 255, 255, 0.38);
+}
+QScrollBar::add-line, QScrollBar::sub-line,
+QScrollBar::add-page, QScrollBar::sub-page {
+    background: none;
+    height: 0px;
+    width: 0px;
+}
+QScrollBar:horizontal { height: 0px; }
+
+/* ── Menús (contextual + bandeja) ── */
+QMenu {
+    background-color: #2A2A2E;
+    color: #F5F5F7;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 5px;
+    font-size: 10pt;
+}
+QMenu::item {
+    padding: 5px 22px 5px 12px;
+    border-radius: 6px;
+    background: transparent;
+}
+QMenu::item:selected {
+    background-color: #0A84FF;
+    color: #FFFFFF;
+}
+QMenu::item:disabled {
+    color: rgba(245, 245, 247, 0.32);
+}
+QMenu::separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.10);
+    margin: 4px 8px;
+}
+
+/* ── Diálogos (Atajos, Acerca de, Logs) ── */
+QDialog {
+    background-color: #1E1E22;
+    color: #F5F5F7;
+}
+QDialog QLabel {
+    color: #F5F5F7;
+    background: transparent;
+}
+QDialog QPushButton {
+    background-color: #3A3A3F;
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 7px;
+    padding: 5px 16px;
+    min-height: 18px;
+}
+QDialog QPushButton:hover   { background-color: #45454B; }
+QDialog QPushButton:pressed { background-color: #2F2F34; }
+QDialog QPushButton:default {
+    background-color: #0A84FF;
+    border: 1px solid #0A84FF;
+}
+QPlainTextEdit, QTextEdit, QTextBrowser, QTableView, QTreeView {
+    background-color: #161618;
+    color: #E5E5EA;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    selection-background-color: rgba(10, 132, 255, 0.45);
+    font-family: "SF Mono", "JetBrainsMono Nerd Font", monospace;
+}
+QHeaderView::section {
+    background-color: #2A2A2E;
+    color: rgba(245, 245, 247, 0.65);
+    border: none;
+    padding: 4px 8px;
+}
+
+QToolTip {
+    background-color: #2C2C30;
+    color: #F5F5F7;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 4px 8px;
+}
