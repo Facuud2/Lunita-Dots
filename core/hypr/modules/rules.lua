@@ -49,9 +49,10 @@ function M.setup()
 
     -- Teclado virtual wvkbd
     hl.layer_rule({
-        name  = "wvkbd-blur",
-        match = { namespace = "^wvkbd$" },
-        blur  = true,
+        name         = "wvkbd-blur",
+        match        = { namespace = "^wvkbd$" },
+        blur         = true,
+        ignore_alpha = 0.05,
     })
 
     -- Layer blur rules
@@ -63,7 +64,7 @@ function M.setup()
 
     hl.layer_rule({
         name  = "macos-quickshell-blur",
-        match = { namespace = "^(macos-launcher|macos-notifications|macos-osd)$" },
+        match = { namespace = "^(macos-notifications|macos-osd)$" },
         blur  = true,
         ignore_alpha = 0.01,
     })
@@ -72,14 +73,21 @@ function M.setup()
         name  = "macos-spotlight-blur",
         match = { namespace = "^macos-spotlight$" },
         blur  = true,
-        ignore_alpha = 0.5,
+        ignore_alpha = 0.05,
+    })
+
+    hl.layer_rule({
+        name  = "macos-launcher-blur",
+        match = { namespace = "^macos-launcher$" },
+        blur  = true,
+        ignore_alpha = 0.05,
     })
 
     hl.layer_rule({
         name  = "macos-clipboard-blur",
         match = { namespace = "^macos-clipboard$" },
         blur  = true,
-        ignore_alpha = 0.5,
+        ignore_alpha = 0.05,
     })
 
     -- Hyprland-run windowrule
@@ -222,6 +230,41 @@ function M.setup()
         center    = true,
         size      = "960 700",
     })
+
+    ------------------------------------
+    ---- TOKRI (Canasta drag & drop) ----
+    ------------------------------------
+    -- Tokri corre bajo XWayland (fuerza xcb). Todas sus ventanas flotan.
+    hl.window_rule({
+        name      = "tokri-float",
+        match     = { class = "^(Tokri)$" },
+        float     = true,
+    })
+
+    -- Panel principal: estilo Dropover/Yoink de macOS. Visible en cualquier
+    -- workspace (pin), sin borde, esquinas 16px y Liquid Glass (blur global).
+    -- Tokri se posiciona solo junto al cursor al "sacudir" un arrastre.
+    hl.window_rule({
+        name        = "tokri-panel",
+        match       = { class = "^(Tokri)$", title = "^(Tokri)$" },
+        pin         = true,
+        border_size = 0,
+        rounding    = 16,
+        opacity     = "0.90 override 0.84 override",
+    })
+
+    -- Regla de arranque (deshabilitada): `lunita-tokri start` la activa
+    -- durante el primer mapeo para ocultar el destello inicial de la ventana
+    -- y la vuelve a desactivar en cuanto Tokri se minimiza a la bandeja.
+    _G.lunita_tokri_boot = hl.window_rule({
+        name             = "tokri-boot-hidden",
+        match            = { class = "^(Tokri)$" },
+        opacity          = "0.0 override 0.0 override",
+        no_anim          = true,
+        no_initial_focus = true,
+        no_shadow        = true,
+    })
+    _G.lunita_tokri_boot:set_enabled(false)
 end
 
 return M

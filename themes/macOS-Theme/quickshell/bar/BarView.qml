@@ -498,6 +498,39 @@ Item {
                 }
             }
 
+            // ── 6.5. Virtual Keyboard (On-Screen Keyboard) ──
+            Item {
+                implicitWidth: 24
+                implicitHeight: 22
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 4
+                    color: (vkbMouseArea.containsMouse || barState.virtualKeyboardVisible)
+                        ? (barState.virtualKeyboardVisible ? Qt.rgba(0, 122/255, 255/255, 0.35) : barState.barActiveHoverColor)
+                        : "transparent"
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                }
+
+                BarIcon {
+                    anchors.centerIn: parent
+                    iconWidth: 15
+                    iconHeight: 15
+                    source: "assets/keyboard.svg"
+                    iconColor: barState.virtualKeyboardVisible ? "#0A84FF" : barState.barTextColor
+                }
+
+                MouseArea {
+                    id: vkbMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        barState.toggleVirtualKeyboard();
+                    }
+                }
+            }
+
             // ── 7. Spotlight Search ──
             Item {
                 implicitWidth: 24

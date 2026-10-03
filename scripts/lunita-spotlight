@@ -22,9 +22,24 @@ if [ ! -d "$SPOTLIGHT_PATH" ]; then
     SPOTLIGHT_PATH="$DOTS_DIR/themes/macOS-Theme/quickshell/spotlight"
 fi
 
+# Detectar monitor enfocado
+TARGET_MONITOR="${2:-}"
+if [ -z "$TARGET_MONITOR" ]; then
+    TARGET_MONITOR=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null || echo "")
+fi
+
+CALL_ACTION="$ACTION"
+CALL_ARGS=()
+if [ -n "$TARGET_MONITOR" ] && [[ "$ACTION" == "toggle" || "$ACTION" == "open" ]]; then
+    CALL_ACTION="${ACTION}On"
+    CALL_ARGS=("$TARGET_MONITOR")
+fi
+
 # 1. Si Spotlight ya está en ejecución, enviar comando IPC directamente
 if pgrep -f "quickshell.*spotlight" >/dev/null 2>&1; then
-    quickshell -p "$SPOTLIGHT_PATH" ipc call spotlight "$ACTION" 2>/dev/null || quickshell ipc call spotlight "$ACTION" 2>/dev/null || true
+    quickshell -p "$SPOTLIGHT_PATH" ipc call spotlight "$CALL_ACTION" "${CALL_ARGS[@]}" 2>/dev/null || \
+    quickshell -p "$SPOTLIGHT_PATH" ipc call spotlight "$ACTION" 2>/dev/null || \
+    quickshell ipc call spotlight "$ACTION" 2>/dev/null || true
     exit 0
 fi
 
@@ -33,4 +48,6 @@ quickshell -d -n -p "$SPOTLIGHT_PATH"
 
 # Pequeña espera para inicializar socket IPC y abrir
 sleep 0.15
-quickshell -p "$SPOTLIGHT_PATH" ipc call spotlight "$ACTION" 2>/dev/null || quickshell ipc call spotlight "$ACTION" 2>/dev/null || true
+quickshell -p "$SPOTLIGHT_PATH" ipc call spotlight "$CALL_ACTION" "${CALL_ARGS[@]}" 2>/dev/null || \
+quickshell -p "$SPOTLIGHT_PATH" ipc call spotlight "$ACTION" 2>/dev/null || \
+quickshell ipc call spotlight "$ACTION" 2>/dev/null || true

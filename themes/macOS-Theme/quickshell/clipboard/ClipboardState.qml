@@ -13,24 +13,36 @@ Item {
     property var clipboardList: []
     property bool isSearching: false
 
+    property bool isDarkTheme: true
+    Process {
+        id: themeMonitor
+        running: true
+        command: ["bash", "-c", "if [ -f $HOME/.config/lunita/color_scheme ]; then cat $HOME/.config/lunita/color_scheme; else gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null || echo 'prefer-dark'; fi"]
+        stdout: SplitParser {
+            onRead: data => {
+                var str = data.trim().toLowerCase();
+                root.isDarkTheme = str.indexOf("light") === -1;
+            }
+        }
+    }
+
     // ── Theme Color Tokens Matching Reference Image Exactly ──
     // Translucent vibrant frosted cyan / aqua glass sampled from reference
-    readonly property color panelBgColor: Qt.rgba(0.42, 0.80, 0.92, 0.62)
-    readonly property color panelInnerSheen: Qt.rgba(1, 1, 1, 0.45)
-    readonly property color panelBorderColor: Qt.rgba(1, 1, 1, 0.35)
-    readonly property color panelShadowColor: Qt.rgba(0, 0, 0, 0.25)
+    readonly property color panelBgColor: isDarkTheme ? Qt.rgba(30/255, 30/255, 30/255, 0.65) : Qt.rgba(1, 1, 1, 0.70)
+    readonly property color panelInnerSheen: isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.60)
+    readonly property color panelBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.10)
+    readonly property color panelShadowColor: isDarkTheme ? Qt.rgba(0, 0, 0, 0.70) : Qt.rgba(0, 0, 0, 0.28)
 
-    // Deep teal/navy readable text sampled from reference
-    readonly property color textColor: "#053B55"
-    readonly property color textDimColor: "#206888"
-    readonly property color dividerColor: Qt.rgba(5, 59, 85, 0.12)
+    readonly property color textColor: isDarkTheme ? "#FFFFFF" : "#1D1D1F"
+    readonly property color textDimColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.55) : Qt.rgba(0, 0, 0, 0.50)
+    readonly property color dividerColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.08)
 
     // Row highlights
-    readonly property color itemHoverBg: Qt.rgba(255, 255, 255, 0.16)
-    readonly property color selectedBgColor: Qt.rgba(255, 255, 255, 0.28)
-    readonly property color selectedBorderColor: Qt.rgba(255, 255, 255, 0.45)
-    readonly property color selectedTextColor: "#022738"
-    readonly property color selectedSubColor: "#134B62"
+    readonly property color itemHoverBg: isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.05)
+    readonly property color selectedBgColor: isDarkTheme ? "#0A84FF" : "#007AFF"
+    readonly property color selectedBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(0, 0, 0, 0.10)
+    readonly property color selectedTextColor: "#FFFFFF"
+    readonly property color selectedSubColor: Qt.rgba(1, 1, 1, 0.82)
 
     // Action button badge
     readonly property color copyBtnBg: Qt.rgba(5, 59, 85, 0.35)

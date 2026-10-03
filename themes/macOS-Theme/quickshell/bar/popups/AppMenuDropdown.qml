@@ -138,7 +138,7 @@ Item {
                 { text: "Take Screenshot (Screen)...", shortcut: "⇧⌘3", cmd: "$HOME/.config/hypr/scripts/screenshot.sh screen" },
                 { text: "Screen Record (Area)...", shortcut: "⌃⌘R", cmd: "$HOME/.config/hypr/scripts/record.sh area" },
                 { separator: true },
-                { text: "Virtual Keyboard", shortcut: "⌘K", cmd: "$HOME/.config/hypr/scripts/virtual_keyboard.sh daemon" }
+                { text: "Virtual Keyboard", shortcut: "⌘K", cmd: "$HOME/.config/hypr/scripts/virtual_keyboard.sh toggle" }
             ];
         }
         if (title === "View") {

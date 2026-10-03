@@ -380,6 +380,9 @@ cmd_apply() {
     if [ -f "$DOTS_DIR/core/lunita-widgets-manager.svg" ]; then
         ln -sf "$DOTS_DIR/core/lunita-widgets-manager.svg" "$HOME/.local/share/icons/hicolor/scalable/apps/lunita-widgets-manager.svg"
     fi
+    if [ -f "$DOTS_DIR/scripts/lunita-tokri" ]; then
+        ln -sf "$DOTS_DIR/scripts/lunita-tokri" "$HOME/.local/bin/lunita-tokri"
+    fi
 
     # 4. Sincronización y recarga/detención de componentes en ejecución
     info "Sincronizando componentes visuales..."
@@ -565,6 +568,11 @@ cmd_apply() {
             pkill -f "quickshell.*clipboard" 2>/dev/null || true
             info "Quickshell Clipboard detenido (no configurado en '$target')."
         fi
+    fi
+
+    # Gestión de Tokri (Canasta macOS)
+    if command -v lunita-tokri >/dev/null 2>&1; then
+        lunita-tokri reload-theme >/dev/null 2>&1 || true
     fi
 
 

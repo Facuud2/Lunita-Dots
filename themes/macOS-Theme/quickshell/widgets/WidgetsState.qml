@@ -30,9 +30,6 @@ Item {
     readonly property color accentOrange: "#FF9F0A"
     readonly property color accentRed: "#FF453A"
 
-    // ── Widgets Layout Data Model ──
-    property var widgetsList: []
-
     // ── System Statistics ──
     property int cpuPercent: 15
     property int ramPercent: 25
@@ -499,8 +496,23 @@ Item {
         calProc.running = true;
     }
 
-    function toggleCalendarExpansion() {
-        var list = root.widgetsList.slice();
+    property var calExpandedScreens: ({})
+    property var savedCalScreens: ({})
+
+    function toggleCalendarExpansion(screenName) {
+        var s = screenName;
+        if (!s) {
+            for (var k in root.screensLayout) {
+                var arr = root.screensLayout[k];
+                if (arr && arr.some(w => w.type === "calendar" || w.id === "cal")) {
+                    s = k;
+                    break;
+                }
+            }
+        }
+        if (!s) s = "HDMI-A-1";
+
+        var list = getScreenWidgets(s).slice();
         var calIdx = -1;
         for (var i = 0; i < list.length; i++) {
             if (list[i].type === "calendar" || list[i].id === "cal") {
@@ -510,8 +522,12 @@ Item {
         }
         if (calIdx === -1) return;
 
-        if (!root.calExpanded) {
-            root.savedCalBeforeExpansion = JSON.parse(JSON.stringify(list));
+        var isExpanded = calExpandedScreens[s] || false;
+        var newExp = Object.assign({}, calExpandedScreens);
+        var newSaved = Object.assign({}, savedCalScreens);
+
+        if (!isExpanded) {
+            newSaved[s] = JSON.parse(JSON.stringify(list));
             var cal = Object.assign({}, list[calIdx]);
             var expandShift = 184;
 
@@ -529,29 +545,52 @@ Item {
             cal.width = 354;
             cal.size = "medium";
             list[calIdx] = cal;
-            root.calExpanded = true;
-            root.widgetsList = list;
+            newExp[s] = true;
         } else {
-            if (root.savedCalBeforeExpansion) {
-                root.widgetsList = root.savedCalBeforeExpansion;
-                root.savedCalBeforeExpansion = null;
+            if (newSaved[s]) {
+                list = newSaved[s];
+                delete newSaved[s];
             } else {
                 var calItem = Object.assign({}, list[calIdx]);
                 calItem.width = 170;
                 calItem.size = "small";
                 list[calIdx] = calItem;
-                root.widgetsList = list;
             }
-            root.calExpanded = false;
+            newExp[s] = false;
         }
+
+        calExpandedScreens = newExp;
+        savedCalScreens = newSaved;
+        root.calExpanded = newExp["HDMI-A-1"] || false;
+
+        var copy = Object.assign({}, root.screensLayout);
+        copy[s] = list;
+        root.screensLayout = copy;
+        root.widgetsList = getScreenWidgets("HDMI-A-1");
+        root.screenLayoutChanged(s);
     }
 
-    function toggleMediaExpanded() {
-        toggleMediaExpansion();
+    property var mediaExpandedScreens: ({})
+    property var savedMediaScreens: ({})
+
+    function toggleMediaExpanded(screenName) {
+        toggleMediaExpansion(screenName);
     }
 
-    function toggleMediaExpansion() {
-        var list = root.widgetsList.slice();
+    function toggleMediaExpansion(screenName) {
+        var s = screenName;
+        if (!s) {
+            for (var k in root.screensLayout) {
+                var arr = root.screensLayout[k];
+                if (arr && arr.some(w => w.type === "media" || w.id === "med" || (w.id && w.id.indexOf("media") !== -1))) {
+                    s = k;
+                    break;
+                }
+            }
+        }
+        if (!s) s = "DP-1";
+
+        var list = getScreenWidgets(s).slice();
         var medIdx = -1;
         for (var i = 0; i < list.length; i++) {
             if (list[i].type === "media" || list[i].id === "med" || (list[i].id && list[i].id.indexOf("media") !== -1)) {
@@ -561,8 +600,12 @@ Item {
         }
         if (medIdx === -1) return;
 
-        if (!root.mediaExpanded) {
-            root.savedMediaBeforeExpansion = JSON.parse(JSON.stringify(list));
+        var isExpanded = mediaExpandedScreens[s] || false;
+        var newExp = Object.assign({}, mediaExpandedScreens);
+        var newSaved = Object.assign({}, savedMediaScreens);
+
+        if (!isExpanded) {
+            newSaved[s] = JSON.parse(JSON.stringify(list));
             var med = Object.assign({}, list[medIdx]);
             var expandShift = 184;
 
@@ -580,21 +623,29 @@ Item {
             med.width = 354;
             med.size = "medium";
             list[medIdx] = med;
-            root.mediaExpanded = true;
-            root.widgetsList = list;
+            newExp[s] = true;
         } else {
-            if (root.savedMediaBeforeExpansion) {
-                root.widgetsList = root.savedMediaBeforeExpansion;
-                root.savedMediaBeforeExpansion = null;
+            if (newSaved[s]) {
+                list = newSaved[s];
+                delete newSaved[s];
             } else {
                 var medItem = Object.assign({}, list[medIdx]);
                 medItem.width = 170;
                 medItem.size = "small";
                 list[medIdx] = medItem;
-                root.widgetsList = list;
             }
-            root.mediaExpanded = false;
+            newExp[s] = false;
         }
+
+        mediaExpandedScreens = newExp;
+        savedMediaScreens = newSaved;
+        root.mediaExpanded = newExp["DP-1"] || false;
+
+        var copy = Object.assign({}, root.screensLayout);
+        copy[s] = list;
+        root.screensLayout = copy;
+        root.widgetsList = getScreenWidgets("HDMI-A-1");
+        root.screenLayoutChanged(s);
     }
 
     function toggleEdit() {

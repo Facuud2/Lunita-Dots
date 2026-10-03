@@ -185,6 +185,7 @@ Item {
                     anchors.fill: parent
                     anchors.topMargin: 4
                     anchors.bottomMargin: 8
+                    spacing: 8
                     clip: true
                     model: root.clipboardState.clipboardList
                     currentIndex: root.clipboardState.selectedIndex

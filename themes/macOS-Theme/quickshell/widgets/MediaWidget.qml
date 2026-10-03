@@ -6,6 +6,7 @@ import Quickshell.Io
 Item {
     id: root
     property var widgetsState
+    property var canvas: null
 
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
@@ -211,7 +212,8 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                             onClicked: {
-                                if (root.widgetsState) root.widgetsState.toggleMediaExpanded();
+                                if (root.canvas) root.canvas.toggleMediaExpanded();
+                                else if (root.widgetsState) root.widgetsState.toggleMediaExpanded();
                             }
                         }
                     }
@@ -392,7 +394,8 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                         onClicked: {
-                            if (root.widgetsState) root.widgetsState.toggleMediaExpanded();
+                            if (root.canvas) root.canvas.toggleMediaExpanded();
+                            else if (root.widgetsState) root.widgetsState.toggleMediaExpanded();
                         }
                     }
                 }

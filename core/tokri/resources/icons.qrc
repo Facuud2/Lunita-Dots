@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>tray.png</file>
+        <file>background.png</file>
+        <file>com.ysuraj.Tokri.ico</file>
+        <file>com.ysuraj.Tokri.png</file>
+    </qresource>
+</RCC>

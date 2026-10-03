@@ -158,8 +158,8 @@ function M.setup()
     -- Misc
     hl.config({
         misc = {
-            force_default_wallpaper      = -1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
-            disable_hyprland_logo        = false, -- If true disables the random hyprland logo / anime girl background. :(
+            force_default_wallpaper      = 0,     -- Set to 0 to disable the anime mascot wallpapers
+            disable_hyprland_logo        = true,  -- Set to true to disable the random hyprland logo / anime girl background
             animate_manual_resizes       = true,  -- Transición suave e interpolada al redimensionar manualmente
             animate_mouse_windowdragging = true,  -- Arrastre fluido y elástico que acompaña al cursor
         },

@@ -29,12 +29,23 @@ Item {
     property var recentAppsList: []
 
     // ── Dark/Light Theme Awareness ──
-    property bool isDarkTheme: false
+    property bool isDarkTheme: true
+    Process {
+        id: themeMonitor
+        running: true
+        command: ["bash", "-c", "if [ -f $HOME/.config/lunita/color_scheme ]; then cat $HOME/.config/lunita/color_scheme; else gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null || echo 'prefer-dark'; fi"]
+        stdout: SplitParser {
+            onRead: data => {
+                var str = data.trim().toLowerCase();
+                root.isDarkTheme = str.indexOf("light") === -1;
+            }
+        }
+    }
 
     // Dynamic Theme Tokens
-    readonly property color panelBgColor: isDarkTheme ? Qt.rgba(0.12, 0.13, 0.16, 0.88) : Qt.rgba(0.94, 0.96, 0.99, 0.88)
+    readonly property color panelBgColor: isDarkTheme ? Qt.rgba(30/255, 30/255, 30/255, 0.65) : Qt.rgba(1, 1, 1, 0.70)
     readonly property color panelInnerSheen: isDarkTheme ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(1, 1, 1, 0.45)
-    readonly property color panelBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.65)
+    readonly property color panelBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.10)
     readonly property color panelShadowColor: isDarkTheme ? Qt.rgba(0, 0, 0, 0.60) : Qt.rgba(0, 0, 0, 0.25)
 
     readonly property color headerTitleColor: isDarkTheme ? "#FFFFFF" : "#1D1D1F"

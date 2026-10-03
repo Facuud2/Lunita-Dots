@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 
 Scope {
     id: root
@@ -11,28 +12,75 @@ Scope {
         id: globalClipboardState
     }
 
+    // Target screen detection (defaults to focused Hyprland monitor or primary screen)
+    property var targetScreen: resolveScreen("")
+
+    function resolveScreen(preferredName) {
+        if (preferredName && preferredName !== "") {
+            for (let i = 0; i < Quickshell.screens.length; i++) {
+                if (Quickshell.screens[i].name === preferredName) {
+                    return Quickshell.screens[i];
+                }
+            }
+        }
+        if (Hyprland.focusedMonitor && Hyprland.focusedMonitor.name) {
+            for (let i = 0; i < Quickshell.screens.length; i++) {
+                if (Quickshell.screens[i].name === Hyprland.focusedMonitor.name) {
+                    return Quickshell.screens[i];
+                }
+            }
+        }
+        return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null;
+    }
+
+    function updateTargetScreen(preferredName) {
+        let s = resolveScreen(preferredName);
+        if (s) root.targetScreen = s;
+    }
+
+    Connections {
+        target: Hyprland
+        function onFocusedMonitorChanged() {
+            if (!globalClipboardState.isOpen) {
+                root.updateTargetScreen("");
+            }
+        }
+    }
+
     // IPC Interface to control Clipboard from CLI, scripts, and Super+V
     IpcHandler {
         target: "clipboard"
 
         function toggle() {
-            globalClipboardState.toggleClipboard()
+            root.updateTargetScreen("");
+            globalClipboardState.toggleClipboard();
+        }
+
+        function toggleOn(screenName: string) {
+            root.updateTargetScreen(screenName);
+            globalClipboardState.toggleClipboard();
         }
 
         function open() {
-            globalClipboardState.openClipboard()
+            root.updateTargetScreen("");
+            globalClipboardState.openClipboard();
+        }
+
+        function openOn(screenName: string) {
+            root.updateTargetScreen(screenName);
+            globalClipboardState.openClipboard();
         }
 
         function close() {
-            globalClipboardState.closeClipboard()
+            globalClipboardState.closeClipboard();
         }
 
         function clear() {
-            globalClipboardState.clearAll()
+            globalClipboardState.clearAll();
         }
     }
 
-    // Clipboard on each active screen
+    // ── 1. Fullscreen transparent click-catcher on all active screens (dismiss on outside click) ──
     Variants {
         model: Quickshell.screens
 
@@ -40,7 +88,6 @@ Scope {
             id: screenScope
             required property var modelData
 
-            // ── 1. Fullscreen transparent click-catcher (NO BLUR, no dim) ──
             PanelWindow {
                 id: clickCatcherWindow
                 screen: screenScope.modelData
@@ -65,44 +112,44 @@ Scope {
                     onClicked: globalClipboardState.closeClipboard()
                 }
             }
+        }
+    }
 
-            // ── 2. Compact Floating Clipboard Card Window (BLURRED BY HYPRLAND) ──
-            // Sized ONLY to the card bounds (540x490) so Hyprland blurs ONLY this card!
-            PanelWindow {
-                id: clipboardWindow
-                screen: screenScope.modelData
-                color: "transparent"
-                visible: globalClipboardState.windowVisible
+    // ── 2. Compact Floating Clipboard Card Window (ONLY on focused monitor, BLURRED BY HYPRLAND) ──
+    // Sized ONLY to the card bounds (540x490) so Hyprland blurs ONLY this card!
+    PanelWindow {
+        id: clipboardWindow
+        screen: root.targetScreen
+        color: "transparent"
+        visible: globalClipboardState.windowVisible
 
-                implicitWidth: 540
-                implicitHeight: 490
+        implicitWidth: 540
+        implicitHeight: 490
 
-                anchors {
-                    top: true
-                }
-                margins {
-                    top: Math.max(80, Math.round(screenScope.modelData.height * 0.18))
-                }
+        anchors {
+            top: true
+        }
+        margins {
+            top: Math.max(80, Math.round((root.targetScreen ? root.targetScreen.height : 1080) * 0.18))
+        }
 
-                mask: Region {
-                    width: 540
-                    height: 490
-                    radius: 22
-                }
+        mask: Region {
+            width: 540
+            height: 490
+            radius: 22
+        }
 
-                WlrLayershell.layer: WlrLayer.Overlay
-                WlrLayershell.namespace: "macos-clipboard"
-                WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: globalClipboardState.isOpen
-                    ? WlrKeyboardFocus.Exclusive
-                    : WlrKeyboardFocus.None
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "macos-clipboard"
+        WlrLayershell.exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.keyboardFocus: globalClipboardState.isOpen
+            ? WlrKeyboardFocus.Exclusive
+            : WlrKeyboardFocus.None
 
-                ClipboardView {
-                    id: clipboardView
-                    clipboardState: globalClipboardState
-                    anchors.fill: parent
-                }
-            }
+        ClipboardView {
+            id: clipboardView
+            clipboardState: globalClipboardState
+            anchors.fill: parent
         }
     }
 }

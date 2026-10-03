@@ -117,15 +117,15 @@ Item {
         }
     }
 
-    Component { id: calComp; CalendarWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
-    Component { id: sysComp; SystemResourcesWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
-    Component { id: netComp; NetworkWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: calComp; CalendarWidget { widgetsState: root.widgetsState } }
+    Component { id: sysComp; SystemResourcesWidget { widgetsState: root.widgetsState } }
+    Component { id: netComp; NetworkWidget { widgetsState: root.widgetsState } }
     Component { id: clkComp; ClockWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
-    Component { id: phoComp; PhotoWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
-    Component { id: batComp; BatteryWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
-    Component { id: gitComp; GitActivityWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
-    Component { id: habComp; HabitTrackerWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
-    Component { id: ttbComp; TimetableWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: phoComp; PhotoWidget { widgetsState: root.widgetsState } }
+    Component { id: batComp; BatteryWidget { widgetsState: root.widgetsState } }
+    Component { id: gitComp; GitActivityWidget { widgetsState: root.widgetsState } }
+    Component { id: habComp; HabitTrackerWidget { widgetsState: root.widgetsState } }
+    Component { id: ttbComp; TimetableWidget { widgetsState: root.widgetsState } }
     Component { id: medComp; MediaWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
 
     // ── Drag & Reposition MouseArea (Whole Card in Edit Mode) ──

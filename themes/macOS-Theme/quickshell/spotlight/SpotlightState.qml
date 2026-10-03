@@ -17,9 +17,9 @@ Item {
     property bool isDarkTheme: true
 
     // Dynamic Theme Color Tokens
-    readonly property color panelBgColor: isDarkTheme ? Qt.rgba(0.11, 0.12, 0.15, 0.88) : Qt.rgba(0.95, 0.96, 0.98, 0.90)
+    readonly property color panelBgColor: isDarkTheme ? Qt.rgba(30/255, 30/255, 30/255, 0.65) : Qt.rgba(1, 1, 1, 0.70)
     readonly property color panelInnerSheen: isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.60)
-    readonly property color panelBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(0, 0, 0, 0.14)
+    readonly property color panelBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.10)
     readonly property color panelShadowColor: isDarkTheme ? Qt.rgba(0, 0, 0, 0.70) : Qt.rgba(0, 0, 0, 0.28)
 
     readonly property color searchInputBg: isDarkTheme ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(0, 0, 0, 0.04)

@@ -27,6 +27,12 @@ Item {
     function toggleClockExpanded() {
         if (root.widgetsState) root.widgetsState.toggleClockExpanded(root.screenName);
     }
+    function toggleMediaExpanded() {
+        if (root.widgetsState) root.widgetsState.toggleMediaExpanded(root.screenName);
+    }
+    function toggleCalendarExpansion() {
+        if (root.widgetsState) root.widgetsState.toggleCalendarExpansion(root.screenName);
+    }
 
     // ── 1. Persistent Dynamic Widgets Container (No flickering/recreation) ──
     Item {

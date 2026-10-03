@@ -1,0 +1,168 @@
+/* ==============================================================================
+ * 🍎 Tokri — macOS 27 (Light / Frosted Acrylic)
+ * Lunita-Dots · themes/macOS-Theme/tokri/tokri-light.qss
+ *
+ * Cargado por `lunita-tokri` mediante el argumento nativo de Qt `-stylesheet`.
+ * La translucidez + blur la aporta Hyprland (ver core/hypr/modules/rules.lua).
+ * ============================================================================== */
+
+* {
+    font-family: "SF Pro Display", "SF Pro Text", "Inter", sans-serif;
+    outline: none;
+}
+
+/* ── Ventana principal ── */
+QMainWindow,
+QMainWindow > QWidget#centralwidget,
+QWidget#centralwidget {
+    background: transparent;
+    background-color: transparent;
+    border: none;
+    color: #1D1D1F;
+}
+
+QWidget#centralwidget {
+    padding: 0px;
+}
+
+QMenuBar {
+    max-height: 0px;
+    min-height: 0px;
+    border: none;
+    background: transparent;
+}
+
+/* ── Lista de elementos ── */
+QListView {
+    background-color: transparent;
+    color: #1D1D1F;
+    selection-color: #1D1D1F;
+    selection-background-color: rgba(0, 122, 255, 0.20);
+    border: none;
+    padding: 4px;
+    font-size: 9pt;
+}
+
+QListView::item {
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+}
+
+QListView::item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+QListView::item:selected,
+QListView::item:selected:active,
+QListView::item:selected:!active {
+    background-color: rgba(0, 122, 255, 0.20);
+    border: 1px solid rgba(0, 122, 255, 0.55);
+}
+
+QListView QLineEdit {
+    background-color: #FFFFFF;
+    color: #1D1D1F;
+    border: 2px solid #007AFF;
+    border-radius: 6px;
+    padding: 1px 4px;
+    selection-background-color: #007AFF;
+    selection-color: #FFFFFF;
+}
+
+/* ── Scrollbar overlay ── */
+QScrollBar:vertical {
+    background: transparent;
+    width: 8px;
+    margin: 6px 2px 6px 0px;
+}
+QScrollBar::handle:vertical {
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 3px;
+    min-height: 32px;
+}
+QScrollBar::handle:vertical:hover {
+    background: rgba(0, 0, 0, 0.38);
+}
+QScrollBar::add-line, QScrollBar::sub-line,
+QScrollBar::add-page, QScrollBar::sub-page {
+    background: none;
+    height: 0px;
+    width: 0px;
+}
+QScrollBar:horizontal { height: 0px; }
+
+/* ── Menús ── */
+QMenu {
+    background-color: #F6F6F8;
+    color: #1D1D1F;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 10px;
+    padding: 5px;
+    font-size: 10pt;
+}
+QMenu::item {
+    padding: 5px 22px 5px 12px;
+    border-radius: 6px;
+    background: transparent;
+}
+QMenu::item:selected {
+    background-color: #007AFF;
+    color: #FFFFFF;
+}
+QMenu::item:disabled {
+    color: rgba(29, 29, 31, 0.32);
+}
+QMenu::separator {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.10);
+    margin: 4px 8px;
+}
+
+/* ── Diálogos ── */
+QDialog {
+    background-color: #F2F2F5;
+    color: #1D1D1F;
+}
+QDialog QLabel {
+    color: #1D1D1F;
+    background: transparent;
+}
+QDialog QPushButton {
+    background-color: #FFFFFF;
+    color: #1D1D1F;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    border-radius: 7px;
+    padding: 5px 16px;
+    min-height: 18px;
+}
+QDialog QPushButton:hover   { background-color: #F7F7F9; }
+QDialog QPushButton:pressed { background-color: #E5E5EA; }
+QDialog QPushButton:default {
+    background-color: #007AFF;
+    color: #FFFFFF;
+    border: 1px solid #007AFF;
+}
+QPlainTextEdit, QTextEdit, QTextBrowser, QTableView, QTreeView {
+    background-color: #FFFFFF;
+    color: #1D1D1F;
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    border-radius: 8px;
+    selection-background-color: rgba(0, 122, 255, 0.30);
+    font-family: "SF Mono", "JetBrainsMono Nerd Font", monospace;
+}
+QHeaderView::section {
+    background-color: #EBEBEF;
+    color: rgba(29, 29, 31, 0.65);
+    border: none;
+    padding: 4px 8px;
+}
+
+QToolTip {
+    background-color: #FFFFFF;
+    color: #1D1D1F;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 6px;
+    padding: 4px 8px;
+}

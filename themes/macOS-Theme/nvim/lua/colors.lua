@@ -11,22 +11,22 @@ local colors = {
 
     primary                = "#007aff",
     on_primary             = "#ffffff",
-    primary_container      = "#007aff33",
+    primary_container      = "#122a46",
     on_primary_container   = "#007aff",
 
     secondary              = "#5856d6",
     on_secondary           = "#ffffff",
-    secondary_container    = "#5856d633",
+    secondary_container    = "#23233e",
     on_secondary_container = "#ffffff",
 
     tertiary               = "#af52de",
     on_tertiary            = "#ffffff",
-    tertiary_container     = "#af52de33",
+    tertiary_container     = "#352240",
     on_tertiary_container  = "#ffffff",
 
     error                  = "#ff3b30",
     on_error               = "#ffffff",
-    error_container        = "#ff3b3033",
+    error_container        = "#451d1d",
 
     outline                = "#8e8e93",
     outline_variant        = "#3a3a3c",
