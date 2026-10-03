@@ -6,6 +6,27 @@ Item {
     id: root
 
     property var widgetsState
+    property string screenName: "default"
+
+    // Helper forwarding methods for WidgetFrame and top bar
+    function addWidget(type) {
+        if (root.widgetsState) root.widgetsState.addWidget(root.screenName, type);
+    }
+    function resetLayout() {
+        if (root.widgetsState) root.widgetsState.resetLayout(root.screenName);
+    }
+    function updateWidgetPosition(id, x, y) {
+        if (root.widgetsState) root.widgetsState.updateWidgetPosition(root.screenName, id, x, y);
+    }
+    function updateWidgetSize(id, w, h, s) {
+        if (root.widgetsState) root.widgetsState.updateWidgetSize(root.screenName, id, w, h, s);
+    }
+    function removeWidget(id) {
+        if (root.widgetsState) root.widgetsState.removeWidget(root.screenName, id);
+    }
+    function toggleClockExpanded() {
+        if (root.widgetsState) root.widgetsState.toggleClockExpanded(root.screenName);
+    }
 
     // ── 1. Persistent Dynamic Widgets Container (No flickering/recreation) ──
     Item {
@@ -17,6 +38,7 @@ Item {
         id: widgetFrameComp
         WidgetFrame {
             widgetsState: root.widgetsState
+            canvas: root
         }
     }
 
@@ -24,8 +46,8 @@ Item {
 
     function syncFrames() {
         if (!root.widgetsState) return;
-        var list = root.widgetsState.widgetsList;
-        if (!list || !Array.isArray(list)) return;
+        var list = root.widgetsState.getScreenWidgets(root.screenName);
+        if (!list || !Array.isArray(list)) list = [];
 
         var newMap = Object.assign({}, framesMap);
         var seen = {};
@@ -38,7 +60,8 @@ Item {
             var existing = newMap[item.id];
             if (!existing) {
                 var obj = widgetFrameComp.createObject(widgetsContainer, {
-                    widgetData: item
+                    widgetData: item,
+                    canvas: root
                 });
                 newMap[item.id] = obj;
             } else {
@@ -59,8 +82,13 @@ Item {
 
     Connections {
         target: root.widgetsState
-        function onWidgetsListChanged() {
+        function onScreensLayoutChanged() {
             root.syncFrames();
+        }
+        function onScreenLayoutChanged(targetScreen) {
+            if (targetScreen === root.screenName || targetScreen === "all") {
+                root.syncFrames();
+            }
         }
     }
 
@@ -109,7 +137,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.resetLayout()
+                    onClicked: root.resetLayout()
                 }
             }
 
@@ -135,7 +163,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("photos")
+                    onClicked: root.addWidget("photos")
                 }
             }
 
@@ -161,7 +189,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("calendar")
+                    onClicked: root.addWidget("calendar")
                 }
             }
 
@@ -187,7 +215,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("resources")
+                    onClicked: root.addWidget("resources")
                 }
             }
 
@@ -213,7 +241,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("clock")
+                    onClicked: root.addWidget("clock")
                 }
             }
 
@@ -239,7 +267,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("network")
+                    onClicked: root.addWidget("network")
                 }
             }
 
@@ -265,7 +293,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("battery")
+                    onClicked: root.addWidget("battery")
                 }
             }
 
@@ -291,7 +319,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("git")
+                    onClicked: root.addWidget("git")
                 }
             }
 
@@ -317,7 +345,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("habits")
+                    onClicked: root.addWidget("habits")
                 }
             }
 
@@ -343,7 +371,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("timetable")
+                    onClicked: root.addWidget("timetable")
                 }
             }
 
@@ -369,7 +397,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.widgetsState.addWidget("media")
+                    onClicked: root.addWidget("media")
                 }
             }
 

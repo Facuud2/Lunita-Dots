@@ -6,6 +6,8 @@ Item {
 
     property var widgetsState
     property var widgetData: null
+    property var canvas: null
+    property string screenName: canvas ? canvas.screenName : "default"
 
     // Position and size properties
     x: widgetData ? widgetData.x : 0
@@ -115,16 +117,16 @@ Item {
         }
     }
 
-    Component { id: calComp; CalendarWidget { widgetsState: root.widgetsState } }
-    Component { id: sysComp; SystemResourcesWidget { widgetsState: root.widgetsState } }
-    Component { id: netComp; NetworkWidget { widgetsState: root.widgetsState } }
-    Component { id: clkComp; ClockWidget { widgetsState: root.widgetsState } }
-    Component { id: phoComp; PhotoWidget { widgetsState: root.widgetsState } }
-    Component { id: batComp; BatteryWidget { widgetsState: root.widgetsState } }
-    Component { id: gitComp; GitActivityWidget { widgetsState: root.widgetsState } }
-    Component { id: habComp; HabitTrackerWidget { widgetsState: root.widgetsState } }
-    Component { id: ttbComp; TimetableWidget { widgetsState: root.widgetsState } }
-    Component { id: medComp; MediaWidget { widgetsState: root.widgetsState } }
+    Component { id: calComp; CalendarWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: sysComp; SystemResourcesWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: netComp; NetworkWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: clkComp; ClockWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: phoComp; PhotoWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: batComp; BatteryWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: gitComp; GitActivityWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: habComp; HabitTrackerWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: ttbComp; TimetableWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
+    Component { id: medComp; MediaWidget { widgetsState: root.widgetsState; canvas: root.canvas } }
 
     // ── Drag & Reposition MouseArea (Whole Card in Edit Mode) ──
     MouseArea {
@@ -148,7 +150,8 @@ Item {
             root.x = snappedX;
             root.y = snappedY;
             if (root.widgetData) {
-                root.widgetsState.updateWidgetPosition(root.widgetData.id, snappedX, snappedY);
+                if (root.canvas) root.canvas.updateWidgetPosition(root.widgetData.id, snappedX, snappedY);
+                else if (root.widgetsState) root.widgetsState.updateWidgetPosition(root.screenName, root.widgetData.id, snappedX, snappedY);
             }
         }
     }
@@ -189,7 +192,8 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     if (root.widgetData) {
-                        root.widgetsState.removeWidget(root.widgetData.id);
+                        if (root.canvas) root.canvas.removeWidget(root.widgetData.id);
+                        else if (root.widgetsState) root.widgetsState.removeWidget(root.screenName, root.widgetData.id);
                     }
                 }
             }
@@ -274,7 +278,8 @@ Item {
                     root.width = finalW;
                     root.height = finalH;
                     if (root.widgetData) {
-                        root.widgetsState.updateWidgetSize(root.widgetData.id, finalW, finalH, sizeName);
+                        if (root.canvas) root.canvas.updateWidgetSize(root.widgetData.id, finalW, finalH, sizeName);
+                        else if (root.widgetsState) root.widgetsState.updateWidgetSize(root.screenName, root.widgetData.id, finalW, finalH, sizeName);
                     }
                 }
             }

@@ -63,9 +63,16 @@ function M.setup()
 
     hl.layer_rule({
         name  = "macos-quickshell-blur",
-        match = { namespace = "^(macos-spotlight|macos-launcher|macos-notifications|macos-osd)$" },
+        match = { namespace = "^(macos-launcher|macos-notifications|macos-osd)$" },
         blur  = true,
         ignore_alpha = 0.01,
+    })
+
+    hl.layer_rule({
+        name  = "macos-spotlight-blur",
+        match = { namespace = "^macos-spotlight$" },
+        blur  = true,
+        ignore_alpha = 0.5,
     })
 
     hl.layer_rule({

@@ -36,8 +36,9 @@ Scope {
             id: screenScope
             required property var modelData
 
+            // ── 1. Fullscreen transparent click-catcher (NO BLUR, no dim) ──
             PanelWindow {
-                id: spotlightWindow
+                id: clickCatcherWindow
                 screen: screenScope.modelData
                 color: "transparent"
                 visible: globalSpotlightState.windowVisible
@@ -49,6 +50,42 @@ Scope {
                     right: true
                 }
 
+                WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.namespace: "macos-spotlight-catcher"
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: globalSpotlightState.isOpen
+                    onClicked: globalSpotlightState.closeSpotlight()
+                }
+            }
+
+            // ── 2. Compact Floating Spotlight Card Window (BLURRED BY HYPRLAND) ──
+            // Sized ONLY to the card bounds (680x460) so Hyprland blurs ONLY this card!
+            PanelWindow {
+                id: spotlightWindow
+                screen: screenScope.modelData
+                color: "transparent"
+                visible: globalSpotlightState.windowVisible
+
+                implicitWidth: 680
+                implicitHeight: 460
+
+                anchors {
+                    top: true
+                }
+                margins {
+                    top: Math.max(80, Math.round(screenScope.modelData.height * 0.18))
+                }
+
+                mask: Region {
+                    width: 680
+                    height: 460
+                    radius: 20
+                }
+
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.namespace: "macos-spotlight"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
@@ -56,30 +93,10 @@ Scope {
                     ? WlrKeyboardFocus.Exclusive
                     : WlrKeyboardFocus.None
 
-                // Backdrop Dimmer (Smooth Dim)
-                Rectangle {
-                    anchors.fill: parent
-                    color: "#30000000"
-                    opacity: globalSpotlightState.isOpen ? 1.0 : 0.0
-
-                    Behavior on opacity {
-                        NumberAnimation { duration: 160 }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        enabled: globalSpotlightState.isOpen
-                        onClicked: globalSpotlightState.closeSpotlight()
-                    }
-                }
-
-                // Centered Upper Spotlight Floating Card
                 SpotlightView {
                     id: spotlightView
                     spotlightState: globalSpotlightState
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: Math.max(80, Math.round(spotlightWindow.height * 0.18))
+                    anchors.fill: parent
                 }
             }
         }

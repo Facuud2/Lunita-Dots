@@ -164,11 +164,18 @@ Item {
     // ── Configuration Paths ──
     readonly property string configDir: Quickshell.env("HOME") + "/.config/lunita"
     readonly property string layoutFile: configDir + "/widgets_layout_qml.json"
+    readonly property string screensLayoutFile: configDir + "/widgets_layout_screens.json"
     readonly property string scriptsDir: Quickshell.env("HOME") + "/.config/quickshell/widgets/scripts"
+
+    property var screensLayout: ({})
+    signal screenLayoutChanged(string targetScreen)
+
+    // Legacy fallback property
+    property var widgetsList: getScreenWidgets("HDMI-A-1")
 
     // ── Initial State Loading ──
     Component.onCompleted: {
-        loadLayout();
+        loadScreensLayout();
         refreshAllData();
         Quickshell.execDetached(["bash", "-c", "echo 0 > /tmp/lunita_widgets_editing"]);
     }
@@ -198,48 +205,95 @@ Item {
     }
 
     // ── Layout Persistence ──
-    function defaultWidgets() {
-        return [
-            { id: "clk", type: "clock",     x: 1520, y: 50,  size: "small",  width: 170, height: 170 },
-            { id: "cal", type: "calendar",  x: 1704, y: 50,  size: "small",  width: 170, height: 170 },
-            { id: "bat", type: "battery",   x: 1520, y: 234, size: "medium", width: 354, height: 170 },
-            { id: "sys", type: "resources", x: 1520, y: 418, size: "small",  width: 170, height: 170 },
-            { id: "net", type: "network",   x: 1704, y: 418, size: "small",  width: 170, height: 170 }
-        ];
+    function defaultScreenWidgets(name) {
+        if (name === "HDMI-A-1") {
+            return [
+                { id: "clk", type: "clock",     x: 600, y: 240, size: "small",  width: 170, height: 170 },
+                { id: "cal", type: "calendar",  x: 1704, y: 50,  size: "small",  width: 170, height: 170 }
+            ];
+        } else if (name === "DP-1") {
+            return [
+                { id: "med", type: "media",     x: 1500, y: 50,  size: "medium", width: 354, height: 170 },
+                { id: "sys", type: "resources", x: 1520, y: 240, size: "small",  width: 170, height: 170 }
+            ];
+        } else {
+            return [
+                { id: "clk", type: "clock",     x: 1520, y: 50,  size: "small",  width: 170, height: 170 },
+                { id: "cal", type: "calendar",  x: 1704, y: 50,  size: "small",  width: 170, height: 170 },
+                { id: "bat", type: "battery",   x: 1520, y: 234, size: "medium", width: 354, height: 170 }
+            ];
+        }
     }
 
-    function loadLayout() {
-        loadLayoutProc.running = true;
+    function defaultWidgets() {
+        return defaultScreenWidgets("HDMI-A-1");
+    }
+
+    function getScreenWidgets(screenName) {
+        var s = screenName || "HDMI-A-1";
+        if (root.screensLayout && root.screensLayout[s] && Array.isArray(root.screensLayout[s])) {
+            return root.screensLayout[s];
+        }
+        return defaultScreenWidgets(s);
+    }
+
+    function setScreenWidgets(screenName, list) {
+        var s = screenName || "HDMI-A-1";
+        var copy = Object.assign({}, root.screensLayout);
+        copy[s] = list;
+        root.screensLayout = copy;
+        root.widgetsList = getScreenWidgets("HDMI-A-1");
+        root.screenLayoutChanged(s);
+        saveScreensLayout();
+    }
+
+    function loadScreensLayout() {
+        loadScreensLayoutProc.running = true;
     }
 
     Process {
-        id: loadLayoutProc
-        command: ["bash", "-c", "if [ -f " + root.layoutFile + " ]; then tr -d '\\r\\n' < " + root.layoutFile + "; else echo '[]'; fi"]
+        id: loadScreensLayoutProc
+        command: ["bash", "-c", "if [ -f " + root.screensLayoutFile + " ]; then tr -d '\\r\\n' < " + root.screensLayoutFile + "; else echo '{}'; fi"]
         stdout: SplitParser {
             onRead: data => {
                 var str = data.trim();
-                if (!str || str === "") return;
+                var parsed = null;
                 try {
-                    var parsed = JSON.parse(str);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        root.widgetsList = parsed;
-                        return;
+                    if (str && str !== "" && str !== "{}") {
+                        parsed = JSON.parse(str);
                     }
                 } catch(e) {}
-                root.widgetsList = root.defaultWidgets();
-                root.saveLayout();
+
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.keys(parsed).length > 0) {
+                    root.screensLayout = parsed;
+                } else {
+                    var initMap = {
+                        "HDMI-A-1": root.defaultScreenWidgets("HDMI-A-1"),
+                        "DP-1": root.defaultScreenWidgets("DP-1")
+                    };
+                    root.screensLayout = initMap;
+                    root.saveScreensLayout();
+                }
+                root.widgetsList = root.getScreenWidgets("HDMI-A-1");
+                root.screenLayoutChanged("all");
             }
         }
     }
 
-    function saveLayout() {
-        var jsonStr = JSON.stringify(root.widgetsList);
-        var cmd = "mkdir -p " + root.configDir + " && echo '" + jsonStr.replace(/'/g, "'\\''") + "' > " + root.layoutFile;
+    function saveScreensLayout() {
+        var jsonStr = JSON.stringify(root.screensLayout);
+        var cmd = "mkdir -p " + root.configDir + " && echo '" + jsonStr.replace(/'/g, "'\\''") + "' > " + root.screensLayoutFile;
         Quickshell.execDetached(["bash", "-c", cmd]);
     }
 
-    function updateWidgetPosition(id, newX, newY) {
-        var list = root.widgetsList.slice();
+    // Support both updateWidgetPosition(screenName, id, x, y) and updateWidgetPosition(id, x, y)
+    function updateWidgetPosition(arg1, arg2, arg3, arg4) {
+        var sName = (arg4 !== undefined) ? arg1 : "HDMI-A-1";
+        var id = (arg4 !== undefined) ? arg2 : arg1;
+        var newX = (arg4 !== undefined) ? arg3 : arg2;
+        var newY = (arg4 !== undefined) ? arg4 : arg3;
+
+        var list = getScreenWidgets(sName).slice();
         for (var i = 0; i < list.length; i++) {
             if (list[i].id === id) {
                 list[i].x = Math.round(newX);
@@ -247,12 +301,18 @@ Item {
                 break;
             }
         }
-        root.widgetsList = list;
-        saveLayout();
+        setScreenWidgets(sName, list);
     }
 
-    function updateWidgetSize(id, newWidth, newHeight, newSize) {
-        var list = root.widgetsList.slice();
+    // Support both updateWidgetSize(screenName, id, w, h, s) and updateWidgetSize(id, w, h, s)
+    function updateWidgetSize(arg1, arg2, arg3, arg4, arg5) {
+        var sName = (arg5 !== undefined) ? arg1 : "HDMI-A-1";
+        var id = (arg5 !== undefined) ? arg2 : arg1;
+        var newWidth = (arg5 !== undefined) ? arg3 : arg2;
+        var newHeight = (arg5 !== undefined) ? arg4 : arg3;
+        var newSize = (arg5 !== undefined) ? arg5 : arg4;
+
+        var list = getScreenWidgets(sName).slice();
         for (var i = 0; i < list.length; i++) {
             if (list[i].id === id) {
                 list[i].width = Math.round(newWidth);
@@ -261,17 +321,23 @@ Item {
                 break;
             }
         }
-        root.widgetsList = list;
-        saveLayout();
+        setScreenWidgets(sName, list);
     }
 
-    function removeWidget(id) {
-        var list = root.widgetsList.filter(w => w.id !== id);
-        root.widgetsList = list;
-        saveLayout();
+    // Support both removeWidget(screenName, id) and removeWidget(id)
+    function removeWidget(arg1, arg2) {
+        var sName = (arg2 !== undefined) ? arg1 : "HDMI-A-1";
+        var id = (arg2 !== undefined) ? arg2 : arg1;
+
+        var list = getScreenWidgets(sName).filter(w => w.id !== id);
+        setScreenWidgets(sName, list);
     }
 
-    function addWidget(type) {
+    // Support both addWidget(screenName, type) and addWidget(type)
+    function addWidget(arg1, arg2) {
+        var sName = (arg2 !== undefined) ? arg1 : "HDMI-A-1";
+        var type = (arg2 !== undefined) ? arg2 : arg1;
+
         var defSizes = {
             "calendar":  { size: "small", w: 170, h: 170 },
             "network":   { size: "small", w: 170, h: 170 },
@@ -287,12 +353,11 @@ Item {
         var s = defSizes[type] || { size: "small", w: 170, h: 170 };
         var newId = type + "_" + Math.floor(Math.random() * 1000);
         
-        // Find suitable empty position
+        var list = getScreenWidgets(sName).slice();
         var newX = 1520;
-        var newY = 50 + (root.widgetsList.length * 90);
+        var newY = 50 + (list.length * 90);
         if (newY > 700) newY = 50;
 
-        var list = root.widgetsList.slice();
         list.push({
             id: newId,
             type: type,
@@ -302,22 +367,33 @@ Item {
             width: s.w,
             height: s.h
         });
-        root.widgetsList = list;
-        saveLayout();
+        setScreenWidgets(sName, list);
     }
 
-    function resetLayout() {
-        root.widgetsList = root.defaultWidgets();
-        saveLayout();
+    function resetLayout(screenName) {
+        var sName = screenName || "HDMI-A-1";
+        var list = defaultScreenWidgets(sName);
+        setScreenWidgets(sName, list);
         resetHealthData();
     }
 
-    function toggleClockExpanded() {
-        toggleClockExpansion();
-    }
+    property var clockExpandedScreens: ({})
+    property var savedClockScreens: ({})
 
-    function toggleClockExpansion() {
-        var list = root.widgetsList.slice();
+    function toggleClockExpanded(screenName) {
+        var s = screenName;
+        if (!s) {
+            for (var k in root.screensLayout) {
+                var arr = root.screensLayout[k];
+                if (arr && arr.some(w => w.type === "clock" || w.id === "clk")) {
+                    s = k;
+                    break;
+                }
+            }
+        }
+        if (!s) s = "HDMI-A-1";
+
+        var list = getScreenWidgets(s).slice();
         var clkIdx = -1;
         for (var i = 0; i < list.length; i++) {
             if (list[i].type === "clock" || list[i].id === "clk") {
@@ -327,15 +403,17 @@ Item {
         }
         if (clkIdx === -1) return;
 
-        if (!root.clockExpanded) {
-            // Expand clock: grows to 354px and shifts left by 184px
-            root.savedBeforeExpansion = JSON.parse(JSON.stringify(list));
+        var isExpanded = clockExpandedScreens[s] || false;
+        var newExp = Object.assign({}, clockExpandedScreens);
+        var newSaved = Object.assign({}, savedClockScreens);
+
+        if (!isExpanded) {
+            newSaved[s] = JSON.parse(JSON.stringify(list));
             var clk = Object.assign({}, list[clkIdx]);
             var targetClkX = clk.x - 184;
             var targetClkY = clk.y;
             var expandShift = 184;
 
-            // Move adjacent widgets on the same row that are to the left
             for (var j = 0; j < list.length; j++) {
                 if (j === clkIdx) continue;
                 var w = Object.assign({}, list[j]);
@@ -349,31 +427,37 @@ Item {
             clk.width = 354;
             clk.size = "medium";
             list[clkIdx] = clk;
-            root.clockExpanded = true;
-            root.widgetsList = list;
+            newExp[s] = true;
         } else {
-            // Collapse clock back to original layout
-            if (root.savedBeforeExpansion) {
-                root.widgetsList = root.savedBeforeExpansion;
-                root.savedBeforeExpansion = null;
+            if (newSaved[s]) {
+                list = newSaved[s];
+                delete newSaved[s];
             } else {
                 var clkItem = Object.assign({}, list[clkIdx]);
                 clkItem.x += 184;
                 clkItem.width = 170;
                 clkItem.size = "small";
                 list[clkIdx] = clkItem;
-                for (var k = 0; k < list.length; k++) {
-                    if (k === clkIdx) continue;
-                    var ow = Object.assign({}, list[k]);
+                for (var m = 0; m < list.length; m++) {
+                    if (m === clkIdx) continue;
+                    var ow = Object.assign({}, list[m]);
                     if (Math.abs(ow.y - clkItem.y) < 60 && ow.x < clkItem.x) {
                         ow.x += 184;
-                        list[k] = ow;
+                        list[m] = ow;
                     }
                 }
-                root.widgetsList = list;
             }
-            root.clockExpanded = false;
+            newExp[s] = false;
         }
+
+        clockExpandedScreens = newExp;
+        savedClockScreens = newSaved;
+
+        var copy = Object.assign({}, root.screensLayout);
+        copy[s] = list;
+        root.screensLayout = copy;
+        root.widgetsList = getScreenWidgets("HDMI-A-1");
+        root.screenLayoutChanged(s);
     }
 
     function selectCalendarDay(dayNumber) {

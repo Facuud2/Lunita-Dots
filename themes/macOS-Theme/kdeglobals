@@ -93,9 +93,6 @@ EnableRemoteFolderThumbnail=false
 MaximumRemoteSize=0
 MaximumSize[$d]
 
-[UiSettings]
-ColorScheme=macOS-Light
-
 [WM]
 activeBackground=241,243,247
 activeForeground=29,29,31

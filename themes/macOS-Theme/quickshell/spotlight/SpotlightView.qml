@@ -10,19 +10,9 @@ Item {
     property alias searchInput: searchField
 
     implicitWidth: 680
-    implicitHeight: mainCard.height
+    implicitHeight: 460
     width: 680
     height: 460
-
-    // ── Deep Ambient Shadow ──
-    RectangularGlow {
-        anchors.fill: mainCard
-        anchors.topMargin: 8
-        glowRadius: 36
-        spread: 0.15
-        color: root.spotlightState.panelShadowColor
-        cornerRadius: mainCard.radius + glowRadius
-    }
 
     // ── Main Frosted Glass Card ──
     Rectangle {
@@ -34,30 +24,11 @@ Item {
         border.width: 1
 
         // Smooth Appearance Animation
-        scale: root.spotlightState.isOpen ? 1.0 : 0.94
         opacity: root.spotlightState.isOpen ? 1.0 : 0.0
-        visible: opacity > 0.01
-
-        transform: Translate {
-            y: root.spotlightState.isOpen ? 0 : -20
-            Behavior on y {
-                NumberAnimation {
-                    duration: root.spotlightState.isOpen ? 220 : 160
-                    easing.type: root.spotlightState.isOpen ? Easing.OutCubic : Easing.InCubic
-                }
-            }
-        }
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: root.spotlightState.isOpen ? 220 : 160
-                easing.type: root.spotlightState.isOpen ? Easing.OutCubic : Easing.InCubic
-            }
-        }
 
         Behavior on opacity {
             NumberAnimation {
-                duration: root.spotlightState.isOpen ? 180 : 130
+                duration: root.spotlightState.isOpen ? 150 : 120
                 easing.type: Easing.OutQuad
             }
         }

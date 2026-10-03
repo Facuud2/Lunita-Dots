@@ -5,9 +5,18 @@ import QtQuick.Controls
 Item {
     id: root
     property var widgetsState
+    property var canvas: null
     property bool contextMenuOpen: false
     property int forecastTab: 0 // 0 = 4 Horas, 1 = Días
     readonly property real expandProgress: Math.max(0.0, Math.min(1.0, (root.width - 170.0) / (354.0 - 170.0)))
+
+    function toggleExpanded() {
+        if (root.canvas) {
+            root.canvas.toggleClockExpanded();
+        } else if (root.widgetsState) {
+            root.widgetsState.toggleClockExpanded();
+        }
+    }
 
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
@@ -225,7 +234,7 @@ Item {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    if (root.widgetsState) root.widgetsState.toggleClockExpanded();
+                    root.toggleExpanded();
                 }
             }
         }
@@ -263,7 +272,7 @@ Item {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    if (root.widgetsState) root.widgetsState.toggleClockExpanded();
+                    root.toggleExpanded();
                 }
             }
         }
@@ -353,7 +362,7 @@ Item {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                if (root.widgetsState) root.widgetsState.toggleClockExpanded();
+                                root.toggleExpanded();
                             }
                         }
                     }
