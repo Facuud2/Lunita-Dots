@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="folderBack" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFD659"/>
+      <stop offset="100%" stop-color="#FFB300"/>
+    </linearGradient>
+    <linearGradient id="folderFront" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE875"/>
+      <stop offset="100%" stop-color="#FFC107"/>
+    </linearGradient>
+    <linearGradient id="blueBase" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0067B8"/>
+      <stop offset="100%" stop-color="#0099FF"/>
+    </linearGradient>
+  </defs>
+  <!-- Back Folder Tab -->
+  <path d="M 6 12 C 6 10.34 7.34 9 9 9 L 19 9 C 21 9 22.5 10.2 23.5 12 L 25.5 15 L 39 15 C 40.66 15 42 16.34 42 18 L 42 36 C 42 37.66 40.66 39 39 39 L 9 39 C 7.34 39 6 37.66 6 36 Z" fill="url(#folderBack)"/>
+  <!-- Front Folder Body -->
+  <rect x="5" y="16" width="38" height="24" rx="4" fill="url(#folderFront)"/>
+  <!-- Blue Explorer Base Accent -->
+  <path d="M 5 36 Q 5 40 9 40 L 39 40 Q 43 40 43 36 L 43 35 L 5 35 Z" fill="url(#blueBase)"/>
+  <!-- Subtle Folder Top Rim Highlight -->
+  <path d="M 6 16 L 42 16" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+</svg>

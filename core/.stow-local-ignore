@@ -1,0 +1,6 @@
+^prelock$
+^sddm$
+^tokri$
+^__pycache__$
+.*\.bak.*
+.*\.orig.*

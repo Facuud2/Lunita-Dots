@@ -1,0 +1,699 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# 🌙 LUNITA THEME SELECTOR (GUI)
+# Selector gráfico de temas para Lunita-Dots
+# ==============================================================================
+
+import os
+import sys
+import json
+import subprocess
+import threading
+from pathlib import Path
+
+import gi
+gi.require_version('Gtk', '4.0')
+gi.require_version('Adw', '1')
+from gi.repository import Gtk, Adw, GLib, Gio, Gdk
+
+def find_dots_dir(start: Path) -> Path:
+    p = start.resolve()
+    for parent in [p] + list(p.parents):
+        if (parent / "themes").is_dir() and (parent / "core").is_dir():
+            return parent
+    return p.parent
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+DOTS_DIR = find_dots_dir(SCRIPT_DIR)
+THEMES_DIR = DOTS_DIR / "themes"
+STATE_FILE = DOTS_DIR / ".lunita-theme"
+USER_STATE_DIR = Path.home() / ".config/lunita"
+USER_STATE_FILE = USER_STATE_DIR / "current_theme"
+AGS_COLORS_FILE = Path.home() / ".config/ags/colors.scss"
+
+def get_current_theme_id() -> str:
+    if STATE_FILE.exists():
+        try:
+            return STATE_FILE.read_text().strip()
+        except Exception:
+            pass
+    if USER_STATE_FILE.exists():
+        try:
+            return USER_STATE_FILE.read_text().strip()
+        except Exception:
+            pass
+    return "lunita-default"
+
+def load_theme_colors():
+    colors = {
+        "primary": "#007aff",
+        "on_primary": "#ffffff",
+        "primary_container": "#007aff33",
+        "surface": "#161618",
+        "surface_container": "#222224",
+        "surface_container_high": "#2c2c2e",
+        "surface_container_highest": "#3a3a3c",
+        "on_surface": "#f5f5f7",
+        "on_surface_variant": "#8e8e93",
+        "outline": "#8e8e93",
+        "outline_variant": "#3a3a3c",
+    }
+    
+    # Try reading from ags colors.scss if present
+    if AGS_COLORS_FILE.exists():
+        try:
+            for line in AGS_COLORS_FILE.read_text().splitlines():
+                line = line.strip()
+                if line.startswith("$") and ":" in line:
+                    key, val = line.split(":", 1)
+                    key = key.lstrip("$").strip()
+                    val = val.rstrip(";").strip()
+                    if key in colors:
+                        colors[key] = val
+        except Exception:
+            pass
+            
+    return colors
+
+class ThemeInfo:
+    def __init__(self, theme_id: str, directory: Path):
+        self.id = theme_id
+        self.directory = directory
+        self.name = theme_id.capitalize()
+        self.version = "1.0.0"
+        self.author = "Desconocido"
+        self.description = "Sin descripción disponible."
+        self.components = {}
+        self.features = []
+
+        json_path = directory / "theme.json"
+        if json_path.exists():
+            try:
+                data = json.loads(json_path.read_text())
+                self.id = data.get("id", self.id)
+                self.name = data.get("name", self.name)
+                self.version = data.get("version", self.version)
+                self.author = data.get("author", self.author)
+                self.description = data.get("description", self.description)
+                self.components = data.get("components", {})
+                self.features = data.get("features", [])
+            except Exception as e:
+                print(f"[ThemeSelector] Error parsing {json_path}: {e}", file=sys.stderr)
+
+def scan_available_themes():
+    themes = []
+    if THEMES_DIR.exists() and THEMES_DIR.is_dir():
+        for item in sorted(THEMES_DIR.iterdir()):
+            if item.is_dir():
+                themes.append(ThemeInfo(item.name, item))
+    return themes
+
+class ThemeSelectorWindow(Adw.ApplicationWindow):
+    def __init__(self, app):
+        super().__init__(application=app, title="Theme Selector")
+        self.set_default_size(920, 640)
+        self.set_title("Theme Selector")
+
+        self.available_themes = []
+        self.current_theme_id = get_current_theme_id()
+        self.selected_theme = None
+        self.is_applying = False
+
+        self.setup_css()
+        self.build_ui()
+        self.load_themes()
+
+    def setup_css(self):
+        colors = load_theme_colors()
+        css = f"""
+        window.theme-selector {{
+            background-color: {colors["surface"]};
+            color: {colors["on_surface"]};
+            font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }}
+        
+        .ts-sidebar {{
+            background-color: {colors["surface"]};
+            border-right: 1px solid rgba(213, 187, 252, 0.08);
+            padding: 12px;
+        }}
+
+        .ts-theme-card {{
+            background-color: {colors["surface_container"]};
+            border: 1px solid rgba(213, 187, 252, 0.12);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            transition: all 200ms ease;
+        }}
+
+        .ts-theme-card:hover {{
+            background-color: {colors["surface_container_high"]};
+            border-color: rgba(213, 187, 252, 0.28);
+        }}
+
+        .ts-theme-card.selected {{
+            background-color: {colors["surface_container_highest"]};
+            border: 1.5px solid {colors["primary"]};
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+        }}
+
+        .ts-badge-active {{
+            background-color: rgba(129, 199, 132, 0.18);
+            color: #81c784;
+            border: 1px solid rgba(129, 199, 132, 0.35);
+            border-radius: 9999px;
+            padding: 2px 10px;
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }}
+
+        .ts-badge-ver {{
+            background-color: rgba(255, 255, 255, 0.06);
+            color: {colors["on_surface_variant"]};
+            border-radius: 9999px;
+            padding: 2px 8px;
+            font-size: 11px;
+        }}
+
+        .ts-details-area {{
+            background-color: {colors["surface"]};
+            padding: 24px 32px;
+        }}
+
+        .ts-hero-card {{
+            background: linear-gradient(135deg, {colors["surface_container"]} 0%, {colors["surface_container_high"]} 100%);
+            border: 1px solid rgba(213, 187, 252, 0.16);
+            border-radius: 20px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+        }}
+
+        .ts-hero-title {{
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }}
+
+        .ts-hero-sub {{
+            font-size: 14px;
+            color: {colors["on_surface_variant"]};
+            margin-top: 4px;
+        }}
+
+        .ts-btn-apply {{
+            background-color: {colors["primary"]};
+            color: {colors["on_primary"]};
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
+            transition: all 180ms ease;
+        }}
+
+        .ts-btn-apply:hover {{
+            background-color: #ecdcff;
+            box-shadow: 0 4px 14px rgba(213, 187, 252, 0.35);
+        }}
+
+        .ts-btn-applied {{
+            background-color: rgba(129, 199, 132, 0.18);
+            color: #81c784;
+            border: 1px solid rgba(129, 199, 132, 0.4);
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }}
+
+        .ts-btn-secondary {{
+            background-color: {colors["surface_container"]};
+            color: {colors["on_surface"]};
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 600;
+        }}
+
+        .ts-btn-secondary:hover {{
+            background-color: {colors["surface_container_high"]};
+            border-color: rgba(255, 255, 255, 0.2);
+        }}
+
+        .ts-section-card {{
+            background-color: {colors["surface_container"]};
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }}
+
+        .ts-section-header {{
+            font-size: 15px;
+            font-weight: 700;
+            color: {colors["primary"]};
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }}
+
+        .ts-chip {{
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 8px 12px;
+        }}
+
+        .ts-chip-key {{
+            font-weight: 700;
+            color: {colors["primary"]};
+            font-size: 12px;
+            text-transform: uppercase;
+        }}
+
+        .ts-chip-val {{
+            color: {colors["on_surface"]};
+            font-size: 13px;
+        }}
+
+        .ts-feature-item {{
+            padding: 6px 0;
+            font-size: 13.5px;
+            color: {colors["on_surface"]};
+        }}
+
+        .ts-progress-box {{
+            background-color: {colors["surface_container_highest"]};
+            border: 1px solid {colors["primary"]};
+            border-radius: 14px;
+            padding: 12px 18px;
+            margin-bottom: 16px;
+        }}
+        """
+
+        provider = Gtk.CssProvider()
+        provider.load_from_string(css)
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+    def build_ui(self):
+        self.add_css_class("theme-selector")
+
+        # Main vertical box
+        main_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.set_content(main_vbox)
+
+        # ── HeaderBar ──
+        header = Adw.HeaderBar()
+        header.set_show_end_title_buttons(True)
+
+        # Title widget with moon icon
+        title_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        title_box.set_valign(Gtk.Align.CENTER)
+        
+        moon_label = Gtk.Label(label="🌙")
+        moon_label.set_css_classes(["ts-moon-icon"])
+        title_box.append(moon_label)
+
+        title_text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        main_title = Gtk.Label(label="Theme Selector")
+        main_title.set_css_classes(["title", "bold"])
+        main_title.set_halign(Gtk.Align.START)
+        
+        sub_title = Gtk.Label(label="Lunita Dots Theme Manager")
+        sub_title.set_css_classes(["subtitle", "dim-label"])
+        sub_title.set_halign(Gtk.Align.START)
+        
+        title_text_box.append(main_title)
+        title_text_box.append(sub_title)
+        title_box.append(title_text_box)
+        header.set_title_widget(title_box)
+
+        # Refresh button in header
+        refresh_btn = Gtk.Button(icon_name="view-refresh-symbolic")
+        refresh_btn.set_tooltip_text("Recargar temas desde el disco")
+        refresh_btn.connect("clicked", lambda _: self.load_themes())
+        header.pack_end(refresh_btn)
+
+        main_vbox.append(header)
+
+        # ── Toast Overlay ──
+        self.toast_overlay = Adw.ToastOverlay()
+        main_vbox.append(self.toast_overlay)
+
+        # ── Paned Content (Sidebar + Details) ──
+        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        paned.set_shrink_start_child(False)
+        paned.set_shrink_end_child(False)
+        paned.set_position(330)
+        self.toast_overlay.set_child(paned)
+
+        # ── Left: Sidebar ──
+        sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        sidebar_box.set_css_classes(["ts-sidebar"])
+        sidebar_box.set_size_request(310, -1)
+
+        sidebar_title = Gtk.Label(label="Temas Disponibles")
+        sidebar_title.set_halign(Gtk.Align.START)
+        sidebar_title.set_css_classes(["ts-section-header"])
+        sidebar_box.append(sidebar_title)
+
+        # Themes scroll list
+        scrolled_list = Gtk.ScrolledWindow()
+        scrolled_list.set_vexpand(True)
+        scrolled_list.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        self.theme_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        scrolled_list.set_child(self.theme_list_box)
+        sidebar_box.append(scrolled_list)
+
+        paned.set_start_child(sidebar_box)
+
+        # ── Right: Theme Details Area ──
+        self.details_scroll = Gtk.ScrolledWindow()
+        self.details_scroll.set_vexpand(True)
+        self.details_scroll.set_hexpand(True)
+        self.details_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        self.details_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.details_box.set_css_classes(["ts-details-area"])
+        self.details_scroll.set_child(self.details_box)
+
+        paned.set_end_child(self.details_scroll)
+
+    def load_themes(self):
+        self.current_theme_id = get_current_theme_id()
+        self.available_themes = scan_available_themes()
+
+        # Clear existing list items
+        while child := self.theme_list_box.get_first_child():
+            self.theme_list_box.remove(child)
+
+        self.card_widgets = {}
+
+        if not self.available_themes:
+            no_themes_label = Gtk.Label(label="No se encontraron temas en themes/")
+            no_themes_label.set_css_classes(["dim-label"])
+            self.theme_list_box.append(no_themes_label)
+            return
+
+        # Build card for each theme
+        for theme in self.available_themes:
+            card = self.create_theme_list_card(theme)
+            self.card_widgets[theme.id] = card
+            self.theme_list_box.append(card)
+
+        # Auto-select current theme or first theme
+        theme_to_select = next((t for t in self.available_themes if t.id == self.current_theme_id), self.available_themes[0])
+        self.select_theme(theme_to_select)
+
+    def create_theme_list_card(self, theme: ThemeInfo) -> Gtk.Widget:
+        button = Gtk.Button()
+        button.set_css_classes(["ts-theme-card"])
+        if theme.id == self.current_theme_id:
+            pass
+
+        card_content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+
+        # Row 1: Name and status badge
+        row1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        
+        name_label = Gtk.Label(label=theme.name)
+        name_label.set_halign(Gtk.Align.START)
+        name_label.set_hexpand(True)
+        name_label.set_css_classes(["bold"])
+        name_label.set_ellipsize(3) # PANGO_ELLIPSIZE_END
+        row1.append(name_label)
+
+        if theme.id == self.current_theme_id:
+            active_badge = Gtk.Label(label="● ACTIVO")
+            active_badge.set_css_classes(["ts-badge-active"])
+            row1.append(active_badge)
+
+        card_content.append(row1)
+
+        # Row 2: ID and Version
+        row2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        id_label = Gtk.Label(label=theme.id)
+        id_label.set_css_classes(["dim-label"])
+        id_label.set_halign(Gtk.Align.START)
+        id_label.set_hexpand(True)
+        row2.append(id_label)
+
+        ver_badge = Gtk.Label(label=f"v{theme.version}")
+        ver_badge.set_css_classes(["ts-badge-ver"])
+        row2.append(ver_badge)
+
+        card_content.append(row2)
+
+        button.set_child(card_content)
+        button.connect("clicked", lambda _: self.select_theme(theme))
+        return button
+
+    def select_theme(self, theme: ThemeInfo):
+        self.selected_theme = theme
+
+        # Update card selection classes
+        for tid, card in self.card_widgets.items():
+            if tid == theme.id:
+                card.add_css_class("selected")
+            else:
+                card.remove_css_class("selected")
+
+        self.render_theme_details(theme)
+
+    def render_theme_details(self, theme: ThemeInfo):
+        # Clear details
+        while child := self.details_box.get_first_child():
+            self.details_box.remove(child)
+
+        is_current = (theme.id == self.current_theme_id)
+
+        # ── Progress indicator if applying ──
+        if self.is_applying:
+            prog_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+            prog_box.set_css_classes(["ts-progress-box"])
+
+            spinner = Gtk.Spinner()
+            spinner.start()
+            prog_box.append(spinner)
+
+            prog_lbl = Gtk.Label(label=f"Aplicando tema '{theme.name}'... Recargando entorno visual")
+            prog_lbl.set_css_classes(["bold"])
+            prog_box.append(prog_lbl)
+
+            self.details_box.append(prog_box)
+
+        # ── Hero Banner ──
+        hero_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        hero_card.set_css_classes(["ts-hero-card"])
+
+        hero_top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        
+        hero_titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        hero_titles.set_hexpand(True)
+
+        title_lbl = Gtk.Label(label=theme.name)
+        title_lbl.set_halign(Gtk.Align.START)
+        title_lbl.set_css_classes(["ts-hero-title"])
+        hero_titles.append(title_lbl)
+
+        author_text = f"por {theme.author}  ·  v{theme.version}  ·  ID: {theme.id}"
+        sub_lbl = Gtk.Label(label=author_text)
+        sub_lbl.set_halign(Gtk.Align.START)
+        sub_lbl.set_css_classes(["ts-hero-sub"])
+        hero_titles.append(sub_lbl)
+
+        hero_top.append(hero_titles)
+
+        # Status badge in hero
+        if is_current:
+            active_badge = Gtk.Label(label="● EN USO")
+            active_badge.set_css_classes(["ts-badge-active"])
+            active_badge.set_valign(Gtk.Align.START)
+            hero_top.append(active_badge)
+
+        hero_card.append(hero_top)
+
+        # Action bar buttons
+        action_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+
+        if is_current:
+            active_btn = Gtk.Button(label="✓ Tema Activo")
+            active_btn.set_css_classes(["ts-btn-applied"])
+            active_btn.set_sensitive(False)
+            action_bar.append(active_btn)
+
+            reapply_btn = Gtk.Button(label="🔄 Reaplicar")
+            reapply_btn.set_css_classes(["ts-btn-secondary"])
+            reapply_btn.set_tooltip_text("Volver a enlazar y recargar todos los componentes de este tema")
+            reapply_btn.set_sensitive(not self.is_applying)
+            reapply_btn.connect("clicked", lambda _: self.apply_theme_async(theme))
+            action_bar.append(reapply_btn)
+        else:
+            apply_btn = Gtk.Button(label="✨ Aplicar Tema")
+            apply_btn.set_css_classes(["ts-btn-apply"])
+            apply_btn.set_sensitive(not self.is_applying)
+            apply_btn.connect("clicked", lambda _: self.apply_theme_async(theme))
+            action_bar.append(apply_btn)
+
+        # Secondary: Open folder in file manager
+        folder_btn = Gtk.Button(label="📁 Ver Carpeta")
+        folder_btn.set_css_classes(["ts-btn-secondary"])
+        folder_btn.set_tooltip_text(f"Abrir {theme.directory} en Dolphin")
+        folder_btn.connect("clicked", lambda _: self.open_theme_folder(theme))
+        action_bar.append(folder_btn)
+
+        hero_card.append(action_bar)
+        self.details_box.append(hero_card)
+
+        # ── Description Card ──
+        desc_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        desc_card.set_css_classes(["ts-section-card"])
+
+        desc_header = Gtk.Label(label="Acerca del Tema")
+        desc_header.set_halign(Gtk.Align.START)
+        desc_header.set_css_classes(["ts-section-header"])
+        desc_card.append(desc_header)
+
+        desc_text = Gtk.Label(label=theme.description)
+        desc_text.set_halign(Gtk.Align.START)
+        desc_text.set_wrap(True)
+        desc_text.set_css_classes(["dim-label"])
+        desc_card.append(desc_text)
+
+        self.details_box.append(desc_card)
+
+        # ── Configured Components Card ──
+        if theme.components:
+            comp_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            comp_card.set_css_classes(["ts-section-card"])
+
+            comp_header = Gtk.Label(label="Componentes del Sistema Configurados")
+            comp_header.set_halign(Gtk.Align.START)
+            comp_header.set_css_classes(["ts-section-header"])
+            comp_card.append(comp_header)
+
+            flow_box = Gtk.FlowBox()
+            flow_box.set_selection_mode(Gtk.SelectionMode.NONE)
+            flow_box.set_max_children_per_line(3)
+            flow_box.set_min_children_per_line(2)
+            flow_box.set_row_spacing(10)
+            flow_box.set_column_spacing(10)
+
+            for comp_k, comp_v in theme.components.items():
+                chip = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+                chip.set_css_classes(["ts-chip"])
+
+                k_lbl = Gtk.Label(label=comp_k.replace("_", " "))
+                k_lbl.set_halign(Gtk.Align.START)
+                k_lbl.set_css_classes(["ts-chip-key"])
+                chip.append(k_lbl)
+
+                v_lbl = Gtk.Label(label=str(comp_v))
+                v_lbl.set_halign(Gtk.Align.START)
+                v_lbl.set_css_classes(["ts-chip-val"])
+                chip.append(v_lbl)
+
+                flow_box.append(chip)
+
+            comp_card.append(flow_box)
+            self.details_box.append(comp_card)
+
+        # ── Features Card ──
+        if theme.features:
+            feat_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+            feat_card.set_css_classes(["ts-section-card"])
+
+            feat_header = Gtk.Label(label="Características & Estilo")
+            feat_header.set_halign(Gtk.Align.START)
+            feat_header.set_css_classes(["ts-section-header"])
+            feat_card.append(feat_header)
+
+            for feat in theme.features:
+                item_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+                item_box.set_css_classes(["ts-feature-item"])
+
+                dot = Gtk.Label(label="✦")
+                dot.set_css_classes(["bold"])
+                dot.set_valign(Gtk.Align.START)
+                item_box.append(dot)
+
+                f_lbl = Gtk.Label(label=feat)
+                f_lbl.set_halign(Gtk.Align.START)
+                f_lbl.set_wrap(True)
+                item_box.append(f_lbl)
+
+                feat_card.append(item_box)
+
+            self.details_box.append(feat_card)
+
+    def open_theme_folder(self, theme: ThemeInfo):
+        try:
+            Gio.AppInfo.launch_default_for_uri(theme.directory.as_uri(), None)
+        except Exception:
+            subprocess.Popen(["dolphin", str(theme.directory)])
+
+    def apply_theme_async(self, theme: ThemeInfo):
+        if self.is_applying:
+            return
+
+        self.is_applying = True
+        self.render_theme_details(theme)
+
+        def worker():
+            cmd = ["lunita-theme", "apply", theme.id]
+            error_msg = None
+            try:
+                proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                if proc.returncode != 0:
+                    error_msg = proc.stderr.strip() or f"Código de salida: {proc.returncode}"
+            except Exception as e:
+                error_msg = str(e)
+
+            GLib.idle_add(self.on_apply_finished, theme, error_msg)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def on_apply_finished(self, theme: ThemeInfo, error_msg: str | None):
+        self.is_applying = False
+        if error_msg:
+            toast = Adw.Toast(title=f"Error al aplicar tema: {error_msg}")
+            self.toast_overlay.add_toast(toast)
+        else:
+            self.current_theme_id = theme.id
+            toast = Adw.Toast(title=f"¡Tema '{theme.name}' aplicado exitosamente!")
+            self.toast_overlay.add_toast(toast)
+
+        self.load_themes()
+        return False
+
+class ThemeSelectorApp(Adw.Application):
+    def __init__(self):
+        super().__init__(
+            application_id="io.lunita.ThemeSelector",
+            flags=Gio.ApplicationFlags.DEFAULT_FLAGS
+        )
+
+    def do_activate(self):
+        win = self.props.active_window
+        if not win:
+            # Force Dark style
+            style_mgr = Adw.StyleManager.get_default()
+            style_mgr.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+            win = ThemeSelectorWindow(self)
+        win.present()
+
+def main():
+    app = ThemeSelectorApp()
+    return app.run(sys.argv)
+
+if __name__ == "__main__":
+    sys.exit(main())

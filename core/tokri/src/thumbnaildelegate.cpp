@@ -50,15 +50,36 @@ void ThumbnailDelegate::paintListRow(QPainter *p,
     p->save();
     p->setRenderHint(QPainter::Antialiasing);
 
-    // Row Background (macOS Dropover style)
-    if (selected) {
-        p->setBrush(QColor(10, 132, 255, 95));
-        p->setPen(QPen(QColor(10, 132, 255, 180), 1));
-        p->drawRoundedRect(cell, 8, 8);
-    } else if (hover) {
-        p->setBrush(dark ? QColor(255, 255, 255, 24) : QColor(0, 0, 0, 15));
-        p->setPen(Qt::NoPen);
-        p->drawRoundedRect(cell, 8, 8);
+    bool isWin11 = ThemeProvider::isWin11();
+
+    // Row Background (Windows 11 Fluent or macOS Dropover)
+    if (isWin11) {
+        int radius = 5;
+        if (selected) {
+            p->setBrush(dark ? QColor(255, 255, 255, 18) : QColor(0, 0, 0, 12));
+            p->setPen(QPen(dark ? QColor(255, 255, 255, 24) : QColor(0, 0, 0, 18), 1));
+            p->drawRoundedRect(cell, radius, radius);
+
+            // Windows 11 Signature Left Accent Indicator Pill
+            p->setBrush(ThemeProvider::accentColor());
+            p->setPen(Qt::NoPen);
+            QRect accentPill(cell.x() + 2, cell.y() + (cell.height() - 16) / 2, 3, 16);
+            p->drawRoundedRect(accentPill, 1.5, 1.5);
+        } else if (hover) {
+            p->setBrush(dark ? QColor(255, 255, 255, 12) : QColor(0, 0, 0, 8));
+            p->setPen(Qt::NoPen);
+            p->drawRoundedRect(cell, radius, radius);
+        }
+    } else {
+        if (selected) {
+            p->setBrush(QColor(10, 132, 255, 95));
+            p->setPen(QPen(QColor(10, 132, 255, 180), 1));
+            p->drawRoundedRect(cell, 8, 8);
+        } else if (hover) {
+            p->setBrush(dark ? QColor(255, 255, 255, 24) : QColor(0, 0, 0, 15));
+            p->setPen(Qt::NoPen);
+            p->drawRoundedRect(cell, 8, 8);
+        }
     }
 
     QFileInfo fi = index.data(QFileSystemModel::FileInfoRole).value<QFileInfo>();
@@ -115,6 +136,7 @@ void ThumbnailDelegate::paintListRow(QPainter *p,
     QRect metaRect(cell.right() - metaWidth - 8, cell.y() + 4, metaWidth, cell.height() - 8);
 
     QFont sizeFont = opt.font;
+    sizeFont.setItalic(false);
     sizeFont.setPointSizeF(9.0);
     sizeFont.setWeight(QFont::DemiBold);
     p->setFont(sizeFont);
@@ -122,6 +144,7 @@ void ThumbnailDelegate::paintListRow(QPainter *p,
     p->drawText(QRect(metaRect.x(), metaRect.y(), metaWidth, 16), Qt::AlignRight | Qt::AlignVCenter, sizeStr);
 
     QFont subFont = opt.font;
+    subFont.setItalic(false);
     subFont.setPointSizeF(7.6);
     p->setFont(subFont);
     p->setPen(dark ? QColor(255, 255, 255, 125) : QColor(0, 0, 0, 115));
@@ -130,6 +153,7 @@ void ThumbnailDelegate::paintListRow(QPainter *p,
     // Middle Column: Title (Middle-elided so extension is always visible)
     QRect titleRect(iconRect.right() + 12, cell.y(), metaRect.left() - (iconRect.right() + 18), cell.height());
     QFont nameFont = opt.font;
+    nameFont.setItalic(false);
     nameFont.setPointSizeF(9.5);
     nameFont.setWeight(QFont::Medium);
     p->setFont(nameFont);
@@ -160,19 +184,38 @@ void ThumbnailDelegate::paintGridItem(QPainter *p,
     p->save();
     p->setRenderHint(QPainter::Antialiasing);
 
-    // Card background
-    if (selected) {
-        p->setBrush(QColor(10, 132, 255, 95));
-        p->setPen(QPen(QColor(10, 132, 255, 200), 1.5));
-        p->drawRoundedRect(cell, 12, 12);
-    } else if (hover) {
-        p->setBrush(dark ? QColor(255, 255, 255, 25) : QColor(0, 0, 0, 18));
-        p->setPen(QPen(dark ? QColor(255, 255, 255, 35) : QColor(0, 0, 0, 25), 1));
-        p->drawRoundedRect(cell, 12, 12);
+    bool isWin11 = ThemeProvider::isWin11();
+
+    // Card background (Windows 11 Fluent or macOS)
+    if (isWin11) {
+        int radius = 8;
+        if (selected) {
+            p->setBrush(dark ? QColor(76, 194, 255, 35) : QColor(0, 120, 212, 30));
+            p->setPen(QPen(ThemeProvider::accentColor(), 1.5));
+            p->drawRoundedRect(cell, radius, radius);
+        } else if (hover) {
+            p->setBrush(dark ? QColor(255, 255, 255, 18) : QColor(0, 0, 0, 14));
+            p->setPen(QPen(dark ? QColor(255, 255, 255, 30) : QColor(0, 0, 0, 22), 1));
+            p->drawRoundedRect(cell, radius, radius);
+        } else {
+            p->setBrush(dark ? QColor(255, 255, 255, 8) : QColor(0, 0, 0, 6));
+            p->setPen(QPen(dark ? QColor(255, 255, 255, 14) : QColor(0, 0, 0, 10), 1));
+            p->drawRoundedRect(cell, radius, radius);
+        }
     } else {
-        p->setBrush(dark ? QColor(255, 255, 255, 12) : QColor(0, 0, 0, 8));
-        p->setPen(QPen(dark ? QColor(255, 255, 255, 18) : QColor(0, 0, 0, 12), 1));
-        p->drawRoundedRect(cell, 12, 12);
+        if (selected) {
+            p->setBrush(QColor(10, 132, 255, 95));
+            p->setPen(QPen(QColor(10, 132, 255, 200), 1.5));
+            p->drawRoundedRect(cell, 12, 12);
+        } else if (hover) {
+            p->setBrush(dark ? QColor(255, 255, 255, 25) : QColor(0, 0, 0, 18));
+            p->setPen(QPen(dark ? QColor(255, 255, 255, 35) : QColor(0, 0, 0, 25), 1));
+            p->drawRoundedRect(cell, 12, 12);
+        } else {
+            p->setBrush(dark ? QColor(255, 255, 255, 12) : QColor(0, 0, 0, 8));
+            p->setPen(QPen(dark ? QColor(255, 255, 255, 18) : QColor(0, 0, 0, 12), 1));
+            p->drawRoundedRect(cell, 12, 12);
+        }
     }
 
     // Thumbnail
@@ -201,6 +244,7 @@ void ThumbnailDelegate::paintGridItem(QPainter *p,
     // Title text
     QRect textRect(cell.x() + 4, thumbRect.bottom() + 4, cell.width() - 8, cell.height() - thumbRect.bottom() - 6);
     QFont font = opt.font;
+    font.setItalic(false);
     font.setPointSizeF(8.5);
     p->setFont(font);
     p->setPen(dark ? QColor("#FFFFFF") : QColor("#1D1D1F"));

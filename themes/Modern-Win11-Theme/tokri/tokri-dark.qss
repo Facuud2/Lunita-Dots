@@ -1,0 +1,272 @@
+/* ==============================================================================
+ * 🪟 Tokri — Modern Windows 11 (Dark / Fluent Mica & Acrylic)
+ * Lunita-Dots · themes/Modern-Win11-Theme/tokri/tokri-dark.qss
+ *
+ * Cargado por `lunita-tokri` mediante el argumento nativo de Qt `-stylesheet`.
+ * Translucidez + Blur Mica gestionado por Hyprland.
+ * Acento Fluent: #4CC2FF / #0078D4
+ * ============================================================================== */
+
+* {
+    font-family: "Segoe UI Variable Text", "Segoe UI Variable Display", "Segoe UI", "Inter", sans-serif;
+    font-style: normal !important;
+    outline: none;
+}
+
+/* ── Ventana principal (Flyout Fluent flotante) ── */
+QMainWindow,
+QMainWindow > QWidget#centralwidget,
+QWidget#centralwidget {
+    background: transparent;
+    background-color: transparent;
+    border: none;
+    color: #F8FAFC;
+    font-style: normal !important;
+}
+
+QWidget#centralwidget {
+    padding: 0px;
+}
+
+/* Ocultar barra de menú clásica */
+QMenuBar {
+    max-height: 0px;
+    min-height: 0px;
+    border: none;
+    background: transparent;
+}
+
+/* ── Cabecera Fluent (Botones de control de ventana Windows 11) ── */
+QPushButton#headerCloseBtn {
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    color: #FFFFFF !important;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 0px;
+    margin: 0px;
+}
+
+QPushButton#headerCloseBtn:hover {
+    background-color: #C42B1C;
+    border: 1px solid #C42B1C;
+    color: #FFFFFF !important;
+}
+
+QPushButton#headerCloseBtn:pressed {
+    background-color: #B22718;
+    border: 1px solid #B22718;
+    color: #FFFFFF !important;
+}
+
+QPushButton#headerMoreBtn {
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    color: #E2E8F0 !important;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 0px;
+    margin: 0px;
+}
+
+QPushButton#headerMoreBtn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #FFFFFF !important;
+}
+
+QPushButton#headerMoreBtn:pressed {
+    background-color: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    color: #FFFFFF !important;
+}
+
+QPushButton#headerMoreBtn:hover {
+    background-color: rgba(255, 255, 255, 0.09);
+    color: #FFFFFF;
+}
+
+QPushButton#headerMoreBtn:pressed {
+    background-color: rgba(255, 255, 255, 0.16);
+    color: #FFFFFF;
+}
+
+QPushButton#headerMoreBtn:pressed {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: #FFFFFF;
+}
+
+/* ── Selector de Modo (Lista / Cuadrícula) ── */
+QWidget#switchContainer {
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 6px;
+}
+
+/* ── Lista de elementos (Grilla y Lista Fluent) ── */
+QListView {
+    background-color: transparent;
+    color: #F8FAFC;
+    selection-color: #FFFFFF;
+    selection-background-color: rgba(76, 194, 255, 0.16);
+    border: none;
+    padding: 4px;
+    font-size: 9.5pt;
+}
+
+QListView::item {
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+}
+
+QListView::item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+QListView::item:selected,
+QListView::item:selected:active,
+QListView::item:selected:!active {
+    background-color: rgba(76, 194, 255, 0.16);
+    border: 1px solid rgba(76, 194, 255, 0.45);
+}
+
+/* Renombrado en línea (F2) */
+QListView QLineEdit {
+    background-color: #242832;
+    color: #FFFFFF;
+    border: 2px solid #4CC2FF;
+    border-radius: 4px;
+    padding: 2px 6px;
+    selection-background-color: #4CC2FF;
+}
+
+/* ── Scrollbars overlay sutiles Windows 11 ── */
+QScrollBar:vertical {
+    background: transparent;
+    width: 6px;
+    margin: 4px 2px 4px 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+    min-height: 28px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+QScrollBar::add-line, QScrollBar::sub-line,
+QScrollBar::add-page, QScrollBar::sub-page {
+    background: none;
+    height: 0px;
+    width: 0px;
+}
+
+QScrollBar:horizontal {
+    height: 0px;
+}
+
+/* ── Menú contextual Fluent ── */
+QMenu {
+    background-color: #20242E;
+    color: #F8FAFC;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 8px;
+    padding: 4px;
+    font-size: 9.5pt;
+}
+
+QMenu::item {
+    padding: 6px 24px 6px 12px;
+    border-radius: 4px;
+    background: transparent;
+}
+
+QMenu::item:selected {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+}
+
+QMenu::item:disabled {
+    color: rgba(248, 250, 252, 0.35);
+}
+
+QMenu::separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 4px 8px;
+}
+
+/* ── Diálogos emergentes (Atajos, Acerca de, Logs) ── */
+QDialog {
+    background-color: #1A1D24;
+    color: #F8FAFC;
+    border-radius: 8px;
+}
+
+QDialog QLabel {
+    color: #F8FAFC;
+    background: transparent;
+}
+
+QDialog QPushButton {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 5px;
+    padding: 5px 16px;
+    min-height: 22px;
+}
+
+QDialog QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+QDialog QPushButton:pressed {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+QDialog QPushButton:default {
+    background-color: #4CC2FF;
+    color: #0B1926;
+    border: 1px solid #4CC2FF;
+    font-weight: 600;
+}
+
+QDialog QPushButton:default:hover {
+    background-color: #60CDFF;
+    border-color: #60CDFF;
+}
+
+QPlainTextEdit, QTextEdit, QTextBrowser, QTableView, QTreeView {
+    background-color: #161820;
+    color: #F8FAFC;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 6px;
+    selection-background-color: rgba(76, 194, 255, 0.35);
+    font-family: "JetBrainsMono Nerd Font", monospace;
+}
+
+QHeaderView::section {
+    background-color: #20242E;
+    color: rgba(248, 250, 252, 0.70);
+    border: none;
+    padding: 4px 8px;
+}
+
+/* ── Tooltips Fluent ── */
+QToolTip {
+    background-color: #1F232B;
+    color: #F8FAFC;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 9pt;
+}

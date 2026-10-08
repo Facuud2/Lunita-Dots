@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="termBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#32363E"/>
+      <stop offset="100%" stop-color="#1B1E23"/>
+    </linearGradient>
+  </defs>
+  <!-- Window Base -->
+  <rect x="4" y="6" width="40" height="36" rx="5" fill="url(#termBg)"/>
+  <!-- Top Tab / Bar line -->
+  <path d="M 4 14 L 44 14" stroke="#454A54" stroke-width="1.5"/>
+  <!-- Terminal Prompt > -->
+  <path d="M 12 21 L 19 26 L 12 31" fill="none" stroke="#60CDFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Terminal Cursor _ -->
+  <line x1="23" y1="31" x2="34" y2="31" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,223 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🚀 LUNITA QUICKSHELL DAEMON & PROCESS MANAGER
+# Control unificado de procesos e inicio de componentes Quickshell para Lunita-Dots
+# ==============================================================================
+
+set -e
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+get_dots_dir() {
+    local d="$1"
+    while [ "$d" != "/" ] && [ -n "$d" ]; do
+        if [ -d "$d/themes" ] && [ -d "$d/core" ]; then
+            echo "$d"
+            return 0
+        fi
+        d="$(dirname "$d")"
+    done
+    return 1
+}
+DOTS_DIR="$(get_dots_dir "$SCRIPT_DIR" 2>/dev/null || (cd "$SCRIPT_DIR/.." && pwd))"
+
+# Colores y estilo
+BOLD="\033[1m"
+GREEN="\033[32m"
+BLUE="\033[34m"
+CYAN="\033[36m"
+YELLOW="\033[33m"
+RED="\033[31m"
+MAGENTA="\033[35m"
+RESET="\033[0m"
+
+info() { echo -e "${CYAN}ℹ${RESET} $1"; }
+success() { echo -e "${GREEN}✓${RESET} $1"; }
+warn() { echo -e "${YELLOW}⚠${RESET} $1"; }
+error() { echo -e "${RED}✗${RESET} $1" >&2; }
+
+# Componentes Quickshell en modo daemon continuo
+DAEMON_COMPONENTS=("bar" "dock" "notifications" "spotlight" "launcher" "widgets" "clipboard")
+
+get_qs_bin() {
+    if command -v quickshell &>/dev/null; then
+        echo "quickshell"
+    elif command -v qs &>/dev/null; then
+        echo "qs"
+    elif [ -x "/usr/bin/quickshell" ]; then
+        echo "/usr/bin/quickshell"
+    else
+        echo ""
+    fi
+}
+
+wait_for_wayland() {
+    local max_attempts=40
+    local attempt=0
+    local runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+    while [ $attempt -lt $max_attempts ]; do
+        if [ -n "$WAYLAND_DISPLAY" ] && [ -S "$runtime_dir/$WAYLAND_DISPLAY" ]; then
+            return 0
+        fi
+
+        # Buscar socket activo wayland-*
+        local found_sock
+        found_sock=$(find "$runtime_dir" -maxdepth 1 -name "wayland-*" -type s 2>/dev/null | head -n 1 || true)
+        if [ -n "$found_sock" ]; then
+            export WAYLAND_DISPLAY="$(basename "$found_sock")"
+            return 0
+        fi
+
+        sleep 0.1
+        ((attempt++))
+    done
+}
+
+get_component_pid() {
+    local comp="$1"
+    local pid=""
+
+    # 1. Consultar IPC nativo de Quickshell
+    if command -v quickshell &>/dev/null; then
+        pid=$(quickshell list --all 2>/dev/null | awk -v c="$comp" '
+            /Instance/ { cur_pid="" }
+            /Process ID:/ { cur_pid=$3 }
+            /Config path:/ && $0 ~ "/quickshell/" c { print cur_pid; exit }
+        ')
+    fi
+
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        echo "$pid"
+        return 0
+    fi
+
+    # 2. Fallback inspeccionando /proc directamente (sin falsos positivos de pgrep)
+    local pids
+    pids=$(pgrep -u "$UID" -x quickshell 2>/dev/null || pgrep -u "$UID" -x qs 2>/dev/null || true)
+    for p in $pids; do
+        if [ -f "/proc/$p/cmdline" ] && tr '\0' ' ' < "/proc/$p/cmdline" | grep -q "quickshell.*[/-]$comp"; then
+            echo "$p"
+            return 0
+        fi
+    done
+    return 1
+}
+
+is_component_running() {
+    local comp="$1"
+    local pid
+    pid="$(get_component_pid "$comp" 2>/dev/null || true)"
+    [ -n "$pid" ]
+}
+
+start_component() {
+    local comp="$1"
+    local config_dir="$HOME/.config/quickshell/$comp"
+    local qs_bin
+    qs_bin="$(get_qs_bin)"
+
+    if [ -z "$qs_bin" ]; then
+        error "Quickshell no está instalado en el sistema."
+        return 1
+    fi
+
+    if [ ! -d "$config_dir" ]; then
+        return 0
+    fi
+
+    if is_component_running "$comp"; then
+        info "Quickshell [$comp] ya está en ejecución."
+        return 0
+    fi
+
+    # Iniciar con bandera -d (daemonize), -n (no-duplicate) y -p (ruta canónica)
+    "$qs_bin" -d -n -p "$config_dir" >/dev/null 2>&1
+    success "Iniciado Quickshell [$comp]"
+}
+
+stop_component() {
+    local comp="$1"
+    local pid
+    pid="$(get_component_pid "$comp" 2>/dev/null || true)"
+    if [ -n "$pid" ]; then
+        kill "$pid" 2>/dev/null || true
+        success "Detenido Quickshell [$comp] (PID: $pid)"
+    fi
+}
+
+cmd_start() {
+    local qs_bin
+    qs_bin="$(get_qs_bin)"
+
+    if [ -z "$qs_bin" ]; then
+        error "Quickshell no está instalado en el sistema."
+        exit 1
+    fi
+
+    # Esperar a que el compositor Wayland esté listo
+    wait_for_wayland
+
+    for comp in "${DAEMON_COMPONENTS[@]}"; do
+        start_component "$comp"
+    done
+}
+
+cmd_stop() {
+    info "Deteniendo todas las instancias de Quickshell..."
+    for comp in "${DAEMON_COMPONENTS[@]}"; do
+        stop_component "$comp"
+    done
+    pkill -u "$UID" -x quickshell 2>/dev/null || true
+    pkill -u "$UID" -x qs 2>/dev/null || true
+    success "Instancias de Quickshell finalizadas."
+}
+
+cmd_restart() {
+    cmd_stop
+    sleep 0.4
+    cmd_start
+}
+
+cmd_status() {
+    echo -e "${BOLD}${MAGENTA}🌙 Estado de Procesos Quickshell (Lunita-Dots)${RESET}"
+    echo "=================================================="
+    for comp in "${DAEMON_COMPONENTS[@]}"; do
+        local config_dir="$HOME/.config/quickshell/$comp"
+        if [ -d "$config_dir" ]; then
+            local pid
+            pid="$(get_component_pid "$comp" 2>/dev/null || true)"
+            if [ -n "$pid" ]; then
+                echo -e "  ${GREEN}●${RESET} ${BOLD}$comp${RESET}: ${GREEN}Activo${RESET} (PID: $pid)"
+            else
+                echo -e "  ${RED}○${RESET} ${BOLD}$comp${RESET}: ${RED}Inactivo${RESET}"
+            fi
+        else
+            echo -e "  ${YELLOW}−${RESET} $comp: No configurado en este tema"
+        fi
+    done
+}
+
+case "$1" in
+    start|autostart|launch)
+        cmd_start
+        ;;
+    stop|kill)
+        cmd_stop
+        ;;
+    restart|reload)
+        cmd_restart
+        ;;
+    status|list)
+        cmd_status
+        ;;
+    *)
+        echo "Uso: lunita-quickshell {start|stop|restart|status}"
+        exit 1
+        ;;
+esac

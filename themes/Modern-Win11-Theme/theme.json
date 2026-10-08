@@ -1,0 +1,29 @@
+{
+  "id": "Modern-Win11-Theme",
+  "name": "Modern Win 11 Theme",
+  "version": "1.0.0",
+  "author": "Facuud2",
+  "description": "Tema autónomo inspirado en la estética moderna de Windows 11 Fluent Design / Mica y el setup COSMIC Desktop con Dynamic Island reactiva superior (Media, Calendario/Pomodoro y Centro de Control), Dock flotante centrado, y paneles laterales de activación por cursor (Sonido en borde izquierdo y Brillo en borde derecho), implementado 100% sobre Quickshell (Qt6/QML) sin dependencias de AGS.",
+  "components": {
+    "bar": "quickshell-dynamic-island",
+    "dock": "quickshell-win11-dock",
+    "launcher": "quickshell-win11-startmenu",
+    "powermenu": "wlogout-fluent-glass",
+    "notifications": "quickshell-fluent-notifications",
+    "sidepanels": "quickshell-edge-flyouts",
+    "color_engine": "fluent-mica",
+    "wallpaper_picker": "hyprquickpaper",
+    "terminal": "kitty-win11",
+    "file_manager": "dolphin-win11-acrylic",
+    "cursor": "Bibata-Modern-Ice",
+    "shell": "zsh-pills"
+  },
+  "features": [
+    "Dynamic Island flotante superior interactiva con modos Colapsado, Reproductor de Música, Calendario con Pomodoro y Centro de Control",
+    "Paneles laterales deslizables por cursor en bordes: Sonido en borde medio izquierdo y Brillo en borde medio derecho con temporizador de gracia",
+    "Dock flotante centrado estilo Windows 11 con efecto Mica / Frosted Acrylic, animaciones elásticas y seguimiento de apps abiertas",
+    "Menú de Inicio Windows 11 centrado con buscador y cuadrícula de aplicaciones",
+    "Integración nativa con Pipewire (audio y conmutación de dispositivos) y control de brillo",
+    "100% Autónomo: Desarrollado íntegramente en Quickshell (Qt6/QML) a altas tasas de refresco (60/120/144+ FPS) sin dependencias de AGS"
+  ]
+}

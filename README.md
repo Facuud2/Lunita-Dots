@@ -127,9 +127,9 @@ flowchart TD
 
 ## 🎨 Sistema Multitema & Lunita Theme Manager
 
-**Lunita-Dots** adopta una arquitectura modular donde cada suite visual se encapsula como un tema autónomo bajo `themes/`. El primer tema del ecosistema es **Tema 1: "Lunita Default"**, el cual agrupa toda la experiencia visual actual (Dynamic Island, notificaciones, widgets Eww, paleta Matugen y animaciones fluidas).
+**Lunita-Dots** adopta una arquitectura modular donde cada suite visual se encapsula como un paquete nativo de **GNU Stow** bajo `themes/`, mientras que el sistema base y utilidades residen bajo `core/`.
 
-Para administrar, alternar y crear nuevos temas, se incluye la herramienta CLI `lunita-theme` (enlazada automáticamente a `~/.local/bin/lunita-theme`):
+Para administrar, alternar y desplegar dotfiles sin esfuerzo manual, se incluye la herramienta CLI `lunita-theme` (enlazada automáticamente a `~/.local/bin/lunita-theme`):
 
 ```bash
 # Ver temas instalados y verificar cuál está activo
@@ -138,38 +138,46 @@ lunita-theme list
 # Ver los detalles del tema actualmente en uso
 lunita-theme current
 
-# Aplicar un tema (enlaza componentes a ~/.config y recarga el entorno)
-lunita-theme apply lunita-default
+# Aplicar un tema (desvincula el anterior, enlaza con GNU Stow y recarga el entorno)
+lunita-theme apply Modern-Win11-Theme
 
-# Generar la estructura base (scaffold) para un nuevo tema (ej. Tema 2)
-lunita-theme create tema-2
+# Revincular / reconstruir enlaces simbólicos con Stow
+lunita-theme restow
+
+# Abrir el selector gráfico interactivo
+lunita-theme gui
+
+# Generar la estructura base (scaffold en formato Stow) para un nuevo tema
+lunita-theme create mi-nuevo-tema
 ```
 
 ---
 
-## 📁 Estructura del Codebase
+## 📁 Estructura del Codebase (GNU Stow)
+
+El repositorio está estructurado en paquetes nativos listos para **GNU Stow**:
 
 ```text
 Lunita-Dots/
-├── themes/                                # 🌟 Directorio central de temas modulares
-│   └── lunita-default/                    # 🌙 TEMA 1: "Lunita Default"
-│       ├── theme.json                     # Descriptor y metadatos del tema
-│       ├── README.md                      # Especificaciones del tema
-│       ├── ags/                           # Dynamic Island (36px), AppLauncher, PowerMenu y Notificaciones
-│       ├── eww/                           # Widget flotante de escritorio (Música + CAVA)
-│       ├── hypr/                          # Configuración visual de Hyprland (animaciones macOS, blur, reglas)
-│       ├── kitty/                         # Terminal Kitty con colores reactivos de Matugen
-│       ├── matugen/                       # Motor de colores Material You (config.toml, templates, hooks)
-│       ├── nvim/                          # Neovim con hot-reload dinámico de colores
-│       ├── quickshell/hyprquickpaper/     # Selector de fondos 3D por GPU en Quickshell (QML)
-│       ├── wlogout/                       # Menú de cierre de sesión
-│       └── zsh/                           # Prompt de pastillas pills sincronizado
-├── core/                                  # ⚙️ Componentes transversales del sistema (independientes del tema)
-│   ├── hypr/                              # Plantillas base y configuración de hardware (monitors.lua)
-│   ├── prelock/                           # Capa Raylib C11 de transición previa al bloqueo
-│   └── sddm/                              # Pantalla de inicio de sesión SDDM (Qylock Orbital)
-├── scripts/                               # 🛠️ Utilidades del ecosistema
-│   └── lunita-theme.sh                    # Gestor CLI de temas (list, apply, current, create)
+├── core/                                  # ⚙️ Paquete Stow: Base transversal e independiente del tema
+│   ├── .config/hypr/                      # Configuración modular de Hyprland (Lua)
+│   ├── .local/bin/                        # Binarios y wrappers (lunita-theme, lunita-launcher, etc.)
+│   ├── .local/share/applications/         # Desktop entries (theme selector, widgets manager)
+│   ├── .local/share/icons/                # Iconos SVG escalables para el sistema
+│   ├── .stow-local-ignore                 # Reglas de exclusión para fuentes y build files
+│   ├── prelock/                           # Código fuente Raylib C11 para transición de bloqueo
+│   ├── sddm/                              # Tema de pantalla de bienvenida SDDM
+│   └── tokri/                             # Código fuente Qt/C++ de Tokri Dock
+├── themes/                                # 🌟 Paquetes Stow: Temas visuales completos
+│   ├── lunita-default/                    # 🌙 TEMA 1: "Lunita Default"
+│   ├── macOS-Theme/                       # 🍎 TEMA 2: "macOS 27"
+│   └── Modern-Win11-Theme/                # 🪟 TEMA 3: "Modern Win 11 Theme"
+│       ├── .config/                       # kitty, quickshell, dolphinrc, kdeglobals, gtk-3.0, gtk-4.0, etc.
+│       ├── .local/share/                  # user-places.xbel, color-schemes, dolphin view properties
+│       ├── .icons/                        # Temas de iconos y cursores predeterminados
+│       ├── .stow-local-ignore             # Exclusión de metadatos (theme.json, README)
+│       └── theme.json                     # Descriptor y metadatos del tema
+├── scripts -> core/.local/bin             # 🔗 Enlace simbólico de compatibilidad para scripts
 ├── .lunita-theme                          # Indicador de estado del tema activo
 └── README.md                              # Documentación del proyecto
 ```
@@ -180,10 +188,10 @@ Lunita-Dots/
 
 Las dependencias se encuentran organizadas según la paquetería de **Arch Linux** (`pacman`) y **AUR** (`yay` o `paru`):
 
-### 1. Núcleo de Wayland y Compositor (Hyprland)
+### 1. Núcleo del Sistema, Compositor y Gestión de Enlaces
 ```bash
-# Repositorios Oficiales
-sudo pacman -S hyprland hyprlock hyprpolkitagent xdg-desktop-portal-hyprland \
+# Repositorios Oficiales (Gestión de Dotfiles con GNU Stow, Hyprland y utilidades Wayland)
+sudo pacman -S stow hyprland hyprlock hyprpolkitagent xdg-desktop-portal-hyprland \
                pipewire wireplumber pipewire-pulse pipewire-alsa \
                grim slurp wl-clipboard libnotify wf-recorder \
                brightnessctl playerctl jq imagemagick ffmpeg
@@ -269,14 +277,21 @@ git clone https://github.com/Facuud2/Lunita-Dots.git ~/.dotfiles
 cd ~/.dotfiles
 ```
 
-### 2. Aplicar Tema 1 (Lunita Default) con `lunita-theme`
+### 2. Desplegar con GNU Stow mediante `lunita-theme`
 
-Aplica el tema predeterminado usando el gestor de temas integrado. Esto creará los enlaces simbólicos en `~/.config/` apuntando a `themes/lunita-default/`, instalará el comando en `~/.local/bin/lunita-theme` y preparará el entorno:
+Aplica el tema predeterminado usando el gestor de temas integrado impulsado por **GNU Stow**. Esto enlazará automáticamente todos los componentes de `core` y `themes/lunita-default/` en `~/.config/`, `~/.local/bin/`, `~/.local/share/` e `~/.icons/`:
 
 ```bash
-chmod +x scripts/lunita-theme.sh
-./scripts/lunita-theme.sh apply lunita-default
+chmod +x scripts/lunita-theme
+./scripts/lunita-theme apply lunita-default
 ```
+
+> [!TIP]
+> Si prefieres usar directamente `stow` de forma manual sin recargar servicios, puedes ejecutar:
+> ```bash
+> stow -d ~/.dotfiles -t ~ core
+> stow -d ~/.dotfiles/themes -t ~ -S lunita-default
+> ```
 
 ### 3. Instalar Fuentes Tipográficas
 

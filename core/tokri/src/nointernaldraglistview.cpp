@@ -1,6 +1,7 @@
 #include "nointernaldraglistview.h"
 
 #include "loghelpers.h"
+#include "themeprovider.h"
 
 #include <QDragEnterEvent>
 #include <QGuiApplication>
@@ -141,50 +142,93 @@ void NoInternalDragListView::paintEvent(QPaintEvent *e) {
     int cx = width() / 2;
     int cy = qMax(height() / 2 - 30, 90);
 
-    // Draw stacked cards like Dropover
-    // Back card (tilted left)
-    p.save();
-    p.translate(cx, cy);
-    p.rotate(-8);
-    p.setBrush(dark ? QColor(255, 255, 255, 12) : QColor(0, 0, 0, 10));
-    p.setPen(QPen(dark ? QColor(255, 255, 255, 30) : QColor(0, 0, 0, 25), 1.2));
-    p.drawRoundedRect(QRect(-42, -32, 84, 64), 10, 10);
-    p.restore();
+    bool isWin11 = ThemeProvider::isWin11();
 
-    // Middle card (tilted right)
-    p.save();
-    p.translate(cx, cy);
-    p.rotate(6);
-    p.setBrush(dark ? QColor(255, 255, 255, 18) : QColor(0, 0, 0, 15));
-    p.setPen(QPen(dark ? QColor(255, 255, 255, 45) : QColor(0, 0, 0, 35), 1.2));
-    p.drawRoundedRect(QRect(-42, -32, 84, 64), 10, 10);
-    p.restore();
+    if (isWin11) {
+        // Windows 11 Fluent Empty State Card
+        p.save();
+        p.translate(cx, cy);
 
-    // Front card (straight)
-    p.save();
-    p.translate(cx, cy);
-    p.setBrush(dark ? QColor(48, 44, 54, 230) : QColor(255, 255, 255, 240));
-    p.setPen(QPen(dark ? QColor(255, 255, 255, 70) : QColor(0, 0, 0, 45), 1.5));
-    p.drawRoundedRect(QRect(-45, -34, 90, 68), 10, 10);
+        // Subtle shadow/background card
+        p.setBrush(dark ? QColor(255, 255, 255, 8) : QColor(0, 0, 0, 6));
+        p.setPen(QPen(dark ? QColor(255, 255, 255, 18) : QColor(0, 0, 0, 12), 1));
+        p.drawRoundedRect(QRect(-48, -36, 96, 72), 8, 8);
 
-    // Accent drop arrow on the front card
-    p.setPen(QPen(QColor("#0A84FF"), 2.2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    p.drawLine(QPoint(0, -8), QPoint(0, 8));
-    p.drawLine(QPoint(-6, 2), QPoint(0, 8));
-    p.drawLine(QPoint(6, 2), QPoint(0, 8));
-    p.restore();
+        // Front Fluent card
+        p.setBrush(dark ? QColor(36, 42, 54, 230) : QColor(255, 255, 255, 240));
+        p.setPen(QPen(dark ? QColor(255, 255, 255, 35) : QColor(0, 0, 0, 25), 1.2));
+        p.drawRoundedRect(QRect(-44, -32, 88, 64), 8, 8);
 
-    // Title and subtitle
-    QFont titleFont = font();
-    titleFont.setPointSizeF(10.5);
-    titleFont.setWeight(QFont::DemiBold);
-    p.setFont(titleFont);
-    p.setPen(dark ? QColor("#FFFFFF") : QColor("#1D1D1F"));
-    p.drawText(QRect(0, cy + 50, width(), 22), Qt::AlignHCenter, "Drop items here to hold");
+        // Accent drop arrow in Windows 11 Fluent Blue (#4CC2FF)
+        p.setPen(QPen(ThemeProvider::accentColor(), 2.2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        p.drawLine(QPoint(0, -9), QPoint(0, 9));
+        p.drawLine(QPoint(-6, 3), QPoint(0, 9));
+        p.drawLine(QPoint(6, 3), QPoint(0, 9));
+        p.restore();
 
-    QFont subFont = font();
-    subFont.setPointSizeF(8.5);
-    p.setFont(subFont);
-    p.setPen(dark ? QColor(255, 255, 255, 120) : QColor(0, 0, 0, 120));
-    p.drawText(QRect(0, cy + 74, width(), 20), Qt::AlignHCenter, "Shake cursor or press Super+T");
+        // Title and subtitle in Segoe UI Variable / Inter
+        QFont titleFont = font();
+        titleFont.setFamily("Segoe UI Variable Display, Segoe UI, Inter, sans-serif");
+        titleFont.setItalic(false);
+        titleFont.setPointSizeF(10.0);
+        titleFont.setWeight(QFont::DemiBold);
+        p.setFont(titleFont);
+        p.setPen(dark ? QColor("#FFFFFF") : QColor("#1A1A1A"));
+        p.drawText(QRect(0, cy + 48, width(), 22), Qt::AlignHCenter, "Arrastra elementos aquí");
+
+        QFont subFont = font();
+        subFont.setFamily("Segoe UI Variable Text, Segoe UI, Inter, sans-serif");
+        subFont.setItalic(false);
+        subFont.setPointSizeF(8.5);
+        p.setFont(subFont);
+        p.setPen(dark ? QColor(255, 255, 255, 130) : QColor(0, 0, 0, 130));
+        p.drawText(QRect(0, cy + 72, width(), 20), Qt::AlignHCenter, "Sacude el cursor o presiona Super+T");
+    } else {
+        // Draw stacked cards like Dropover
+        // Back card (tilted left)
+        p.save();
+        p.translate(cx, cy);
+        p.rotate(-8);
+        p.setBrush(dark ? QColor(255, 255, 255, 12) : QColor(0, 0, 0, 10));
+        p.setPen(QPen(dark ? QColor(255, 255, 255, 30) : QColor(0, 0, 0, 25), 1.2));
+        p.drawRoundedRect(QRect(-42, -32, 84, 64), 10, 10);
+        p.restore();
+
+        // Middle card (tilted right)
+        p.save();
+        p.translate(cx, cy);
+        p.rotate(6);
+        p.setBrush(dark ? QColor(255, 255, 255, 18) : QColor(0, 0, 0, 15));
+        p.setPen(QPen(dark ? QColor(255, 255, 255, 45) : QColor(0, 0, 0, 35), 1.2));
+        p.drawRoundedRect(QRect(-42, -32, 84, 64), 10, 10);
+        p.restore();
+
+        // Front card (straight)
+        p.save();
+        p.translate(cx, cy);
+        p.setBrush(dark ? QColor(48, 44, 54, 230) : QColor(255, 255, 255, 240));
+        p.setPen(QPen(dark ? QColor(255, 255, 255, 70) : QColor(0, 0, 0, 45), 1.5));
+        p.drawRoundedRect(QRect(-45, -34, 90, 68), 10, 10);
+
+        // Accent drop arrow on the front card
+        p.setPen(QPen(QColor("#0A84FF"), 2.2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        p.drawLine(QPoint(0, -8), QPoint(0, 8));
+        p.drawLine(QPoint(-6, 2), QPoint(0, 8));
+        p.drawLine(QPoint(6, 2), QPoint(0, 8));
+        p.restore();
+
+        // Title and subtitle
+        QFont titleFont = font();
+        titleFont.setPointSizeF(10.5);
+        titleFont.setWeight(QFont::DemiBold);
+        p.setFont(titleFont);
+        p.setPen(dark ? QColor("#FFFFFF") : QColor("#1D1D1F"));
+        p.drawText(QRect(0, cy + 50, width(), 22), Qt::AlignHCenter, "Drop items here to hold");
+
+        QFont subFont = font();
+        subFont.setPointSizeF(8.5);
+        p.setFont(subFont);
+        p.setPen(dark ? QColor(255, 255, 255, 120) : QColor(0, 0, 0, 120));
+        p.drawText(QRect(0, cy + 74, width(), 20), Qt::AlignHCenter, "Shake cursor or press Super+T");
+    }
 }

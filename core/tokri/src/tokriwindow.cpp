@@ -197,85 +197,167 @@ void TokriWindow::setupDropoverUI()
     mainLayout->setContentsMargins(16, 14, 16, 14);
     mainLayout->setSpacing(10);
 
-    // ── Header Bar (Close + Pill Handle + More) ──
+    // ── Header Bar (Windows 11 Fluent or macOS Dropover) ──
     QHBoxLayout *headerLayout = new QHBoxLayout;
     headerLayout->setContentsMargins(0, 0, 0, 0);
 
-    // Circular Close Button (X)
-    QPushButton *closeBtn = new QPushButton("✕", this);
-    closeBtn->setObjectName("headerCloseBtn");
-    closeBtn->setFixedSize(24, 24);
-    closeBtn->setCursor(Qt::PointingHandCursor);
-    closeBtn->setToolTip("Ocultar en bandeja (Esc)");
-    closeBtn->setStyleSheet(
-        "QPushButton#headerCloseBtn { "
-        "  background: rgba(255, 255, 255, 0.16); "
-        "  border: 1px solid rgba(255, 255, 255, 0.22); "
-        "  border-radius: 12px; "
-        "  color: #FFFFFF; "
-        "  padding: 0px; margin: 0px; "
-        "  font-size: 11px; font-weight: bold; text-align: center; "
-        "} "
-        "QPushButton#headerCloseBtn:hover { "
-        "  background: #FF3B30; "
-        "  border: 1px solid #FF3B30; "
-        "  color: #FFFFFF; "
-        "}"
-    );
-    connect(closeBtn, &QPushButton::clicked, this, &TokriWindow::sleep);
-    headerLayout->addWidget(closeBtn);
+    bool isWin11 = ThemeProvider::isWin11();
 
-    headerLayout->addStretch();
+    if (isWin11) {
+        // Windows 11 Header: Icon + Title on left, More + Close on right
+        QLabel *iconLabel = new QLabel(this);
+        QPixmap iconPix(":/com.ysuraj.Tokri.png");
+        if (!iconPix.isNull()) {
+            iconLabel->setPixmap(iconPix.scaled(18, 18, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        }
+        iconLabel->setFixedSize(18, 18);
+        headerLayout->addWidget(iconLabel);
 
-    // Center Accent Pill (Dropover signature handle)
-    QWidget *pillHandle = new QWidget(this);
-    pillHandle->setFixedSize(38, 5);
-    pillHandle->setStyleSheet(
-        "background-color: #FFD60A; border-radius: 2.5px;"
-    );
-    headerLayout->addWidget(pillHandle);
+        QLabel *titleLabel = new QLabel("Tokri", this);
+        titleLabel->setStyleSheet("QLabel { font-family: 'Segoe UI Variable Display', 'Segoe UI', 'Adwaita Sans', sans-serif; font-style: normal; font-size: 12px; font-weight: 600; color: #FFFFFF; background: transparent; padding-left: 4px; }");
+        headerLayout->addWidget(titleLabel);
 
-    headerLayout->addStretch();
+        headerLayout->addStretch();
 
-    // Circular More Options Button (•••)
-    QPushButton *moreBtn = new QPushButton("•••", this);
-    moreBtn->setObjectName("headerMoreBtn");
-    moreBtn->setFixedSize(24, 24);
-    moreBtn->setCursor(Qt::PointingHandCursor);
-    moreBtn->setToolTip("Opciones");
-    moreBtn->setStyleSheet(
-        "QPushButton#headerMoreBtn { "
-        "  background: rgba(255, 255, 255, 0.16); "
-        "  border: 1px solid rgba(255, 255, 255, 0.22); "
-        "  border-radius: 12px; "
-        "  color: #FFFFFF; "
-        "  padding: 0px; margin: 0px; "
-        "  font-size: 10px; font-weight: bold; text-align: center; "
-        "} "
-        "QPushButton#headerMoreBtn:hover { "
-        "  background: rgba(255, 255, 255, 0.32); "
-        "  color: #FFFFFF; "
-        "}"
-    );
-    connect(moreBtn, &QPushButton::clicked, this, [this, moreBtn]{
-        QMenu menu(this);
-        menu.setPalette(palette());
-        menu.addAction("📂 Open Basket Folder", this, [this]{
-            QDesktopServices::openUrl(QUrl::fromLocalFile(StandardPaths::getPath(StandardPaths::TokriDir)));
+        QPushButton *moreBtn = new QPushButton("···", this);
+        moreBtn->setObjectName("headerMoreBtn");
+        moreBtn->setFixedSize(28, 22);
+        moreBtn->setCursor(Qt::PointingHandCursor);
+        moreBtn->setToolTip("Opciones");
+        moreBtn->setStyleSheet(
+            "QPushButton#headerMoreBtn { "
+            "  background: rgba(255, 255, 255, 0.06); "
+            "  border: 1px solid rgba(255, 255, 255, 0.09); "
+            "  border-radius: 4px; "
+            "  color: #E2E8F0; "
+            "  font-size: 12px; font-weight: bold; text-align: center; "
+            "  padding: 0px; margin: 0px; "
+            "} "
+            "QPushButton#headerMoreBtn:hover { "
+            "  background: rgba(255, 255, 255, 0.14); "
+            "  border: 1px solid rgba(255, 255, 255, 0.18); "
+            "  color: #FFFFFF; "
+            "}"
+        );
+        connect(moreBtn, &QPushButton::clicked, this, [this, moreBtn]{
+            QMenu menu(this);
+            menu.setPalette(palette());
+            menu.addAction("📂 Abrir carpeta de canasta", this, [this]{
+                QDesktopServices::openUrl(QUrl::fromLocalFile(StandardPaths::getPath(StandardPaths::TokriDir)));
+            });
+            menu.addAction("📋 Pegar", this, &TokriWindow::pasteRequested);
+            menu.addAction("✓ Seleccionar todo", this, &TokriWindow::selectAll);
+            menu.addSeparator();
+            menu.addAction("🗑 Vaciar canasta (Mover a la papelera)", this, &TokriWindow::clearAll);
+            menu.addSeparator();
+            if (ui->actionHelp) menu.addAction(ui->actionHelp);
+            if (ui->actionAbout) menu.addAction(ui->actionAbout);
+            menu.addSeparator();
+            menu.addAction("🚪 Salir de Tokri", qApp, &QCoreApplication::quit);
+
+            menu.exec(moreBtn->mapToGlobal(QPoint(0, moreBtn->height() + 4)));
         });
-        menu.addAction("📋 Paste", this, &TokriWindow::pasteRequested);
-        menu.addAction("✓ Select All", this, &TokriWindow::selectAll);
-        menu.addSeparator();
-        menu.addAction("🗑 Clear All (Move to Trash)", this, &TokriWindow::clearAll);
-        menu.addSeparator();
-        if (ui->actionHelp) menu.addAction(ui->actionHelp);
-        if (ui->actionAbout) menu.addAction(ui->actionAbout);
-        menu.addSeparator();
-        menu.addAction("🚪 Quit Tokri", qApp, &QCoreApplication::quit);
+        headerLayout->addWidget(moreBtn);
 
-        menu.exec(moreBtn->mapToGlobal(QPoint(0, moreBtn->height() + 4)));
-    });
-    headerLayout->addWidget(moreBtn);
+        QPushButton *closeBtn = new QPushButton("✕", this);
+        closeBtn->setObjectName("headerCloseBtn");
+        closeBtn->setFixedSize(30, 22);
+        closeBtn->setCursor(Qt::PointingHandCursor);
+        closeBtn->setToolTip("Ocultar en bandeja (Esc)");
+        closeBtn->setStyleSheet(
+            "QPushButton#headerCloseBtn { "
+            "  background: rgba(255, 255, 255, 0.06); "
+            "  border: 1px solid rgba(255, 255, 255, 0.09); "
+            "  border-radius: 4px; "
+            "  color: #E2E8F0; "
+            "  font-size: 11px; font-weight: bold; text-align: center; "
+            "  padding: 0px; margin: 0px; "
+            "} "
+            "QPushButton#headerCloseBtn:hover { "
+            "  background: #C42B1C; "
+            "  border: 1px solid #C42B1C; "
+            "  color: #FFFFFF; "
+            "}"
+        );
+        connect(closeBtn, &QPushButton::clicked, this, &TokriWindow::sleep);
+        headerLayout->addWidget(closeBtn);
+    } else {
+        // Circular Close Button (X)
+        QPushButton *closeBtn = new QPushButton("✕", this);
+        closeBtn->setObjectName("headerCloseBtn");
+        closeBtn->setFixedSize(24, 24);
+        closeBtn->setCursor(Qt::PointingHandCursor);
+        closeBtn->setToolTip("Ocultar en bandeja (Esc)");
+        closeBtn->setStyleSheet(
+            "QPushButton#headerCloseBtn { "
+            "  background: rgba(255, 255, 255, 0.16); "
+            "  border: 1px solid rgba(255, 255, 255, 0.22); "
+            "  border-radius: 12px; "
+            "  color: #FFFFFF; "
+            "  padding: 0px; margin: 0px; "
+            "  font-size: 11px; font-weight: bold; text-align: center; "
+            "} "
+            "QPushButton#headerCloseBtn:hover { "
+            "  background: #FF3B30; "
+            "  border: 1px solid #FF3B30; "
+            "  color: #FFFFFF; "
+            "}"
+        );
+        connect(closeBtn, &QPushButton::clicked, this, &TokriWindow::sleep);
+        headerLayout->addWidget(closeBtn);
+
+        headerLayout->addStretch();
+
+        // Center Accent Pill (Dropover signature handle)
+        QWidget *pillHandle = new QWidget(this);
+        pillHandle->setFixedSize(38, 5);
+        pillHandle->setStyleSheet(
+            "background-color: #FFD60A; border-radius: 2.5px;"
+        );
+        headerLayout->addWidget(pillHandle);
+
+        headerLayout->addStretch();
+
+        // Circular More Options Button (•••)
+        QPushButton *moreBtn = new QPushButton("•••", this);
+        moreBtn->setObjectName("headerMoreBtn");
+        moreBtn->setFixedSize(24, 24);
+        moreBtn->setCursor(Qt::PointingHandCursor);
+        moreBtn->setToolTip("Opciones");
+        moreBtn->setStyleSheet(
+            "QPushButton#headerMoreBtn { "
+            "  background: rgba(255, 255, 255, 0.16); "
+            "  border: 1px solid rgba(255, 255, 255, 0.22); "
+            "  border-radius: 12px; "
+            "  color: #FFFFFF; "
+            "  padding: 0px; margin: 0px; "
+            "  font-size: 10px; font-weight: bold; text-align: center; "
+            "} "
+            "QPushButton#headerMoreBtn:hover { "
+            "  background: rgba(255, 255, 255, 0.32); "
+            "  color: #FFFFFF; "
+            "}"
+        );
+        connect(moreBtn, &QPushButton::clicked, this, [this, moreBtn]{
+            QMenu menu(this);
+            menu.setPalette(palette());
+            menu.addAction("📂 Open Basket Folder", this, [this]{
+                QDesktopServices::openUrl(QUrl::fromLocalFile(StandardPaths::getPath(StandardPaths::TokriDir)));
+            });
+            menu.addAction("📋 Paste", this, &TokriWindow::pasteRequested);
+            menu.addAction("✓ Select All", this, &TokriWindow::selectAll);
+            menu.addSeparator();
+            menu.addAction("🗑 Clear All (Move to Trash)", this, &TokriWindow::clearAll);
+            menu.addSeparator();
+            if (ui->actionHelp) menu.addAction(ui->actionHelp);
+            if (ui->actionAbout) menu.addAction(ui->actionAbout);
+            menu.addSeparator();
+            menu.addAction("🚪 Quit Tokri", qApp, &QCoreApplication::quit);
+
+            menu.exec(moreBtn->mapToGlobal(QPoint(0, moreBtn->height() + 4)));
+        });
+        headerLayout->addWidget(moreBtn);
+    }
 
     // ── Toolbar Row (Items Count + Grid/List Switcher) ──
     QHBoxLayout *toolbarLayout = new QHBoxLayout;
@@ -283,9 +365,15 @@ void TokriWindow::setupDropoverUI()
 
     mStatusLabel = new QLabel("Canasta vacía", this);
     mStatusLabel->setFixedHeight(26);
-    mStatusLabel->setStyleSheet(
-        "QLabel { font-size: 13px; font-weight: 600; color: #F5F5F7; background: transparent; }"
-    );
+    if (isWin11) {
+        mStatusLabel->setStyleSheet(
+            "QLabel { font-family: 'Segoe UI Variable Text', 'Segoe UI', 'Adwaita Sans', sans-serif; font-style: normal; font-size: 12px; font-weight: 600; color: #FFFFFF; background: transparent; }"
+        );
+    } else {
+        mStatusLabel->setStyleSheet(
+            "QLabel { font-size: 13px; font-weight: 600; color: #F5F5F7; background: transparent; }"
+        );
+    }
     toolbarLayout->addWidget(mStatusLabel);
 
     toolbarLayout->addStretch();
@@ -293,14 +381,16 @@ void TokriWindow::setupDropoverUI()
     // Mode Switcher Container
     QWidget *switchContainer = new QWidget(this);
     switchContainer->setFixedSize(62, 26);
-    switchContainer->setStyleSheet(
-        "QWidget#switchContainer { "
-        "  background: rgba(255, 255, 255, 0.12); "
-        "  border: 1px solid rgba(255, 255, 255, 0.16); "
-        "  border-radius: 7px; "
-        "}"
-    );
     switchContainer->setObjectName("switchContainer");
+    if (!isWin11) {
+        switchContainer->setStyleSheet(
+            "QWidget#switchContainer { "
+            "  background: rgba(255, 255, 255, 0.12); "
+            "  border: 1px solid rgba(255, 255, 255, 0.16); "
+            "  border-radius: 7px; "
+            "}"
+        );
+    }
     QHBoxLayout *switchLayout = new QHBoxLayout(switchContainer);
     switchLayout->setContentsMargins(2, 2, 2, 2);
     switchLayout->setSpacing(2);
@@ -342,11 +432,23 @@ void TokriWindow::setViewListMode(bool listMode)
         mDelegate->setListMode(listMode);
     }
 
-    QString activeStyle =
-        "QPushButton { background: rgba(255, 255, 255, 0.35); color: #FFFFFF; border: none; border-radius: 5px; font-size: 13px; font-weight: bold; padding: 0px; margin: 0px; }";
-    QString inactiveStyle =
-        "QPushButton { background: transparent; color: rgba(255, 255, 255, 0.55); border: none; border-radius: 5px; font-size: 13px; padding: 0px; margin: 0px; } "
-        "QPushButton:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.14); }";
+    bool isWin11 = ThemeProvider::isWin11();
+    QString activeStyle;
+    QString inactiveStyle;
+
+    if (isWin11) {
+        activeStyle =
+            "QPushButton { background: rgba(255, 255, 255, 0.16); color: #4CC2FF; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 4px; font-size: 12px; font-weight: bold; padding: 0px; margin: 0px; }";
+        inactiveStyle =
+            "QPushButton { background: transparent; color: rgba(255, 255, 255, 0.55); border: 1px solid transparent; border-radius: 4px; font-size: 12px; padding: 0px; margin: 0px; } "
+            "QPushButton:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.08); }";
+    } else {
+        activeStyle =
+            "QPushButton { background: rgba(255, 255, 255, 0.35); color: #FFFFFF; border: none; border-radius: 5px; font-size: 13px; font-weight: bold; padding: 0px; margin: 0px; }";
+        inactiveStyle =
+            "QPushButton { background: transparent; color: rgba(255, 255, 255, 0.55); border: none; border-radius: 5px; font-size: 13px; padding: 0px; margin: 0px; } "
+            "QPushButton:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.14); }";
+    }
 
     if (listMode) {
         ui->listView->setViewMode(QListView::ListMode);
@@ -455,18 +557,15 @@ void TokriWindow::paintEvent(QPaintEvent *)
     p.setRenderHint(QPainter::Antialiasing);
 
     QRect r = rect().adjusted(1, 1, -1, -1);
-    bool dark = ThemeProvider::isDark();
-
-    // Dark warm acrylic glass: rgba(36, 33, 40, 235)
-    // Light frosted acrylic: rgba(246, 246, 248, 240)
-    QColor bgColor = dark ? QColor(36, 33, 40, 235) : QColor(246, 246, 248, 240);
-    QColor borderColor = dark ? QColor(255, 255, 255, 38) : QColor(0, 0, 0, 30);
+    int radius = ThemeProvider::windowCornerRadius();
+    QColor bgColor = ThemeProvider::windowBgColor();
+    QColor borderColor = ThemeProvider::windowBorderColor();
 
     QPainterPath path;
-    path.addRoundedRect(r, 20, 20);
+    path.addRoundedRect(r, radius, radius);
 
     p.fillPath(path, bgColor);
-    p.setPen(QPen(borderColor, 1.2));
+    p.setPen(QPen(borderColor, 1.0));
     p.drawPath(path);
 }
 

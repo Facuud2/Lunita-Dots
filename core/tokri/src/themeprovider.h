@@ -99,6 +99,60 @@ public:
         return true;
     }
 
+    static QString currentThemeName()
+    {
+        QFile file(QDir::homePath() + "/.config/lunita/current_theme");
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QString name = QString::fromUtf8(file.readAll()).trimmed();
+            if (!name.isEmpty()) return name;
+        }
+        return QString();
+    }
+
+    static bool isWin11()
+    {
+        QString th = currentThemeName().toLower();
+        return th.contains("win11") || th.contains("windows");
+    }
+
+    static QColor accentColor()
+    {
+        if (isWin11()) {
+            return isDark() ? QColor("#4CC2FF") : QColor("#0078D4");
+        }
+        return isDark() ? QColor("#0A84FF") : QColor("#007AFF");
+    }
+
+    static QColor accentHoverColor()
+    {
+        if (isWin11()) {
+            return isDark() ? QColor("#60CDFF") : QColor("#106EBE");
+        }
+        return isDark() ? QColor("#409CFF") : QColor("#0062CC");
+    }
+
+    static int windowCornerRadius()
+    {
+        return isWin11() ? 10 : 20;
+    }
+
+    static QColor windowBgColor()
+    {
+        if (isWin11()) {
+            // Windows 11 Fluent Mica / Dark Acrylic: #1C2028
+            return isDark() ? QColor(28, 32, 40, 242) : QColor(243, 243, 243, 244);
+        }
+        return isDark() ? QColor(36, 33, 40, 235) : QColor(246, 246, 248, 240);
+    }
+
+    static QColor windowBorderColor()
+    {
+        if (isWin11()) {
+            return isDark() ? QColor(255, 255, 255, 24) : QColor(0, 0, 0, 22);
+        }
+        return isDark() ? QColor(255, 255, 255, 38) : QColor(0, 0, 0, 30);
+    }
+
     static QPalette theme()
     {
         return isDark() ? ThemeProvider::dark() : ThemeProvider::light();

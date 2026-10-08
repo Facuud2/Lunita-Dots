@@ -1,0 +1,7 @@
+^theme\.json$
+^README\.md$
+^assets$
+^tokri$
+^zsh$
+.*\.bak.*
+.*\.orig.*

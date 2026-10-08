@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="sc-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2c2a38"/>
+      <stop offset="100%" stop-color="#14131d"/>
+    </linearGradient>
+    <linearGradient id="sc-p" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff2d55"/>
+      <stop offset="100%" stop-color="#af52de"/>
+    </linearGradient>
+    <linearGradient id="sc-c" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#007aff"/>
+      <stop offset="100%" stop-color="#5856d6"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="116" height="116" rx="26" fill="url(#sc-bg)"/>
+  <rect x="6" y="6" width="116" height="116" rx="26" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+  <!-- 2 Overlapping rounded rhombuses -->
+  <rect x="42" y="24" width="46" height="46" rx="14" fill="url(#sc-p)" transform="rotate(45 65 47)"/>
+  <rect x="42" y="56" width="46" height="46" rx="14" fill="url(#sc-c)" opacity="0.88" transform="rotate(45 65 79)"/>
+</svg>

@@ -1,0 +1,1 @@
+pills.zsh-theme
