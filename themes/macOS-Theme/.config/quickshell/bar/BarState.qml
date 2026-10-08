@@ -582,7 +582,7 @@ Item {
     }
 
     function toggleRecording() {
-        var home = Quickshell.env("HOME") || "/home/facuud2";
+        var home = Quickshell.env("HOME") || "";
         Quickshell.execDetached(["bash", "-c", home + "/.config/hypr/scripts/record.sh area"]);
     }
 
@@ -641,7 +641,7 @@ Item {
 
     function lockScreen() {
         closePopups();
-        var home = Quickshell.env("HOME") || "/home/facuud2";
+        var home = Quickshell.env("HOME") || "";
         Quickshell.execDetached(["bash", "-c", home + "/.config/hypr/scripts/smart_lock.sh classic || hyprlock"]);
     }
 
@@ -657,7 +657,7 @@ Item {
 
     function toggleVirtualKeyboard() {
         closePopups();
-        var home = Quickshell.env("HOME") || "/home/facuud2";
+        var home = Quickshell.env("HOME") || "";
         Quickshell.execDetached(["bash", "-c", home + "/.config/hypr/scripts/virtual_keyboard.sh toggle"]);
         checkVkbTimer.interval = 250;
         checkVkbTimer.restart();

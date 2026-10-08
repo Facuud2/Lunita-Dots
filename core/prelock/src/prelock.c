@@ -17,7 +17,16 @@
 #include <unistd.h>
 
 #define PRELOCK_WINDOW_TITLE "Smooth_Prelock"
-#define PRELOCK_UNLOCK_FILE "/tmp/prelock_unlocked"
+
+static const char *get_prelock_unlock_file(char *buf, size_t size) {
+  const char *runtime_dir = getenv("XDG_RUNTIME_DIR");
+  if (runtime_dir != NULL && runtime_dir[0] != '\0') {
+    snprintf(buf, size, "%s/prelock_unlocked", runtime_dir);
+  } else {
+    snprintf(buf, size, "/tmp/prelock_unlocked_%u", (unsigned int)getuid());
+  }
+  return buf;
+}
 
 static volatile sig_atomic_t exit_requested = 0;
 
@@ -245,6 +254,8 @@ int prelock_run(int argc, char *argv[]) {
   bool readiness_signaled = false;
   float fade_out_time = 0.0f;
   const float fade_out_duration = 0.85f;
+  char unlock_file_path[512];
+  get_prelock_unlock_file(unlock_file_path, sizeof(unlock_file_path));
 
   while (!exit_requested && !WindowShouldClose()) {
     float delta_time = GetFrameTime();
@@ -263,9 +274,9 @@ int prelock_run(int argc, char *argv[]) {
       }
 
       if (animation_time >= animation->duration_seconds &&
-          access(PRELOCK_UNLOCK_FILE, F_OK) == 0) {
+          access(unlock_file_path, F_OK) == 0) {
         is_unlocked = true;
-        (void)remove(PRELOCK_UNLOCK_FILE);
+        (void)remove(unlock_file_path);
       }
     } else {
       if (delta_time > 0.1f) {

@@ -28,8 +28,10 @@ get_dots_dir() {
 DOTS_DIR="$(get_dots_dir "$SCRIPT_DIR" 2>/dev/null || (cd "$SCRIPT_DIR/.." && pwd))"
 
 USER_UID="$(id -u)"
-NATIVE_SOCKET="/tmp/com.ysuraj.Tokri.ipc"
-FLATPAK_SOCKET="/run/user/${USER_UID}/.flatpak/com.ysuraj.Tokri/tmp/com.ysuraj.Tokri.ipc"
+RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/${USER_UID}}"
+NATIVE_SOCKET="${RUNTIME_DIR}/com.ysuraj.Tokri.ipc"
+FALLBACK_SOCKET="/tmp/com.ysuraj.Tokri.ipc"
+FLATPAK_SOCKET="${RUNTIME_DIR}/.flatpak/com.ysuraj.Tokri/tmp/com.ysuraj.Tokri.ipc"
 
 get_active_qss() {
     local theme="macOS-Theme"
@@ -61,6 +63,8 @@ get_active_qss() {
 get_socket() {
     if [ -S "$NATIVE_SOCKET" ]; then
         echo "$NATIVE_SOCKET"
+    elif [ -S "$FALLBACK_SOCKET" ]; then
+        echo "$FALLBACK_SOCKET"
     elif [ -S "$FLATPAK_SOCKET" ]; then
         echo "$FLATPAK_SOCKET"
     else

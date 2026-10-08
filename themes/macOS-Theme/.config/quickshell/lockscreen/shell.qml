@@ -10,7 +10,7 @@ ShellRoot {
 
         onUnlockSuccess: {
             rootLock.locked = false;
-            let home = Quickshell.env("HOME") || "/home/facuud2";
+            let home = Quickshell.env("HOME") || "";
             Quickshell.execDetached(["quickshell", "kill", "-p", home + "/.config/quickshell/lockscreen"]);
             Qt.quit();
         }

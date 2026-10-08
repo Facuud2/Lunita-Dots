@@ -322,6 +322,13 @@ cmd_apply() {
     fi
     success "Archivos y configuraciones del tema enlazados con GNU Stow."
 
+    # 4.1. Normalizar dinámicamente rutas de usuario en archivos de configuración
+    for conf_file in "$HOME/.config/qt6ct/qt6ct.conf" "$HOME/.config/gtk-3.0/bookmarks" "$HOME/.local/share/user-places.xbel"; do
+        if [ -e "$conf_file" ]; then
+            sed --follow-symlinks -i "s|/home/[a-zA-Z0-9._-]\+|$HOME|g" "$conf_file" 2>/dev/null || true
+        fi
+    done
+
     # Recargar daemon systemd de usuario si hay servicios definidos
     if [ -d "$target_dir/.config/systemd/user" ] || [ -d "$target_dir/systemd/user" ]; then
         systemctl --user daemon-reload 2>/dev/null || true

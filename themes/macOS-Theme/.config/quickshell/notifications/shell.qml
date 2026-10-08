@@ -47,7 +47,7 @@ Scope {
         }
 
         function sample(name: string) {
-            var home = Quickshell.env("HOME") || "/home/facuud2";
+            var home = Quickshell.env("HOME") || "";
             var cmd = home + "/.config/quickshell/notifications/scripts/test_notification.sh " + (name || "brunch");
             Quickshell.execDetached(["bash", "-c", cmd]);
         }

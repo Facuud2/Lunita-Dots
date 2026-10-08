@@ -186,7 +186,7 @@ FocusScope {
 
                     Image {
                         anchors.fill: parent
-                        source: lockState.artUrl !== "" ? lockState.artUrl : "file:///home/facuud2/.config/hypr/assets/default_cover.png"
+                        source: lockState.artUrl !== "" ? lockState.artUrl : (lockState.home !== "" ? "file://" + lockState.home + "/.config/hypr/assets/default_cover.png" : "")
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         cache: false

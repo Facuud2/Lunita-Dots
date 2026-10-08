@@ -7,13 +7,13 @@
 
 ;; ── Streams & Data Sources ───────────────────────────────────────────
 (deflisten anime_data
-  :initial '{"img1":"/home/facuud2/.config/eww/assets/placeholder.png","img2":"/home/facuud2/.config/eww/assets/placeholder.png","img3":"/home/facuud2/.config/eww/assets/placeholder.png","img4":"/home/facuud2/.config/eww/assets/placeholder.png","img5":"/home/facuud2/.config/eww/assets/placeholder.png","img6":"/home/facuud2/.config/eww/assets/placeholder.png","nsfw":false,"nsfw_label":"OFF","nsfw_class":"inactive","count":0,"source":"Konachan"}'
-  "python3 /home/facuud2/.config/eww/scripts/konachan.py watch")
+  :initial '{"img1":"~/.config/eww/assets/placeholder.png","img2":"~/.config/eww/assets/placeholder.png","img3":"~/.config/eww/assets/placeholder.png","img4":"~/.config/eww/assets/placeholder.png","img5":"~/.config/eww/assets/placeholder.png","img6":"~/.config/eww/assets/placeholder.png","nsfw":false,"nsfw_label":"OFF","nsfw_class":"inactive","count":0,"source":"Konachan"}'
+  "python3 ~/.config/eww/scripts/konachan.py watch")
 
 (deflisten cava_output :initial "▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
   "scripts/cava.sh")
 
-(deflisten media :initial '{"status":"Stopped","player":"","title":"No Music Playing","artist":"","cover":"/home/facuud2/.config/eww/assets/default_cover.png","has_media":false}'
+(deflisten media :initial '{"status":"Stopped","player":"","title":"No Music Playing","artist":"","cover":"~/.config/eww/assets/default_cover.png","has_media":false}'
   "scripts/media.py")
 
 (deflisten wallpaper_theme :initial ""
@@ -80,7 +80,7 @@
 
         ;; Scroll / Next button at the bottom of feed
         (button :class "scroll-footer-btn"
-                :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py next &"
+                :onclick "python3 ~/.config/eww/scripts/konachan.py next &"
                 :tooltip "Load more anime cards"
           (box :space-evenly false :spacing 8 :halign "center"
             (label :class "scroll-btn-icon" :text "")
@@ -95,7 +95,7 @@
              :halign "start"
              :text "Enter tags, or \"/\" for commands")
       (button :class "footer-cmd-arrow"
-              :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py fetch &"
+              :onclick "python3 ~/.config/eww/scripts/konachan.py fetch &"
               :tooltip "Fetch new batch"
         ""))
 
@@ -114,7 +114,7 @@
 
       ;; NSFW Toggle
       (button :class "nsfw-toggle-btn"
-              :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py toggle_nsfw &"
+              :onclick "python3 ~/.config/eww/scripts/konachan.py toggle_nsfw &"
               :tooltip "Toggle Safe / NSFW"
         (box :space-evenly false :spacing 6
           (label :class "nsfw-text" :text "Allow NSFW")
@@ -122,12 +122,12 @@
 
       ;; Quick command links
       (button :class "quick-cmd-btn"
-              :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py next &"
+              :onclick "python3 ~/.config/eww/scripts/konachan.py next &"
               :tooltip "Rotate cards"
         "/mode")
 
       (button :class "quick-cmd-btn"
-              :onclick "python3 /home/facuud2/.config/eww/scripts/konachan.py fetch &"
+              :onclick "python3 ~/.config/eww/scripts/konachan.py fetch &"
               :tooltip "Fetch newest"
         "/clear"))))
 
