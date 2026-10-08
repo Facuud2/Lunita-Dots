@@ -53,7 +53,11 @@ fi
 
 # 2. Hyprlock / Prelock flow
 prelock_bin="$HOME/.local/bin/prelock"
-unlock_file="/tmp/prelock_unlocked"
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+    unlock_file="$XDG_RUNTIME_DIR/prelock_unlocked"
+else
+    unlock_file="/tmp/prelock_unlocked_$(id -u)"
+fi
 stock_hyprlock_bin="/usr/bin/hyprlock"
 companion_bin="$HOME/.local/libexec/prelock/hyprlock-prelock"
 
