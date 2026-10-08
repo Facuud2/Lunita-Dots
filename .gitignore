@@ -10,9 +10,28 @@ __pycache__/
 *~
 
 
+# Estado local del gestor de temas
+.lunita-theme
+
 # Configuración exclusiva de hardware del usuario y archivos generados en caliente
 **/hypr/modules/monitors.lua
 **/hypr/current_wallpaper.png
 **/hypr/scripts/wvkbd-colors.env
-core/hypr/monitors.lua
-core/hypr/hyprlock-colors.conf
+core/.config/hypr/monitors.lua
+core/.config/hypr/hyprlock-colors.conf
+core/.config/hypr/modules/colors.lua
+core/prelock/palette.conf
+
+# Paletas dinámicas generadas por Matugen en lunita-default
+themes/lunita-default/.config/ags/colors.scss
+themes/lunita-default/.config/eww/colors.scss
+themes/lunita-default/.config/kitty/colors-matugen.conf
+themes/lunita-default/.config/nvim/lua/colors.lua
+themes/lunita-default/.config/gtk-3.0/gtk.css
+themes/lunita-default/.config/gtk-4.0/gtk.css
+themes/lunita-default/.config/qt6ct/colors/lunita.conf
+themes/lunita-default/.config/qt6ct/qss/lunita.qss
+themes/lunita-default/.config/vesktop/themes/lunita.theme.css
+themes/lunita-default/.config/kdeglobals
+themes/lunita-default/.local/share/color-schemes/Lunita.colors
+themes/lunita-default/.config/eww/assets/default_cover.png
