@@ -5,8 +5,8 @@
 # ==============================================================================
 
 CACHE_ART="/tmp/hyprlock_art.png"
-DEFAULT_ART="/home/facuud2/.config/hypr/assets/default_cover.png"
-FALLBACK_ART="/home/facuud2/.config/hypr/avatar.jpg"
+DEFAULT_ART="${HOME}/.config/hypr/assets/default_cover.png"
+FALLBACK_ART="${HOME}/.config/hypr/avatar.jpg"
 
 get_player_status() {
     playerctl status 2>/dev/null || echo "Stopped"
@@ -46,7 +46,7 @@ update_art() {
 import subprocess, urllib.request, urllib.parse, re, os
 
 cache_art = "/tmp/hyprlock_art.png"
-default_art = "/home/facuud2/.config/hypr/assets/default_cover.png"
+default_art = os.path.expanduser("~/.config/hypr/assets/default_cover.png")
 
 def get_metadata(prop):
     try:

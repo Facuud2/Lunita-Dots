@@ -8,7 +8,8 @@ if [ -f "$COLORS_FILE" ]; then
     OUTLINE=$(grep '\$outline:' "$COLORS_FILE" | awk '{print $2}' | tr -d ';')
     CONTAINER=$(grep '\$surface_container:' "$COLORS_FILE" | awk '{print $2}' | tr -d ';')
 
-    cat << SVG > /tmp/note_matugen.svg
+    TMP_SVG="$(mktemp --tmpdir="${XDG_RUNTIME_DIR:-/tmp}" lunita_note_XXXXXX.svg)"
+    cat << SVG > "$TMP_SVG"
 <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
   <rect width="80" height="80" rx="16" fill="${BG:-#1e1e2e}"/>
   <circle cx="40" cy="40" r="28" fill="${CONTAINER:-#181825}" stroke="${OUTLINE:-#313244}" stroke-width="2"/>
@@ -17,7 +18,8 @@ if [ -f "$COLORS_FILE" ]; then
   <circle cx="40" cy="40" r="3" fill="${BG:-#181825}"/>
 </svg>
 SVG
-    ffmpeg -y -i /tmp/note_matugen.svg -frames:v 1 -update 1 "$HOME/.config/eww/assets/default_cover.png" >/dev/null 2>&1
+    ffmpeg -y -i "$TMP_SVG" -frames:v 1 -update 1 "$HOME/.config/eww/assets/default_cover.png" >/dev/null 2>&1
+    rm -f "$TMP_SVG"
 fi
 
 # Reload eww

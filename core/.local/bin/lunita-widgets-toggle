@@ -2,7 +2,8 @@
 import os
 import sys
 
-PIPE_PATH = "/tmp/lunita_widgets_ipc.pipe"
+runtime_dir = os.environ.get("XDG_RUNTIME_DIR") or f"/tmp/lunita-{os.getuid()}"
+PIPE_PATH = os.path.join(runtime_dir, "lunita_widgets_ipc.pipe")
 cmd = sys.argv[1] if len(sys.argv) > 1 else "toggle_edit"
 
 try:

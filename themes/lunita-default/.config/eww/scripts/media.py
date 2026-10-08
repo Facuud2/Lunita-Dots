@@ -6,7 +6,7 @@ import time
 import urllib.parse
 import subprocess
 
-CACHE_DIR = "/tmp/eww_music"
+CACHE_DIR = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "eww_music")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 DEFAULT_COVER = os.path.expanduser("~/.config/eww/assets/default_cover.png")

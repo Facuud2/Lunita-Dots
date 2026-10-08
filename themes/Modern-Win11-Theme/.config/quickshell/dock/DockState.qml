@@ -1232,7 +1232,7 @@ Item {
 
     Process {
         id: sinksProc
-        command: ["python3", "/home/facuud2/.config/quickshell/dock/scripts/audio_sinks.py"]
+        command: ["python3", (Quickshell.env("HOME") || "") + "/.config/quickshell/dock/scripts/audio_sinks.py"]
         stdout: SplitParser {
             onRead: data => {
                 try {
@@ -1246,7 +1246,7 @@ Item {
     }
 
     function setAudioSink(sinkId) {
-        Quickshell.execDetached(["python3", "/home/facuud2/.config/quickshell/dock/scripts/audio_sinks.py", "set", String(sinkId)]);
+        Quickshell.execDetached(["python3", (Quickshell.env("HOME") || "") + "/.config/quickshell/dock/scripts/audio_sinks.py", "set", String(sinkId)]);
         var current = root.audioSinks.slice();
         for (var i = 0; i < current.length; i++) {
             current[i].active = (current[i].id === sinkId);

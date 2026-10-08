@@ -7,7 +7,7 @@ import Quickshell.Services.UPower
 QtObject {
     id: lockState
 
-    property string home: Quickshell.env("HOME") || "/home/facuud2"
+    property string home: Quickshell.env("HOME") || ""
     property string wallpaperPath: "file://" + home + "/.config/hypr/current_wallpaper.png"
 
     // ── Authentication State ──
