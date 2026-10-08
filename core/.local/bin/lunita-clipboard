@@ -30,7 +30,12 @@ ACTION="${1:-toggle}"
 
 CLIPBOARD_PATH="$HOME/.config/quickshell/clipboard"
 if [ ! -d "$CLIPBOARD_PATH" ]; then
-    CLIPBOARD_PATH="$DOTS_DIR/themes/macOS-Theme/quickshell/clipboard"
+    CURRENT_THEME="$(cat "$DOTS_DIR/.lunita-theme" 2>/dev/null || cat "$HOME/.lunita-theme" 2>/dev/null || echo "macOS-Theme")"
+    if [ -d "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/clipboard" ]; then
+        CLIPBOARD_PATH="$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/clipboard"
+    else
+        CLIPBOARD_PATH="$DOTS_DIR/themes/macOS-Theme/.config/quickshell/clipboard"
+    fi
 fi
 
 # Detectar monitor enfocado

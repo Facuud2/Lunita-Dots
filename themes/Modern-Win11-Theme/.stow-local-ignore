@@ -3,5 +3,6 @@
 ^assets$
 ^tokri$
 ^zsh$
+^dolphin$
 .*\.bak.*
 .*\.orig.*

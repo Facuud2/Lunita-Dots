@@ -30,7 +30,12 @@ ACTION="${1:-toggle}"
 
 SPOTLIGHT_PATH="$HOME/.config/quickshell/spotlight"
 if [ ! -d "$SPOTLIGHT_PATH" ]; then
-    SPOTLIGHT_PATH="$DOTS_DIR/themes/macOS-Theme/quickshell/spotlight"
+    CURRENT_THEME="$(cat "$DOTS_DIR/.lunita-theme" 2>/dev/null || cat "$HOME/.lunita-theme" 2>/dev/null || echo "macOS-Theme")"
+    if [ -d "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/spotlight" ]; then
+        SPOTLIGHT_PATH="$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/spotlight"
+    else
+        SPOTLIGHT_PATH="$DOTS_DIR/themes/macOS-Theme/.config/quickshell/spotlight"
+    fi
 fi
 
 # Detectar monitor enfocado

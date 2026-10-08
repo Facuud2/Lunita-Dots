@@ -30,7 +30,12 @@ ACTION="${1:-toggle}"
 
 LAUNCHER_PATH="$HOME/.config/quickshell/launcher"
 if [ ! -d "$LAUNCHER_PATH" ]; then
-    LAUNCHER_PATH="$DOTS_DIR/themes/macOS-Theme/quickshell/launcher"
+    CURRENT_THEME="$(cat "$DOTS_DIR/.lunita-theme" 2>/dev/null || cat "$HOME/.lunita-theme" 2>/dev/null || echo "macOS-Theme")"
+    if [ -d "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/launcher" ]; then
+        LAUNCHER_PATH="$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/launcher"
+    else
+        LAUNCHER_PATH="$DOTS_DIR/themes/macOS-Theme/.config/quickshell/launcher"
+    fi
 fi
 
 # Detectar monitor enfocado

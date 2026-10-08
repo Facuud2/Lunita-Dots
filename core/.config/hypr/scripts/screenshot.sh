@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
 
-# Directorio de capturas
-TARGET_DIR="${HOME}/Imagenes/Capturas de pantalla"
+# Directorio de capturas (resolución portátil con xdg-user-dir)
+PICTURES_DIR=""
+if command -v xdg-user-dir >/dev/null 2>&1; then
+    PICTURES_DIR=$(xdg-user-dir PICTURES 2>/dev/null)
+fi
+if [ -z "$PICTURES_DIR" ] || [ ! -d "$PICTURES_DIR" ]; then
+    if [ -d "${HOME}/Imagenes" ]; then
+        PICTURES_DIR="${HOME}/Imagenes"
+    elif [ -d "${HOME}/Pictures" ]; then
+        PICTURES_DIR="${HOME}/Pictures"
+    else
+        PICTURES_DIR="${HOME}/Imagenes"
+    fi
+fi
+TARGET_DIR="${PICTURES_DIR}/Capturas de pantalla"
 mkdir -p "$TARGET_DIR"
 
 MODE="${1:-area}"

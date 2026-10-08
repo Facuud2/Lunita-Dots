@@ -42,8 +42,8 @@ fi
 mode="${1:-auto}"
 qs_lock_dir="$HOME/.config/quickshell/lockscreen"
 
-# 1. Prioritize theme's native Quickshell Lockscreen
-if [ "$mode" != "hyprlock" ] && command -v quickshell >/dev/null 2>&1 && [ -f "$qs_lock_dir/shell.qml" ]; then
+# 1. Prioritize theme's native Quickshell Lockscreen (si el tema lo implementa)
+if [ "$mode" != "hyprlock" ] && [ "$mode" != "prelock" ] && command -v quickshell >/dev/null 2>&1 && [ -f "$qs_lock_dir/shell.qml" ]; then
     quickshell -p "$qs_lock_dir"
     status=$?
     if [ $status -eq 0 ]; then
@@ -51,8 +51,89 @@ if [ "$mode" != "hyprlock" ] && command -v quickshell >/dev/null 2>&1 && [ -f "$
     fi
 fi
 
-# 2. Fallback to Hyprlock
-/usr/bin/hyprlock
+# 2. Hyprlock / Prelock flow
+prelock_bin="$HOME/.local/bin/prelock"
+unlock_file="/tmp/prelock_unlocked"
+stock_hyprlock_bin="/usr/bin/hyprlock"
+companion_bin="$HOME/.local/libexec/prelock/hyprlock-prelock"
+
+prelock_pid=""
+ready_dir=""
+ready_fifo=""
+
+close_ready_channel() {
+    if [[ -n "${ready_fd:-}" ]]; then
+        exec {ready_fd}>&-
+        unset ready_fd
+    fi
+    [[ -n "$ready_fifo" ]] && rm -f -- "$ready_fifo"
+    [[ -n "$ready_dir" ]] && rmdir -- "$ready_dir" 2>/dev/null || true
+    ready_fifo=""
+    ready_dir=""
+}
+
+stop_prelock() {
+    local pid="${prelock_pid:-}"
+    [[ -n "$pid" ]] || return
+
+    prelock_pid=""
+    if kill -0 "$pid" 2>/dev/null; then
+        kill -TERM "$pid" 2>/dev/null || true
+    fi
+    wait "$pid" 2>/dev/null || true
+}
+
+fade_prelock() {
+    local pid="${prelock_pid:-}"
+    [[ -n "$pid" ]] || return
+
+    if kill -0 "$pid" 2>/dev/null; then
+        touch "$unlock_file"
+    fi
+    wait "$pid" 2>/dev/null || true
+    prelock_pid=""
+    rm -f "$unlock_file"
+}
+
+cleanup() {
+    close_ready_channel
+    stop_prelock
+    rm -f "$unlock_file"
+}
+
+trap cleanup EXIT
+
+# Iniciar Prelock si está disponible
+if [ -x "$prelock_bin" ]; then
+    anim="classic"
+    if [ "$mode" != "auto" ] && [ "$mode" != "hyprlock" ] && [ "$mode" != "prelock" ]; then
+        anim="$mode"
+    fi
+
+    ready_dir="$(mktemp -d "$runtime_root/prelock-ready.XXXXXX" 2>/dev/null)"
+    if [[ -n "$ready_dir" ]] && mkfifo -m 600 "$ready_dir/ready" &&
+        exec {ready_fd}<>"$ready_dir/ready"; then
+        ready_fifo="$ready_dir/ready"
+        PRELOCK_READY_FIFO="$ready_fifo" "$prelock_bin" "$anim" &
+        prelock_pid=$!
+        IFS= read -r -t 3 -u "$ready_fd" || true
+        close_ready_channel
+    else
+        "$prelock_bin" "$anim" &
+        prelock_pid=$!
+        sleep 0.8
+    fi
+fi
+
+# Seleccionar binario de hyprlock (companion parcheado si existe, o stock)
+locker="$stock_hyprlock_bin"
+if [ -x "$companion_bin" ]; then
+    locker="$companion_bin"
+fi
+
+"$locker"
 status=$?
 
+fade_prelock
+trap - EXIT
 exit "$status"

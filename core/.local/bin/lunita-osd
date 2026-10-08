@@ -31,7 +31,12 @@ TYPE="${2:-volume}"
 
 OSD_PATH="$HOME/.config/quickshell/osd"
 if [ ! -d "$OSD_PATH" ]; then
-    OSD_PATH="$DOTS_DIR/themes/macOS-Theme/quickshell/osd"
+    CURRENT_THEME="$(cat "$DOTS_DIR/.lunita-theme" 2>/dev/null || cat "$HOME/.lunita-theme" 2>/dev/null || echo "macOS-Theme")"
+    if [ -d "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/osd" ]; then
+        OSD_PATH="$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/osd"
+    else
+        OSD_PATH="$DOTS_DIR/themes/macOS-Theme/.config/quickshell/osd"
+    fi
 fi
 
 # 1. Si el OSD de Quickshell ya está en ejecución, enviar comando IPC

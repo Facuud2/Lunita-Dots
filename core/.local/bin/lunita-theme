@@ -67,13 +67,73 @@ get_current_theme() {
     fi
 }
 
-# Limpiar enlaces manuales/antiguos que apunten a Lunita-Dots para evitar conflictos de Stow
+# Limpiar enlaces manuales/antiguos y resolver colisiones antes de ejecutar Stow
 clean_legacy_links() {
-    info "Verificando y resolviendo posibles enlaces manuales previos..."
+    local target_pkg="${1:-}"
+    info "Verificando y resolviendo posibles colisiones previas de Stow..."
     python3 -c "
-import os
+import os, sys, re
+
 home = os.path.expanduser('~')
 dots_prefix = '$DOTS_DIR'
+target_pkg = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] else ''
+
+# 1. Si se provee un paquete específico (e.g. core o un tema), resolver conflictos directos
+if target_pkg and os.path.isdir(target_pkg):
+    ignore_patterns = [re.compile(r'^\.stow-local-ignore$')]
+    ignore_file = os.path.join(target_pkg, '.stow-local-ignore')
+    if os.path.exists(ignore_file):
+        with open(ignore_file, 'r', errors='ignore') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    try:
+                        ignore_patterns.append(re.compile(line))
+                    except Exception:
+                        pass
+
+    def is_ignored(rel_p):
+        parts = rel_p.split(os.sep)
+        for pat in ignore_patterns:
+            if pat.search(rel_p) or pat.search(parts[0]):
+                return True
+        return False
+
+    for root, dirs, files in os.walk(target_pkg):
+        rel_root = os.path.relpath(root, target_pkg)
+        if rel_root != '.' and is_ignored(rel_root):
+            continue
+
+        if rel_root != '.':
+            target_dir = os.path.join(home, rel_root)
+            if os.path.islink(target_dir):
+                try:
+                    real_dir = os.path.realpath(target_dir)
+                    if real_dir != os.path.realpath(root) and (real_dir.startswith(dots_prefix) or not os.path.exists(target_dir)):
+                        os.unlink(target_dir)
+                except Exception:
+                    pass
+
+        for f in files:
+            rel_file = os.path.normpath(os.path.join(rel_root, f)) if rel_root != '.' else f
+            if is_ignored(rel_file):
+                continue
+            src_file = os.path.join(target_pkg, rel_file)
+            target_file = os.path.join(home, rel_file)
+            if os.path.lexists(target_file):
+                try:
+                    real_target = os.path.realpath(target_file)
+                    if os.path.islink(target_file):
+                        if real_target != os.path.realpath(src_file):
+                            os.unlink(target_file)
+                    else:
+                        # Si no es un enlace, y NO apunta a la carpeta del repositorio (ej. archivo regular generado por Matugen)
+                        if not real_target.startswith(dots_prefix):
+                            os.remove(target_file)
+                except Exception:
+                    pass
+
+# 2. Limpieza general de enlaces rotos de Lunita-Dots en directorios comunes
 scan_dirs = [
     os.path.join(home, '.config'),
     os.path.join(home, '.local', 'bin'),
@@ -90,11 +150,11 @@ for base in scan_dirs:
                 try:
                     target = os.path.realpath(p)
                     raw_target = os.readlink(p)
-                    if raw_target.startswith(dots_prefix) or target.startswith(dots_prefix):
+                    if (raw_target.startswith(dots_prefix) or target.startswith(dots_prefix)) and not os.path.exists(p):
                         os.unlink(p)
                 except Exception:
                     pass
-" 2>/dev/null || true
+" "$target_pkg" 2>/dev/null || true
 }
 
 # ------------------------------------------------------------------------------
@@ -184,35 +244,28 @@ cmd_stow() {
     case "$target" in
         core)
             info "Vinculando paquete 'core' con GNU Stow..."
-            if ! stow -d "$DOTS_DIR" -t "$HOME" -S core 2>/dev/null; then
-                clean_legacy_links
-                stow -d "$DOTS_DIR" -t "$HOME" -S core
-            fi
+            clean_legacy_links "$DOTS_DIR/core"
+            stow -d "$DOTS_DIR" -t "$HOME" -S core
             success "Paquete core vinculado exitosamente."
             ;;
         theme)
             info "Vinculando tema '$current' con GNU Stow..."
-            if ! stow -d "$THEMES_DIR" -t "$HOME" -S "$current" 2>/dev/null; then
-                clean_legacy_links
-                stow -d "$THEMES_DIR" -t "$HOME" -S "$current"
-            fi
+            clean_legacy_links "$THEMES_DIR/$current"
+            stow -d "$THEMES_DIR" -t "$HOME" -S "$current"
             success "Tema '$current' vinculado exitosamente."
             ;;
         all|"")
             info "Vinculando core y tema actual ($current) con GNU Stow..."
-            if ! stow -d "$DOTS_DIR" -t "$HOME" -S core 2>/dev/null; then
-                clean_legacy_links
-                stow -d "$DOTS_DIR" -t "$HOME" -S core
-            fi
-            if ! stow -d "$THEMES_DIR" -t "$HOME" -S "$current" 2>/dev/null; then
-                clean_legacy_links
-                stow -d "$THEMES_DIR" -t "$HOME" -S "$current"
-            fi
+            clean_legacy_links "$DOTS_DIR/core"
+            stow -d "$DOTS_DIR" -t "$HOME" -S core
+            clean_legacy_links "$THEMES_DIR/$current"
+            stow -d "$THEMES_DIR" -t "$HOME" -S "$current"
             success "Todos los paquetes vinculados exitosamente con GNU Stow."
             ;;
         *)
             if [ -d "$THEMES_DIR/$target" ]; then
                 info "Vinculando tema '$target' con GNU Stow..."
+                clean_legacy_links "$THEMES_DIR/$target"
                 stow -d "$THEMES_DIR" -t "$HOME" -S "$target"
                 success "Tema '$target' vinculado."
             else
@@ -270,8 +323,10 @@ cmd_restow() {
     local current
     current="$(get_current_theme)"
     info "Reiniciando enlaces de GNU Stow (core + $current)..."
-    stow -d "$DOTS_DIR" -t "$HOME" -R core 2>/dev/null || { clean_legacy_links; stow -d "$DOTS_DIR" -t "$HOME" -S core; }
-    stow -d "$THEMES_DIR" -t "$HOME" -R "$current" 2>/dev/null || { clean_legacy_links; stow -d "$THEMES_DIR" -t "$HOME" -S "$current"; }
+    clean_legacy_links "$DOTS_DIR/core"
+    stow -d "$DOTS_DIR" -t "$HOME" -R core 2>/dev/null || stow -d "$DOTS_DIR" -t "$HOME" -S core
+    clean_legacy_links "$THEMES_DIR/$current"
+    stow -d "$THEMES_DIR" -t "$HOME" -R "$current" 2>/dev/null || stow -d "$THEMES_DIR" -t "$HOME" -S "$current"
     success "Dotfiles revinculados correctamente con GNU Stow."
 }
 
@@ -309,17 +364,12 @@ cmd_apply() {
     fi
 
     # 3. Vincular paquete core (siempre activo e independiente del tema)
-    if ! stow -d "$DOTS_DIR" -t "$HOME" -S core 2>/dev/null; then
-        clean_legacy_links
-        stow -d "$DOTS_DIR" -t "$HOME" -S core
-    fi
+    clean_legacy_links "$DOTS_DIR/core"
+    stow -d "$DOTS_DIR" -t "$HOME" -S core
 
     # 4. Vincular el nuevo tema
-    if ! stow -d "$THEMES_DIR" -t "$HOME" -S "$target" 2>/dev/null; then
-        clean_legacy_links
-        stow -d "$DOTS_DIR" -t "$HOME" -S core
-        stow -d "$THEMES_DIR" -t "$HOME" -S "$target"
-    fi
+    clean_legacy_links "$target_dir"
+    stow -d "$THEMES_DIR" -t "$HOME" -S "$target"
     success "Archivos y configuraciones del tema enlazados con GNU Stow."
 
     # 4.1. Normalizar dinámicamente rutas de usuario en archivos de configuración

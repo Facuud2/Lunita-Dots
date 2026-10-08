@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 
-TARGET_DIR="${HOME}/Videos/Grabaciones de pantalla"
+# Directorio de grabaciones (resolución portátil con xdg-user-dir)
+VIDEOS_DIR=""
+if command -v xdg-user-dir >/dev/null 2>&1; then
+    VIDEOS_DIR=$(xdg-user-dir VIDEOS 2>/dev/null)
+fi
+if [ -z "$VIDEOS_DIR" ] || [ ! -d "$VIDEOS_DIR" ]; then
+    if [ -d "${HOME}/Videos" ]; then
+        VIDEOS_DIR="${HOME}/Videos"
+    elif [ -d "${HOME}/Vídeos" ]; then
+        VIDEOS_DIR="${HOME}/Vídeos"
+    else
+        VIDEOS_DIR="${HOME}/Videos"
+    fi
+fi
+TARGET_DIR="${VIDEOS_DIR}/Grabaciones de pantalla"
 mkdir -p "$TARGET_DIR"
 
 TIMESTAMP=$(date +'%Y-%m-%d_%H-%M-%S')
