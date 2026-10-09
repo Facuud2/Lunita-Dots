@@ -105,12 +105,8 @@ Item {
 
     function toggleThemeMode() {
         isDarkTheme = !isDarkTheme;
-        var scheme = isDarkTheme ? "prefer-dark" : "prefer-light";
-        var gtkTheme = isDarkTheme ? "Adwaita-dark" : "Adwaita";
-        var cmd = "gsettings set org.gnome.desktop.interface color-scheme '" + scheme + "' 2>/dev/null; " +
-                  "gsettings set org.gnome.desktop.interface gtk-theme '" + gtkTheme + "' 2>/dev/null; " +
-                  "mkdir -p $HOME/.config/lunita && echo '" + (isDarkTheme ? "dark" : "light") + "' > $HOME/.config/lunita/color_scheme; " +
-                  "command -v lunita-tokri >/dev/null 2>&1 && lunita-tokri reload-theme >/dev/null 2>&1 || true";
+        var mode = isDarkTheme ? "dark" : "light";
+        var cmd = "command -v lunita-palette-sync >/dev/null 2>&1 && lunita-palette-sync " + mode + " >/dev/null 2>&1 || true";
         Quickshell.execDetached(["bash", "-c", cmd]);
     }
 

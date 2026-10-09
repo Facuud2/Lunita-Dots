@@ -21,6 +21,50 @@
     "shell": "zsh-pills",
     "discord": "vesktop-macos-cupertino"
   },
+  "engine": "macos-cupertino",
+  "typography": {
+    "interface": "SF Pro Display",
+    "display": "SF Pro Display",
+    "monospace": "JetBrainsMono Nerd Font",
+    "size": 10
+  },
+  "assets": {
+    "icon_theme": "WhiteSur",
+    "cursor_theme": "macOS",
+    "cursor_size": 32
+  },
+  "tokens": {
+    "accent": "#007AFF",
+    "accent_hover": "#0062CC",
+    "accent_active": "#004FB0",
+    "accent_fg": "#FFFFFF",
+    "dark": {
+      "surface": "#161618",
+      "surface_container": "#1E1E20",
+      "surface_container_high": "#2C2C2E",
+      "on_surface": "#F5F5F7",
+      "on_surface_dim": "#8E8E93",
+      "border": "rgba(255, 255, 255, 0.12)",
+      "surface_opacity": 0.85
+    },
+    "light": {
+      "surface": "#F5F7FB",
+      "surface_container": "#EBEFF5",
+      "surface_container_high": "#FFFFFF",
+      "on_surface": "#1D1D1F",
+      "on_surface_dim": "#8E8E93",
+      "border": "rgba(0, 0, 0, 0.08)",
+      "surface_opacity": 0.95
+    }
+  },
+  "component_overrides": {
+    "dock": {
+      "surface_opacity": 0.30
+    },
+    "spotlight": {
+      "surface_opacity": 0.70
+    }
+  },
   "features": [
     "Barra superior de menú adaptable a Tema Claro y Oscuro con conmutador en Control Center",
     "Físicas elásticas SwiftUI y Core Animation para transiciones ultra fluidas en Hyprland",

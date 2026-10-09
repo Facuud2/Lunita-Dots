@@ -19,6 +19,43 @@
     "cursor": "bibata-modern-ice-40px",
     "shell": "zsh-pills"
   },
+  "engine": "matugen",
+  "typography": {
+    "interface": "JetBrainsMono Nerd Font",
+    "display": "JetBrainsMono Nerd Font",
+    "monospace": "JetBrainsMono Nerd Font",
+    "size": 10
+  },
+  "assets": {
+    "icon_theme": "BeautyLine",
+    "cursor_theme": "Bibata-Modern-Ice",
+    "cursor_size": 40
+  },
+  "tokens": {
+    "accent": "#B588F7",
+    "accent_hover": "#CBA6F7",
+    "accent_active": "#9A6CE0",
+    "accent_fg": "#FFFFFF",
+    "dark": {
+      "surface": "#181825",
+      "surface_container": "#1E1E2E",
+      "surface_container_high": "#313244",
+      "on_surface": "#CDD6F4",
+      "on_surface_dim": "#A6ADC8",
+      "border": "rgba(255, 255, 255, 0.10)",
+      "surface_opacity": 0.85
+    },
+    "light": {
+      "surface": "#EFF1F5",
+      "surface_container": "#E6E9EF",
+      "surface_container_high": "#DCE0E8",
+      "on_surface": "#4C4F69",
+      "on_surface_dim": "#6C6F85",
+      "border": "rgba(0, 0, 0, 0.08)",
+      "surface_opacity": 0.95
+    }
+  },
+  "component_overrides": {},
   "features": [
     "Dynamic Island superior de 36px interactiva y expansible",
     "Servidor de notificaciones D-Bus integrado en la Dynamic Island",

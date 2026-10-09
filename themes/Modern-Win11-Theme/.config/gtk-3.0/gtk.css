@@ -1,43 +1,100 @@
-/* Windows 11 Fluent Design / Mica GTK Styling */
-window, dialog {
+/* Generado dinámicamente por lunita-palette-sync para Modern-Win11-Theme (dark) */
+@define-color accent_color #0078D4;
+@define-color accent_bg_color #0078D4;
+@define-color accent_fg_color #FFFFFF;
+
+@define-color window_bg_color #1A1C23;
+@define-color window_fg_color #F4F4F5;
+
+@define-color view_bg_color #1A1C23;
+@define-color view_fg_color #F4F4F5;
+
+@define-color headerbar_bg_color #18191F;
+@define-color headerbar_fg_color #F4F4F5;
+@define-color headerbar_border_color rgba(255, 255, 255, 0.08);
+
+@define-color sidebar_bg_color #18191F;
+@define-color sidebar_fg_color #F4F4F5;
+
+@define-color card_bg_color #18191F;
+@define-color card_fg_color #F4F4F5;
+
+@define-color popover_bg_color #242730;
+@define-color popover_fg_color #F4F4F5;
+
+* {
+    font-family: "Segoe UI Variable Text, Segoe UI, Inter", -apple-system, sans-serif;
+}
+
+window:not(.background), dialog {
+    background-color: #1A1C23;
+    color: #F4F4F5;
     border-radius: 12px;
-    background-color: #1a1c23;
+}
+
+window.background {
+    background-color: transparent;
+    background: transparent;
 }
 
 headerbar {
-    border-radius: 12px 12px 0 0;
-    background: #18191f;
+    background-color: #18191F;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    min-height: 42px;
+}
+
+headerbar .title {
+    color: #F4F4F5;
+    font-weight: 600;
+}
+
+placessidebar, placessidebar row, placessidebar .navigation-sidebar {
+    background-color: #18191F;
+    color: #F4F4F5;
+    border: none;
+}
+
+placessidebar row:selected {
+    background-color: #0078D4;
+    color: #FFFFFF;
+}
+
+filechooser view, filechooser treeview, filechooser iconview, treeview.view, iconview.view {
+    background-color: #1A1C23;
+    color: #F4F4F5;
+}
+
+filechooser treeview:selected, filechooser iconview:selected, treeview.view:selected, iconview.view:selected {
+    background-color: #0078D4;
+    color: #FFFFFF;
 }
 
 button {
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.06);
-    color: #f4f4f5;
+    background: rgba(255, 255, 255, 0.08);
+    color: #F4F4F5;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: all 180ms ease;
+    transition: all 150ms ease;
 }
 
 button:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.14);
 }
 
-button:active, button:checked {
-    background: #0078d4;
-    color: #ffffff;
-    border-color: #0078d4;
+button:active, button:checked, button.suggested-action {
+    background: #0078D4;
+    color: #FFFFFF;
+    border-color: #0078D4;
 }
 
-entry {
+entry, searchentry {
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-    padding: 6px 10px;
+    color: #F4F4F5;
+    caret-color: #0078D4;
 }
 
-entry:focus {
-    border-color: #60cdff;
-    box-shadow: 0 0 0 1px #60cdff;
+entry:focus, searchentry:focus {
+    border-color: #0078D4;
 }

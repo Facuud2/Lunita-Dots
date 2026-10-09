@@ -1,0 +1,448 @@
+#!/usr/bin/env python3
+# ==============================================================================
+# 🌙 LUNITA PALETTE SYNC (Design Tokens & Color Orchestrator)
+# Sincronizador unificado de tokens de diseño para GTK, Qt, Quickshell y terminales
+# Lunita-Dots · core/.local/bin/lunita-palette-sync
+# ==============================================================================
+
+import os
+import sys
+import json
+import subprocess
+from pathlib import Path
+
+HOME = Path.home()
+LUNITA_STATE_DIR = HOME / ".config/lunita"
+COLOR_SCHEME_FILE = LUNITA_STATE_DIR / "color_scheme"
+CURRENT_THEME_FILE = LUNITA_STATE_DIR / "current_theme"
+ACTIVE_TOKENS_FILE = LUNITA_STATE_DIR / "active_tokens.json"
+
+def find_dots_dir() -> Path:
+    source = Path(__file__).resolve()
+    for parent in [source] + list(source.parents):
+        if (parent / "themes").is_dir() and (parent / "core").is_dir():
+            return parent
+    return source.parent.parent.parent
+
+DOTS_DIR = find_dots_dir()
+STATE_FILE = DOTS_DIR / ".lunita-theme"
+
+def hex_to_rgb(hex_str: str):
+    hex_str = hex_str.strip().lstrip("#")
+    if len(hex_str) == 3:
+        hex_str = "".join([c * 2 for c in hex_str])
+    if len(hex_str) >= 6:
+        r = int(hex_str[0:2], 16)
+        g = int(hex_str[2:4], 16)
+        b = int(hex_str[4:6], 16)
+        return r, g, b
+    return 0, 0, 0
+
+def hex_to_rgb_str(hex_str: str) -> str:
+    r, g, b = hex_to_rgb(hex_str)
+    return f"{r},{g},{b}"
+
+def get_active_theme_id() -> str:
+    if STATE_FILE.exists():
+        t = STATE_FILE.read_text().strip()
+        if t: return t
+    if CURRENT_THEME_FILE.exists():
+        t = CURRENT_THEME_FILE.read_text().strip()
+        if t: return t
+    return "lunita-default"
+
+def get_active_mode() -> str:
+    if COLOR_SCHEME_FILE.exists():
+        mode = COLOR_SCHEME_FILE.read_text().strip().lower()
+        if "light" in mode:
+            return "light"
+    return "dark"
+
+def run_cmd(cmd, silent=True):
+    try:
+        subprocess.run(cmd, shell=isinstance(cmd, str), check=False,
+                       stdout=subprocess.DEVNULL if silent else None,
+                       stderr=subprocess.DEVNULL if silent else None)
+    except Exception:
+        pass
+
+def main():
+    action = sys.argv[1] if len(sys.argv) > 1 else "sync"
+
+    current_mode = get_active_mode()
+    if action == "toggle":
+        target_mode = "light" if current_mode == "dark" else "dark"
+    elif action in ("dark", "light"):
+        target_mode = action
+    else:
+        target_mode = current_mode
+
+    LUNITA_STATE_DIR.mkdir(parents=True, exist_ok=True)
+    COLOR_SCHEME_FILE.write_text(target_mode + "\n")
+
+    theme_id = get_active_theme_id()
+    theme_json_path = DOTS_DIR / "themes" / theme_id / "theme.json"
+
+    if not theme_json_path.exists():
+        print(f"[!] No se encontró theme.json en {theme_json_path}")
+        return 1
+
+    try:
+        theme_data = json.loads(theme_json_path.read_text())
+    except Exception as e:
+        print(f"[!] Error leyendo {theme_json_path}: {e}")
+        return 1
+
+    # Extraer tipografía
+    typography = theme_data.get("typography", {})
+    font_ui = typography.get("interface", "SF Pro Display")
+    font_display = typography.get("display", font_ui)
+    font_mono = typography.get("monospace", "JetBrainsMono Nerd Font")
+    font_size = typography.get("size", 10)
+
+    # Extraer activos
+    assets = theme_data.get("assets", {})
+    icon_theme = assets.get("icon_theme", "WhiteSur")
+    cursor_theme = assets.get("cursor_theme", "Bibata-Modern-Ice")
+    cursor_size = assets.get("cursor_size", 24)
+
+    # Extraer tokens y resolver variante
+    tokens = theme_data.get("tokens", {})
+    accent = tokens.get("accent", "#0078D4")
+    accent_hover = tokens.get("accent_hover", "#60CDFF")
+    accent_active = tokens.get("accent_active", "#005A9E")
+    accent_fg = tokens.get("accent_fg", "#FFFFFF")
+
+    palette = tokens.get(target_mode, {})
+    if not palette:
+        palette = tokens.get("dark", {})
+
+    surface = palette.get("surface", "#1A1C23" if target_mode == "dark" else "#F5F7FB")
+    surface_container = palette.get("surface_container", "#18191F" if target_mode == "dark" else "#EBEFF5")
+    surface_container_high = palette.get("surface_container_high", "#242730" if target_mode == "dark" else "#FFFFFF")
+    on_surface = palette.get("on_surface", "#F4F4F5" if target_mode == "dark" else "#1D1D1F")
+    on_surface_dim = palette.get("on_surface_dim", "#94A3B8" if target_mode == "dark" else "#8E8E93")
+    border = palette.get("border", "rgba(255, 255, 255, 0.08)" if target_mode == "dark" else "rgba(0, 0, 0, 0.08)")
+    surface_opacity = palette.get("surface_opacity", 0.85 if target_mode == "dark" else 0.95)
+
+    overrides = theme_data.get("component_overrides", {})
+
+    # Guardar tokens resueltos como JSON para Quickshell
+    active_tokens = {
+        "theme_id": theme_id,
+        "mode": target_mode,
+        "is_dark": target_mode == "dark",
+        "typography": {
+            "interface": font_ui,
+            "display": font_display,
+            "monospace": font_mono,
+            "size": font_size
+        },
+        "assets": {
+            "icon_theme": icon_theme,
+            "cursor_theme": cursor_theme,
+            "cursor_size": cursor_size
+        },
+        "accent": accent,
+        "accent_hover": accent_hover,
+        "accent_active": accent_active,
+        "accent_fg": accent_fg,
+        "surface": surface,
+        "surface_container": surface_container,
+        "surface_container_high": surface_container_high,
+        "on_surface": on_surface,
+        "on_surface_dim": on_surface_dim,
+        "border": border,
+        "surface_opacity": surface_opacity,
+        "overrides": overrides
+    }
+    ACTIVE_TOKENS_FILE.write_text(json.dumps(active_tokens, indent=2) + "\n")
+
+    # --------------------------------------------------------------------------
+    # 1. ACTUALIZAR GTK (settings.ini & gtk.css)
+    # --------------------------------------------------------------------------
+    gtk_theme_name = "Adwaita-dark" if target_mode == "dark" else "Adwaita"
+    prefer_dark = "1" if target_mode == "dark" else "0"
+
+    gtk_settings_content = f"""[Settings]
+gtk-theme-name={gtk_theme_name}
+gtk-application-prefer-dark-theme={prefer_dark}
+gtk-icon-theme-name={icon_theme}
+gtk-font-name={font_ui} {font_size}
+gtk-cursor-theme-name={cursor_theme}
+gtk-cursor-theme-size={cursor_size}
+"""
+
+    for gtk_dir in [HOME / ".config/gtk-3.0", HOME / ".config/gtk-4.0"]:
+        gtk_dir.mkdir(parents=True, exist_ok=True)
+        (gtk_dir / "settings.ini").write_text(gtk_settings_content)
+
+    gtk_css_content = f"""/* Generado dinámicamente por lunita-palette-sync para {theme_id} ({target_mode}) */
+@define-color accent_color {accent};
+@define-color accent_bg_color {accent};
+@define-color accent_fg_color {accent_fg};
+
+@define-color window_bg_color {surface};
+@define-color window_fg_color {on_surface};
+
+@define-color view_bg_color {surface};
+@define-color view_fg_color {on_surface};
+
+@define-color headerbar_bg_color {surface_container};
+@define-color headerbar_fg_color {on_surface};
+@define-color headerbar_border_color {border};
+
+@define-color sidebar_bg_color {surface_container};
+@define-color sidebar_fg_color {on_surface};
+
+@define-color card_bg_color {surface_container};
+@define-color card_fg_color {on_surface};
+
+@define-color popover_bg_color {surface_container_high};
+@define-color popover_fg_color {on_surface};
+
+* {{
+    font-family: "{font_ui}", -apple-system, sans-serif;
+}}
+
+window:not(.background), dialog {{
+    background-color: {surface};
+    color: {on_surface};
+    border-radius: 12px;
+}}
+
+window.background {{
+    background-color: transparent;
+    background: transparent;
+}}
+
+headerbar {{
+    background-color: {surface_container};
+    border-bottom: 1px solid {border};
+    min-height: 42px;
+}}
+
+headerbar .title {{
+    color: {on_surface};
+    font-weight: 600;
+}}
+
+placessidebar, placessidebar row, placessidebar .navigation-sidebar {{
+    background-color: {surface_container};
+    color: {on_surface};
+    border: none;
+}}
+
+placessidebar row:selected {{
+    background-color: {accent};
+    color: {accent_fg};
+}}
+
+filechooser view, filechooser treeview, filechooser iconview, treeview.view, iconview.view {{
+    background-color: {surface};
+    color: {on_surface};
+}}
+
+filechooser treeview:selected, filechooser iconview:selected, treeview.view:selected, iconview.view:selected {{
+    background-color: {accent};
+    color: {accent_fg};
+}}
+
+button {{
+    border-radius: 6px;
+    background: {'rgba(255, 255, 255, 0.08)' if target_mode == 'dark' else 'rgba(0, 0, 0, 0.05)'};
+    color: {on_surface};
+    border: 1px solid {border};
+    transition: all 150ms ease;
+}}
+
+button:hover {{
+    background: {'rgba(255, 255, 255, 0.14)' if target_mode == 'dark' else 'rgba(0, 0, 0, 0.08)'};
+}}
+
+button:active, button:checked, button.suggested-action {{
+    background: {accent};
+    color: {accent_fg};
+    border-color: {accent};
+}}
+
+entry, searchentry {{
+    background-color: {'rgba(255, 255, 255, 0.06)' if target_mode == 'dark' else 'rgba(0, 0, 0, 0.04)'};
+    border: 1px solid {border};
+    border-radius: 6px;
+    color: {on_surface};
+    caret-color: {accent};
+}}
+
+entry:focus, searchentry:focus {{
+    border-color: {accent};
+}}
+"""
+    for gtk_dir in [HOME / ".config/gtk-3.0", HOME / ".config/gtk-4.0"]:
+        (gtk_dir / "gtk.css").write_text(gtk_css_content)
+
+    # Sincronizar GSettings
+    color_scheme_gsettings = "prefer-dark" if target_mode == "dark" else "prefer-light"
+    run_cmd(f"gsettings set org.gnome.desktop.interface color-scheme '{color_scheme_gsettings}' 2>/dev/null")
+    run_cmd(f"gsettings set org.gnome.desktop.interface gtk-theme '{gtk_theme_name}' 2>/dev/null")
+    run_cmd(f"gsettings set org.gnome.desktop.interface icon-theme '{icon_theme}' 2>/dev/null")
+    run_cmd(f"gsettings set org.gnome.desktop.interface cursor-theme '{cursor_theme}' 2>/dev/null")
+    run_cmd(f"gsettings set org.gnome.desktop.interface cursor-size {cursor_size} 2>/dev/null")
+    run_cmd(f"gsettings set org.gnome.desktop.interface font-name '{font_ui} {font_size}' 2>/dev/null")
+
+    # Reiniciar portal GTK si está activo
+    run_cmd("systemctl --user restart xdg-desktop-portal-gtk 2>/dev/null")
+
+    # --------------------------------------------------------------------------
+    # 2. ACTUALIZAR QT & DOLPHIN (kdeglobals & qt6ct)
+    # --------------------------------------------------------------------------
+    surf_rgb = hex_to_rgb_str(surface)
+    cont_rgb = hex_to_rgb_str(surface_container)
+    cont_high_rgb = hex_to_rgb_str(surface_container_high)
+    text_rgb = hex_to_rgb_str(on_surface)
+    dim_rgb = hex_to_rgb_str(on_surface_dim)
+    accent_rgb = hex_to_rgb_str(accent)
+
+    kdeglobals_content = f"""[Colors:Button]
+BackgroundAlternate={cont_rgb}
+BackgroundNormal={cont_high_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={accent_rgb}
+ForegroundInactive={dim_rgb}
+ForegroundLink={accent_rgb}
+ForegroundNormal={text_rgb}
+
+[Colors:Header]
+BackgroundAlternate={cont_rgb}
+BackgroundNormal={cont_rgb}
+ForegroundInactive={dim_rgb}
+ForegroundNormal={text_rgb}
+
+[Colors:Selection]
+BackgroundAlternate={accent_rgb}
+BackgroundNormal={accent_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={accent_rgb}
+ForegroundInactive=255,255,255
+ForegroundNormal=255,255,255
+
+[Colors:Tooltip]
+BackgroundAlternate={surf_rgb}
+BackgroundNormal={surf_rgb}
+ForegroundInactive={dim_rgb}
+ForegroundNormal={text_rgb}
+
+[Colors:View]
+BackgroundAlternate={cont_rgb}
+BackgroundNormal={surf_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={accent_rgb}
+ForegroundInactive={dim_rgb}
+ForegroundLink={accent_rgb}
+ForegroundNormal={text_rgb}
+
+[Colors:Window]
+BackgroundAlternate={cont_rgb}
+BackgroundNormal={surf_rgb}
+DecorationFocus={accent_rgb}
+DecorationHover={accent_rgb}
+ForegroundInactive={dim_rgb}
+ForegroundLink={accent_rgb}
+ForegroundNormal={text_rgb}
+
+[General]
+ColorScheme={theme_id}-{target_mode.capitalize()}
+Name={theme_id} {target_mode.capitalize()}
+TerminalApplication=kitty
+TerminalService=kitty.desktop
+fixed={font_mono},{font_size},-1,5,50,0,0,0,0,0
+font={font_ui},{font_size},-1,5,50,0,0,0,0,0
+menuFont={font_ui},{font_size},-1,5,50,0,0,0,0,0
+toolBarFont={font_ui},{font_size},-1,5,50,0,0,0,0,0
+
+[Icons]
+Theme={icon_theme}
+
+[KDE]
+ShowDeleteCommand=true
+SingleClick=false
+widgetStyle=Fusion
+
+[Mouse]
+cursorSize={cursor_size}
+cursorTheme={cursor_theme}
+
+[WM]
+activeBackground={cont_rgb}
+activeForeground={text_rgb}
+inactiveBackground={surf_rgb}
+inactiveForeground={dim_rgb}
+"""
+    (HOME / ".config/kdeglobals").write_text(kdeglobals_content)
+
+    # Actualizar paleta qt6ct
+    qt6ct_dir = HOME / ".config/qt6ct"
+    qt6ct_colors_dir = qt6ct_dir / "colors"
+    qt6ct_colors_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generar archivo de colores qt6ct
+    qt6ct_conf_color = f"""[ColorScheme]
+active_colors=#{text_rgb}, #{cont_rgb}, #{dim_rgb}, #{cont_high_rgb}, #{surf_rgb}, #{cont_rgb}, #{text_rgb}, #ffffff, #{text_rgb}, #{surf_rgb}, #{surf_rgb}, #000000, #{accent_rgb}, #ffffff, #{accent_rgb}, #ff3b30, #{cont_rgb}, #{text_rgb}, #{surf_rgb}, #{text_rgb}, #{dim_rgb}
+disabled_colors=#{dim_rgb}, #{cont_rgb}, #{dim_rgb}, #{cont_high_rgb}, #{surf_rgb}, #{cont_rgb}, #{dim_rgb}, #ffffff, #{dim_rgb}, #{surf_rgb}, #{surf_rgb}, #000000, #{dim_rgb}, #{dim_rgb}, #{accent_rgb}, #ff3b30, #{cont_rgb}, #{dim_rgb}, #{surf_rgb}, #{dim_rgb}, #{dim_rgb}
+inactive_colors=#{text_rgb}, #{cont_rgb}, #{dim_rgb}, #{cont_high_rgb}, #{surf_rgb}, #{cont_rgb}, #{text_rgb}, #ffffff, #{text_rgb}, #{surf_rgb}, #{surf_rgb}, #000000, #{accent_rgb}, #ffffff, #{accent_rgb}, #ff3b30, #{cont_rgb}, #{text_rgb}, #{surf_rgb}, #{text_rgb}, #{dim_rgb}
+"""
+    (qt6ct_colors_dir / "lunita-current.conf").write_text(qt6ct_conf_color)
+
+    # Notificar a Dolphin y aplicaciones KDE vía D-Bus
+    run_cmd("dbus-send --type=signal /KGlobalSettings org.kde.KGlobalSettings.notifyChange int32:0 int32:0 2>/dev/null")
+
+    # --------------------------------------------------------------------------
+    # 3. ACTUALIZAR TOKRI, KITTY & WLOGOUT
+    # --------------------------------------------------------------------------
+    # Tokri
+    run_cmd("command -v lunita-tokri >/dev/null 2>&1 && lunita-tokri reload-theme >/dev/null 2>&1 || true")
+
+    # Kitty (enviar señal SIGUSR1)
+    run_cmd("pgrep -x kitty >/dev/null && kill -SIGUSR1 $(pgrep -x kitty) 2>/dev/null || true")
+
+    # wlogout
+    wlogout_css = HOME / ".config/wlogout/style.css"
+    if wlogout_css.exists():
+        wlogout_content = f"""* {{
+    background-image: none;
+    box-shadow: none;
+    font-family: "{font_ui}", -apple-system, sans-serif;
+}}
+
+window {{
+    background-color: {'rgba(18, 18, 22, 0.82)' if target_mode == 'dark' else 'rgba(240, 242, 245, 0.85)'};
+}}
+
+button {{
+    border-radius: 16px;
+    border-color: {border};
+    color: {on_surface};
+    background-color: {surface_container};
+    border-style: solid;
+    border-width: 1px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 28%;
+    margin: 10px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}}
+
+button:focus, button:active, button:hover {{
+    background-color: {accent};
+    color: {accent_fg};
+    border-color: {accent};
+    outline-style: none;
+}}
+"""
+        wlogout_css.write_text(wlogout_content)
+
+    print(f"✓ Lunita Palette Sync completado: Tema '{theme_id}' ({target_mode}) sincronizado en GTK, Qt y Quickshell.")
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
