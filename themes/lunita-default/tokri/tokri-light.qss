@@ -1,0 +1,89 @@
+/* ==============================================================================
+ * 🌙 Tokri — Lunita Default (Light / Material You)
+ * Lunita-Dots · themes/lunita-default/tokri/tokri-light.qss
+ * ============================================================================== */
+
+* {
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    outline: none;
+}
+
+QMainWindow,
+QMainWindow > QWidget#centralwidget,
+QWidget#centralwidget {
+    background: transparent;
+    background-color: transparent;
+    border: none;
+    color: #4C4F69;
+}
+
+QWidget#centralwidget {
+    padding: 0px;
+}
+
+QMenuBar {
+    max-height: 0px;
+    min-height: 0px;
+    border: none;
+    background: transparent;
+}
+
+QListView {
+    background-color: transparent;
+    color: #4C4F69;
+    selection-color: #FFFFFF;
+    selection-background-color: rgba(181, 136, 247, 0.40);
+    border: none;
+    padding: 4px;
+    font-size: 9pt;
+}
+
+QListView::item {
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+}
+
+QListView::item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+QListView::item:selected {
+    background-color: rgba(181, 136, 247, 0.30);
+    border: 1px solid #B588F7;
+}
+
+QPushButton {
+    background-color: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    color: #4C4F69;
+    padding: 4px 10px;
+}
+
+QPushButton:hover {
+    background-color: rgba(181, 136, 247, 0.15);
+    border-color: #B588F7;
+}
+
+QPushButton:pressed {
+    background-color: #B588F7;
+    color: #FFFFFF;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 6px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical {
+    background: rgba(0, 0, 0, 0.20);
+    border-radius: 3px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #B588F7;
+}

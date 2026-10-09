@@ -18,6 +18,55 @@
     "cursor": "Bibata-Modern-Ice",
     "shell": "zsh-pills"
   },
+  "engine": "fluent-mica",
+  "typography": {
+    "interface": "Segoe UI Variable Text, Segoe UI, Inter",
+    "display": "Segoe UI Variable Display, Segoe UI",
+    "monospace": "JetBrainsMono Nerd Font",
+    "size": 10
+  },
+  "assets": {
+    "icon_theme": "Fluent-yellow-dark",
+    "cursor_theme": "Bibata-Modern-Ice",
+    "cursor_size": 24
+  },
+  "tokens": {
+    "accent": "#0078D4",
+    "accent_hover": "#60CDFF",
+    "accent_active": "#005A9E",
+    "accent_fg": "#FFFFFF",
+    "dark": {
+      "surface": "#1A1C23",
+      "surface_container": "#18191F",
+      "surface_container_high": "#242730",
+      "on_surface": "#F4F4F5",
+      "on_surface_dim": "#94A3B8",
+      "border": "rgba(255, 255, 255, 0.08)",
+      "surface_opacity": 0.85
+    },
+    "light": {
+      "surface": "#F3F3F3",
+      "surface_container": "#FFFFFF",
+      "surface_container_high": "#E5E5E5",
+      "on_surface": "#1A1A1A",
+      "on_surface_dim": "#5C5C5C",
+      "border": "rgba(0, 0, 0, 0.08)",
+      "surface_opacity": 0.90
+    }
+  },
+  "component_overrides": {
+    "dock": {
+      "surface_opacity": 0.22,
+      "accent": "#4CC2FF"
+    },
+    "launcher": {
+      "surface_opacity": 0.22,
+      "accent": "#4CC2FF"
+    },
+    "bar": {
+      "accent": "#4CC2FF"
+    }
+  },
   "features": [
     "Dynamic Island flotante superior interactiva con modos Colapsado, Reproductor de Música, Calendario con Pomodoro y Centro de Control",
     "Paneles laterales deslizables por cursor en bordes: Sonido en borde medio izquierdo y Brillo en borde medio derecho con temporizador de gracia",

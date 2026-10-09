@@ -1,80 +1,59 @@
 [Colors:Button]
-BackgroundAlternate=26,30,38
-BackgroundNormal=31,36,45
-DecorationFocus=0,210,196
-DecorationHover=0,210,196
+BackgroundAlternate=24,25,31
+BackgroundNormal=36,39,48
+DecorationFocus=0,120,212
+DecorationHover=0,120,212
 ForegroundInactive=148,163,184
-ForegroundLink=0,210,196
-ForegroundNegative=248,113,113
-ForegroundNeutral=251,191,36
-ForegroundNormal=241,245,249
-ForegroundPositive=52,211,153
-ForegroundVisited=56,189,248
-
-[Colors:Complementary]
-BackgroundAlternate=26,30,38
-BackgroundNormal=31,36,45
-DecorationFocus=0,210,196
-DecorationHover=0,210,196
-ForegroundInactive=148,163,184
-ForegroundNormal=241,245,249
+ForegroundLink=0,120,212
+ForegroundNormal=244,244,245
 
 [Colors:Header]
-BackgroundAlternate=22,26,33
-BackgroundNormal=24,28,36
+BackgroundAlternate=24,25,31
+BackgroundNormal=24,25,31
 ForegroundInactive=148,163,184
-ForegroundNormal=241,245,249
+ForegroundNormal=244,244,245
 
 [Colors:Selection]
-BackgroundAlternate=0,180,216
-BackgroundNormal=0,210,196
-DecorationFocus=0,210,196
-DecorationHover=0,210,196
-ForegroundInactive=241,245,249
-ForegroundNormal=5,19,26
-
-[Colors:Tooltip]
-BackgroundAlternate=20,24,31
-BackgroundNormal=15,18,24
-ForegroundInactive=148,163,184
+BackgroundAlternate=0,120,212
+BackgroundNormal=0,120,212
+DecorationFocus=0,120,212
+DecorationHover=0,120,212
+ForegroundInactive=255,255,255
 ForegroundNormal=255,255,255
 
-[Colors:View]
-BackgroundAlternate=22,25,32
-BackgroundNormal=20,23,29
-DecorationFocus=0,210,196
-DecorationHover=0,210,196
+[Colors:Tooltip]
+BackgroundAlternate=26,28,35
+BackgroundNormal=26,28,35
 ForegroundInactive=148,163,184
-ForegroundLink=0,210,196
-ForegroundNegative=248,113,113
-ForegroundNeutral=251,191,36
-ForegroundNormal=248,250,252
-ForegroundPositive=52,211,153
-ForegroundVisited=56,189,248
+ForegroundNormal=244,244,245
+
+[Colors:View]
+BackgroundAlternate=24,25,31
+BackgroundNormal=26,28,35
+DecorationFocus=0,120,212
+DecorationHover=0,120,212
+ForegroundInactive=148,163,184
+ForegroundLink=0,120,212
+ForegroundNormal=244,244,245
 
 [Colors:Window]
-BackgroundAlternate=22,25,32
-BackgroundNormal=24,27,34
-DecorationFocus=0,210,196
-DecorationHover=0,210,196
+BackgroundAlternate=24,25,31
+BackgroundNormal=26,28,35
+DecorationFocus=0,120,212
+DecorationHover=0,120,212
 ForegroundInactive=148,163,184
-ForegroundLink=0,210,196
-ForegroundNegative=248,113,113
-ForegroundNeutral=251,191,36
-ForegroundNormal=241,245,249
-ForegroundPositive=52,211,153
-ForegroundVisited=56,189,248
+ForegroundLink=0,120,212
+ForegroundNormal=244,244,245
 
 [General]
-ColorScheme=Win11-Dark-Acrylic
-Name=Win11 Dark Acrylic
+ColorScheme=Modern-Win11-Theme-Dark
+Name=Modern-Win11-Theme Dark
 TerminalApplication=kitty
 TerminalService=kitty.desktop
 fixed=JetBrainsMono Nerd Font,10,-1,5,50,0,0,0,0,0
-font=SF Pro Display,10,-1,5,50,0,0,0,0,0
-menuFont=SF Pro Display,10,-1,5,50,0,0,0,0,0
-smallestReadableFont=SF Pro Display,8,-1,5,50,0,0,0,0,0
-toolBarFont=SF Pro Display,10,-1,5,50,0,0,0,0,0
+font=Segoe UI Variable Text, Segoe UI, Inter,10,-1,5,50,0,0,0,0,0
+menuFont=Segoe UI Variable Text, Segoe UI, Inter,10,-1,5,50,0,0,0,0,0
+toolBarFont=Segoe UI Variable Text, Segoe UI, Inter,10,-1,5,50,0,0,0,0,0
 
 [Icons]
 Theme=Fluent-yellow-dark
@@ -88,13 +67,8 @@ widgetStyle=Fusion
 cursorSize=24
 cursorTheme=Bibata-Modern-Ice
 
-[PreviewSettings]
-EnableRemoteFolderThumbnail=false
-MaximumRemoteSize=0
-MaximumSize[$d]
-
 [WM]
-activeBackground=24,28,36
-activeForeground=241,245,249
-inactiveBackground=20,23,29
+activeBackground=24,25,31
+activeForeground=244,244,245
+inactiveBackground=26,28,35
 inactiveForeground=148,163,184

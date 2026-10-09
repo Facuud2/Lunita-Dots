@@ -59,3 +59,8 @@ CURR_WALL=$(awww query 2>/dev/null | awk -F 'image: ' '{print $2}' | head -n 1)
 if [ -n "$CURR_WALL" ] && [ -f "$CURR_WALL" ]; then
     cp "$CURR_WALL" "$HOME/.config/hypr/current_wallpaper.png"
 fi
+
+# Sync palette with Lunita design tokens orchestrator
+if command -v lunita-palette-sync >/dev/null 2>&1; then
+    lunita-palette-sync sync 2>/dev/null || true
+fi

@@ -444,6 +444,13 @@ cmd_apply() {
         gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
     fi
 
+    # Sincronizar tokens de diseño en GTK, Qt y Quickshell
+    if command -v lunita-palette-sync >/dev/null 2>&1; then
+        lunita-palette-sync sync 2>/dev/null || true
+    elif [ -x "$DOTS_DIR/core/.local/bin/lunita-palette-sync" ]; then
+        "$DOTS_DIR/core/.local/bin/lunita-palette-sync" sync 2>/dev/null || true
+    fi
+
     # Reiniciar portal GTK para aplicar estilos CSS actualizados
     if systemctl --user is-active --quiet xdg-desktop-portal-gtk 2>/dev/null; then
         systemctl --user restart xdg-desktop-portal-gtk 2>/dev/null || true
@@ -735,6 +742,20 @@ case "$1" in
         ;;
     restow)
         cmd_restow
+        ;;
+    sync)
+        if command -v lunita-palette-sync >/dev/null 2>&1; then
+            lunita-palette-sync sync
+        elif [ -x "$DOTS_DIR/core/.local/bin/lunita-palette-sync" ]; then
+            "$DOTS_DIR/core/.local/bin/lunita-palette-sync" sync
+        fi
+        ;;
+    mode|toggle-mode)
+        if command -v lunita-palette-sync >/dev/null 2>&1; then
+            lunita-palette-sync "${2:-toggle}"
+        elif [ -x "$DOTS_DIR/core/.local/bin/lunita-palette-sync" ]; then
+            "$DOTS_DIR/core/.local/bin/lunita-palette-sync" "${2:-toggle}"
+        fi
         ;;
     create)
         cmd_create "$2"
