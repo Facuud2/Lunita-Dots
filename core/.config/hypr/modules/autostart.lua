@@ -16,14 +16,12 @@ function M.setup()
     -- 3. Cursor y tema de sistema (dinámico según el tema activo)
     hl.exec_cmd("sh -c 'CT=$(grep -s \"^gtk-cursor-theme-name=\" ~/.config/gtk-3.0/settings.ini | cut -d= -f2 | tr -d \" \"); CS=$(grep -s \"^gtk-cursor-theme-size=\" ~/.config/gtk-3.0/settings.ini | cut -d= -f2 | tr -d \" \"); CT=${CT:-Bibata-Modern-Ice}; CS=${CS:-40}; hyprctl setcursor \"$CT\" \"$CS\"; gsettings set org.gnome.desktop.interface cursor-theme \"$CT\"; gsettings set org.gnome.desktop.interface cursor-size \"$CS\"'")
 
-    -- 4. Demonio de fondo de pantalla y wallpaper dinámico por tiempo
-    -- hl.exec_cmd("sh -c 'export PATH=\"" .. home .. "/.local/bin:$PATH\"; lunita-dynamic-wallpaper init'")
+    -- 4. Demonio de fondo de pantalla (awww)
+    hl.exec_cmd("sh -c 'pgrep -x awww-daemon >/dev/null || awww-daemon &'")
 
     -- 5. Quickshell (Barra Superior, Dock, Notificaciones, OSD, Spotlight, Launcher)
     hl.exec_cmd("sh -c 'export PATH=\"" .. home .. "/.local/bin:$PATH\"; lunita-quickshell start'")
 
-    -- 6. Componentes auxiliares (AGS si existe en el tema)
-    hl.exec_cmd("sh -c '[ -d \"" .. home .. "/.config/ags\" ] && env PATH=\"" .. home .. "/.local/bin:$PATH\" ags run'")
 
     -- 7. Teclado Virtual, Portapapeles y Plugins
     hl.exec_cmd(home .. "/.config/hypr/scripts/virtual_keyboard.sh daemon")

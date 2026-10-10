@@ -30,8 +30,10 @@ TIMETABLE_FILE = CONFIG_DIR / "unab_timetable.json"
 WEATHER_LOCATION_FILE = CONFIG_DIR / "weather_location"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DOTS_DIR = SCRIPT_DIR.parent
-WIDGETS_DIR = DOTS_DIR / "themes/macOS-Theme/quickshell/widgets"
+DOTS_DIR = SCRIPT_DIR.parent.parent
+WIDGETS_DIR = Path.home() / ".config/quickshell/widgets"
+if not WIDGETS_DIR.exists():
+    WIDGETS_DIR = DOTS_DIR / "themes/macOS-Theme/.config/quickshell/widgets"
 SCRIPTS_DIR = WIDGETS_DIR / "scripts"
 
 # Colores sugeridos para eventos del calendario

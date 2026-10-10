@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none">
+  <!-- Back sheet -->
+  <path d="M7 6C7 4.34315 8.34315 3 10 3H19L24 8V19C24 20.6569 22.6569 22 21 22H19" stroke="#053B55" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>
+  <!-- Front sheet -->
+  <path d="M11 9C11 7.34315 12.3431 6 14 6H21L27 12V25C27 26.6569 25.6569 28 24 28H14C12.3431 28 11 26.6569 11 25V9Z" stroke="#053B55" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Fold corner on front sheet -->
+  <path d="M21 6V12H27" stroke="#053B55" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -2,6 +2,7 @@
 # ==============================================================================
 # 🚀 LUNITA QUICKSHELL DAEMON & PROCESS MANAGER
 # Control unificado de procesos e inicio de componentes Quickshell para Lunita-Dots
+# Basado estrictamente en las declaraciones autoritarias de theme.json
 # ==============================================================================
 
 set -e
@@ -41,8 +42,55 @@ success() { echo -e "${GREEN}✓${RESET} $1"; }
 warn() { echo -e "${YELLOW}⚠${RESET} $1"; }
 error() { echo -e "${RED}✗${RESET} $1" >&2; }
 
-# Componentes Quickshell en modo daemon continuo
-DAEMON_COMPONENTS=("bar" "dock" "notifications" "spotlight" "launcher" "widgets" "clipboard")
+# Componentes Quickshell candidatos para modo daemon continuo
+DAEMON_COMPONENTS=("bar" "dock" "notifications" "osd" "spotlight" "launcher" "widgets" "clipboard")
+
+get_active_theme() {
+    if [ -f "$DOTS_DIR/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme"
+    elif [ -f "$HOME/.config/lunita/current_theme" ]; then
+        tr -d '[:space:]' < "$HOME/.config/lunita/current_theme"
+    elif [ -f "$HOME/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$HOME/.lunita-theme"
+    else
+        echo "lunita-default"
+    fi
+}
+
+is_component_enabled_in_theme() {
+    local comp="$1"
+    local theme
+    theme="$(get_active_theme)"
+    local theme_file="$DOTS_DIR/themes/$theme/theme.json"
+
+    if [ ! -f "$theme_file" ]; then
+        [ -d "$HOME/.config/quickshell/$comp" ]
+        return $?
+    fi
+
+    local val=""
+    if command -v jq >/dev/null 2>&1; then
+        val=$(jq -r --arg c "$comp" '.components[$c] // empty' "$theme_file" 2>/dev/null || echo "")
+    elif command -v python3 >/dev/null 2>&1; then
+        val=$(python3 -c "import json; d=json.load(open('$theme_file')); print(d.get('components', {}).get('$comp', '') or '')" 2>/dev/null || echo "")
+    fi
+
+    if [ -z "$val" ] || [ "$val" = "null" ] || [ "$val" = "false" ] || [ "$val" = "none" ]; then
+        return 1
+    fi
+
+    # Si está asignado a otro subsistema, ignorarlo para Quickshell
+    if [[ "$val" == ags-* || "$val" == eww-* || "$val" == rofi-* || "$val" == wlogout-* ]]; then
+        return 1
+    fi
+
+    # Verificar existencia real de la configuración
+    if [ -d "$HOME/.config/quickshell/$comp" ] || [ -d "$DOTS_DIR/themes/$theme/.config/quickshell/$comp" ]; then
+        return 0
+    fi
+
+    return 1
+}
 
 get_qs_bin() {
     if command -v quickshell &>/dev/null; then
@@ -66,7 +114,6 @@ wait_for_wayland() {
             return 0
         fi
 
-        # Buscar socket activo wayland-*
         local found_sock
         found_sock=$(find "$runtime_dir" -maxdepth 1 -name "wayland-*" -type s 2>/dev/null | head -n 1 || true)
         if [ -n "$found_sock" ]; then
@@ -97,7 +144,7 @@ get_component_pid() {
         return 0
     fi
 
-    # 2. Fallback inspeccionando /proc directamente (sin falsos positivos de pgrep)
+    # 2. Inspeccionar /proc directamente (sin falsos positivos de pgrep)
     local pids
     pids=$(pgrep -u "$UID" -x quickshell 2>/dev/null || pgrep -u "$UID" -x qs 2>/dev/null || true)
     for p in $pids; do
@@ -128,7 +175,13 @@ start_component() {
     fi
 
     if [ ! -d "$config_dir" ]; then
-        return 0
+        local current_theme
+        current_theme="$(get_active_theme)"
+        if [ -d "$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp" ]; then
+            config_dir="$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp"
+        else
+            return 0
+        fi
     fi
 
     if is_component_running "$comp"; then
@@ -136,7 +189,6 @@ start_component() {
         return 0
     fi
 
-    # Iniciar con bandera -d (daemonize), -n (no-duplicate) y -p (ruta canónica)
     "$qs_bin" -d -n -p "$config_dir" >/dev/null 2>&1
     success "Iniciado Quickshell [$comp]"
 }
@@ -160,11 +212,27 @@ cmd_start() {
         exit 1
     fi
 
-    # Esperar a que el compositor Wayland esté listo
     wait_for_wayland
 
+    local current_theme
+    current_theme="$(get_active_theme)"
+    info "Iniciando componentes Quickshell para el tema: ${BOLD}$current_theme${RESET}"
+
+    # 1. Detener procesos huérfanos que NO pertenezcan al tema activo
     for comp in "${DAEMON_COMPONENTS[@]}"; do
-        start_component "$comp"
+        if ! is_component_enabled_in_theme "$comp"; then
+            if is_component_running "$comp"; then
+                info "Deteniendo componente inactivo en este tema: $comp"
+                stop_component "$comp"
+            fi
+        fi
+    done
+
+    # 2. Iniciar únicamente los componentes declarados para este tema
+    for comp in "${DAEMON_COMPONENTS[@]}"; do
+        if is_component_enabled_in_theme "$comp"; then
+            start_component "$comp"
+        fi
     done
 }
 
@@ -185,20 +253,25 @@ cmd_restart() {
 }
 
 cmd_status() {
-    echo -e "${BOLD}${MAGENTA}🌙 Estado de Procesos Quickshell (Lunita-Dots)${RESET}"
+    local current_theme
+    current_theme="$(get_active_theme)"
+    echo -e "${BOLD}${MAGENTA}🌙 Estado de Procesos Quickshell (Tema: $current_theme)${RESET}"
     echo "=================================================="
     for comp in "${DAEMON_COMPONENTS[@]}"; do
-        local config_dir="$HOME/.config/quickshell/$comp"
-        if [ -d "$config_dir" ]; then
-            local pid
-            pid="$(get_component_pid "$comp" 2>/dev/null || true)"
+        local pid
+        pid="$(get_component_pid "$comp" 2>/dev/null || true)"
+        if is_component_enabled_in_theme "$comp"; then
             if [ -n "$pid" ]; then
                 echo -e "  ${GREEN}●${RESET} ${BOLD}$comp${RESET}: ${GREEN}Activo${RESET} (PID: $pid)"
             else
                 echo -e "  ${RED}○${RESET} ${BOLD}$comp${RESET}: ${RED}Inactivo${RESET}"
             fi
         else
-            echo -e "  ${YELLOW}−${RESET} $comp: No configurado en este tema"
+            if [ -n "$pid" ]; then
+                echo -e "  ${YELLOW}⚠${RESET} ${BOLD}$comp${RESET}: ${YELLOW}Huérfano ejecutándose (no configurado en este tema)${RESET} (PID: $pid)"
+            else
+                echo -e "  ${YELLOW}−${RESET} $comp: No configurado en este tema"
+            fi
         fi
     done
 }

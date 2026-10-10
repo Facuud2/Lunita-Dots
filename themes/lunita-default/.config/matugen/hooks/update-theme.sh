@@ -37,11 +37,9 @@ if pgrep -x kitty > /dev/null; then
     kill -SIGUSR1 $(pgrep -x kitty) 2>/dev/null || true
 fi
 
-# Reload AGS (App Launcher & Dynamic Island)
-if pgrep -x ags > /dev/null; then
-    ags quit 2>/dev/null
-    sleep 0.3
-    hyprctl dispatch 'hl.dsp.exec_cmd("env PATH=$HOME/.local/bin:$PATH ags run")' >/dev/null 2>&1 || true
+# Reload Quickshell (Dynamic Island, Launcher, Notifications, OSD)
+if command -v lunita-quickshell >/dev/null 2>&1; then
+    lunita-quickshell restart >/dev/null 2>&1 || true
 fi
 
 # Touch Vesktop Quick CSS to trigger hot reload in Vencord if running

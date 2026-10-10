@@ -34,7 +34,7 @@ FALLBACK_SOCKET="/tmp/com.ysuraj.Tokri.ipc"
 FLATPAK_SOCKET="${RUNTIME_DIR}/.flatpak/com.ysuraj.Tokri/tmp/com.ysuraj.Tokri.ipc"
 
 get_active_qss() {
-    local theme="macOS-Theme"
+    local theme="lunita-default"
     if [ -f "$DOTS_DIR/.lunita-theme" ]; then
         theme="$(cat "$DOTS_DIR/.lunita-theme" | tr -d '[:space:]')"
     elif [ -f "$HOME/.config/lunita/current_theme" ]; then
@@ -53,6 +53,8 @@ get_active_qss() {
 
     if [ -f "$DOTS_DIR/themes/$theme/tokri/tokri-$variant.qss" ]; then
         echo "$DOTS_DIR/themes/$theme/tokri/tokri-$variant.qss"
+    elif [ -f "$DOTS_DIR/themes/$theme/tokri/tokri-dark.qss" ]; then
+        echo "$DOTS_DIR/themes/$theme/tokri/tokri-dark.qss"
     elif [ -f "$DOTS_DIR/themes/macOS-Theme/tokri/tokri-$variant.qss" ]; then
         echo "$DOTS_DIR/themes/macOS-Theme/tokri/tokri-$variant.qss"
     else

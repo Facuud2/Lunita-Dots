@@ -16,7 +16,9 @@
     "lockscreen": "quickshell-macos-lockscreen",
     "terminal": "kitty-macos",
     "file_manager": "dolphin-lunita",
-    "clipboard": "ags-cliphist",
+    "clipboard": "quickshell-clipboard",
+    "spotlight": "quickshell-macos-spotlight",
+    "osd": "quickshell-macos-osd",
     "cursor": "apple-macos-32px",
     "shell": "zsh-pills",
     "discord": "vesktop-macos-cupertino"

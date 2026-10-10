@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="lp-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#737987"/>
+      <stop offset="50%" stop-color="#4e5564"/>
+      <stop offset="100%" stop-color="#2a2e39"/>
+    </linearGradient>
+    <linearGradient id="rocket-silver" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#c5ccd8"/>
+    </linearGradient>
+    <linearGradient id="rocket-flame" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffcc00"/>
+      <stop offset="60%" stop-color="#ff5e3a"/>
+      <stop offset="100%" stop-color="#ff2a6d"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="url(#lp-bg)"/>
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+  <!-- Stars -->
+  <circle cx="28" cy="32" r="1.5" fill="#fff" opacity="0.8"/>
+  <circle cx="96" cy="28" r="2" fill="#fff" opacity="0.9"/>
+  <circle cx="34" cy="88" r="1.5" fill="#fff" opacity="0.7"/>
+  <circle cx="102" cy="80" r="1.5" fill="#fff" opacity="0.8"/>
+  <circle cx="78" cy="24" r="1" fill="#fff" opacity="0.6"/>
+  <!-- Rocket Flame -->
+  <path d="M48 80 L32 96 C30 98 28 106 32 108 C34 110 42 108 44 106 L60 90 Z" fill="url(#rocket-flame)"/>
+  <!-- Rocket Wings -->
+  <path d="M42 66 L24 76 C22 77 22 84 26 86 L48 82 Z" fill="#e03131"/>
+  <path d="M72 96 L82 114 C83 118 90 118 92 114 L88 92 Z" fill="#e03131"/>
+  <!-- Rocket Body -->
+  <path d="M94 34 C80 24 58 40 48 58 L70 80 C88 70 104 48 94 34 Z" fill="url(#rocket-silver)"/>
+  <path d="M94 34 C88 28 80 28 72 34 L78 50 L94 44 Z" fill="#e03131"/>
+  <!-- Porthole Window -->
+  <circle cx="68" cy="54" r="7" fill="#2266aa" stroke="#ffffff" stroke-width="2.5"/>
+  <circle cx="66" cy="52" r="2.5" fill="#66ccff"/>
+</svg>

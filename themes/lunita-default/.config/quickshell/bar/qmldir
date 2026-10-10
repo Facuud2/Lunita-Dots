@@ -1,0 +1,33 @@
+singleton Theme 1.0 Theme.qml
+singleton Cfg 1.0 Cfg.qml
+singleton Icons 1.0 Icons.qml
+singleton Exec 1.0 Exec.qml
+singleton SysInfo 1.0 SysInfo.qml
+singleton Weather 1.0 Weather.qml
+singleton Notifs 1.0 Notifs.qml
+singleton Audio 1.0 Audio.qml
+singleton Recorder 1.0 Recorder.qml
+singleton Net 1.0 Net.qml
+singleton MprisPlayer 1.0 MprisPlayer.qml
+CompactPill 1.0 CompactPill.qml
+ExpandedPanel 1.0 ExpandedPanel.qml
+Clock 1.0 Clock.qml
+WeatherWidget 1.0 WeatherWidget.qml
+Network 1.0 Network.qml
+Volume 1.0 Volume.qml
+Battery 1.0 Battery.qml
+Workspaces 1.0 Workspaces.qml
+MiniPlayer 1.0 MiniPlayer.qml
+MediaCard 1.0 MediaCard.qml
+Meters 1.0 Meters.qml
+QuickActions 1.0 QuickActions.qml
+StatusPills 1.0 StatusPills.qml
+RecordView 1.0 RecordView.qml
+CalendarPanel 1.0 CalendarPanel.qml
+PowerView 1.0 PowerView.qml
+NotifPanel 1.0 NotifPanel.qml
+AppLauncher 1.0 AppLauncher.qml
+AudioPanel 1.0 AudioPanel.qml
+ConnPanel 1.0 ConnPanel.qml
+HeaderClock 1.0 HeaderClock.qml
+RecordingAndMetersRow 1.0 RecordingAndMetersRow.qml

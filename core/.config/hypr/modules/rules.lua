@@ -92,7 +92,7 @@ function M.setup()
 
     hl.layer_rule({
         name  = "launcher-blur",
-        match = { namespace = "^(macos-launcher|win11-launcher)$" },
+        match = { namespace = "^(macos-launcher|win11-launcher|lunita-app-launcher)$" },
         blur  = true,
         ignore_alpha = 0.05,
         no_anim = true,

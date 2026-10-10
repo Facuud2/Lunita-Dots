@@ -1,7 +1,10 @@
 ^theme\.json$
 ^README\.md$
 ^assets$
+^wallpaper$
 ^tokri$
 ^zsh$
 .*\.bak.*
 .*\.orig.*
+^\.config/ags$
+

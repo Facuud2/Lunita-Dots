@@ -46,7 +46,7 @@ while read -r img; do
             wait -n
         done
     fi
-done < <(find "$wallpaper_path" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \))
+done < <(find -L "$wallpaper_path" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \))
 
 # Let all image jobs finish before starting video jobs so the batch-size
 # throttle above only ever governs one kind of job at a time.
@@ -105,7 +105,7 @@ if command -v ffmpeg &>/dev/null; then
                 wait -n
             done
         fi
-    done < <(find "$wallpaper_path" -type f \( "${video_find_expr[@]}" \))
+    done < <(find -L "$wallpaper_path" -type f \( "${video_find_expr[@]}" \))
 
     wait
 else
