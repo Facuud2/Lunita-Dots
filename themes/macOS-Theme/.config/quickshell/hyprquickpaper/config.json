@@ -1,5 +1,5 @@
 {
-    "wallpaper_path": "~/Imagenes/Wallpapers/",
+    "wallpaper_path": "~/.config/lunita/wallpaper/",
     "cache_path": "~/.cache/quickshell/thumbs/",
     "wallpaper_tool": "awww",
     "number_of_pictures": 7,

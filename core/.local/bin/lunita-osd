@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # 🔊 LUNITA OSD WRAPPER
-# Gestor e invocador reactivo para el OSD clásico estilo macOS
+# Gestor e invocador reactivo para OSD basado en theme.json
 # ==============================================================================
 
 set -e
@@ -26,28 +26,76 @@ get_dots_dir() {
 }
 DOTS_DIR="$(get_dots_dir "$SCRIPT_DIR" 2>/dev/null || (cd "$SCRIPT_DIR/.." && pwd))"
 
+get_active_theme() {
+    if [ -f "$DOTS_DIR/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme"
+    elif [ -f "$HOME/.config/lunita/current_theme" ]; then
+        tr -d '[:space:]' < "$HOME/.config/lunita/current_theme"
+    elif [ -f "$HOME/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$HOME/.lunita-theme"
+    else
+        echo "lunita-default"
+    fi
+}
+
+get_theme_component() {
+    local comp="$1"
+    local theme
+    theme="$(get_active_theme)"
+    local theme_file="$DOTS_DIR/themes/$theme/theme.json"
+
+    if [ ! -f "$theme_file" ]; then
+        echo ""
+        return 0
+    fi
+
+    if command -v jq >/dev/null 2>&1; then
+        jq -r --arg c "$comp" '.components[$c] // empty' "$theme_file" 2>/dev/null || echo ""
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 -c "import json; d=json.load(open('$theme_file')); print(d.get('components', {}).get('$comp', '') or '')" 2>/dev/null || echo ""
+    fi
+}
+
 ACTION="${1:-show}"
 TYPE="${2:-volume}"
+ACTIVE_THEME="$(get_active_theme)"
+OSD_COMP="$(get_theme_component "osd")"
 
+# Si el tema actual no tiene OSD configurado, salir silenciosamente
+if [ -z "$OSD_COMP" ] || [ "$OSD_COMP" = "null" ]; then
+    exit 0
+fi
+
+# Soporte para AGS en temas legacy
+if [[ "$OSD_COMP" == ags-* ]]; then
+    if command -v ags >/dev/null 2>&1; then
+        ags request "show-osd $TYPE" 2>/dev/null || true
+    fi
+    exit 0
+fi
+
+# Para componentes Quickshell
 OSD_PATH="$HOME/.config/quickshell/osd"
 if [ ! -d "$OSD_PATH" ]; then
-    CURRENT_THEME="$(cat "$DOTS_DIR/.lunita-theme" 2>/dev/null || cat "$HOME/.lunita-theme" 2>/dev/null || echo "macOS-Theme")"
-    if [ -d "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/osd" ]; then
-        OSD_PATH="$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/osd"
+    if [ -d "$DOTS_DIR/themes/$ACTIVE_THEME/.config/quickshell/osd" ]; then
+        OSD_PATH="$DOTS_DIR/themes/$ACTIVE_THEME/.config/quickshell/osd"
     else
-        OSD_PATH="$DOTS_DIR/themes/macOS-Theme/.config/quickshell/osd"
+        exit 0
     fi
 fi
 
 # 1. Si el OSD de Quickshell ya está en ejecución, enviar comando IPC
-if pgrep -f "quickshell.*osd" >/dev/null 2>&1; then
-    quickshell -p "$OSD_PATH" ipc call osd "$ACTION" "$TYPE" 2>/dev/null || quickshell ipc call osd "$ACTION" "$TYPE" 2>/dev/null || true
+if pgrep -u "$UID" -f "quickshell.*osd" >/dev/null 2>&1; then
+    quickshell -p "$OSD_PATH" ipc call osd "$ACTION" "$TYPE" 2>/dev/null || \
+    quickshell ipc call osd "$ACTION" "$TYPE" 2>/dev/null || true
     exit 0
 fi
 
 # 2. Si no está en ejecución, iniciarlo en modo daemon
 if [ -d "$OSD_PATH" ]; then
-    quickshell -d -n -p "$OSD_PATH"
+    quickshell -d -n -p "$OSD_PATH" </dev/null >/dev/null 2>&1 &
+    disown -h $! 2>/dev/null || true
     sleep 0.15
-    quickshell -p "$OSD_PATH" ipc call osd "$ACTION" "$TYPE" 2>/dev/null || true
+    quickshell -p "$OSD_PATH" ipc call osd "$ACTION" "$TYPE" 2>/dev/null || \
+    quickshell ipc call osd "$ACTION" "$TYPE" 2>/dev/null || true
 fi

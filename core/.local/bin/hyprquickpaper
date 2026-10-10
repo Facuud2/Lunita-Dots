@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🌙 HYPRQUICKPAPER LAUNCHER WRAPPER
+# Lanzador de selector de wallpapers con debounce, toggle y soporte multi-tema
+# ==============================================================================
+
+# Debounce rapid keypresses (within 350ms) to prevent multiple simultaneous launches
+COOLDOWN_FILE="/tmp/hyprquickpaper_cooldown"
+NOW=$(date +%s%3N)
+if [ -f "$COOLDOWN_FILE" ]; then
+    LAST=$(cat "$COOLDOWN_FILE" 2>/dev/null || echo 0)
+    DIFF=$(( NOW - LAST ))
+    if [ "$DIFF" -ge 0 ] && [ "$DIFF" -lt 350 ]; then
+        exit 0
+    fi
+fi
+echo "$NOW" > "$COOLDOWN_FILE"
+
+# If already running, kill the active instance cleanly (toggle behavior)
+PID=$(pgrep -f "^qs.*hyprquickpaper|/qs.*hyprquickpaper" | head -n 1)
+[ -z "$PID" ] && PID=$(pgrep -f "[q]s -n -c hyprquickpaper" | head -n 1)
+if [ -n "$PID" ]; then
+    kill "$PID" 2>/dev/null
+    exit 0
+fi
+
+# Detectar directorio raíz canónico de Lunita-Dots
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
+get_dots_dir() {
+    local d="$1"
+    while [ "$d" != "/" ] && [ -n "$d" ]; do
+        if [ -d "$d/themes" ] && [ -d "$d/core" ]; then
+            echo "$d"
+            return 0
+        fi
+        d="$(dirname "$d")"
+    done
+    return 1
+}
+
+DOTS_DIR="$(get_dots_dir "$SCRIPT_DIR" 2>/dev/null || (cd "$SCRIPT_DIR/../../.." 2>/dev/null && pwd))"
+
+get_current_theme() {
+    if [ -n "$DOTS_DIR" ] && [ -f "$DOTS_DIR/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme"
+    elif [ -f "$HOME/.config/lunita/current_theme" ]; then
+        tr -d '[:space:]' < "$HOME/.config/lunita/current_theme"
+    else
+        echo "lunita-default"
+    fi
+}
+
+CURRENT_THEME="$(get_current_theme)"
+
+# 1. Garantizar que el demonio de fondo de pantalla esté activo
+if command -v awww-daemon &>/dev/null && ! pgrep -x awww-daemon >/dev/null; then
+    if command -v hyprctl &>/dev/null && pgrep -x Hyprland >/dev/null; then
+        hyprctl dispatch 'hl.dsp.exec_cmd("awww-daemon")' >/dev/null 2>&1 || true
+    fi
+    if ! pgrep -x awww-daemon >/dev/null; then
+        nohup awww-daemon >/dev/null 2>&1 &
+    fi
+fi
+
+# 2. Enlazar la carpeta wallpaper del tema actual a ~/.config/lunita/wallpaper
+mkdir -p "$HOME/.config/lunita"
+if [ -n "$DOTS_DIR" ] && [ -d "$DOTS_DIR/themes/$CURRENT_THEME/wallpaper" ]; then
+    ln -sfn "$DOTS_DIR/themes/$CURRENT_THEME/wallpaper" "$HOME/.config/lunita/wallpaper"
+fi
+
+# 3. Garantizar que ~/.config/quickshell/hyprquickpaper exista y sea válido
+if [ ! -d "$HOME/.config/quickshell/hyprquickpaper" ] && [ -n "$DOTS_DIR" ]; then
+    mkdir -p "$HOME/.config/quickshell"
+    if [ -d "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/hyprquickpaper" ]; then
+        ln -sfn "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
+    elif [ -d "$DOTS_DIR/themes/lunita-default/.config/quickshell/hyprquickpaper" ]; then
+        ln -sfn "$DOTS_DIR/themes/lunita-default/.config/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
+    fi
+fi
+
+# 4. Iniciar Quickshell con el módulo hyprquickpaper (-n: protección contra duplicados)
+exec qs -n -c hyprquickpaper "$@"

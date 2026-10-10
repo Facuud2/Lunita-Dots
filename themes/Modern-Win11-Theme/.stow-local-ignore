@@ -1,8 +1,10 @@
 ^theme\.json$
 ^README\.md$
 ^assets$
+^wallpaper$
 ^tokri$
 ^zsh$
 ^dolphin$
 .*\.bak.*
 .*\.orig.*
+

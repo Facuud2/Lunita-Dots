@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # 📋 LUNITA CLIPBOARD WRAPPER
-# Gestor e invocador reactivo para el Clipboard macOS en Quickshell
+# Gestor e invocador reactivo para el portapapeles basado en theme.json
 # ==============================================================================
 
 set -e
@@ -26,15 +26,60 @@ get_dots_dir() {
 }
 DOTS_DIR="$(get_dots_dir "$SCRIPT_DIR" 2>/dev/null || (cd "$SCRIPT_DIR/.." && pwd))"
 
-ACTION="${1:-toggle}"
+get_active_theme() {
+    if [ -f "$DOTS_DIR/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme"
+    elif [ -f "$HOME/.config/lunita/current_theme" ]; then
+        tr -d '[:space:]' < "$HOME/.config/lunita/current_theme"
+    elif [ -f "$HOME/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$HOME/.lunita-theme"
+    else
+        echo "lunita-default"
+    fi
+}
 
+get_theme_component() {
+    local comp="$1"
+    local theme
+    theme="$(get_active_theme)"
+    local theme_file="$DOTS_DIR/themes/$theme/theme.json"
+
+    if [ ! -f "$theme_file" ]; then
+        echo ""
+        return 0
+    fi
+
+    if command -v jq >/dev/null 2>&1; then
+        jq -r --arg c "$comp" '.components[$c] // empty' "$theme_file" 2>/dev/null || echo ""
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 -c "import json; d=json.load(open('$theme_file')); print(d.get('components', {}).get('$comp', '') or '')" 2>/dev/null || echo ""
+    fi
+}
+
+ACTION="${1:-toggle}"
+ACTIVE_THEME="$(get_active_theme)"
+CLIPBOARD_COMP="$(get_theme_component "clipboard")"
+
+# Si el tema actual no tiene portapapeles declarado, salir silenciosamente
+if [ -z "$CLIPBOARD_COMP" ] || [ "$CLIPBOARD_COMP" = "null" ]; then
+    exit 0
+fi
+
+# Soporte para AGS en temas legacy
+if [[ "$CLIPBOARD_COMP" == ags-* ]]; then
+    if command -v ags >/dev/null 2>&1; then
+        ags request toggle-cliphist 2>/dev/null || true
+    fi
+    exit 0
+fi
+
+# Para componentes Quickshell
 CLIPBOARD_PATH="$HOME/.config/quickshell/clipboard"
 if [ ! -d "$CLIPBOARD_PATH" ]; then
-    CURRENT_THEME="$(cat "$DOTS_DIR/.lunita-theme" 2>/dev/null || cat "$HOME/.lunita-theme" 2>/dev/null || echo "macOS-Theme")"
-    if [ -d "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/clipboard" ]; then
-        CLIPBOARD_PATH="$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/clipboard"
+    if [ -d "$DOTS_DIR/themes/$ACTIVE_THEME/.config/quickshell/clipboard" ]; then
+        CLIPBOARD_PATH="$DOTS_DIR/themes/$ACTIVE_THEME/.config/quickshell/clipboard"
     else
-        CLIPBOARD_PATH="$DOTS_DIR/themes/macOS-Theme/.config/quickshell/clipboard"
+        exit 0
     fi
 fi
 
@@ -52,7 +97,7 @@ if [ -n "$TARGET_MONITOR" ] && [[ "$ACTION" == "toggle" || "$ACTION" == "open" ]
 fi
 
 # 1. Si el portapapeles ya está en ejecución, enviar comando IPC directamente
-if pgrep -f "quickshell.*clipboard" >/dev/null 2>&1; then
+if pgrep -u "$UID" -f "quickshell.*clipboard" >/dev/null 2>&1; then
     quickshell -p "$CLIPBOARD_PATH" ipc call clipboard "$CALL_ACTION" "${CALL_ARGS[@]}" 2>/dev/null || \
     quickshell -p "$CLIPBOARD_PATH" ipc call clipboard "$ACTION" 2>/dev/null || \
     quickshell ipc call clipboard "$ACTION" 2>/dev/null || true
@@ -60,7 +105,8 @@ if pgrep -f "quickshell.*clipboard" >/dev/null 2>&1; then
 fi
 
 # 2. Si no está en ejecución, iniciarlo en modo daemon
-quickshell -d -n -p "$CLIPBOARD_PATH"
+quickshell -d -n -p "$CLIPBOARD_PATH" </dev/null >/dev/null 2>&1 &
+disown -h $! 2>/dev/null || true
 
 # Pequeña espera para inicializar socket IPC y ejecutar la acción
 sleep 0.15

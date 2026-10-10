@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="settings-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d6d9e0"/>
+      <stop offset="50%" stop-color="#b8bcc6"/>
+      <stop offset="100%" stop-color="#9397a3"/>
+    </linearGradient>
+    <linearGradient id="gear-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#808592"/>
+      <stop offset="100%" stop-color="#555964"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="url(#settings-bg)"/>
+  <rect x="8" y="8" width="112" height="112" rx="26" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+  <!-- Brushed gear -->
+  <g transform="translate(64,64) scale(1.15)">
+    <circle cx="0" cy="0" r="28" fill="url(#gear-grad)"/>
+    <!-- Gear teeth -->
+    <path d="M-6 -34 L6 -34 L5 -26 L-5 -26 Z M-6 34 L6 34 L5 26 L-5 26 Z M-34 -6 L-34 6 L-26 5 L-26 -5 Z M34 -6 L34 6 L26 5 L26 -5 Z" fill="url(#gear-grad)"/>
+    <path d="M-6 -34 L6 -34 L5 -26 L-5 -26 Z" transform="rotate(45)" fill="url(#gear-grad)"/>
+    <path d="M-6 34 L6 34 L5 26 L-5 26 Z" transform="rotate(45)" fill="url(#gear-grad)"/>
+    <path d="M-34 -6 L-34 6 L-26 5 L-26 -5 Z" transform="rotate(45)" fill="url(#gear-grad)"/>
+    <path d="M34 -6 L34 6 L26 5 L26 -5 Z" transform="rotate(45)" fill="url(#gear-grad)"/>
+    <!-- Center Hole -->
+    <circle cx="0" cy="0" r="12" fill="#c0c4cd"/>
+    <circle cx="0" cy="0" r="8" fill="url(#gear-grad)"/>
+  </g>
+</svg>

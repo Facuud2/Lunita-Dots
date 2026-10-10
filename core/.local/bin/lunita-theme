@@ -388,6 +388,25 @@ cmd_apply() {
     echo "$target" > "$STATE_FILE"
     echo "$target" > "$USER_STATE_FILE"
 
+    # 5.1 Sincronizar directorio de wallpapers del tema y aplicar fondo por defecto
+    if [ -d "$target_dir/wallpaper" ]; then
+        mkdir -p "$USER_STATE_DIR"
+        ln -sfn "$target_dir/wallpaper" "$USER_STATE_DIR/wallpaper"
+        info "Directorio de wallpapers sincronizado para '$target'."
+
+        local default_wall
+        default_wall="$(find -L "$target_dir/wallpaper" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) 2>/dev/null | sort | head -n 1)"
+        if [ -n "$default_wall" ]; then
+            if [ -x "$target_dir/.config/quickshell/hyprquickpaper/commands.sh" ]; then
+                "$target_dir/.config/quickshell/hyprquickpaper/commands.sh" "$default_wall" >/dev/null 2>&1 &
+            elif [ -x "$HOME/.config/quickshell/hyprquickpaper/commands.sh" ]; then
+                "$HOME/.config/quickshell/hyprquickpaper/commands.sh" "$default_wall" >/dev/null 2>&1 &
+            elif command -v awww &>/dev/null; then
+                awww img "$default_wall" --transition-type grow --transition-duration 1.2 2>/dev/null || true
+            fi
+        fi
+    fi
+
     # 6. Sincronización y recarga/detención de componentes en ejecución
     info "Sincronizando componentes visuales..."
 
@@ -462,8 +481,13 @@ cmd_apply() {
         success "Terminales Kitty recargadas."
     fi
 
-    # Gestión de AGS
-    if [ -d "$target_dir/.config/ags" ] || [ -d "$target_dir/ags" ]; then
+    # Gestión de AGS (solo si el tema no usa barra de Quickshell)
+    local uses_qs_bar=false
+    if [ -d "$target_dir/.config/quickshell/bar" ] || [ -d "$target_dir/quickshell/bar" ]; then
+        uses_qs_bar=true
+    fi
+
+    if [ "$uses_qs_bar" = false ] && ([ -d "$target_dir/.config/ags" ] || [ -d "$target_dir/ags" ]); then
         if pgrep -x ags > /dev/null; then
             ags quit 2>/dev/null || true
             sleep 0.3
@@ -475,129 +499,17 @@ cmd_apply() {
             ags quit 2>/dev/null || true
             sleep 0.2
             pkill -x ags 2>/dev/null || true
-            info "AGS detenido (no configurado en '$target')."
+            info "AGS detenido (tema migrado o sin AGS)."
         fi
     fi
 
-    # Gestión de Quickshell Dock
-    if [ -d "$target_dir/.config/quickshell/dock" ] || [ -d "$target_dir/quickshell/dock" ]; then
-        if pgrep -f "quickshell.*dock" > /dev/null; then
-            pkill -f "quickshell.*dock" 2>/dev/null || true
-            sleep 0.2
-        fi
-        quickshell -d -n -p "$HOME/.config/quickshell/dock"
-        success "Quickshell Dock iniciado."
-    else
-        if pgrep -f "quickshell.*dock" > /dev/null; then
-            pkill -f "quickshell.*dock" 2>/dev/null || true
-            info "Quickshell Dock detenido (no configurado en '$target')."
-        fi
+    # Gestión de Quickshell (orquestación unificada y autoritaria según theme.json)
+    if command -v lunita-quickshell >/dev/null 2>&1; then
+        lunita-quickshell restart 2>/dev/null || true
+    elif [ -x "$DOTS_DIR/core/.local/bin/lunita-quickshell" ]; then
+        "$DOTS_DIR/core/.local/bin/lunita-quickshell" restart 2>/dev/null || true
     fi
 
-    # Gestión de Quickshell Bar (Status Bar)
-    if [ -d "$target_dir/.config/quickshell/bar" ] || [ -d "$target_dir/quickshell/bar" ]; then
-        if pgrep -f "quickshell.*bar" > /dev/null; then
-            pkill -f "quickshell.*bar" 2>/dev/null || true
-            sleep 0.2
-        fi
-        quickshell -d -n -p "$HOME/.config/quickshell/bar"
-        success "Quickshell Bar iniciada."
-    else
-        if pgrep -f "quickshell.*bar" > /dev/null; then
-            pkill -f "quickshell.*bar" 2>/dev/null || true
-            info "Quickshell Bar detenida (no configurado en '$target')."
-        fi
-    fi
-
-    # Gestión de Quickshell Launcher
-    if [ -d "$target_dir/.config/quickshell/launcher" ] || [ -d "$target_dir/quickshell/launcher" ]; then
-        if pgrep -f "quickshell.*launcher" > /dev/null; then
-            pkill -f "quickshell.*launcher" 2>/dev/null || true
-            sleep 0.2
-        fi
-        quickshell -d -n -p "$HOME/.config/quickshell/launcher"
-        success "Quickshell Launcher iniciado."
-    else
-        if pgrep -f "quickshell.*launcher" > /dev/null; then
-            pkill -f "quickshell.*launcher" 2>/dev/null || true
-            info "Quickshell Launcher detenido (no configurado en '$target')."
-        fi
-    fi
-
-    # Gestión de Quickshell Spotlight
-    if [ -d "$target_dir/.config/quickshell/spotlight" ] || [ -d "$target_dir/quickshell/spotlight" ]; then
-        if pgrep -f "quickshell.*spotlight" > /dev/null; then
-            pkill -f "quickshell.*spotlight" 2>/dev/null || true
-            sleep 0.2
-        fi
-        quickshell -d -n -p "$HOME/.config/quickshell/spotlight"
-        success "Quickshell Spotlight iniciado."
-    else
-        if pgrep -f "quickshell.*spotlight" > /dev/null; then
-            pkill -f "quickshell.*spotlight" 2>/dev/null || true
-            info "Quickshell Spotlight detenido (no configurado en '$target')."
-        fi
-    fi
-
-    # Gestión de Quickshell Notifications
-    if [ -d "$target_dir/.config/quickshell/notifications" ] || [ -d "$target_dir/quickshell/notifications" ]; then
-        if pgrep -f "quickshell.*notifications" > /dev/null; then
-            pkill -f "quickshell.*notifications" 2>/dev/null || true
-            sleep 0.2
-        fi
-        quickshell -d -n -p "$HOME/.config/quickshell/notifications"
-        success "Quickshell Notifications iniciado."
-    else
-        if pgrep -f "quickshell.*notifications" > /dev/null; then
-            pkill -f "quickshell.*notifications" 2>/dev/null || true
-            info "Quickshell Notifications detenido (no configurado en '$target')."
-        fi
-    fi
-
-    # Gestión de Quickshell OSD
-    if [ -d "$target_dir/.config/quickshell/osd" ] || [ -d "$target_dir/quickshell/osd" ]; then
-        if pgrep -f "quickshell.*osd" > /dev/null; then
-            pkill -f "quickshell.*osd" 2>/dev/null || true
-            sleep 0.2
-        fi
-        quickshell -d -n -p "$HOME/.config/quickshell/osd"
-        success "Quickshell OSD iniciado."
-    else
-        if pgrep -f "quickshell.*osd" > /dev/null; then
-            pkill -f "quickshell.*osd" 2>/dev/null || true
-            info "Quickshell OSD detenido (no configurado en '$target')."
-        fi
-    fi
-
-    # Gestión de Quickshell Widgets (Desktop Canvas)
-    if [ -d "$target_dir/.config/quickshell/widgets" ] || [ -d "$target_dir/quickshell/widgets" ]; then
-        if pgrep -f "quickshell.*widgets" > /dev/null; then
-            pkill -f "quickshell.*widgets" 2>/dev/null || true
-            sleep 0.2
-        fi
-        quickshell -d -n -p "$HOME/.config/quickshell/widgets"
-        success "Quickshell Widgets de escritorio iniciados."
-    else
-        if pgrep -f "quickshell.*widgets" > /dev/null; then
-            pkill -f "quickshell.*widgets" 2>/dev/null || true
-            info "Quickshell Widgets detenidos (no configurado en '$target')."
-        fi
-    fi
-
-    # Gestión de Quickshell Clipboard
-    if [ -d "$target_dir/.config/quickshell/clipboard" ] || [ -d "$target_dir/quickshell/clipboard" ]; then
-        if pgrep -f "quickshell.*clipboard" > /dev/null; then
-            pkill -f "quickshell.*clipboard" 2>/dev/null || true
-            sleep 0.2
-        fi
-        quickshell -d -n -p "$HOME/.config/quickshell/clipboard"
-        success "Quickshell Clipboard iniciado."
-    else
-        if pgrep -f "quickshell.*clipboard" > /dev/null; then
-            pkill -f "quickshell.*clipboard" 2>/dev/null || true
-            info "Quickshell Clipboard detenido (no configurado en '$target')."
-        fi
-    fi
 
     # Gestión de Tokri (Canasta macOS)
     if command -v lunita-tokri >/dev/null 2>&1; then
@@ -629,11 +541,13 @@ cmd_create() {
     mkdir -p "$dest/.config"/{ags,eww,kitty,matugen/templates,matugen/hooks,wlogout,quickshell}
     mkdir -p "$dest/.local/share"
     mkdir -p "$dest/.icons"
+    mkdir -p "$dest/wallpaper"
 
     cat << 'EOF' > "$dest/.stow-local-ignore"
 ^theme\.json$
 ^README\.md$
 ^assets$
+^wallpaper$
 ^tokri$
 ^zsh$
 .*\.bak.*

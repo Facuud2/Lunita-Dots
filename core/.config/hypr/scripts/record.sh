@@ -150,9 +150,15 @@ case "$MODE" in
         ;;
     screen)
         setup_audio
+        # En multi-monitor, detectar monitor enfocado para que wf-recorder no pregunte interactivamente por stdin
+        FOCUSED_OUTPUT=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null || echo "")
+        OUTPUT_ARGS=()
+        if [ -n "$FOCUSED_OUTPUT" ]; then
+            OUTPUT_ARGS=(-o "$FOCUSED_OUTPUT")
+        fi
         notify-send "Grabación de pantalla" "Grabando pantalla completa${AUDIO_DESC}..." -a "Grabación de pantalla"
         (
-            wf-recorder "${AUDIO_ARGS[@]}" -f "$FILEPATH"
+            wf-recorder "${OUTPUT_ARGS[@]}" "${AUDIO_ARGS[@]}" -f "$FILEPATH"
             cleanup_audio_modules
             notify-send "Grabación de pantalla" "Finalizó la grabación" -a "Grabación de pantalla"
         ) & disown

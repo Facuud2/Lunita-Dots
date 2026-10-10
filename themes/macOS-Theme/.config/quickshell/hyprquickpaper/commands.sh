@@ -9,6 +9,7 @@ CONFIG="$DIR/config.json"
 source "$DIR/common.sh"
 
 WALLPAPER="$1"
+WALLPAPER="${WALLPAPER#file://}"
 if [ -z "$WALLPAPER" ]; then
     exit 0
 fi
@@ -49,6 +50,28 @@ if is_video "$WALLPAPER" "$VIDEO_EXT_PATTERN"; then
         exit 1
     fi
 else
+    # Garantizar que el demonio de fondo esté activo antes de cambiar wallpaper
+    if [ "$TOOL" = "awww" ] || [ "$TOOL" = "swww" ]; then
+        if command -v awww-daemon &>/dev/null && ! pgrep -x awww-daemon >/dev/null; then
+            if command -v hyprctl &>/dev/null && pgrep -x Hyprland >/dev/null; then
+                hyprctl dispatch 'hl.dsp.exec_cmd("awww-daemon")' >/dev/null 2>&1 || true
+            fi
+            if ! pgrep -x awww-daemon >/dev/null; then
+                nohup awww-daemon >/dev/null 2>&1 &
+            fi
+            for _ in {1..30}; do
+                if awww query >/dev/null 2>&1; then break; fi
+                sleep 0.05
+            done
+        elif command -v swww-daemon &>/dev/null && ! pgrep -x swww-daemon >/dev/null; then
+            nohup swww-daemon >/dev/null 2>&1 &
+            for _ in {1..30}; do
+                if swww query >/dev/null 2>&1; then break; fi
+                sleep 0.05
+            done
+        fi
+    fi
+
     echo "Using $TOOL for image wallpaper: $WALLPAPER"
 
     case "$TOOL" in
@@ -98,4 +121,13 @@ if [ -n "$STABLE_COPY_PATH" ]; then
     fi
 fi
 
-
+# --- Matugen dynamic theming integration ---
+if command -v matugen &>/dev/null; then
+    if is_video "$WALLPAPER" "$VIDEO_EXT_PATTERN"; then
+        if [ -f "$THUMB" ]; then
+            matugen image "$THUMB" --source-color-index 0 >/dev/null 2>&1 &
+        fi
+    else
+        matugen image "$WALLPAPER" --source-color-index 0 >/dev/null 2>&1 &
+    fi
+fi

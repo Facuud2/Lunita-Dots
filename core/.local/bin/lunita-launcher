@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # 🚀 LUNITA LAUNCHER WRAPPER
-# Gestor e invocador reactivo para el App Launcher de macOS en Quickshell
+# Gestor e invocador reactivo para el App Launcher basado en theme.json
 # ==============================================================================
 
 set -e
@@ -26,15 +26,70 @@ get_dots_dir() {
 }
 DOTS_DIR="$(get_dots_dir "$SCRIPT_DIR" 2>/dev/null || (cd "$SCRIPT_DIR/.." && pwd))"
 
-ACTION="${1:-toggle}"
+get_active_theme() {
+    if [ -f "$DOTS_DIR/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme"
+    elif [ -f "$HOME/.config/lunita/current_theme" ]; then
+        tr -d '[:space:]' < "$HOME/.config/lunita/current_theme"
+    elif [ -f "$HOME/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$HOME/.lunita-theme"
+    else
+        echo "lunita-default"
+    fi
+}
 
+get_theme_component() {
+    local comp="$1"
+    local theme
+    theme="$(get_active_theme)"
+    local theme_file="$DOTS_DIR/themes/$theme/theme.json"
+
+    if [ ! -f "$theme_file" ]; then
+        echo ""
+        return 0
+    fi
+
+    if command -v jq >/dev/null 2>&1; then
+        jq -r --arg c "$comp" '.components[$c] // empty' "$theme_file" 2>/dev/null || echo ""
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 -c "import json; d=json.load(open('$theme_file')); print(d.get('components', {}).get('$comp', '') or '')" 2>/dev/null || echo ""
+    fi
+}
+
+ACTION="${1:-toggle}"
+ACTIVE_THEME="$(get_active_theme)"
+LAUNCHER_COMP="$(get_theme_component "launcher")"
+
+# Si el tema actual no tiene launcher declarado ni bar con apps, salir silenciosamente
+if [ -z "$LAUNCHER_COMP" ] || [ "$LAUNCHER_COMP" = "null" ]; then
+    BAR_COMP="$(get_theme_component "bar")"
+    if [[ "$BAR_COMP" == *"island"* ]]; then
+        quickshell -p "$HOME/.config/quickshell/bar" ipc call bar open apps 2>/dev/null || \
+        quickshell ipc call bar open apps 2>/dev/null || true
+    fi
+    exit 0
+fi
+
+# Soporte para AGS en temas legacy que lo utilicen explícitamente
+if [[ "$LAUNCHER_COMP" == ags-* ]]; then
+    if command -v ags >/dev/null 2>&1; then
+        ags request toggle-launcher 2>/dev/null || true
+    fi
+    exit 0
+fi
+
+# Para componentes Quickshell
 LAUNCHER_PATH="$HOME/.config/quickshell/launcher"
 if [ ! -d "$LAUNCHER_PATH" ]; then
-    CURRENT_THEME="$(cat "$DOTS_DIR/.lunita-theme" 2>/dev/null || cat "$HOME/.lunita-theme" 2>/dev/null || echo "macOS-Theme")"
-    if [ -d "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/launcher" ]; then
-        LAUNCHER_PATH="$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/launcher"
+    if [ -d "$DOTS_DIR/themes/$ACTIVE_THEME/.config/quickshell/launcher" ]; then
+        LAUNCHER_PATH="$DOTS_DIR/themes/$ACTIVE_THEME/.config/quickshell/launcher"
     else
-        LAUNCHER_PATH="$DOTS_DIR/themes/macOS-Theme/.config/quickshell/launcher"
+        BAR_COMP="$(get_theme_component "bar")"
+        if [[ "$BAR_COMP" == *"island"* ]]; then
+            quickshell -p "$HOME/.config/quickshell/bar" ipc call bar open apps 2>/dev/null || \
+            quickshell ipc call bar open apps 2>/dev/null || true
+        fi
+        exit 0
     fi
 fi
 
@@ -52,7 +107,7 @@ if [ -n "$TARGET_MONITOR" ] && [[ "$ACTION" == "toggle" || "$ACTION" == "open" ]
 fi
 
 # 1. Si el launcher ya está en ejecución, enviar comando IPC directamente
-if pgrep -f "quickshell.*launcher" >/dev/null 2>&1; then
+if pgrep -u "$UID" -f "quickshell.*launcher" >/dev/null 2>&1; then
     quickshell -p "$LAUNCHER_PATH" ipc call launcher "$CALL_ACTION" "${CALL_ARGS[@]}" 2>/dev/null || \
     quickshell -p "$LAUNCHER_PATH" ipc call launcher "$ACTION" 2>/dev/null || \
     quickshell ipc call launcher "$ACTION" 2>/dev/null || true
