@@ -46,10 +46,18 @@ error() { echo -e "${RED}✗${RESET} $1" >&2; }
 DAEMON_COMPONENTS=("bar" "dock" "notifications" "osd" "spotlight" "launcher" "widgets" "clipboard")
 
 get_active_theme() {
-    if [ -f "$DOTS_DIR/.lunita-theme" ]; then
-        tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme"
-    elif [ -f "$HOME/.config/lunita/current_theme" ]; then
+    if [ -f "$HOME/.config/lunita/current_theme" ]; then
         tr -d '[:space:]' < "$HOME/.config/lunita/current_theme"
+    elif [ -L "$HOME/.config/quickshell/bar" ]; then
+        local target
+        target="$(readlink -f "$HOME/.config/quickshell/bar" 2>/dev/null || true)"
+        if [[ "$target" =~ /themes/([^/]+)/ ]]; then
+            echo "${BASH_REMATCH[1]}"
+            return 0
+        fi
+        echo "lunita-default"
+    elif [ -f "$DOTS_DIR/.lunita-theme" ]; then
+        tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme"
     elif [ -f "$HOME/.lunita-theme" ]; then
         tr -d '[:space:]' < "$HOME/.lunita-theme"
     else
@@ -105,11 +113,11 @@ get_qs_bin() {
 }
 
 wait_for_wayland() {
-    local max_attempts=40
+    local max_attempts=50
     local attempt=0
     local runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 
-    while [ $attempt -lt $max_attempts ]; do
+    while [ "$attempt" -lt "$max_attempts" ]; do
         if [ -n "$WAYLAND_DISPLAY" ] && [ -S "$runtime_dir/$WAYLAND_DISPLAY" ]; then
             return 0
         fi
@@ -122,8 +130,11 @@ wait_for_wayland() {
         fi
 
         sleep 0.1
-        ((attempt++))
+        attempt=$((attempt + 1))
     done
+
+    warn "No se detectó un socket Wayland tras esperar en $runtime_dir"
+    return 1
 }
 
 get_component_pid() {

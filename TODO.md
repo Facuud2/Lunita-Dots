@@ -58,11 +58,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** [ISSUE-001]
 
 ### [ISSUE-004] Persistencia y Autostart de Quickshell al iniciar sesión
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
-- **Rama Sugerida:** `ISSUE_002_FIX`
+- **Rama Sugerida:** `ISSUE_004_QUICKSHELL_AUTOSTART`
 - **Módulo(s):** Core / Autostart / Quickshell
-- **Archivos Afectados:** `core/.config/hypr/modules/autostart.lua`, `core/.local/bin/lunita-quickshell`, A investigar por el agente.
+- **Archivos Afectados:** `core/.config/hypr/modules/autostart.lua`, `core/.local/bin/lunita-quickshell`
 - **Descripción:** Al iniciar el sistema, el entorno visual de Quickshell no arranca automáticamente, obligando al usuario a ejecutar `lunita-quickshell start` de forma manual. Se debe garantizar que el autostart de Hyprland lea el tema activo de la sesion previa y levante los demonios correspondientes sin intervención humana.
 - **Criterios de Aceptación:**
   1. Reiniciar el sistema levanta automáticamente los componentes de Quickshell del tema actual.
