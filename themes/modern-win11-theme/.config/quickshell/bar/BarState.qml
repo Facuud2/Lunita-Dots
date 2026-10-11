@@ -545,7 +545,7 @@ Item {
     }
 
     function reloadInterface() {
-        Quickshell.execDetached(["bash", "-c", "lunita-theme apply Modern-Win11-Theme 2>/dev/null || quickshell kill && lunita-quickshell &"]);
+        Quickshell.execDetached(["bash", "-c", "lunita-theme apply modern-win11-theme 2>/dev/null || quickshell kill && lunita-quickshell &"]);
     }
 
     // ==========================================
