@@ -6,6 +6,7 @@ __pycache__/
 
 # Backups y archivos temporales
 *.bak
+*.orig
 *.tmp
 *~
 
