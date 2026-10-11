@@ -70,11 +70,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-005] Testing de rendimiento e integración de Hyprquickpaper
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
-- **Rama Sugerida:** `ISSUE_003_TEST`
+- **Rama Sugerida:** `ISSUE_005_TEST_HYPRQUICKPAPER`
 - **Módulo(s):** Lunita-Theme / Wallpaper
-- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/hyprquickpaper/`, `core/.local/bin/hyprquickpaper`
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/hyprquickpaper/`, `core/.local/bin/hyprquickpaper`, `BACKLOG.md`
 - **Descripción:** Realizar pruebas de rendimiento, renderizado 3D e interactividad del componente hyprquickpaper dentro de la suite de Lunita-Default. 
 - **Criterios de Aceptación:**
   1. Componente ejecutado y testeado en el entorno local.
