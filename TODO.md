@@ -148,22 +148,22 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-012] Interpolación y curvas de animación en el Launchpad
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** BAJA
-- **Rama Sugerida:** `ISSUE_010_FEAT`
+- **Rama Sugerida:** `ISSUE_012_LAUNCHPAD_ANIMATIONS`
 - **Módulo(s):** macOS-Theme / Launcher
-- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/launcher/` (Archivos QML)
+- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/launcher/LauncherView.qml`, `themes/macOS-Theme/.config/quickshell/launcher/LauncherState.qml`, `themes/macOS-Theme/.config/quickshell/launcher/AppItem.qml`
 - **Descripción:** La aparición del launcher es demasiado espontánea/brusca. Se deben inyectar curvas Bezier (`Easing.InOutQuad` o resortes) para opacidad y escalado, logrando que los iconos aparezcan con un efecto suave, cuidando la atención al detalle.
 - **Criterios de Aceptación:**
   1. Animaciones de entrada y salida fluidas y consistentes con la estética de Cupertino.
 - **Dependencias:** Ninguna
 
 ### [ISSUE-013] Limpieza de estado (Clear) del buscador al cerrar Launchpad
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
-- **Rama Sugerida:** `ISSUE_011_FIX`
+- **Rama Sugerida:** `ISSUE_013_LAUNCHPAD_SEARCH_CLEAR`
 - **Módulo(s):** macOS-Theme / Launcher
-- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/launcher/` (Archivos QML)
+- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/launcher/LauncherView.qml`
 - **Descripción:** El estado del `TextField` persiste en memoria. Si el usuario escribe una búsqueda, cierra el launcher (SUPER+A) y vuelve a abrirlo, el texto anterior sigue allí. Se debe vaciar el string del input en el hook de cierre (`onVisibleChanged`).
 - **Criterios de Aceptación:**
   1. Cada invocación del launcher muestra la barra de búsqueda vacía.
