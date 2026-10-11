@@ -47,10 +47,10 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 ---
 
 ### [ISSUE-003] Dinamización de Marcadores de Usuario mediante XDG
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Módulo(s):** Temas / GTK / Qt / Stow
-- **Archivos Afectados:** `themes/macOS-Theme/.config/gtk-3.0/bookmarks`, `themes/Modern-Win11-Theme/.config/gtk-3.0/bookmarks`, `themes/*/user-places.xbel`, `core/.local/bin/lunita-theme`
+- **Archivos Afectados:** `core/.local/bin/lunita-theme`, `.gitignore`, `themes/*/.stow-local-ignore`, `themes/*/.config/gtk-3.0/bookmarks.template`, `themes/*/.local/share/user-places.xbel.template`
 - **Descripción:** Reemplazar las rutas fijas (`/home/facuud2/...`) por generación dinámica basada en utilidades XDG (`xdg-user-dir`) durante la aplicación del tema o mediante plantillas dinámicas, evitando roturas en instalaciones de otros usuarios.
 - **Criterios de Aceptación:**
   1. No existen referencias hardcodeadas a `/home/facuud2` en los archivos versionados de marcadores.

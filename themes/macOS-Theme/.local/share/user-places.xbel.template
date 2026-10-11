@@ -38,7 +38,7 @@
    </metadata>
   </info>
  </bookmark>
- <bookmark href="file:///home/facuud2/Documentos">
+ <bookmark href="file://{{XDG_DOCUMENTS_DIR}}">
   <title>Documents</title>
   <info>
    <metadata owner="http://freedesktop.org">
@@ -50,7 +50,7 @@
    </metadata>
   </info>
  </bookmark>
- <bookmark href="file:///home/facuud2/Imagenes">
+ <bookmark href="file://{{XDG_PICTURES_DIR}}">
   <title>Images</title>
   <info>
    <metadata owner="http://freedesktop.org">
@@ -62,7 +62,7 @@
    </metadata>
   </info>
  </bookmark>
- <bookmark href="file:///home/facuud2/Videos">
+ <bookmark href="file://{{XDG_VIDEOS_DIR}}">
   <title>Videos</title>
   <info>
    <metadata owner="http://freedesktop.org">
@@ -74,7 +74,7 @@
    </metadata>
   </info>
  </bookmark>
- <bookmark href="file:///home/facuud2/Musica">
+ <bookmark href="file://{{XDG_MUSIC_DIR}}">
   <title>Music</title>
   <info>
    <metadata owner="http://freedesktop.org">
@@ -86,7 +86,7 @@
    </metadata>
   </info>
  </bookmark>
- <bookmark href="file:///home/facuud2/Desktop">
+ <bookmark href="file://{{XDG_DESKTOP_DIR}}">
   <title>Desktop</title>
   <info>
    <metadata owner="http://freedesktop.org">
@@ -98,7 +98,7 @@
    </metadata>
   </info>
  </bookmark>
- <bookmark href="file:///home/facuud2/Downloads">
+ <bookmark href="file://{{XDG_DOWNLOAD_DIR}}">
   <title>Downloads</title>
   <info>
    <metadata owner="http://freedesktop.org">
@@ -110,8 +110,8 @@
    </metadata>
   </info>
  </bookmark>
- <bookmark href="file:///home/facuud2">
-  <title>facuud2</title>
+ <bookmark href="file://{{HOME}}">
+  <title>{{USER}}</title>
   <info>
    <metadata owner="http://freedesktop.org">
     <bookmark:icon name="user-home"/>
