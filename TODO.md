@@ -93,11 +93,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-007] Rediseño y contraste del widget de Clima Dinámico
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** BAJA
-- **Rama Sugerida:** `ISSUE_005_FEAT`
+- **Rama Sugerida:** `ISSUE_007_WEATHER_WIDGET_REDESIGN`
 - **Módulo(s):** Lunita-Theme / Widgets
-- **Archivos Afectados:** A investigar por el agente (QML del widget de clima).
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/bar/WeatherWidget.qml`
 - **Descripción:** La UI actual del clima carece de datos reales (siempre el icon de nublado con 11 grados Celsius). Se debe refactorizar la paleta del widget para utilizar colores más marcados/contrastantes siguiendo la tematica de NothingOS y actualizar la iconografía vectorial para armonizarla con el diseño actual de Lunita-Default.
 - **Criterios de Aceptación:**
   1. Nueva iconografía y paleta de alto contraste implementadas.
