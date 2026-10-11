@@ -45,6 +45,33 @@ Scope {
                 root.updateTargetScreen("");
             }
         }
+
+        // Close launcher immediately if user focuses or clicks any other window in Hyprland
+        function onActiveToplevelChanged() {
+            if (globalLauncherState.isOpen) {
+                globalLauncherState.closeLauncher();
+            }
+        }
+
+        function onRawEvent(event) {
+            if (!event || !globalLauncherState.isOpen) return;
+            var ev = event.name;
+            if (ev === "activewindow" || ev === "activewindowv2" || ev === "focusedmon") {
+                globalLauncherState.closeLauncher();
+            }
+        }
+    }
+
+    // Capture focus grab under Hyprland: auto-clears / closes when clicking outside windows
+    HyprlandFocusGrab {
+        id: focusGrab
+        active: globalLauncherState.isOpen
+        windows: []
+        onCleared: {
+            if (globalLauncherState.isOpen) {
+                globalLauncherState.closeLauncher();
+            }
+        }
     }
 
     // IPC Interface to control launcher from CLI, scripts, binds or Dock
@@ -76,7 +103,7 @@ Scope {
         }
     }
 
-    // ── 1. Fullscreen transparent click-catcher on all active screens (dismiss on outside click) ──
+    // ── Fullscreen Overlay Window per screen with Click-Catcher Backdrop and LauncherView ──
     Variants {
         model: Quickshell.screens
 
@@ -84,8 +111,11 @@ Scope {
             id: screenScope
             required property var modelData
 
+            readonly property bool isTargetScreen: root.targetScreen !== null &&
+                (root.targetScreen === screenScope.modelData || root.targetScreen.name === screenScope.modelData.name)
+
             PanelWindow {
-                id: clickCatcherWindow
+                id: overlayWindow
                 screen: screenScope.modelData
                 color: "transparent"
                 visible: globalLauncherState.windowVisible
@@ -97,55 +127,39 @@ Scope {
                     right: true
                 }
 
-                WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.namespace: "macos-launcher-catcher"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.namespace: "macos-launcher"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: (globalLauncherState.isOpen && screenScope.isTargetScreen)
+                    ? WlrKeyboardFocus.Exclusive
+                    : WlrKeyboardFocus.None
 
+                // 1. Outside Click Catcher Backdrop
                 MouseArea {
                     anchors.fill: parent
-                    enabled: globalLauncherState.isOpen
-                    onClicked: globalLauncherState.closeLauncher()
+                    z: 0
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onPressed: {
+                        if (globalLauncherState.isOpen) {
+                            globalLauncherState.closeLauncher();
+                        }
+                    }
+                }
+
+                // 2. LauncherView anchored at bottom center on the target screen
+                LauncherView {
+                    id: launcherView
+                    visible: screenScope.isTargetScreen
+                    launcherState: globalLauncherState
+                    z: 1
+
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        bottom: parent.bottom
+                        bottomMargin: 76
+                    }
                 }
             }
-        }
-    }
-
-    // ── 2. Compact Floating Launcher Window (ONLY on focused monitor, BLURRED BY HYPRLAND) ──
-    // Sized ONLY to the card bounds (580x640) so Hyprland blurs ONLY this card!
-    PanelWindow {
-        id: launcherWindow
-        screen: root.targetScreen
-        color: "transparent"
-        visible: globalLauncherState.windowVisible
-
-        implicitWidth: 580
-        implicitHeight: 640
-
-        anchors {
-            bottom: true
-        }
-        margins {
-            bottom: 76
-        }
-
-        mask: Region {
-            width: 580
-            height: 640
-            radius: 26
-        }
-
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "macos-launcher"
-        WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.keyboardFocus: globalLauncherState.isOpen
-            ? WlrKeyboardFocus.Exclusive
-            : WlrKeyboardFocus.None
-
-        LauncherView {
-            id: launcherView
-            launcherState: globalLauncherState
-            anchors.fill: parent
         }
     }
 }
