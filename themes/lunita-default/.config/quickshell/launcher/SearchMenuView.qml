@@ -16,6 +16,21 @@ Item {
         searchInput.forceActiveFocus();
     }
 
+    Timer {
+        id: focusTimer
+        interval: 30
+        running: true
+        repeat: false
+        onTriggered: searchInput.forceActiveFocus()
+    }
+
+    function launchCurrent() {
+        if (launcherState.filteredApps.length > 0) {
+            var selectedApp = launcherState.filteredApps[launcherState.searchSelectedIndex];
+            launcherState.launchSelectedApp(selectedApp);
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 10
@@ -122,12 +137,8 @@ Item {
                             }
                         }
 
-                        Keys.onReturnPressed: {
-                            if (launcherState.filteredApps.length > 0) {
-                                var selectedApp = launcherState.filteredApps[launcherState.searchSelectedIndex];
-                                launcherState.launchSelectedApp(selectedApp);
-                            }
-                        }
+                        Keys.onReturnPressed: root.launchCurrent()
+                        Keys.onEnterPressed: root.launchCurrent()
 
                         Keys.onEscapePressed: {
                             if (launcherState.searchQuery !== "") {

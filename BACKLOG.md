@@ -35,6 +35,14 @@ Este documento contiene el inventario de requerimientos futuros, refactorizacion
 - **Objetivo:** Refactorizar los widgets de Quickshell (`widgets/scripts/`) para que compartan servicios subyacentes comunes en `core/` y solo varíe la capa estética QML en cada tema.
 - **Complejidad:** Alta.
 
+### [BACKLOG-THEME-03] Centralización y Deduplicación del Selector Hyprquickpaper
+- **Objetivo:** Hyprquickpaper se encuentra actualmente triplicado de forma idéntica en `themes/lunita-default/`, `themes/macOS-Theme/` y `themes/Modern-Win11-Theme/` ocupando espacio redundante. Extraerlo como paquete compartido en `core/` o enlazarlo simbióticamente mediante Stow para evitar dispersión de mantenimiento.
+- **Complejidad:** Baja.
+
+### [BACKLOG-THEME-04] Optimización de Caché Asíncrona y Miniaturas de Video en Hyprquickpaper
+- **Objetivo:** En `cache.sh`, la generación masiva de thumbnails de vídeo con `ffmpeg` puede saturar I/O si hay carpetas con múltiples clips. Implementar throttle y límite de concurrencia de workers en segundo plano y fallback visual mientras `magick`/`ffmpeg` completan el thumbnail.
+- **Complejidad:** Media.
+
 ---
 
 ## ⚙️ 3. Subproyectos Nativos y C++
