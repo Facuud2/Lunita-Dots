@@ -20,7 +20,7 @@ function M.setup()
     hl.exec_cmd("sh -c 'pgrep -x awww-daemon >/dev/null || awww-daemon &'")
 
     -- 5. Quickshell (Barra Superior, Dock, Notificaciones, OSD, Spotlight, Launcher)
-    hl.exec_cmd("sh -c 'export PATH=\"" .. home .. "/.local/bin:$PATH\"; lunita-quickshell start'")
+    hl.exec_cmd("sh -c 'sleep 0.5; export PATH=\"" .. home .. "/.local/bin:$PATH\"; lunita-quickshell start'")
 
 
     -- 7. Teclado Virtual, Portapapeles y Plugins

@@ -1,0 +1,6 @@
+file://{{XDG_DOWNLOAD_DIR}} Descargas
+file://{{XDG_PICTURES_DIR}} Imágenes
+file://{{XDG_VIDEOS_DIR}} Videos
+file:///mnt/Desarrollo Desarrollo
+file:///mnt/Disco2 Disco2
+file:///mnt/Desarrollo/Lunita-Dots Lunita-Dots

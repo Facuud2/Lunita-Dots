@@ -6,4 +6,6 @@
 ^zsh$
 .*\.bak.*
 .*\.orig.*
+^\.config/ags$
+.*\.template$
 
