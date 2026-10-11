@@ -115,33 +115,33 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-009] Optimización de refresco (240Hz) en animación del Launcher
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
-- **Rama Sugerida:** `ISSUE_007_REFACTOR`
+- **Rama Sugerida:** `ISSUE_009_LAUNCHER_240HZ_ANIMATION`
 - **Módulo(s):** Lunita-Theme / Launcher
-- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/` (Archivos QML)
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/LauncherState.qml`, `themes/lunita-default/.config/quickshell/launcher/LauncherView.qml`
 - **Descripción:** Las curvas de animación (`NumberAnimation` / `PropertyAnimation`) al expandir el launcher parecen estar limitadas o renderizando a 60Hz. Modificar las físicas o sincronizaciones de la ventana en Quickshell para aprovechar la fluidez en monitores de alta tasa de refresco (240Hz).
 - **Criterios de Aceptación:**
   1. Animación de expansión fluida y sin "stuttering" a 240fps.
 - **Dependencias:** Ninguna
 
 ### [ISSUE-010] Soporte para tecla Enter del Numpad en el App Launcher
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
-- **Rama Sugerida:** `ISSUE_008_FIX`
+- **Rama Sugerida:** `ISSUE_010_LAUNCHER_NUMPAD_ENTER`
 - **Módulo(s):** Lunita-Theme / Launcher
-- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/` (Archivos QML)
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/SearchMenuView.qml`, `themes/lunita-default/.config/quickshell/launcher/shell.qml`
 - **Descripción:** El interceptor de teclado del buscador detecta la tecla "Enter" principal (`Qt.Key_Return`), pero ignora la tecla "Enter" del teclado numérico (`Qt.Key_Enter`). 
 - **Criterios de Aceptación:**
   1. Ambas teclas Enter ejecutan la aplicación seleccionada.
 - **Dependencias:** Ninguna
 
 ### [ISSUE-011] Cierre del Launchpad al perder el foco (Click externo)
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
-- **Rama Sugerida:** `ISSUE_009_FIX`
+- **Rama Sugerida:** `ISSUE_011_LAUNCHPAD_OUTSIDE_CLICK_DISMISS`
 - **Módulo(s):** macOS-Theme / Launcher
-- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/launcher/` (Archivos QML)
+- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/launcher/shell.qml`
 - **Descripción:** El Launchpad permanece abierto al hacer click fuera de sus márgenes. Se debe implementar un cierre reactivo (vía `onActiveFocusChanged` de la ventana o integrando un `MouseArea` invisible de fondo) para emular el comportamiento nativo de macOS.
 - **Criterios de Aceptación:**
   1. Un click fuera de los componentes principales oculta el launcher inmediatamente.
