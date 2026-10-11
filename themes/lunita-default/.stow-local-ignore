@@ -7,4 +7,5 @@
 .*\.bak.*
 .*\.orig.*
 ^\.config/ags$
+.*\.template$
 

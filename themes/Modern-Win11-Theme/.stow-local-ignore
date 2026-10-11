@@ -7,4 +7,4 @@
 ^dolphin$
 .*\.bak.*
 .*\.orig.*
-
+.*\.template$

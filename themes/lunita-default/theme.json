@@ -7,7 +7,7 @@
   "components": {
     "bar": "quickshell-nothing-dynamic-island",
     "launcher": "quickshell-app-launcher",
-    "powermenu": "quickshell-powermenu",
+    "powermenu": "wlogout-nothing-glass",
     "notifications": "quickshell-notifications",
     "osd": "quickshell-osd",
     "widgets": "eww-cava-player",
