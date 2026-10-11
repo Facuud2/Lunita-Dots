@@ -166,6 +166,15 @@ Scope {
                     id: keyHandler
                     focus: globalLauncherState.isOpen && !globalLauncherState.searchMode
 
+                    Connections {
+                        target: globalLauncherState
+                        function onIsOpenChanged() {
+                            if (globalLauncherState.isOpen && !globalLauncherState.searchMode) {
+                                keyHandler.forceActiveFocus();
+                            }
+                        }
+                    }
+
                     Keys.onEscapePressed: {
                         if (globalLauncherState.searchMode) {
                             globalLauncherState.closeSearch();
@@ -192,44 +201,62 @@ Scope {
                         }
                     }
 
-                    Keys.onReturnPressed: {
+                    Keys.onReturnPressed: root.handleReturn(event)
+                    Keys.onEnterPressed: root.handleReturn(event)
+
+                    Keys.onPressed: function(event) {
                         if (!globalLauncherState.searchMode) {
-                            if (globalLauncherState.activeTab === "apps") {
-                                if (globalLauncherState.selectedIndex === 0) {
-                                    globalLauncherState.openSearch("");
-                                } else {
-                                    const quickApps = [
-                                        { cmd: "", isSearch: true },
-                                        { cmd: "kitty", isSearch: false },
-                                        { cmd: "dolphin", isSearch: false },
-                                        { cmd: "antigravity || code", isSearch: false },
-                                        { cmd: "zen-browser || firefox", isSearch: false },
-                                        { cmd: "spotify", isSearch: false }
-                                    ];
-                                    let sel = quickApps[globalLauncherState.selectedIndex];
-                                    if (sel) {
-                                        if (sel.isSearch) globalLauncherState.openSearch("");
-                                        else globalLauncherState.launchCommand(sel.cmd);
-                                    }
-                                }
-                            } else if (globalLauncherState.activeTab === "links") {
-                                const quickLinks = [
-                                    "https://www.google.com",
-                                    "https://www.youtube.com",
-                                    "https://www.reddit.com",
-                                    "https://www.twitter.com",
-                                    "https://www.netflix.com",
-                                    "https://www.soundcloud.com"
-                                ];
-                                let url = quickLinks[globalLauncherState.selectedIndex];
-                                if (url) {
-                                    globalLauncherState.launchCommand("zen-browser '" + url + "' || xdg-open '" + url + "'");
-                                }
+                            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                root.handleReturn(event);
+                                event.accepted = true;
+                                return;
+                            }
+                            if (event.key >= Qt.Key_Space && event.key <= Qt.Key_ydiaeresis && event.text && event.text.length > 0) {
+                                globalLauncherState.openSearch(event.text);
+                                event.accepted = true;
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    function handleReturn(event) {
+        if (!globalLauncherState.searchMode) {
+            if (globalLauncherState.activeTab === "apps") {
+                if (globalLauncherState.selectedIndex === 0) {
+                    globalLauncherState.openSearch("");
+                } else {
+                    const quickApps = [
+                        { cmd: "", isSearch: true },
+                        { cmd: "kitty", isSearch: false },
+                        { cmd: "dolphin", isSearch: false },
+                        { cmd: "antigravity || code", isSearch: false },
+                        { cmd: "zen-browser || firefox", isSearch: false },
+                        { cmd: "spotify", isSearch: false }
+                    ];
+                    let sel = quickApps[globalLauncherState.selectedIndex];
+                    if (sel) {
+                        if (sel.isSearch) globalLauncherState.openSearch("");
+                        else globalLauncherState.launchCommand(sel.cmd);
+                    }
+                }
+            } else if (globalLauncherState.activeTab === "links") {
+                const quickLinks = [
+                    "https://www.google.com",
+                    "https://www.youtube.com",
+                    "https://www.reddit.com",
+                    "https://www.twitter.com",
+                    "https://www.netflix.com",
+                    "https://www.soundcloud.com"
+                ];
+                let url = quickLinks[globalLauncherState.selectedIndex];
+                if (url) {
+                    globalLauncherState.launchCommand("zen-browser '" + url + "' || xdg-open '" + url + "'");
+                }
+            }
+            if (event) event.accepted = true;
         }
     }
 }

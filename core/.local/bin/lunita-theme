@@ -202,6 +202,78 @@ cmd_list() {
 }
 
 # ------------------------------------------------------------------------------
+# Generación Dinámica de Marcadores de Usuario (XDG)
+# ------------------------------------------------------------------------------
+generate_user_bookmarks() {
+    local target_dir="$1"
+
+    python3 - "$target_dir" <<'EOF'
+import os
+import sys
+import subprocess
+from pathlib import Path
+
+target_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+if not target_dir or not target_dir.is_dir():
+    sys.exit(0)
+
+def get_xdg_dir(name, fallback_candidates):
+    try:
+        out = subprocess.check_output(["xdg-user-dir", name], stderr=subprocess.DEVNULL, text=True).strip()
+        if out and Path(out).is_dir():
+            return Path(out)
+    except Exception:
+        pass
+
+    user_dirs_file = Path.home() / ".config/user-dirs.dirs"
+    if user_dirs_file.is_file():
+        try:
+            for line in user_dirs_file.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line.startswith(f"XDG_{name}_DIR="):
+                    val = line.split("=", 1)[1].strip("\"'")
+                    val = val.replace("$HOME", str(Path.home()))
+                    p = Path(val)
+                    if p.is_dir():
+                        return p
+        except Exception:
+            pass
+
+    for fb in fallback_candidates:
+        candidate = Path.home() / fb
+        if candidate.is_dir():
+            return candidate
+
+    return Path.home() / fallback_candidates[0]
+
+home = Path.home()
+user = os.environ.get("USER") or home.name
+
+substitutions = {
+    "{{HOME}}": str(home),
+    "{{USER}}": user,
+    "{{XDG_DOCUMENTS_DIR}}": str(get_xdg_dir("DOCUMENTS", ["Documentos", "Documents"])),
+    "{{XDG_DOWNLOAD_DIR}}": str(get_xdg_dir("DOWNLOAD", ["Downloads", "Descargas"])),
+    "{{XDG_PICTURES_DIR}}": str(get_xdg_dir("PICTURES", ["Imagenes", "Pictures", "Imágenes"])),
+    "{{XDG_VIDEOS_DIR}}": str(get_xdg_dir("VIDEOS", ["Videos", "Vídeos"])),
+    "{{XDG_MUSIC_DIR}}": str(get_xdg_dir("MUSIC", ["Musica", "Music", "Música"])),
+    "{{XDG_DESKTOP_DIR}}": str(get_xdg_dir("DESKTOP", ["Desktop", "Escritorio"])),
+}
+
+# Procesar plantillas en el tema destino
+for tmpl in target_dir.glob("**/*.template"):
+    dest = tmpl.with_suffix("")
+    try:
+        content = tmpl.read_text(encoding="utf-8")
+        for placeholder, value in substitutions.items():
+            content = content.replace(placeholder, value)
+        dest.write_text(content, encoding="utf-8")
+    except Exception as e:
+        sys.stderr.write(f"Error procesando plantilla {tmpl}: {e}\n")
+EOF
+}
+
+# ------------------------------------------------------------------------------
 # Comando: CURRENT
 # ------------------------------------------------------------------------------
 cmd_current() {
@@ -251,6 +323,7 @@ cmd_stow() {
         theme)
             info "Vinculando tema '$current' con GNU Stow..."
             clean_legacy_links "$THEMES_DIR/$current"
+            generate_user_bookmarks "$THEMES_DIR/$current"
             stow -d "$THEMES_DIR" -t "$HOME" -S "$current"
             success "Tema '$current' vinculado exitosamente."
             ;;
@@ -259,6 +332,7 @@ cmd_stow() {
             clean_legacy_links "$DOTS_DIR/core"
             stow -d "$DOTS_DIR" -t "$HOME" -S core
             clean_legacy_links "$THEMES_DIR/$current"
+            generate_user_bookmarks "$THEMES_DIR/$current"
             stow -d "$THEMES_DIR" -t "$HOME" -S "$current"
             success "Todos los paquetes vinculados exitosamente con GNU Stow."
             ;;
@@ -266,6 +340,7 @@ cmd_stow() {
             if [ -d "$THEMES_DIR/$target" ]; then
                 info "Vinculando tema '$target' con GNU Stow..."
                 clean_legacy_links "$THEMES_DIR/$target"
+                generate_user_bookmarks "$THEMES_DIR/$target"
                 stow -d "$THEMES_DIR" -t "$HOME" -S "$target"
                 success "Tema '$target' vinculado."
             else
@@ -369,6 +444,7 @@ cmd_apply() {
 
     # 4. Vincular el nuevo tema
     clean_legacy_links "$target_dir"
+    generate_user_bookmarks "$target_dir"
     stow -d "$THEMES_DIR" -t "$HOME" -S "$target"
     success "Archivos y configuraciones del tema enlazados con GNU Stow."
 

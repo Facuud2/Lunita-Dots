@@ -140,7 +140,10 @@ Item {
                     QuickActions {
                         width: parent.width
                         onRequestNotifs: root.openOverlay("notif")
-                        onRequestPower: root.openOverlay("power")
+                        onRequestPower: {
+                            Exec.run("wlogout");
+                            root.closeRequested();
+                        }
                         onRequestLock: {
                             Exec.run("~/.config/hypr/scripts/smart_lock.sh classic || hyprlock");
                             root.closeRequested();
