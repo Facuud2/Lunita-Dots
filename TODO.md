@@ -82,11 +82,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-006] Reparar disparador del menú Wlogout en Dynamic Island
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
-- **Rama Sugerida:** `ISSUE_004_FIX`
+- **Rama Sugerida:** `ISSUE_006_FIX_WLOGOUT_TRIGGER`
 - **Módulo(s):** Lunita-Theme / Bar (Dynamic Island)
-- **Archivos Afectados:** A investigar por el agente (Archivos QML de la barra), `themes/lunita-default/.config/wlogout/`
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/bar/ExpandedPanel.qml`, `themes/lunita-default/theme.json`
 - **Descripción:** El botón/módulo de energía ubicado en la Dynamic Island no está invocando correctamente el script o ejecutable de `wlogout` al hacer click, pues actualmente renderiza con pequeno menu propio de la dynamic island cosa que debe cambiar completamente.
 - **Criterios de Aceptación:**
   1. Un click en la interfaz QML despliega el menú `wlogout` de pantalla completa de forma consistente.
