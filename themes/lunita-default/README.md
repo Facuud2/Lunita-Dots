@@ -8,9 +8,9 @@
 
 | Componente | Framework / Herramienta | Función Principal |
 |---|---|---|
-| **Barra Superior** | [AGS v2 (Astal + GTK4)](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/ags) | Dynamic Island interactiva de 36px con pastillas dinámicas |
-| **Notificaciones** | [AGS Dynamic Island](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/ags/widget/island/NotificationService.ts) | Demonio D-Bus integrado con pastilla animada |
-| **Lanzador & PowerMenu** | [AGS AppLauncher & PowerMenu](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/ags/widget) | Búsqueda por teclado, monitor de recursos y menú de apagado |
+| **Barra Superior** | [Quickshell (Qt6/QML)](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/quickshell/bar) | Dynamic Island interactiva de 36px con pastillas dinámicas |
+| **Notificaciones** | [Quickshell Notifications](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/quickshell/notifications) | Demonio D-Bus integrado con pastilla animada |
+| **Lanzador & PowerMenu** | [Quickshell Launcher](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/quickshell/launcher) | Búsqueda por teclado, monitor de recursos y menú de apagado |
 | **Widget de Escritorio** | [Eww + CAVA](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/eww) | Reproductor multimedia y espectro de audio fijado en el escritorio |
 | **Motor de Temas** | [Matugen](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/matugen) | Extracción de paleta armónica desde el wallpaper activo |
 | **Compositor** | [Hyprland (Lua)](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/hypr) | Animaciones Bezier macOS, blur frosted glass y reglas de ventana |
@@ -23,7 +23,7 @@
 ## 🎨 Paleta y Comportamiento Dinámico
 Al cambiar el fondo con HyprQuickPaper (`SUPER + W`) o con `awww img`, Matugen genera automáticamente los tokens de color para:
 - Bordes y sombras de Hyprland (`hypr/modules/colors.lua`)
-- Estilos de la Dynamic Island y Launcher (`ags/colors.scss`)
+- Estilos de la Dynamic Island y Launcher (`quickshell/colors.json`)
 - Widget y carátula SVG de Eww (`eww/colors.scss`)
 - Terminal Kitty (`kitty/colors-matugen.conf`)
 - Highlights de Neovim (`nvim/lua/colors.lua`)
