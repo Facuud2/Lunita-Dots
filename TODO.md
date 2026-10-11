@@ -21,10 +21,10 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 ---
 
 ### [ISSUE-001] Limpieza y Purgado de Artefactos de Caché y Residuos en Git
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Módulo(s):** Repositorio / Git / Temas
-- **Archivos Afectados:** `.gitignore`, `themes/lunita-default/.config/eww/scripts/__pycache__/`, `themes/lunita-default/.config/quickshell/bar/Battery.qml.orig`, `.lunita-theme`
+- **Archivos Afectados:** `.gitignore`, `themes/lunita-default/.config/eww/scripts/__pycache__/media.cpython-314.pyc`, `themes/lunita-default/.config/quickshell/bar/Battery.qml.orig`, `.lunita-theme`
 - **Descripción:** Desvincular del tracking de Git los archivos compilados (`.pyc`), residuos de edición (`.orig`) y el estado mutable local (`.lunita-theme`), asegurando que `.gitignore` los descarte de forma estricta.
 - **Criterios de Aceptación:**
   1. `git ls-files | grep -E '\.pyc$|\.orig$|\.lunita-theme$'` retorna vacío.
@@ -34,10 +34,10 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 ---
 
 ### [ISSUE-002] Purgado Definitivo del Código Huérfano de AGS v2
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
 - **Módulo(s):** Temas / `lunita-default`
-- **Archivos Afectados:** `themes/lunita-default/.config/ags/`
+- **Archivos Afectados:** `themes/lunita-default/.config/ags/`, `themes/lunita-default/.stow-local-ignore`, `themes/lunita-default/README.md`
 - **Descripción:** Eliminar completamente la carpeta legacy de AGS (`themes/lunita-default/.config/ags/`) para reducir el peso del repositorio, dado que Quickshell reemplazó esta funcionalidad y ya está excluido por Stow.
 - **Criterios de Aceptación:**
   1. La carpeta `themes/lunita-default/.config/ags` es removida del repositorio.
@@ -47,12 +47,135 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 ---
 
 ### [ISSUE-003] Dinamización de Marcadores de Usuario mediante XDG
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Módulo(s):** Temas / GTK / Qt / Stow
-- **Archivos Afectados:** `themes/macOS-Theme/.config/gtk-3.0/bookmarks`, `themes/Modern-Win11-Theme/.config/gtk-3.0/bookmarks`, `themes/*/user-places.xbel`, `core/.local/bin/lunita-theme`
+- **Archivos Afectados:** `core/.local/bin/lunita-theme`, `.gitignore`, `themes/*/.stow-local-ignore`, `themes/*/.config/gtk-3.0/bookmarks.template`, `themes/*/.local/share/user-places.xbel.template`
 - **Descripción:** Reemplazar las rutas fijas (`/home/facuud2/...`) por generación dinámica basada en utilidades XDG (`xdg-user-dir`) durante la aplicación del tema o mediante plantillas dinámicas, evitando roturas en instalaciones de otros usuarios.
 - **Criterios de Aceptación:**
   1. No existen referencias hardcodeadas a `/home/facuud2` en los archivos versionados de marcadores.
   2. Al ejecutar `lunita-theme apply`, los marcadores apuntan a las carpetas XDG reales del usuario activo.
 - **Dependencias:** [ISSUE-001]
+
+### [ISSUE-004] Persistencia y Autostart de Quickshell al iniciar sesión
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_002_FIX`
+- **Módulo(s):** Core / Autostart / Quickshell
+- **Archivos Afectados:** `core/.config/hypr/modules/autostart.lua`, `core/.local/bin/lunita-quickshell`, A investigar por el agente.
+- **Descripción:** Al iniciar el sistema, el entorno visual de Quickshell no arranca automáticamente, obligando al usuario a ejecutar `lunita-quickshell start` de forma manual. Se debe garantizar que el autostart de Hyprland lea el tema activo de la sesion previa y levante los demonios correspondientes sin intervención humana.
+- **Criterios de Aceptación:**
+  1. Reiniciar el sistema levanta automáticamente los componentes de Quickshell del tema actual.
+  2. No existen condiciones de carrera (race conditions) entre la carga de variables XDG y el arranque de Quickshell.
+- **Dependencias:** Ninguna
+
+### [ISSUE-005] Testing de rendimiento e integración de Hyprquickpaper
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_003_TEST`
+- **Módulo(s):** Lunita-Theme / Wallpaper
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/hyprquickpaper/`, `core/.local/bin/hyprquickpaper`
+- **Descripción:** Realizar pruebas de rendimiento, renderizado 3D e interactividad del componente hyprquickpaper dentro de la suite de Lunita-Default. 
+- **Criterios de Aceptación:**
+  1. Componente ejecutado y testeado en el entorno local.
+  2. Bugs resultantes documentados como nuevas tareas en el BACKLOG.md.
+- **Dependencias:** Ninguna
+
+### [ISSUE-006] Reparar disparador del menú Wlogout en Dynamic Island
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_004_FIX`
+- **Módulo(s):** Lunita-Theme / Bar (Dynamic Island)
+- **Archivos Afectados:** A investigar por el agente (Archivos QML de la barra), `themes/lunita-default/.config/wlogout/`
+- **Descripción:** El botón/módulo de energía ubicado en la Dynamic Island no está invocando correctamente el script o ejecutable de `wlogout` al hacer click, pues actualmente renderiza con pequeno menu propio de la dynamic island cosa que debe cambiar completamente.
+- **Criterios de Aceptación:**
+  1. Un click en la interfaz QML despliega el menú `wlogout` de pantalla completa de forma consistente.
+- **Dependencias:** Ninguna
+
+### [ISSUE-007] Rediseño y contraste del widget de Clima Dinámico
+- **Estado:** PENDIENTE
+- **Prioridad:** BAJA
+- **Rama Sugerida:** `ISSUE_005_FEAT`
+- **Módulo(s):** Lunita-Theme / Widgets
+- **Archivos Afectados:** A investigar por el agente (QML del widget de clima).
+- **Descripción:** La UI actual del clima carece de datos reales (siempre el icon de nublado con 11 grados Celsius). Se debe refactorizar la paleta del widget para utilizar colores más marcados/contrastantes siguiendo la tematica de NothingOS y actualizar la iconografía vectorial para armonizarla con el diseño actual de Lunita-Default.
+- **Criterios de Aceptación:**
+  1. Nueva iconografía y paleta de alto contraste implementadas.
+- **Dependencias:** Ninguna
+
+### [ISSUE-008] Auto-foco y escritura directa en el App Launcher (Type-to-Search)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_006_FIX`
+- **Módulo(s):** Lunita-Theme / Launcher
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/` (Archivos QML)
+- **Descripción:** Actualmente el usuario debe hacer click o navegar hasta el icono de la lupa para buscar. El componente debe capturar el foco del teclado inmediatamente al volverse visible (`forceActiveFocus()`), permitiendo escribir nativamente sin pasos extra.
+- **Criterios de Aceptación:**
+  1. Presionar atajo de launcher y escribir inmediatamente rellena el campo de búsqueda expandiendo el app launcher en consecuencia.
+- **Dependencias:** Ninguna
+
+### [ISSUE-009] Optimización de refresco (240Hz) en animación del Launcher
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_007_REFACTOR`
+- **Módulo(s):** Lunita-Theme / Launcher
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/` (Archivos QML)
+- **Descripción:** Las curvas de animación (`NumberAnimation` / `PropertyAnimation`) al expandir el launcher parecen estar limitadas o renderizando a 60Hz. Modificar las físicas o sincronizaciones de la ventana en Quickshell para aprovechar la fluidez en monitores de alta tasa de refresco (240Hz).
+- **Criterios de Aceptación:**
+  1. Animación de expansión fluida y sin "stuttering" a 240fps.
+- **Dependencias:** Ninguna
+
+### [ISSUE-010] Soporte para tecla Enter del Numpad en el App Launcher
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_008_FIX`
+- **Módulo(s):** Lunita-Theme / Launcher
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/` (Archivos QML)
+- **Descripción:** El interceptor de teclado del buscador detecta la tecla "Enter" principal (`Qt.Key_Return`), pero ignora la tecla "Enter" del teclado numérico (`Qt.Key_Enter`). 
+- **Criterios de Aceptación:**
+  1. Ambas teclas Enter ejecutan la aplicación seleccionada.
+- **Dependencias:** Ninguna
+
+### [ISSUE-011] Cierre del Launchpad al perder el foco (Click externo)
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_009_FIX`
+- **Módulo(s):** macOS-Theme / Launcher
+- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/launcher/` (Archivos QML)
+- **Descripción:** El Launchpad permanece abierto al hacer click fuera de sus márgenes. Se debe implementar un cierre reactivo (vía `onActiveFocusChanged` de la ventana o integrando un `MouseArea` invisible de fondo) para emular el comportamiento nativo de macOS.
+- **Criterios de Aceptación:**
+  1. Un click fuera de los componentes principales oculta el launcher inmediatamente.
+- **Dependencias:** Ninguna
+
+### [ISSUE-012] Interpolación y curvas de animación en el Launchpad
+- **Estado:** PENDIENTE
+- **Prioridad:** BAJA
+- **Rama Sugerida:** `ISSUE_010_FEAT`
+- **Módulo(s):** macOS-Theme / Launcher
+- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/launcher/` (Archivos QML)
+- **Descripción:** La aparición del launcher es demasiado espontánea/brusca. Se deben inyectar curvas Bezier (`Easing.InOutQuad` o resortes) para opacidad y escalado, logrando que los iconos aparezcan con un efecto suave, cuidando la atención al detalle.
+- **Criterios de Aceptación:**
+  1. Animaciones de entrada y salida fluidas y consistentes con la estética de Cupertino.
+- **Dependencias:** Ninguna
+
+### [ISSUE-013] Limpieza de estado (Clear) del buscador al cerrar Launchpad
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_011_FIX`
+- **Módulo(s):** macOS-Theme / Launcher
+- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/launcher/` (Archivos QML)
+- **Descripción:** El estado del `TextField` persiste en memoria. Si el usuario escribe una búsqueda, cierra el launcher (SUPER+A) y vuelve a abrirlo, el texto anterior sigue allí. Se debe vaciar el string del input en el hook de cierre (`onVisibleChanged`).
+- **Criterios de Aceptación:**
+  1. Cada invocación del launcher muestra la barra de búsqueda vacía.
+- **Dependencias:** Ninguna
+
+### [ISSUE-014] Sincronización de esquema Claro/Oscuro en Dolphin
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_012_FIX`
+- **Módulo(s):** macOS-Theme / GTK-Qt Sync
+- **Archivos Afectados:** `themes/macOS-Theme/dolphin/`, `themes/macOS-Theme/.config/qt6ct/`, A investigar.
+- **Descripción:** El gestor de archivos KDE Dolphin no reacciona al modo claro/oscuro soportado por este tema particular. Forzar la inyección y lectura de las variables de colores para aplicaciones Qt al conmutar la preferencia visual.
+- **Criterios de Aceptación:**
+  1. Cambiar la paleta del macOS-Theme a modo oscuro/claro impacta instantáneamente o en el próximo reinicio a la ventana de Dolphin.
+- **Dependencias:** Ninguna

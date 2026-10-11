@@ -13,6 +13,10 @@ __pycache__/
 # Estado local del gestor de temas
 .lunita-theme
 
+# Marcadores y lugares de usuario generados dinámicamente
+themes/*/.config/gtk-3.0/bookmarks
+themes/*/.local/share/user-places.xbel
+
 # Configuración exclusiva de hardware del usuario y archivos generados en caliente
 **/hypr/modules/monitors.lua
 **/hypr/current_wallpaper.png
