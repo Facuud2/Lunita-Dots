@@ -65,9 +65,13 @@ Item {
         anchors.topMargin: 4
         anchors.bottomMargin: 4
 
-        scale: itemMouse.pressed ? 0.94 : (itemMouse.containsMouse ? 1.07 : 1.0)
+        scale: itemMouse.pressed ? 0.92 : (itemMouse.containsMouse ? 1.08 : 1.0)
         Behavior on scale {
-            NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+            NumberAnimation {
+                duration: itemMouse.pressed ? 120 : 180
+                easing.type: Easing.OutBack
+                easing.overshoot: itemMouse.pressed ? 1.0 : 1.35
+            }
         }
 
         // App Icon Squircle Container

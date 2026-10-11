@@ -22,13 +22,23 @@ Item {
         border.color: launcherState.panelBorderColor
         border.width: 1
 
-        // Smooth Appearance Animation
+        // Smooth Cupertino Appearance & Exit Animations
         opacity: launcherState.isOpen ? 1.0 : 0.0
+        scale: launcherState.isOpen ? 1.0 : 0.94
+        transformOrigin: Item.Center
 
         Behavior on opacity {
             NumberAnimation {
-                duration: launcherState.isOpen ? 180 : 140
-                easing.type: Easing.OutQuad
+                duration: launcherState.isOpen ? 220 : 160
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: launcherState.isOpen ? 240 : 170
+                easing.type: launcherState.isOpen ? Easing.OutBack : Easing.InQuad
+                easing.overshoot: 1.12
             }
         }
 
