@@ -206,6 +206,11 @@ Scope {
 
                     Keys.onPressed: function(event) {
                         if (!globalLauncherState.searchMode) {
+                            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                root.handleReturn(event);
+                                event.accepted = true;
+                                return;
+                            }
                             if (event.key >= Qt.Key_Space && event.key <= Qt.Key_ydiaeresis && event.text && event.text.length > 0) {
                                 globalLauncherState.openSearch(event.text);
                                 event.accepted = true;

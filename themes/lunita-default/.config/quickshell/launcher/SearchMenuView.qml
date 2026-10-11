@@ -140,6 +140,13 @@ Item {
                         Keys.onReturnPressed: root.launchCurrent()
                         Keys.onEnterPressed: root.launchCurrent()
 
+                        Keys.onPressed: function(event) {
+                            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                root.launchCurrent();
+                                event.accepted = true;
+                            }
+                        }
+
                         Keys.onEscapePressed: {
                             if (launcherState.searchQuery !== "") {
                                 launcherState.searchQuery = "";
