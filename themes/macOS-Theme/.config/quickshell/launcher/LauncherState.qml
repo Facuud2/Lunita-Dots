@@ -14,7 +14,7 @@ Item {
 
     Timer {
         id: closeTimer
-        interval: 220
+        interval: 240
         repeat: false
         onTriggered: {
             if (!root.isOpen) {
