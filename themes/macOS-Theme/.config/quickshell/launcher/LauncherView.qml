@@ -119,12 +119,24 @@ Item {
         }
     }
 
-    // Auto focus search field when opened
+    // Auto focus search field and clear search query when opened or closed
     Connections {
         target: launcherState
         function onIsOpenChanged() {
             if (launcherState.isOpen) {
+                headerBar.searchInputField.text = ""
                 headerBar.searchInputField.forceActiveFocus()
+            } else {
+                headerBar.searchInputField.text = ""
+            }
+        }
+    }
+
+    onVisibleChanged: {
+        if (!visible) {
+            headerBar.searchInputField.text = ""
+            if (launcherState) {
+                launcherState.searchQuery = ""
             }
         }
     }
