@@ -44,6 +44,9 @@ Este documento define las reglas de conducta, convenciones arquitectónicas, res
 - **NUNCA** hacer commit de archivos temporales, cachés o backups (`.pyc`, `__pycache__`, `.bak`, `.orig`, `*~`, `.tmp`).
 - Respetar `.gitignore` y `.stow-local-ignore` en todo momento.
 
+### ⛔ Regla de Trazabilidad
+- Si una tarea indica que los archivos afectados deben ser investigados, debes buscar el origen del problema y, antes de finalizar y marcar con [x], debes actualizar el campo 'Archivos Afectados' en el TODO.md con la ruta exacta de los archivos que terminaste modificando
+
 ---
 
 ## 3. Estándares y Convenciones de Código
