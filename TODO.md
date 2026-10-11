@@ -104,11 +104,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-008] Auto-foco y escritura directa en el App Launcher (Type-to-Search)
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
-- **Rama Sugerida:** `ISSUE_006_FIX`
+- **Rama Sugerida:** `ISSUE_008_LAUNCHER_AUTO_FOCUS`
 - **Módulo(s):** Lunita-Theme / Launcher
-- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/` (Archivos QML)
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/shell.qml`, `themes/lunita-default/.config/quickshell/launcher/SearchMenuView.qml`
 - **Descripción:** Actualmente el usuario debe hacer click o navegar hasta el icono de la lupa para buscar. El componente debe capturar el foco del teclado inmediatamente al volverse visible (`forceActiveFocus()`), permitiendo escribir nativamente sin pasos extra.
 - **Criterios de Aceptación:**
   1. Presionar atajo de launcher y escribir inmediatamente rellena el campo de búsqueda expandiendo el app launcher en consecuencia.
