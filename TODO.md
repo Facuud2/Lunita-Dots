@@ -215,11 +215,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-018] Centralización y deduplicación del selector Hyprquickpaper
-- **Estado:** PENDIENTE
+- **Estado:** EN PROGRESO
 - **Prioridad:** BAJA
 - **Rama Sugerida:** `ISSUE_018_REFACTOR`
-- **Módulo(s):** Core / Quickshell
-- **Archivos Afectados:** Directorios `themes/*/.config/quickshell/hyprquickpaper/`, `core/`
+- **Módulo(s):** Core / Quickshell / Wallpaper
+- **Archivos Afectados:** `core/.config/quickshell/hyprquickpaper/`, `core/.local/bin/hyprquickpaper`, `core/.local/bin/lunita-theme`, `themes/lunita-default/.config/quickshell/hyprquickpaper/`, `themes/macos-theme/.config/quickshell/hyprquickpaper/`, `themes/modern-win11-theme/.config/quickshell/hyprquickpaper/`
 - **Descripción:** El componente interactivo Hyprquickpaper está triplicado idénticamente en las carpetas de los tres temas. Se debe extraer este código a un directorio compartido en `core/` (u orquestar un enlace simbólico universal mediante Stow) para tener un único punto de mantenimiento (Single Source of Truth).
 - **Criterios de Aceptación:**
   1. El código de Hyprquickpaper existe una única vez en el repositorio.
