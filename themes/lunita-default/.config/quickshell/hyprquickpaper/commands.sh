@@ -121,8 +121,15 @@ if [ -n "$STABLE_COPY_PATH" ]; then
     fi
 fi
 
-# --- Matugen dynamic theming integration ---
-if command -v matugen &>/dev/null; then
+# --- Matugen dynamic theming integration (solo lunita-default) ---
+CURRENT_THEME="lunita-default"
+if [ -f "$HOME/.config/lunita/current_theme" ]; then
+    CURRENT_THEME=$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")
+elif [ -f "$HOME/.lunita-theme" ]; then
+    CURRENT_THEME=$(tr -d '[:space:]' < "$HOME/.lunita-theme")
+fi
+
+if [ "$CURRENT_THEME" = "lunita-default" ] && command -v matugen &>/dev/null; then
     if is_video "$WALLPAPER" "$VIDEO_EXT_PATTERN"; then
         if [ -f "$THUMB" ]; then
             matugen image "$THUMB" --source-color-index 0 >/dev/null 2>&1 &

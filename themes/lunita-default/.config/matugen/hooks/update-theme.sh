@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+# Verificar que el tema activo sea lunita-default
+CURRENT_THEME="lunita-default"
+if [ -f "$HOME/.config/lunita/current_theme" ]; then
+    CURRENT_THEME=$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")
+elif [ -f "$HOME/.lunita-theme" ]; then
+    CURRENT_THEME=$(tr -d '[:space:]' < "$HOME/.lunita-theme")
+fi
+
+if [ "$CURRENT_THEME" != "lunita-default" ]; then
+    exit 0
+fi
+
 # Regenerate default cover art with new theme colors
 COLORS_FILE="$HOME/.config/eww/colors.scss"
 if [ -f "$COLORS_FILE" ]; then

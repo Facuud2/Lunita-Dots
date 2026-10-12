@@ -23,7 +23,17 @@ while true; do
         if [ "$CURR_WALL" != "$LAST_WALL" ]; then
             echo "$CURR_WALL" > "$CACHE_FILE"
             LAST_WALL="$CURR_WALL"
-            matugen image "$CURR_WALL" --source-color-index 0 >/dev/null 2>&1
+
+            CURRENT_THEME="lunita-default"
+            if [ -f "$HOME/.config/lunita/current_theme" ]; then
+                CURRENT_THEME=$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")
+            elif [ -f "$HOME/.lunita-theme" ]; then
+                CURRENT_THEME=$(tr -d '[:space:]' < "$HOME/.lunita-theme")
+            fi
+
+            if [ "$CURRENT_THEME" = "lunita-default" ]; then
+                matugen image "$CURR_WALL" --source-color-index 0 >/dev/null 2>&1
+            fi
             echo "$CURR_WALL"
         fi
     fi

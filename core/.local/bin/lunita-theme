@@ -436,6 +436,13 @@ cmd_apply() {
     if [ -n "$current" ] && [ -d "$THEMES_DIR/$current" ] && [ "$current" != "$target" ]; then
         info "Desvinculando tema anterior (${CYAN}$current${RESET}) con GNU Stow..."
         stow -d "$THEMES_DIR" -t "$HOME" -D "$current" 2>/dev/null || true
+
+        # Si salimos de lunita-default a un tema con paleta fija, purgar archivos mutados por Matugen
+        if [ "$current" = "lunita-default" ]; then
+            pkill -f "watch_wallpaper.sh" 2>/dev/null || true
+            rm -f "$HOME/.config/quickshell/colors.json" 2>/dev/null || true
+            rm -f "$HOME/.config/eww/colors.scss" 2>/dev/null || true
+        fi
     fi
 
     # 3. Vincular paquete core (siempre activo e independiente del tema)
