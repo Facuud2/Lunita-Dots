@@ -179,3 +179,73 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Criterios de Aceptación:**
   1. Cambiar la paleta del macOS-Theme a modo oscuro/claro impacta instantáneamente o en el próximo reinicio a la ventana de Dolphin.
 - **Dependencias:** Ninguna
+
+### [ISSUE-015] Reparar bucle de carga infinito en GUI al aplicar lunita-default
+- **Estado:** COMPLETADO
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_015_FIX`
+- **Módulo(s):** GUI / Theme Selector
+- **Archivos Afectados:** `core/.local/bin/lunita-theme-selector`
+- **Descripción:** Al seleccionar `lunita-default` y pulsar en `Aplicar tema` desde la interfaz gráfica, el tema se aplica correctamente en el backend, pero la GUI queda en un bucle infinito de carga sin mostrar el mensaje "Tema cambiado con éxito" (a diferencia del resto de los temas). El agente DEBE modificar ÚNICAMENTE el hilo de ejecución/respuesta de la interfaz gráfica GTK/Python. TIENE ESTRICTAMENTE PROHIBIDO modificar, validar o alterar componentes visuales QML, scripts del tema o la lógica del CLI, ya que funcionan perfectamente en terminal.
+- **Criterios de Aceptación:**
+  1. Seleccionar `lunita-default` en la GUI finaliza la animación y notifica el éxito correctamente sin colgarse.
+- **Dependencias:** Ninguna
+
+### [ISSUE-016] Restaurar fondo de pantalla automático al reiniciar el sistema
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_016_FIX`
+- **Módulo(s):** Core / Autostart / Wallpaper
+- **Archivos Afectados:** A investigar por el agente (probablemente `core/.config/hypr/modules/autostart.lua` o scripts asociados a `awww`).
+- **Descripción:** Tras reiniciar el sistema operativo, el fondo de pantalla no se renderiza. Se sospecha que el daemon encargado (`awww` o script disparador) no está siendo invocado correctamente durante la secuencia de inicio de Hyprland. El agente debe diagnosticar la cadena de ejecución durante el boot y repararlo.
+- **Criterios de Aceptación:**
+  1. Al iniciar sesión en frío, el fondo de pantalla del tema activo se muestra sin requerir comandos manuales.
+- **Dependencias:** Ninguna
+
+### [ISSUE-017] Normalización de nombres de temas (Minúsculas en sistema, Mayúsculas en GUI)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_017_REFACTOR`
+- **Módulo(s):** Core / Temas / GUI
+- **Archivos Afectados:** Estructura de carpetas en `themes/`, `theme.json` de cada tema, `.lunita-theme`, `core/.local/bin/lunita-theme-selector`.
+- **Descripción:** Para evitar errores de tipeo y consistencia en la CLI, todas las carpetas físicas de los temas y sus identificadores de sistema deben ser en minúsculas (ej. `lunita-theme`, `macos-theme`, `win11-theme`). Sin embargo, el archivo `theme.json` debe alojar un atributo `name` formateado ("Lunita Theme", "MacOS 27 Theme", "Modern Windows 11 Theme") para que la GUI gráfica lo consuma y lo muestre con su correcta capitalización.
+- **Criterios de Aceptación:**
+  1. Directorios, estado guardado y CLI utilizan strings 100% en minúsculas.
+  2. La GUI de selección renderiza los nombres legibles y formateados provenientes del JSON.
+- **Dependencias:** Ninguna
+
+### [ISSUE-018] Centralización y deduplicación del selector Hyprquickpaper
+- **Estado:** PENDIENTE
+- **Prioridad:** BAJA
+- **Rama Sugerida:** `ISSUE_018_REFACTOR`
+- **Módulo(s):** Core / Quickshell
+- **Archivos Afectados:** Directorios `themes/*/.config/quickshell/hyprquickpaper/`, `core/`
+- **Descripción:** El componente interactivo Hyprquickpaper está triplicado idénticamente en las carpetas de los tres temas. Se debe extraer este código a un directorio compartido en `core/` (u orquestar un enlace simbólico universal mediante Stow) para tener un único punto de mantenimiento (Single Source of Truth).
+- **Criterios de Aceptación:**
+  1. El código de Hyprquickpaper existe una única vez en el repositorio.
+  2. Su funcionalidad permanece inalterada en los tres temas.
+- **Dependencias:** Ninguna
+
+### [ISSUE-019] Unificación de lógica y servicios de los Widgets QML
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_019_REFACTOR`
+- **Módulo(s):** Core / Temas / Widgets
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/scripts/`, `core/`
+- **Descripción:** Refactorizar la arquitectura de los widgets de escritorio en Quickshell. Los scripts subyacentes, recolección de datos y servicios lógicos compartidos deben migrarse al directorio base `core/`, garantizando que dentro de la carpeta `themes/` únicamente resida la capa de presentación (la sintaxis visual QML específica de cada ecosistema).
+- **Criterios de Aceptación:**
+  1. Eliminación de lógica duplicada entre temas.
+  2. Los widgets de todos los temas importan y consumen correctamente los scripts base del core.
+- **Dependencias:** Ninguna
+
+### [ISSUE-020] Desacople de plantillas Matugen y protección de paletas estáticas
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_020_REFACTOR`
+- **Módulo(s):** Core / Motor de Color
+- **Archivos Afectados:** Scripts de sincronización de paletas, hooks de Matugen, `lunita-theme`
+- **Descripción:** Centralizar cómo interactúa Matugen con Quickshell. Actualmente existe el riesgo de que el motor inyecte variables o altere estilos globales. Se debe aplicar un flujo condicional de entrega y validación: Matugen solo debe generar y aplicar sus colores en `lunita-default`. Los temas estáticos (`macOS-Theme`, `Modern-Win11-Theme`) deben conservar sus paletas definidas nativamente.
+- **Criterios de Aceptación:**
+  1. Al transicionar de `lunita-default` (con colores reactivos al wallpaper) a otro tema, no ocurre ningún "bleed" o sangrado de colores.
+  2. macOS y Win11 mantienen sus colores temáticos fijos correctamente inyectados, sin interferencia del daemon de Matugen.
+- **Dependencias:** Ninguna
