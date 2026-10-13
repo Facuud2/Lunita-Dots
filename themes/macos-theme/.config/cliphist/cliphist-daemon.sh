@@ -150,6 +150,14 @@ wait_for_wayland() {
     return 1
 }
 
+is_wayland_alive() {
+    local runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -S "$runtime_dir/$WAYLAND_DISPLAY" ]; then
+        return 0
+    fi
+    return 1
+}
+
 ensure_watchers() {
     if ! wait_for_wayland; then
         return 1
@@ -173,7 +181,13 @@ ensure_watchers || true
 
 # Bucle de supervisión y monitoreo continuo de capacidad (cada 5 segundos)
 while true; do
+    if ! is_wayland_alive; then
+        echo "[cliphist-daemon] Servidor Wayland no detectado o desconectado. Saliendo..."
+        cleanup
+    fi
     ensure_watchers || true
     prune_if_needed
-    sleep 5
+    sleep 5 &
+    SLEEP_PID=$!
+    wait "$SLEEP_PID" 2>/dev/null || true
 done

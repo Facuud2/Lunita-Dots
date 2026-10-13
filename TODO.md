@@ -218,12 +218,13 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Estado:** COMPLETADO
 - **Prioridad:** BAJA
 - **Rama Sugerida:** `ISSUE_018_REFACTOR`
-- **Módulo(s):** Core / Quickshell / Wallpaper
-- **Archivos Afectados:** `core/.config/quickshell/hyprquickpaper/`, `core/.local/bin/hyprquickpaper`, `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-dynamic-wallpaper`, `.gitignore`, `themes/lunita-default/.config/quickshell/hyprquickpaper/`, `themes/macos-theme/.config/quickshell/hyprquickpaper/`, `themes/modern-win11-theme/.config/quickshell/hyprquickpaper/`
-- **Descripción:** El componente interactivo Hyprquickpaper está triplicado idénticamente en las carpetas de los tres temas. Se debe extraer este código a un directorio compartido en `core/` (u orquestar un enlace simbólico universal mediante Stow) para tener un único punto de mantenimiento (Single Source of Truth).
+- **Módulo(s):** Core / Quickshell / Wallpaper / Demonio
+- **Archivos Afectados:** `core/.config/quickshell/hyprquickpaper/`, `core/.local/bin/hyprquickpaper`, `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-dynamic-wallpaper`, `themes/lunita-default/.config/cliphist/cliphist-daemon.sh`, `themes/lunita-default/.config/systemd/user/cliphist.service`, `themes/macos-theme/.config/cliphist/cliphist-daemon.sh`, `themes/macos-theme/.config/systemd/user/cliphist.service`, `.gitignore`
+- **Descripción:** El componente interactivo Hyprquickpaper está centralizado en `core/` (con enlaces simbólicos en `~/.config/lunita/wallpaper` dinámicos por tema), solucionando colisiones con GNU Stow, la coincidencia del wallpaper actual activo al presionar SUPER+W y eliminando el timeout de 90s al apagar/reiniciar el sistema causado por la falta de detección de desconexión de Wayland en cliphist-daemon.
 - **Criterios de Aceptación:**
-  1. El código de Hyprquickpaper existe una única vez en el repositorio.
-  2. Su funcionalidad permanece inalterada en los tres temas.
+  1. El código de Hyprquickpaper existe una única vez en el repositorio y mantiene la selección del wallpaper actual.
+  2. Su funcionalidad permanece inalterada en los tres temas sin forzar reescrituras indebidas de fondo al abrirse.
+  3. El apagado del sistema se realiza de forma limpia e inmediata sin esperar a session-2.scope.
 - **Dependencias:** Ninguna
 
 ### [ISSUE-019] Unificación de lógica y servicios de los Widgets QML

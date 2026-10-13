@@ -9,6 +9,7 @@ ExecStart=%h/.config/cliphist/cliphist-daemon.sh start
 ExecStop=%h/.config/cliphist/cliphist-daemon.sh --stop
 Restart=on-failure
 RestartSec=3
+TimeoutStopSec=2s
 
 [Install]
 WantedBy=graphical-session.target

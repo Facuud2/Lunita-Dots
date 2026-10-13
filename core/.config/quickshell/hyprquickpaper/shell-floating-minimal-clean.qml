@@ -86,9 +86,14 @@ PanelWindow {
                 }
                 let activePath = (rawText ? rawText : "").trim()
 
-                if (activePath.length > 0) {
+                let cleanActiveName = activePath.replace(/^file:\/\//, "");
+                cleanActiveName = cleanActiveName.substring(cleanActiveName.lastIndexOf("/") + 1);
+
+                if (cleanActiveName.length > 0) {
                     for (let i = 0; i < folderModel.count; i++) {
-                        if (folderModel.get(i, "filePath") === activePath) {
+                        let itemPath = folderModel.get(i, "filePath");
+                        let itemFileName = folderModel.get(i, "fileName");
+                        if (itemFileName === cleanActiveName || itemPath === activePath || (itemPath && itemPath.endsWith("/" + cleanActiveName))) {
                             main.selectedIndex = i
                             break
                         }

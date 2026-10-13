@@ -297,25 +297,29 @@ PanelWindow {
                 } catch (e) {
                     try { rawText = activeWallpaperFile.text; } catch (e2) { rawText = ""; }
                 }
-                let activePath = (rawText ? rawText : "").trim()
-                let matchedIndex = -1
+                let activePath = (rawText ? rawText : "").trim();
+                let cleanActiveName = activePath.replace(/^file:\/\//, "");
+                cleanActiveName = cleanActiveName.substring(cleanActiveName.lastIndexOf("/") + 1);
 
-                if (activePath.length > 0) {
+                let matchedIndex = -1;
+
+                if (cleanActiveName.length > 0) {
                     for (let i = 0; i < folderModel.count; i++) {
-                        let itemPath = folderModel.get(i, "filePath")
-                        if (itemPath === activePath) {
-                            matchedIndex = i
-                            break
+                        let itemPath = folderModel.get(i, "filePath");
+                        let itemFileName = folderModel.get(i, "fileName");
+                        if (itemFileName === cleanActiveName || itemPath === activePath || (itemPath && itemPath.endsWith("/" + cleanActiveName))) {
+                            matchedIndex = i;
+                            break;
                         }
                     }
                 }
 
                 if (matchedIndex === -1) {
-                    matchedIndex = Math.floor(folderModel.count / 2)
+                    matchedIndex = Math.floor(folderModel.count / 2);
                 }
 
-                pathView.currentIndex = matchedIndex
-                updateBackground()
+                pathView.currentIndex = matchedIndex;
+                updateBackground();
             }
         }
 

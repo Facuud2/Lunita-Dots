@@ -234,12 +234,15 @@ PanelWindow {
 
                 let rawText = activeWallpaperFile.text() ? activeWallpaperFile.text() : ""
                 let activePath = rawText.trim()
+                let cleanActiveName = activePath.replace(/^file:\/\//, "");
+                cleanActiveName = cleanActiveName.substring(cleanActiveName.lastIndexOf("/") + 1);
                 let matchedIndex = -1
 
-                if (activePath.length > 0) {
+                if (cleanActiveName.length > 0) {
                     for (let i = 0; i < folderModel.count; i++) {
-                        let itemPath = folderModel.get(i, "filePath")
-                        if (itemPath === activePath) {
+                        let itemPath = folderModel.get(i, "filePath");
+                        let itemFileName = folderModel.get(i, "fileName");
+                        if (itemFileName === cleanActiveName || itemPath === activePath || (itemPath && itemPath.endsWith("/" + cleanActiveName))) {
                             matchedIndex = i
                             break
                         }
