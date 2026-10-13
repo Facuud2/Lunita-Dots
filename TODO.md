@@ -219,12 +219,13 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Prioridad:** BAJA
 - **Rama Sugerida:** `ISSUE_018_REFACTOR`
 - **Módulo(s):** Core / Quickshell / Wallpaper / Demonio
-- **Archivos Afectados:** `core/.config/quickshell/hyprquickpaper/`, `core/.local/bin/hyprquickpaper`, `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-dynamic-wallpaper`, `themes/lunita-default/.config/cliphist/cliphist-daemon.sh`, `themes/lunita-default/.config/systemd/user/cliphist.service`, `themes/macos-theme/.config/cliphist/cliphist-daemon.sh`, `themes/macos-theme/.config/systemd/user/cliphist.service`, `.gitignore`
-- **Descripción:** El componente interactivo Hyprquickpaper está centralizado en `core/` (con enlaces simbólicos en `~/.config/lunita/wallpaper` dinámicos por tema), solucionando colisiones con GNU Stow, la coincidencia del wallpaper actual activo al presionar SUPER+W y eliminando el timeout de 90s al apagar/reiniciar el sistema causado por la falta de detección de desconexión de Wayland en cliphist-daemon.
+- **Archivos Afectados:** `core/.config/quickshell/hyprquickpaper/`, `core/.config/systemd/user/awww.service`, `core/.config/hypr/modules/autostart.lua`, `core/.local/bin/hyprquickpaper`, `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-dynamic-wallpaper`, `themes/lunita-default/.config/cliphist/cliphist-daemon.sh`, `themes/lunita-default/.config/systemd/user/cliphist.service`, `themes/macos-theme/.config/cliphist/cliphist-daemon.sh`, `themes/macos-theme/.config/systemd/user/cliphist.service`, `.gitignore`
+- **Descripción:** El componente interactivo Hyprquickpaper está centralizado en `core/` (con enlaces simbólicos en `~/.config/lunita/wallpaper` dinámicos por tema), solucionando colisiones con GNU Stow, la coincidencia del wallpaper actual activo al presionar SUPER+W, eliminando el timeout de 90s al apagar el sistema y configurando el servicio de sistema nativo `awww.service` para levantar el demonio de fondo y recordar el último wallpaper seleccionado automáticamente en el arranque.
 - **Criterios de Aceptación:**
   1. El código de Hyprquickpaper existe una única vez en el repositorio y mantiene la selección del wallpaper actual.
   2. Su funcionalidad permanece inalterada en los tres temas sin forzar reescrituras indebidas de fondo al abrirse.
   3. El apagado del sistema se realiza de forma limpia e inmediata sin esperar a session-2.scope.
+  4. El demonio de awww arranca de forma nativa e independiente mediante systemd recordando el wallpaper previo.
 - **Dependencias:** Ninguna
 
 ### [ISSUE-019] Unificación de lógica y servicios de los Widgets QML
