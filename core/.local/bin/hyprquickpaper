@@ -88,12 +88,12 @@ fi
 # 3. Garantizar que ~/.config/quickshell/hyprquickpaper exista y sea válido
 if [ ! -d "$HOME/.config/quickshell/hyprquickpaper" ] && [ -n "$DOTS_DIR" ]; then
     mkdir -p "$HOME/.config/quickshell"
-    if [ -d "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" ]; then
+    # Si core está disponible, vincular mediante GNU Stow o enlace relativo
+    if command -v stow &>/dev/null && [ -d "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" ]; then
+        stow -d "$DOTS_DIR" -t "$HOME" -S core 2>/dev/null || true
+    fi
+    if [ ! -d "$HOME/.config/quickshell/hyprquickpaper" ] && [ -d "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" ]; then
         ln -sfn "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
-    elif [ -d "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/hyprquickpaper" ]; then
-        ln -sfn "$DOTS_DIR/themes/$CURRENT_THEME/.config/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
-    elif [ -d "$DOTS_DIR/themes/lunita-default/.config/quickshell/hyprquickpaper" ]; then
-        ln -sfn "$DOTS_DIR/themes/lunita-default/.config/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
     fi
 fi
 
