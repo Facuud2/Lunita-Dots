@@ -21,6 +21,35 @@ VIDEO_EXT_PATTERN=$(get_video_extensions_pattern "$CONFIG")
 wallpaper_path="${wallpaper_path%/}/"
 cache_path="${cache_path%/}/"
 
+# Fallback: si wallpaper_path no existe o está roto, intentar resolverlo dinámicamente
+if [ ! -d "$wallpaper_path" ]; then
+    CURRENT_THEME="lunita-default"
+    if [ -f "$HOME/.config/lunita/current_theme" ]; then
+        CURRENT_THEME="$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")"
+    fi
+
+    # Buscar raíz del repositorio Lunita-Dots
+    CHECK_DIR="$DIR"
+    DOTS_DIR=""
+    while [ "$CHECK_DIR" != "/" ] && [ -n "$CHECK_DIR" ]; do
+        if [ -d "$CHECK_DIR/themes" ] && [ -d "$CHECK_DIR/core" ]; then
+            DOTS_DIR="$CHECK_DIR"
+            break
+        fi
+        CHECK_DIR="$(dirname "$CHECK_DIR")"
+    done
+
+    if [ -n "$DOTS_DIR" ] && [ -d "$DOTS_DIR/themes/$CURRENT_THEME/wallpaper" ]; then
+        mkdir -p "$HOME/.config/lunita"
+        ln -sfn "$DOTS_DIR/themes/$CURRENT_THEME/wallpaper" "$HOME/.config/lunita/wallpaper"
+        wallpaper_path="$DOTS_DIR/themes/$CURRENT_THEME/wallpaper/"
+    elif [ -d "$HOME/Imagenes/Wallpapers" ]; then
+        wallpaper_path="$HOME/Imagenes/Wallpapers/"
+    elif [ -d "$HOME/Pictures/Wallpapers" ]; then
+        wallpaper_path="$HOME/Pictures/Wallpapers/"
+    fi
+fi
+
 mkdir -p "$cache_path"
 
 echo "Scanning $wallpaper_path for images..."

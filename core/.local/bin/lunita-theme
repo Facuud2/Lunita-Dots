@@ -483,6 +483,13 @@ cmd_apply() {
                 awww img "$default_wall" --transition-type grow --transition-duration 1.2 2>/dev/null || true
             fi
         fi
+
+        # Regenerar caché de thumbnails de hyprquickpaper en segundo plano
+        if [ -x "$HOME/.config/quickshell/hyprquickpaper/cache.sh" ]; then
+            "$HOME/.config/quickshell/hyprquickpaper/cache.sh" "$HOME/.config/quickshell/hyprquickpaper" >/dev/null 2>&1 &
+        elif [ -x "$DOTS_DIR/core/.config/quickshell/hyprquickpaper/cache.sh" ]; then
+            "$DOTS_DIR/core/.config/quickshell/hyprquickpaper/cache.sh" "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" >/dev/null 2>&1 &
+        fi
     fi
 
     # 6. Sincronización y recarga/detención de componentes en ejecución

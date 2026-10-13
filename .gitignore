@@ -29,7 +29,7 @@ core/prelock/palette.conf
 # Paletas dinámicas generadas por Matugen en lunita-default
 themes/lunita-default/.config/ags/colors.scss
 themes/lunita-default/.config/eww/colors.scss
-themes/lunita-default/.config/kitty/colors-matugen.conf
+themes/*/.config/kitty/colors-matugen.conf
 themes/lunita-default/.config/nvim/lua/colors.lua
 themes/lunita-default/.config/gtk-3.0/gtk.css
 themes/lunita-default/.config/gtk-4.0/gtk.css
