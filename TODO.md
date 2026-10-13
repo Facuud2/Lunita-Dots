@@ -243,9 +243,9 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Prioridad:** MEDIA
 - **Rama Sugerida:** `ISSUE_020_REFACTOR`
 - **Módulo(s):** Core / Motor de Color
-- **Archivos Afectados:** `core/.local/bin/lunita-theme`, `themes/lunita-default/.config/eww/scripts/watch_wallpaper.sh`, `themes/lunita-default/.config/matugen/hooks/update-theme.sh`, `themes/lunita-default/.config/quickshell/hyprquickpaper/commands.sh`, `themes/macOS-Theme/.config/quickshell/hyprquickpaper/commands.sh`, `themes/Modern-Win11-Theme/.config/quickshell/hyprquickpaper/commands.sh`
-- **Descripción:** Centralizar cómo interactúa Matugen con Quickshell. Actualmente existe el riesgo de que el motor inyecte variables o altere estilos globales. Se debe aplicar un flujo condicional de entrega y validación: Matugen solo debe generar y aplicar sus colores en `lunita-default`. Los temas estáticos (`macOS-Theme`, `Modern-Win11-Theme`) deben conservar sus paletas definidas nativamente.
+- **Archivos Afectados:** `core/.local/bin/lunita-palette-sync`, `core/.local/bin/lunita-theme`, `themes/macOS-Theme/theme.json`, `themes/Modern-Win11-Theme/theme.json`, `themes/lunita-default/theme.json`, `themes/lunita-default/.config/eww/scripts/watch_wallpaper.sh`, `themes/lunita-default/.config/matugen/hooks/update-theme.sh`, `themes/lunita-default/.config/quickshell/hyprquickpaper/commands.sh`, `themes/macOS-Theme/.config/quickshell/hyprquickpaper/commands.sh`, `themes/Modern-Win11-Theme/.config/quickshell/hyprquickpaper/commands.sh`
+- **Descripción:** Centralizar cómo interactúa Matugen con Quickshell y Hyprland. Sincronizar dinámicamente los bordes y paleta de Hyprland (`colors.lua`) mediante `lunita-palette-sync` a partir de los tokens de cada tema (`theme.json`), evitando el sangrado de colores de Matugen hacia temas estáticos (`macOS-Theme`, `Modern-Win11-Theme`).
 - **Criterios de Aceptación:**
-  1. Al transicionar de `lunita-default` (con colores reactivos al wallpaper) a otro tema, no ocurre ningún "bleed" o sangrado de colores.
-  2. macOS y Win11 mantienen sus colores temáticos fijos correctamente inyectados, sin interferencia del daemon de Matugen.
+  1. Al transicionar de `lunita-default` (con colores reactivos al wallpaper) a otro tema, no ocurre ningún "bleed" o sangrado de colores en Hyprland ni componentes del entorno.
+  2. macOS y Win11 mantienen sus colores temáticos fijos correctamente inyectados (bordes de ventana azul Cupertino `#007AFF` y Fluent `#0078D4`), sin interferencia del daemon de Matugen.
 - **Dependencias:** Ninguna

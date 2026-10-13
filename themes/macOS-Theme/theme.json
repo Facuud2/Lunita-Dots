@@ -65,6 +65,14 @@
     },
     "spotlight": {
       "surface_opacity": 0.70
+    },
+    "hyprland": {
+      "active_border_1": "rgba(007affcc)",
+      "active_border_2": "rgba(5856d6aa)",
+      "inactive_border": "rgba(ffffff18)",
+      "group_border_active": "rgba(007affee)",
+      "group_border_inactive": "rgba(ffffff18)",
+      "groupbar_active": "rgba(007affcc)"
     }
   },
   "features": [

@@ -65,6 +65,14 @@
     },
     "bar": {
       "accent": "#4CC2FF"
+    },
+    "hyprland": {
+      "active_border_1": "rgba(0078d4ee)",
+      "active_border_2": "rgba(60cdffaa)",
+      "inactive_border": "rgba(ffffff14)",
+      "group_border_active": "rgba(0078d4ee)",
+      "group_border_inactive": "rgba(ffffff14)",
+      "groupbar_active": "rgba(0078d4cc)"
     }
   },
   "features": [

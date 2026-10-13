@@ -440,6 +440,7 @@ cmd_apply() {
         # Si salimos de lunita-default a un tema con paleta fija, purgar archivos mutados por Matugen
         if [ "$current" = "lunita-default" ]; then
             pkill -f "watch_wallpaper.sh" 2>/dev/null || true
+            pkill -x "matugen" 2>/dev/null || true
             rm -f "$HOME/.config/quickshell/colors.json" 2>/dev/null || true
             rm -f "$HOME/.config/eww/colors.scss" 2>/dev/null || true
         fi
@@ -531,6 +532,13 @@ cmd_apply() {
         icon_theme="$(grep '^gtk-icon-theme-name=' "$gtk3_ini" | cut -d= -f2 | tr -d ' ' || echo 'WhiteSur')"
     fi
 
+    # Sincronizar tokens de diseño en GTK, Qt, Quickshell y Hyprland (antes de recargar el compositor)
+    if command -v lunita-palette-sync >/dev/null 2>&1; then
+        lunita-palette-sync sync 2>/dev/null || true
+    elif [ -x "$DOTS_DIR/core/.local/bin/lunita-palette-sync" ]; then
+        "$DOTS_DIR/core/.local/bin/lunita-palette-sync" sync 2>/dev/null || true
+    fi
+
     # Recargar Hyprland y aplicar cursor
     if pgrep -x Hyprland > /dev/null; then
         hyprctl setcursor "$cursor_theme" "$cursor_size" >/dev/null 2>&1 || true
@@ -544,13 +552,6 @@ cmd_apply() {
         gsettings set org.gnome.desktop.interface cursor-size "$cursor_size" 2>/dev/null || true
         gsettings set org.gnome.desktop.interface color-scheme "$color_scheme" 2>/dev/null || true
         gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
-    fi
-
-    # Sincronizar tokens de diseño en GTK, Qt y Quickshell
-    if command -v lunita-palette-sync >/dev/null 2>&1; then
-        lunita-palette-sync sync 2>/dev/null || true
-    elif [ -x "$DOTS_DIR/core/.local/bin/lunita-palette-sync" ]; then
-        "$DOTS_DIR/core/.local/bin/lunita-palette-sync" sync 2>/dev/null || true
     fi
 
     # Reiniciar portal GTK para aplicar estilos CSS actualizados
