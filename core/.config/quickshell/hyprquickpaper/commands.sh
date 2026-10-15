@@ -121,13 +121,4 @@ if [ -n "$STABLE_COPY_PATH" ]; then
     fi
 fi
 
-# --- Matugen dynamic theming integration ---
-if command -v matugen &>/dev/null; then
-    if is_video "$WALLPAPER" "$VIDEO_EXT_PATTERN"; then
-        if [ -f "$THUMB" ]; then
-            matugen image "$THUMB" --source-color-index 0 >/dev/null 2>&1 &
-        fi
-    else
-        matugen image "$WALLPAPER" --source-color-index 0 >/dev/null 2>&1 &
-    fi
-fi
+# --- Tema estático Win11: No utiliza Matugen (paleta estática Fluent/Mica) ---

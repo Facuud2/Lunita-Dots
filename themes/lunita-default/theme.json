@@ -56,7 +56,16 @@
       "surface_opacity": 0.95
     }
   },
-  "component_overrides": {},
+  "component_overrides": {
+    "hyprland": {
+      "active_border_1": "rgba(b588f7ee)",
+      "active_border_2": "rgba(cba6f7aa)",
+      "inactive_border": "rgba(ffffff14)",
+      "group_border_active": "rgba(b588f7ee)",
+      "group_border_inactive": "rgba(ffffff14)",
+      "groupbar_active": "rgba(b588f7cc)"
+    }
+  },
   "features": [
     "Nothing Dynamic Island superior de 36px interactiva y expansible en Quickshell",
     "Servidor de notificaciones y OSD desacoplados y reactivos en Quickshell",
