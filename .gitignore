@@ -29,7 +29,7 @@ core/prelock/palette.conf
 # Paletas dinámicas generadas por Matugen en lunita-default
 themes/lunita-default/.config/ags/colors.scss
 themes/lunita-default/.config/eww/colors.scss
-themes/lunita-default/.config/kitty/colors-matugen.conf
+themes/*/.config/kitty/colors-matugen.conf
 themes/lunita-default/.config/nvim/lua/colors.lua
 themes/lunita-default/.config/gtk-3.0/gtk.css
 themes/lunita-default/.config/gtk-4.0/gtk.css
@@ -39,4 +39,17 @@ themes/lunita-default/.config/vesktop/themes/lunita.theme.css
 themes/lunita-default/.config/kdeglobals
 themes/lunita-default/.local/share/color-schemes/Lunita.colors
 themes/lunita-default/.config/eww/assets/default_cover.png
+# Paletas dinámicas generadas por Matugen y scripts de sincronización
+themes/*/.config/ags/colors.scss
+themes/*/.config/eww/colors.scss
+themes/*/.config/kitty/colors-matugen.conf
+themes/*/.config/nvim/lua/colors.lua
+themes/*/.config/gtk-3.0/gtk.css
+themes/*/.config/gtk-4.0/gtk.css
+themes/*/.config/qt6ct/colors/lunita.conf
+themes/*/.config/qt6ct/qss/lunita.qss
+themes/*/.config/vesktop/themes/lunita.theme.css
+themes/*/.config/kdeglobals
+themes/*/.local/share/color-schemes/Lunita.colors
+themes/*/.config/eww/assets/default_cover.png
 .lunita-theme

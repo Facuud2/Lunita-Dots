@@ -58,13 +58,18 @@ check_stow() {
 
 # Obtener nombre del tema activo actual
 get_current_theme() {
-    if [ -f "$STATE_FILE" ]; then
-        cat "$STATE_FILE" | tr -d '[:space:]'
-    elif [ -f "$USER_STATE_FILE" ]; then
-        cat "$USER_STATE_FILE" | tr -d '[:space:]'
+    local theme=""
+    if [ -f "$USER_STATE_FILE" ]; then
+        theme="$(tr -d '[:space:]' < "$USER_STATE_FILE")"
+    elif [ -f "$STATE_FILE" ]; then
+        theme="$(tr -d '[:space:]' < "$STATE_FILE")"
     else
-        echo "lunita-default"
+        theme="lunita-default"
     fi
+
+    # Normalizar a minúsculas para compatibilidad total con los directorios
+    theme="${theme,,}"
+    echo "$theme"
 }
 
 # Limpiar enlaces manuales/antiguos y resolver colisiones antes de ejecutar Stow
@@ -109,7 +114,12 @@ if target_pkg and os.path.isdir(target_pkg):
             if os.path.islink(target_dir):
                 try:
                     real_dir = os.path.realpath(target_dir)
+                    raw_dir = os.readlink(target_dir)
+                    # Si apunta a otro directorio del repo, está roto, o es un enlace absoluto manual que Stow rechaza:
                     if real_dir != os.path.realpath(root) and (real_dir.startswith(dots_prefix) or not os.path.exists(target_dir)):
+                        os.unlink(target_dir)
+                    elif os.path.isabs(raw_dir) and real_dir.startswith(dots_prefix):
+                        # Enlace absoluto no generado por Stow (Stow genera enlaces relativos como ../../../)
                         os.unlink(target_dir)
                 except Exception:
                     pass
@@ -473,13 +483,22 @@ cmd_apply() {
         local default_wall
         default_wall="$(find -L "$target_dir/wallpaper" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) 2>/dev/null | sort | head -n 1)"
         if [ -n "$default_wall" ]; then
-            if [ -x "$target_dir/.config/quickshell/hyprquickpaper/commands.sh" ]; then
-                "$target_dir/.config/quickshell/hyprquickpaper/commands.sh" "$default_wall" >/dev/null 2>&1 &
-            elif [ -x "$HOME/.config/quickshell/hyprquickpaper/commands.sh" ]; then
+            if [ -x "$HOME/.config/quickshell/hyprquickpaper/commands.sh" ]; then
                 "$HOME/.config/quickshell/hyprquickpaper/commands.sh" "$default_wall" >/dev/null 2>&1 &
+            elif [ -x "$DOTS_DIR/core/.config/quickshell/hyprquickpaper/commands.sh" ]; then
+                "$DOTS_DIR/core/.config/quickshell/hyprquickpaper/commands.sh" "$default_wall" >/dev/null 2>&1 &
+            elif [ -x "$target_dir/.config/quickshell/hyprquickpaper/commands.sh" ]; then
+                "$target_dir/.config/quickshell/hyprquickpaper/commands.sh" "$default_wall" >/dev/null 2>&1 &
             elif command -v awww &>/dev/null; then
                 awww img "$default_wall" --transition-type grow --transition-duration 1.2 2>/dev/null || true
             fi
+        fi
+
+        # Regenerar caché de thumbnails de hyprquickpaper en segundo plano
+        if [ -x "$HOME/.config/quickshell/hyprquickpaper/cache.sh" ]; then
+            "$HOME/.config/quickshell/hyprquickpaper/cache.sh" "$HOME/.config/quickshell/hyprquickpaper" >/dev/null 2>&1 &
+        elif [ -x "$DOTS_DIR/core/.config/quickshell/hyprquickpaper/cache.sh" ]; then
+            "$DOTS_DIR/core/.config/quickshell/hyprquickpaper/cache.sh" "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" >/dev/null 2>&1 &
         fi
     fi
 
@@ -703,8 +722,8 @@ cmd_help() {
     echo -e "${BOLD}Ejemplos:${RESET}"
     echo "  lunita-theme gui"
     echo "  lunita-theme list"
-    echo "  lunita-theme apply Modern-Win11-Theme"
-    echo "  lunita-theme apply macOS-Theme"
+    echo "  lunita-theme apply modern-win11-theme"
+    echo "  lunita-theme apply macos-theme"
     echo "  lunita-theme restow"
 }
 

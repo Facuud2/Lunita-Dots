@@ -1,0 +1,78 @@
+{
+  "id": "macos-theme",
+  "name": "macOS 27",
+  "version": "2.0.0",
+  "author": "Facuud2",
+  "description": "Tema réplica inspirado en la elegancia y ergonomía de macOS para Lunita-Dots. Barra de menú superior con soporte nativo para Tema Claro y Oscuro, dock liquid glass, curvas fluidas SwiftUI/Core Animation y estética frosted acrylic.",
+  "components": {
+    "bar": "quickshell-macos-statusbar (Light & Dark)",
+    "dock": "dock-macos-liquid-glass",
+    "launcher": "quickshell-macos-app-library",
+    "powermenu": "wlogout-macos-glass",
+    "notifications": "quickshell-macos-notifications",
+    "widgets": "quickshell-macos-widgets",
+    "color_engine": "macos-cupertino",
+    "wallpaper_picker": "hyprquickpaper",
+    "lockscreen": "quickshell-macos-lockscreen",
+    "terminal": "kitty-macos",
+    "file_manager": "dolphin-lunita",
+    "clipboard": "quickshell-clipboard",
+    "spotlight": "quickshell-macos-spotlight",
+    "osd": "quickshell-macos-osd",
+    "cursor": "apple-macos-32px",
+    "shell": "zsh-pills",
+    "discord": "vesktop-macos-cupertino"
+  },
+  "engine": "macos-cupertino",
+  "typography": {
+    "interface": "SF Pro Display",
+    "display": "SF Pro Display",
+    "monospace": "JetBrainsMono Nerd Font",
+    "size": 10
+  },
+  "assets": {
+    "icon_theme": "WhiteSur",
+    "cursor_theme": "macOS",
+    "cursor_size": 32
+  },
+  "tokens": {
+    "accent": "#007AFF",
+    "accent_hover": "#0062CC",
+    "accent_active": "#004FB0",
+    "accent_fg": "#FFFFFF",
+    "dark": {
+      "surface": "#161618",
+      "surface_container": "#1E1E20",
+      "surface_container_high": "#2C2C2E",
+      "on_surface": "#F5F5F7",
+      "on_surface_dim": "#8E8E93",
+      "border": "rgba(255, 255, 255, 0.12)",
+      "surface_opacity": 0.85
+    },
+    "light": {
+      "surface": "#F5F7FB",
+      "surface_container": "#EBEFF5",
+      "surface_container_high": "#FFFFFF",
+      "on_surface": "#1D1D1F",
+      "on_surface_dim": "#8E8E93",
+      "border": "rgba(0, 0, 0, 0.08)",
+      "surface_opacity": 0.95
+    }
+  },
+  "component_overrides": {
+    "dock": {
+      "surface_opacity": 0.30
+    },
+    "spotlight": {
+      "surface_opacity": 0.70
+    }
+  },
+  "features": [
+    "Barra superior de menú adaptable a Tema Claro y Oscuro con conmutador en Control Center",
+    "Físicas elásticas SwiftUI y Core Animation para transiciones ultra fluidas en Hyprland",
+    "Bordes de 16px y efectos de desenfoque Liquid Glass / Frosted Acrylic",
+    "Paleta oficial de Cupertino (System Blue, Indigo, Purple, Red, Green)",
+    "Paquete oficial de cursores macOS (Apple Cursors) de alta resolución a 32px",
+    "Arquitectura modular lista y libre de dependencias de matugen"
+  ]
+}
