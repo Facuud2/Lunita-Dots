@@ -652,24 +652,64 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
             cmd = ["lunita-theme", "apply", theme.id]
             error_msg = None
             try:
-                proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                if proc.returncode != 0:
-                    error_msg = proc.stderr.strip() or f"Código de salida: {proc.returncode}"
-            except Exception as e:
-                error_msg = str(e)
+                proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
 
-            GLib.idle_add(self.on_apply_finished, theme, error_msg)
+                # Monitorear activamente el proceso y el estado del tema
+                max_wait_seconds = 20
+                poll_interval = 0.5
+                elapsed = 0.0
+
+                while True:
+                    ret = proc.poll()
+                    if ret is not None:
+                        # El proceso terminó por sí mismo
+                        _, stderr_data = proc.communicate()
+                        if ret != 0:
+                            # Si falló con código distinto de 0, verificar si a pesar de todo se aplicó
+                            if get_current_theme_id() != theme.id:
+                                error_msg = (stderr_data or "").strip() or f"Código de salida: {ret}"
+                        break
+
+                    # Verificar si los archivos de estado ya confirman que el tema fue aplicado
+                    if get_current_theme_id() == theme.id and elapsed >= 3.0:
+                        # El tema ya está aplicado con éxito; los daemons en segundo plano pueden seguir corriendo
+                        break
+
+                    import time
+                    time.sleep(poll_interval)
+                    elapsed += poll_interval
+
+                    if elapsed >= max_wait_seconds:
+                        # Si se alcanzó el límite de tiempo, comprobar el estado real
+                        if get_current_theme_id() != theme.id:
+                            proc.kill()
+                            error_msg = "El proceso tardó demasiado en aplicar el tema"
+                        break
+            except Exception as e:
+                if get_current_theme_id() != theme.id:
+                    error_msg = str(e)
+            finally:
+                GLib.idle_add(self.on_apply_finished, theme, error_msg)
 
         threading.Thread(target=worker, daemon=True).start()
 
     def on_apply_finished(self, theme: ThemeInfo, error_msg: str | None):
         self.is_applying = False
-        if error_msg:
+        self.current_theme_id = get_current_theme_id()
+
+        if self.current_theme_id == theme.id:
+            toast = Adw.Toast(title=f"¡Tema '{theme.name}' aplicado exitosamente!")
+            self.toast_overlay.add_toast(toast)
+        elif error_msg:
             toast = Adw.Toast(title=f"Error al aplicar tema: {error_msg}")
             self.toast_overlay.add_toast(toast)
         else:
-            self.current_theme_id = theme.id
-            toast = Adw.Toast(title=f"¡Tema '{theme.name}' aplicado exitosamente!")
+            toast = Adw.Toast(title=f"Error al verificar la aplicación del tema '{theme.name}'")
             self.toast_overlay.add_toast(toast)
 
         self.load_themes()

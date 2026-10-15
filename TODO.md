@@ -227,11 +227,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-019] Unificación de lógica y servicios de los Widgets QML
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_019_REFACTOR`
 - **Módulo(s):** Core / Temas / Widgets
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/scripts/`, `core/`
+- **Archivos Afectados:** `core/.config/quickshell/widgets/scripts/`, `core/.local/bin/lunita-widgets-manager`, `themes/macOS-Theme/.config/quickshell/widgets/scripts/`
 - **Descripción:** Refactorizar la arquitectura de los widgets de escritorio en Quickshell. Los scripts subyacentes, recolección de datos y servicios lógicos compartidos deben migrarse al directorio base `core/`, garantizando que dentro de la carpeta `themes/` únicamente resida la capa de presentación (la sintaxis visual QML específica de cada ecosistema).
 - **Criterios de Aceptación:**
   1. Eliminación de lógica duplicada entre temas.

@@ -13,7 +13,7 @@ elif [[ -f "/mnt/Desarrollo/Lunita-Dots/.lunita-theme" ]]; then
 fi
 
 case "$_lunita_current_theme" in
-  macOS-Theme|macos)
+  macos-theme|macOS-Theme|macos)
     if [[ -f "${ZSH_CUSTOM:-$ZSH/custom}/themes/macos.zsh-theme" ]]; then
       source "${ZSH_CUSTOM:-$ZSH/custom}/themes/macos.zsh-theme"
     elif [[ -f "${0:A:h}/macos.zsh-theme" ]]; then
