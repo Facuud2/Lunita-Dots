@@ -192,22 +192,22 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-016] Restaurar fondo de pantalla automático al reiniciar el sistema
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_016_FIX`
 - **Módulo(s):** Core / Autostart / Wallpaper
-- **Archivos Afectados:** A investigar por el agente (probablemente `core/.config/hypr/modules/autostart.lua` o scripts asociados a `awww`).
+- **Archivos Afectados:** `core/.config/hypr/modules/autostart.lua`, `core/.local/bin/lunita-dynamic-wallpaper`
 - **Descripción:** Tras reiniciar el sistema operativo, el fondo de pantalla no se renderiza. Se sospecha que el daemon encargado (`awww` o script disparador) no está siendo invocado correctamente durante la secuencia de inicio de Hyprland. El agente debe diagnosticar la cadena de ejecución durante el boot y repararlo.
 - **Criterios de Aceptación:**
   1. Al iniciar sesión en frío, el fondo de pantalla del tema activo se muestra sin requerir comandos manuales.
 - **Dependencias:** Ninguna
 
 ### [ISSUE-017] Normalización de nombres de temas (Minúsculas en sistema, Mayúsculas en GUI)
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_017_REFACTOR`
 - **Módulo(s):** Core / Temas / GUI
-- **Archivos Afectados:** Estructura de carpetas en `themes/`, `theme.json` de cada tema, `.lunita-theme`, `core/.local/bin/lunita-theme-selector`.
+- **Archivos Afectados:** `themes/macos-theme/`, `themes/modern-win11-theme/`, `themes/macos-theme/theme.json`, `themes/modern-win11-theme/theme.json`, `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-tokri`, `core/.local/bin/lunita-widgets-manager`, `core/.oh-my-zsh/custom/themes/lunita.zsh-theme`, `themes/macos-theme/.oh-my-zsh/custom/macos.zsh`, `themes/macos-theme/.config/quickshell/bar/scripts/resolve_all_tray.sh`, `themes/modern-win11-theme/.config/quickshell/bar/BarState.qml`
 - **Descripción:** Para evitar errores de tipeo y consistencia en la CLI, todas las carpetas físicas de los temas y sus identificadores de sistema deben ser en minúsculas (ej. `lunita-theme`, `macos-theme`, `win11-theme`). Sin embargo, el archivo `theme.json` debe alojar un atributo `name` formateado ("Lunita Theme", "MacOS 27 Theme", "Modern Windows 11 Theme") para que la GUI gráfica lo consuma y lo muestre con su correcta capitalización.
 - **Criterios de Aceptación:**
   1. Directorios, estado guardado y CLI utilizan strings 100% en minúsculas.
