@@ -32,11 +32,13 @@ WEATHER_LOCATION_FILE = CONFIG_DIR / "weather_location"
 SCRIPT_DIR = Path(__file__).resolve().parent
 DOTS_DIR = SCRIPT_DIR.parent.parent
 WIDGETS_DIR = Path.home() / ".config/quickshell/widgets"
-if not WIDGETS_DIR.exists():
-    WIDGETS_DIR = DOTS_DIR / "themes/macos-theme/.config/quickshell/widgets"
-    if not WIDGETS_DIR.exists():
-        WIDGETS_DIR = DOTS_DIR / "themes/macOS-Theme/.config/quickshell/widgets"
 SCRIPTS_DIR = WIDGETS_DIR / "scripts"
+if not SCRIPTS_DIR.exists():
+    core_scripts = DOTS_DIR / "core/.config/quickshell/widgets/scripts"
+    if core_scripts.exists():
+        SCRIPTS_DIR = core_scripts
+    else:
+        SCRIPTS_DIR = DOTS_DIR / "themes/macOS-Theme/.config/quickshell/widgets/scripts"
 
 # Colores sugeridos para eventos del calendario
 CALENDAR_COLORS = [

@@ -43,6 +43,14 @@ Este documento contiene el inventario de requerimientos futuros, refactorizacion
 - **Objetivo:** En `cache.sh`, la generación masiva de thumbnails de vídeo con `ffmpeg` puede saturar I/O si hay carpetas con múltiples clips. Implementar throttle y límite de concurrencia de workers en segundo plano y fallback visual mientras `magick`/`ffmpeg` completan el thumbnail.
 - **Complejidad:** Media.
 
+### [BACKLOG-THEME-05] Disparadores e Integración de Widgets en Escritorio para Lunita-Default y Modern-Win11
+- **Objetivo:** Proveer controles visuales directos (botones dedicados o menú contextual de configuración) para invocar el gestor de widgets (`lunita-widgets-manager`) y alternar los widgets de escritorio (`lunita-widgets-toggle`) tanto en `lunita-default` como en `modern-win11-theme`, emulando la paridad funcional existente en `macOS-Theme`.
+- **Alcance y Características Técnicas:**
+  - **Lunita-Default (Dynamic Island / Barra Superior):** Integrar un botón dedicado de Widgets en la barra superior o dentro del menú expandido de la Dynamic Island con soporte para click izquierdo (conmutar visibilidad de widgets en el escritorio vía `lunita-widgets-toggle`) y click derecho (abrir el configurador interactivo `lunita-widgets-manager`).
+  - **Modern-Win11-Theme (Dock / Bandeja del Sistema):** Adaptar el botón de widgets existente en la bandeja de tareas (`TrayPlatter.qml` / `dock`) o añadir acceso rápido en la barra/dock para que el click izquierdo active o muestre los widgets del escritorio y el click secundario (o botón de configuración de widgets) dispare `lunita-widgets-manager` en lugar de únicamente abrir el app launcher.
+  - **Capa de Widgets de Escritorio en Ambos Temas:** Asegurar que los componentes de presentación QML de widgets puedan desplegarse anclados al layer `Background` o `Bottom` del escritorio en `lunita-default` y `modern-win11-theme`, consumiendo los servicios unificados de `core/`.
+- **Complejidad:** Media.
+
 ---
 
 ## ⚙️ 3. Subproyectos Nativos y C++

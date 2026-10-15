@@ -218,22 +218,20 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Estado:** COMPLETADO
 - **Prioridad:** BAJA
 - **Rama Sugerida:** `ISSUE_018_REFACTOR`
-- **Módulo(s):** Core / Quickshell / Wallpaper / Demonio
-- **Archivos Afectados:** `core/.config/quickshell/hyprquickpaper/`, `core/.config/systemd/user/awww.service`, `core/.config/hypr/modules/autostart.lua`, `core/.local/bin/hyprquickpaper`, `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-dynamic-wallpaper`, `themes/lunita-default/.config/cliphist/cliphist-daemon.sh`, `themes/lunita-default/.config/systemd/user/cliphist.service`, `themes/macos-theme/.config/cliphist/cliphist-daemon.sh`, `themes/macos-theme/.config/systemd/user/cliphist.service`, `.gitignore`
-- **Descripción:** El componente interactivo Hyprquickpaper está centralizado en `core/` (con enlaces simbólicos en `~/.config/lunita/wallpaper` dinámicos por tema), solucionando colisiones con GNU Stow, la coincidencia del wallpaper actual activo al presionar SUPER+W, eliminando el timeout de 90s al apagar el sistema y configurando el servicio de sistema nativo `awww.service` para levantar el demonio de fondo y recordar el último wallpaper seleccionado automáticamente en el arranque.
+- **Módulo(s):** Core / Quickshell
+- **Archivos Afectados:** `core/.config/quickshell/hyprquickpaper/`, `core/.local/bin/hyprquickpaper`, `core/.local/bin/lunita-theme`, `themes/lunita-default/.config/quickshell/hyprquickpaper/`, `themes/macOS-Theme/.config/quickshell/hyprquickpaper/`, `themes/Modern-Win11-Theme/.config/quickshell/hyprquickpaper/`
+- **Descripción:** El componente interactivo Hyprquickpaper está triplicado idénticamente en las carpetas de los tres temas. Se debe extraer este código a un directorio compartido en `core/` (u orquestar un enlace simbólico universal mediante Stow) para tener un único punto de mantenimiento (Single Source of Truth).
 - **Criterios de Aceptación:**
-  1. El código de Hyprquickpaper existe una única vez en el repositorio y mantiene la selección del wallpaper actual.
-  2. Su funcionalidad permanece inalterada en los tres temas sin forzar reescrituras indebidas de fondo al abrirse.
-  3. El apagado del sistema se realiza de forma limpia e inmediata sin esperar a session-2.scope.
-  4. El demonio de awww arranca de forma nativa e independiente mediante systemd recordando el wallpaper previo.
+  1. El código de Hyprquickpaper existe una única vez en el repositorio.
+  2. Su funcionalidad permanece inalterada en los tres temas.
 - **Dependencias:** Ninguna
 
 ### [ISSUE-019] Unificación de lógica y servicios de los Widgets QML
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_019_REFACTOR`
 - **Módulo(s):** Core / Temas / Widgets
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/scripts/`, `core/`
+- **Archivos Afectados:** `core/.config/quickshell/widgets/scripts/`, `core/.local/bin/lunita-widgets-manager`, `themes/macOS-Theme/.config/quickshell/widgets/scripts/`
 - **Descripción:** Refactorizar la arquitectura de los widgets de escritorio en Quickshell. Los scripts subyacentes, recolección de datos y servicios lógicos compartidos deben migrarse al directorio base `core/`, garantizando que dentro de la carpeta `themes/` únicamente resida la capa de presentación (la sintaxis visual QML específica de cada ecosistema).
 - **Criterios de Aceptación:**
   1. Eliminación de lógica duplicada entre temas.
