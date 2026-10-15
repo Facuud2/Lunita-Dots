@@ -62,7 +62,18 @@ find_wallpaper_dir() {
         return 0
     fi
 
-    # 2. Si quickpaper config.json existe y define wallpaper_path
+    # 2. Si existe el enlace simbólico del tema activo (~/.config/lunita/wallpaper)
+    local theme_wall_dir="$HOME/.config/lunita/wallpaper"
+    if [ -d "$theme_wall_dir" ]; then
+        local has_theme_imgs
+        has_theme_imgs=$(find -L "$theme_wall_dir" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null | head -n 1)
+        if [ -n "$has_theme_imgs" ]; then
+            echo "$theme_wall_dir"
+            return 0
+        fi
+    fi
+
+    # 3. Si quickpaper config.json existe y define wallpaper_path
     local qp_config="$HOME/.config/quickshell/hyprquickpaper/config.json"
     if [ -f "$qp_config" ]; then
         local qp_dir
