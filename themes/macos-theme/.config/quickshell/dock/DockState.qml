@@ -586,11 +586,72 @@ Item {
         trashProc.running = true
     }
 
+    // ── Safe Icon Source Resolver (Never returns missing-texture image://icon/) ──
+    function resolveIconSource(iconVal) {
+        if (!iconVal || iconVal.length === 0) {
+            return Qt.resolvedUrl("assets/icons/launchpad.svg")
+        }
+        if (iconVal.startsWith("file://") || iconVal.startsWith("/")) {
+            return iconVal.startsWith("file://") ? iconVal : ("file://" + iconVal)
+        }
+        let lower = iconVal.toLowerCase()
+        if (lower.includes("zen") || lower.includes("safari") || lower.includes("firefox") || lower.includes("chrome") || lower.includes("browser")) return Qt.resolvedUrl("assets/icons/safari.svg")
+        if (lower.includes("code") || lower.includes("antigravity") || lower.includes("cursor") || lower.includes("text-editor")) return Qt.resolvedUrl("assets/icons/code.svg")
+        if (lower.includes("kitty") || lower.includes("terminal") || lower.includes("alacritty") || lower.includes("wezterm")) return Qt.resolvedUrl("assets/icons/terminal.svg")
+        if (lower.includes("dolphin") || lower.includes("file-manager") || lower.includes("nautilus") || lower.includes("thunar") || lower.includes("folder")) return Qt.resolvedUrl("assets/icons/finder.svg")
+        if (lower.includes("spotify") || lower.includes("music") || lower.includes("audio")) return Qt.resolvedUrl("assets/icons/music.svg")
+        if (lower.includes("discord") || lower.includes("vesktop") || lower.includes("telegram") || lower.includes("chat")) return Qt.resolvedUrl("assets/icons/messages.svg")
+        if (lower.includes("settings") || lower.includes("preferences")) return Qt.resolvedUrl("assets/icons/settings.svg")
+
+        for (let i = 0; i < root.installedAppsList.length; i++) {
+            let item = root.installedAppsList[i]
+            if (item.iconPath && (item.iconName === iconVal || item.id === iconVal || (item.matchClasses && item.matchClasses.indexOf(lower) !== -1))) {
+                return item.iconPath
+            }
+        }
+
+        let qsPath = Quickshell.iconPath(iconVal, true)
+        if (qsPath && qsPath.length > 0) {
+            return qsPath
+        }
+        return Qt.resolvedUrl("assets/icons/launchpad.svg")
+    }
+
     // ── Scan System Installed Desktop Applications ──
     Process {
         id: scanProc
         command: ["bash", "-c", "python3 -c '
 import os, glob, json
+
+gtk_theme = None
+try:
+    import gi
+    gi.require_version(\"Gtk\", \"3.0\")
+    from gi.repository import Gtk
+    gtk_theme = Gtk.IconTheme.get_default()
+except Exception:
+    pass
+
+def resolve_icon_path(icon_name):
+    if not icon_name:
+        return \"\"
+    if os.path.isabs(icon_name) and os.path.isfile(icon_name):
+        return \"file://\" + icon_name
+    if gtk_theme is not None:
+        for candidate in (icon_name, icon_name.lower()):
+            try:
+                info = gtk_theme.lookup_icon(candidate, 48, 0)
+                if info:
+                    fn = info.get_filename()
+                    if fn and os.path.isfile(fn):
+                        return \"file://\" + fn
+            except Exception:
+                pass
+    for ext in (\".svg\", \".png\"):
+        p = f\"/usr/share/pixmaps/{icon_name}{ext}\"
+        if os.path.isfile(p):
+            return \"file://\" + p
+    return \"\"
 
 apps = []
 paths = glob.glob(\"/usr/share/applications/*.desktop\") + glob.glob(os.path.expanduser(\"~/.local/share/applications/*.desktop\"))
@@ -629,6 +690,8 @@ for p in paths:
         seen.add(desktop_id)
         
         clean_exec = exec_cmd.split(\"%\")[0].strip()
+        icon_val = icon or \"application-x-executable\"
+        icon_path = resolve_icon_path(icon_val)
         
         apps.append({
             \"id\": desktop_id,
@@ -636,7 +699,8 @@ for p in paths:
             \"displayName\": name,
             \"description\": desc,
             \"executable\": clean_exec,
-            \"iconName\": icon or \"application-x-executable\",
+            \"iconName\": icon_val,
+            \"iconPath\": icon_path,
             \"cmd\": f\"gtk-launch {desktop_id}\",
             \"matchClasses\": [desktop_id.replace(\".desktop\", \"\").lower(), clean_exec.lower(), name.lower()]
         })

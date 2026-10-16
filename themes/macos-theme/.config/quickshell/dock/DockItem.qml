@@ -69,9 +69,13 @@ Item {
             if (id === "shortcuts") return Qt.resolvedUrl("assets/icons/shortcuts.svg")
             if (id === "keychain") return Qt.resolvedUrl("assets/icons/keychain.svg")
         }
-        if (app && app.fallbackIcon) return "image://icon/" + app.fallbackIcon
-        if (runningApp && runningApp.icon) return "image://icon/" + runningApp.icon
-        return "image://icon/application-x-executable"
+        if (app && app.fallbackIcon) {
+            return dockState ? dockState.resolveIconSource(app.fallbackIcon) : Qt.resolvedUrl("assets/icons/launchpad.svg")
+        }
+        if (runningApp && runningApp.icon) {
+            return dockState ? dockState.resolveIconSource(runningApp.icon) : Qt.resolvedUrl("assets/icons/launchpad.svg")
+        }
+        return Qt.resolvedUrl("assets/icons/launchpad.svg")
     }
 
     width: 52
