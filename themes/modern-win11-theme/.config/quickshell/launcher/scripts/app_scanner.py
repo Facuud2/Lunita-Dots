@@ -37,10 +37,14 @@ def get_all_data_dirs():
 def get_search_icon_dirs(data_dirs):
     """Build list of icon theme search directories."""
     dirs = [
+        os.path.expanduser("~/.local/share/icons/Fluent-yellow-dark"),
+        os.path.expanduser("~/.local/share/icons/Fluent-dark"),
+        os.path.expanduser("~/.local/share/icons/Fluent"),
         os.path.expanduser("~/.local/share/icons/WhiteSur"),
         os.path.expanduser("~/.local/share/icons/WhiteSur-dark"),
         os.path.expanduser("~/.local/share/icons/Papirus-Dark"),
         os.path.expanduser("~/.local/share/icons/Papirus"),
+        os.path.expanduser("~/.local/share/icons/BeautyLine"),
         os.path.expanduser("~/.local/share/icons/hicolor"),
         os.path.expanduser("~/.local/share/flatpak/exports/share/icons"),
         "/var/lib/flatpak/exports/share/icons",
@@ -48,8 +52,7 @@ def get_search_icon_dirs(data_dirs):
         "/usr/share/icons/breeze",
         "/usr/share/icons/breeze-dark",
         "/usr/share/icons",
-        "/usr/share/pixmaps",
-        "/mnt/Desarrollo/Lunita-Dots/core"
+        "/usr/share/pixmaps"
     ]
 
     for d in data_dirs:

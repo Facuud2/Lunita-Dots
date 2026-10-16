@@ -80,13 +80,30 @@ Item {
         if (!app) return Qt.resolvedUrl("assets/icons/appstore.svg");
         if (app.icon) {
             var ic = String(app.icon);
-            if (ic.indexOf("image://") === 0 || ic.indexOf("file://") === 0 || ic.indexOf("qs:") === 0 || ic.indexOf("/") === 0) {
+            if (ic.indexOf("file://") === 0 || ic.indexOf("image://qspixmap/") === 0 || ic.indexOf("image://qsimage/") === 0) {
                 return ic;
             }
-            return Qt.resolvedUrl("assets/icons/" + ic);
+            if (ic.indexOf("image://icon/") === 0) {
+                var cleanName = ic.substring(13);
+                if (root.dockState && root.dockState.appIconsMap && root.dockState.appIconsMap[cleanName]) {
+                    return root.dockState.appIconsMap[cleanName];
+                }
+            }
+            if (root.dockState && root.dockState.appIconsMap && root.dockState.appIconsMap[ic]) {
+                return root.dockState.appIconsMap[ic];
+            }
+            if (ic.indexOf(".svg") !== -1 || ic.indexOf(".png") !== -1) {
+                return Qt.resolvedUrl("assets/icons/" + ic);
+            }
+        }
+        if (app.clazz && root.dockState && root.dockState.appIconsMap && root.dockState.appIconsMap[app.clazz]) {
+            return root.dockState.appIconsMap[app.clazz];
+        }
+        if (app.id && root.dockState && root.dockState.appIconsMap && root.dockState.appIconsMap[app.id]) {
+            return root.dockState.appIconsMap[app.id];
         }
         if (app.iconFile) return Qt.resolvedUrl("assets/icons/" + app.iconFile);
-        return "image://icon/" + (app.id || app.clazz || "application-x-executable");
+        return Qt.resolvedUrl("assets/icons/appstore.svg");
     }
 
     // ── 1. Inner Clipped Slot Container ──

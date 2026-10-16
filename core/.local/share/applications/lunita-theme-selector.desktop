@@ -9,3 +9,4 @@ Terminal=false
 Categories=Settings;DesktopSettings;
 Keywords=theme;selector;lunita;dots;hyprland;style;apariencia;
 StartupNotify=true
+StartupWMClass=io.lunita.ThemeSelector

@@ -200,17 +200,20 @@ Rectangle {
                         source: {
                             var raw = trayItemDelegate.rawIcon;
                             if (!raw) return "";
+                            if (raw.indexOf("image://qspixmap/") === 0 || raw.indexOf("image://qsimage/") === 0 || raw.indexOf("file://") === 0) {
+                                return raw;
+                            }
                             if (root.dockState.trayIconsMap[raw]) {
                                 return root.dockState.trayIconsMap[raw];
                             }
-                            if (raw.indexOf("image://qsimage/") === 0 || raw.indexOf("file://") === 0) {
-                                return raw;
-                            }
                             var qIdx = raw.indexOf("?");
                             if (qIdx !== -1) {
-                                return raw.substring(0, qIdx);
+                                var base = raw.substring(0, qIdx);
+                                if (root.dockState.trayIconsMap[base]) {
+                                    return root.dockState.trayIconsMap[base];
+                                }
                             }
-                            return raw;
+                            return "";
                         }
                     }
 
