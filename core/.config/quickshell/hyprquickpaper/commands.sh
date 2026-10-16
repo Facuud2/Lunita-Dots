@@ -121,4 +121,21 @@ if [ -n "$STABLE_COPY_PATH" ]; then
     fi
 fi
 
-# --- Tema estático Win11: No utiliza Matugen (paleta estática Fluent/Mica) ---
+# --- Matugen dynamic theming integration (solo lunita-default) ---
+CURRENT_THEME="lunita-default"
+if [ -f "$HOME/.config/lunita/current_theme" ]; then
+    CURRENT_THEME=$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")
+elif [ -f "$HOME/.lunita-theme" ]; then
+    CURRENT_THEME=$(tr -d '[:space:]' < "$HOME/.lunita-theme")
+fi
+CURRENT_THEME="${CURRENT_THEME,,}"
+
+if [ "$CURRENT_THEME" = "lunita-default" ] && command -v matugen &>/dev/null; then
+    if is_video "$WALLPAPER" "$VIDEO_EXT_PATTERN"; then
+        if [ -f "$THUMB" ]; then
+            matugen image "$THUMB" --source-color-index 0 >/dev/null 2>&1 &
+        fi
+    else
+        matugen image "$WALLPAPER" --source-color-index 0 >/dev/null 2>&1 &
+    fi
+fi
