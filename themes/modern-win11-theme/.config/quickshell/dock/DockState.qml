@@ -1433,4 +1433,52 @@ Item {
         root.displayedMonth = now.getMonth();
         root.selectedDay = now.getDate();
     }
+
+    // ==========================================
+    // 16. SYSTEM TRAY ICON RESOLVER
+    // ==========================================
+    readonly property string trayResolverScriptPath: Qt.resolvedUrl("scripts/tray_resolver.py").toString().replace("file://", "")
+    property var trayIconsMap: ({})
+
+    Process {
+        id: trayResolverProc
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: data => {
+                var line = data.trim();
+                if (!line || line.indexOf("|") === -1) return;
+                var parts = line.split("|");
+                if (parts.length >= 2) {
+                    var raw = parts[0];
+                    var resolved = parts.slice(1).join("|").trim();
+                    if (resolved !== "") {
+                        var mapCopy = Object.assign({}, root.trayIconsMap);
+                        mapCopy[raw] = resolved;
+                        root.trayIconsMap = mapCopy;
+                    }
+                }
+            }
+        }
+    }
+
+    function resolveTrayIcons(items) {
+        if (!items || items.length === 0) return;
+        var args = ["python3", root.trayResolverScriptPath, "--batch"];
+        var hasArgs = false;
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            if (item && item.icon) {
+                var iconStr = item.icon.toString();
+                if (iconStr !== "") {
+                    args.push(iconStr);
+                    hasArgs = true;
+                }
+            }
+        }
+        if (hasArgs) {
+            trayResolverProc.command = args;
+            trayResolverProc.running = false;
+            trayResolverProc.running = true;
+        }
+    }
 }

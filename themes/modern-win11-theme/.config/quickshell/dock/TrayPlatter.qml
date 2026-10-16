@@ -1,10 +1,12 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Services.SystemTray
 
 Rectangle {
     id: root
 
     required property var dockState
+    property var panelWindow: null
 
     readonly property real targetWidth: contentRow.implicitWidth + 28
     width: targetWidth
@@ -141,6 +143,130 @@ Rectangle {
                     font.family: "Segoe UI, Inter, sans-serif"
                     font.pixelSize: 11
                     color: "#FFFFFF"
+                }
+            }
+        }
+
+        // 2.5. Background Apps System Tray (Left of Language Indicator, growing right-to-left)
+        Row {
+            id: systemTrayRow
+            height: 38
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 2
+            layoutDirection: Qt.RightToLeft
+            visible: SystemTray.items.values.length > 0
+
+            Repeater {
+                id: trayRepeater
+                model: SystemTray.items.values
+                onCountChanged: {
+                    root.dockState.resolveTrayIcons(SystemTray.items.values);
+                }
+                Component.onCompleted: {
+                    root.dockState.resolveTrayIcons(SystemTray.items.values);
+                }
+
+                delegate: Item {
+                    id: trayItemDelegate
+                    required property var modelData
+                    width: 28
+                    height: 38
+                    property bool isHovered: trayMouseArea.containsMouse
+
+                    property string rawIcon: modelData.icon ? modelData.icon.toString() : ""
+                    onRawIconChanged: {
+                        if (rawIcon !== "") {
+                            root.dockState.resolveTrayIcons(SystemTray.items.values);
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 6
+                        color: trayItemDelegate.isHovered ? Qt.rgba(1, 1, 1, 0.26) : "transparent"
+                        border.color: trayItemDelegate.isHovered ? Qt.rgba(1, 1, 1, 0.35) : "transparent"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                    }
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: 16
+                        height: 16
+                        sourceSize: Qt.size(32, 32)
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        source: {
+                            var raw = trayItemDelegate.rawIcon;
+                            if (!raw) return "";
+                            if (root.dockState.trayIconsMap[raw]) {
+                                return root.dockState.trayIconsMap[raw];
+                            }
+                            if (raw.indexOf("image://qsimage/") === 0 || raw.indexOf("file://") === 0) {
+                                return raw;
+                            }
+                            var qIdx = raw.indexOf("?");
+                            if (qIdx !== -1) {
+                                return raw.substring(0, qIdx);
+                            }
+                            return raw;
+                        }
+                    }
+
+                    MouseArea {
+                        id: trayMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                        onClicked: mouse => {
+                            if (mouse.button === Qt.LeftButton) {
+                                if (trayItemDelegate.modelData.onlyMenu && trayItemDelegate.modelData.hasMenu && root.panelWindow) {
+                                    var pos = parent.mapToItem(null, 0, 0);
+                                    trayItemDelegate.modelData.display(root.panelWindow, Math.round(pos.x), Math.round(pos.y));
+                                } else {
+                                    trayItemDelegate.modelData.activate();
+                                }
+                            } else if (mouse.button === Qt.RightButton) {
+                                if (trayItemDelegate.modelData.hasMenu && root.panelWindow) {
+                                    var posR = parent.mapToItem(null, 0, 0);
+                                    trayItemDelegate.modelData.display(root.panelWindow, Math.round(posR.x), Math.round(posR.y));
+                                } else {
+                                    trayItemDelegate.modelData.secondaryActivate();
+                                }
+                            } else if (mouse.button === Qt.MiddleButton) {
+                                trayItemDelegate.modelData.secondaryActivate();
+                            }
+                        }
+                        onWheel: wheel => {
+                            trayItemDelegate.modelData.scroll(wheel.angleDelta.y, false);
+                        }
+                    }
+
+                    // Tooltip
+                    Rectangle {
+                        readonly property string tipLabel: trayItemDelegate.modelData.tooltipTitle || trayItemDelegate.modelData.title || trayItemDelegate.modelData.id || ""
+                        anchors.bottom: parent.top
+                        anchors.bottomMargin: 8
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: trayItemTip.implicitWidth + 14
+                        height: 22
+                        radius: 5
+                        color: Qt.rgba(0.12, 0.13, 0.16, 0.95)
+                        border.color: Qt.rgba(1, 1, 1, 0.16)
+                        border.width: 1
+                        visible: trayItemDelegate.isHovered && tipLabel !== ""
+                        z: 999
+                        Text {
+                            id: trayItemTip
+                            anchors.centerIn: parent
+                            text: parent.tipLabel
+                            font.family: "Segoe UI, Inter, sans-serif"
+                            font.pixelSize: 11
+                            color: "#FFFFFF"
+                        }
+                    }
                 }
             }
         }
