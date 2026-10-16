@@ -999,39 +999,131 @@ Item {
     }
 
     // ==========================================
-    // 7. SYSTEM TRAY: WI-FI & NETWORK
+    // 7. SYSTEM TRAY: WI-FI & ETHERNET NETWORK
     // ==========================================
+    readonly property string networkScriptPath: Qt.resolvedUrl("scripts/network_manager.py").toString().replace("file://", "")
+
+    property bool ethernetHasDevice: false
+    property bool ethernetConnected: false
+    property string ethernetDevice: ""
+    property string ethernetName: "Ethernet"
+    property string ethernetIp: ""
+
+    property bool wifiHasDevice: false
+    property bool wifiEnabled: true
     property bool wifiConnected: true
+    property string wifiDevice: ""
     property string wifiSsid: "Wi-Fi"
+    property string wifiIp: ""
+    property int wifiSignal: 100
+    property var wifiNetworks: []
+    property bool networkScanning: false
 
     Timer {
         id: wifiTimer
-        interval: 4000
+        interval: 4500
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: wifiProc.running = true
+        onTriggered: root.refreshNetwork()
+    }
+
+    function parseNetworkState(raw) {
+        if (!raw || raw.trim().length === 0) return;
+        try {
+            var parsed = JSON.parse(raw.trim());
+            if (parsed.ethernet) {
+                root.ethernetHasDevice = !!parsed.ethernet.hasDevice;
+                root.ethernetConnected = !!parsed.ethernet.connected;
+                root.ethernetDevice = parsed.ethernet.device || "";
+                root.ethernetName = parsed.ethernet.name || "Ethernet";
+                root.ethernetIp = parsed.ethernet.ip || "";
+            }
+            if (parsed.wifi) {
+                root.wifiHasDevice = !!parsed.wifi.hasDevice;
+                root.wifiEnabled = !!parsed.wifi.enabled;
+                root.wifiConnected = !!parsed.wifi.connected;
+                root.wifiDevice = parsed.wifi.device || "";
+                root.wifiSsid = parsed.wifi.name || (parsed.wifi.connected ? "Wi-Fi" : "Desconectado");
+                root.wifiIp = parsed.wifi.ip || "";
+                root.wifiSignal = parsed.wifi.signal || 0;
+                if (Array.isArray(parsed.wifi.networks)) {
+                    root.wifiNetworks = parsed.wifi.networks;
+                }
+            }
+        } catch (e) {}
     }
 
     Process {
         id: wifiProc
-        command: ["bash", "-c", "nmcli -t -f active,ssid dev wifi 2>/dev/null | grep '^yes' | cut -d: -f2 || ip route get 1.1.1.1 2>/dev/null | awk '{print $5}' || echo 'Online'"]
+        command: ["python3", root.networkScriptPath, "status"]
         stdout: SplitParser {
             onRead: data => {
-                var line = data.trim();
-                if (line && line.length > 0) {
-                    root.wifiConnected = true;
-                    root.wifiSsid = line;
-                } else {
-                    root.wifiConnected = false;
-                    root.wifiSsid = "Desconectado";
-                }
+                root.parseNetworkState(data);
             }
         }
     }
 
-    function openNetwork() {
-        Quickshell.execDetached(["bash", "-c", "nm-connection-editor || kitty -e nmtui &"]);
+    Process {
+        id: networkActionProc
+        stdout: SplitParser {
+            onRead: data => {
+                root.networkScanning = false;
+                root.parseNetworkState(data);
+            }
+        }
+        onExited: {
+            root.networkScanning = false;
+        }
+    }
+
+    function refreshNetwork() {
+        if (!wifiProc.running && !networkActionProc.running) {
+            wifiProc.running = true;
+        }
+    }
+
+    function scanWifiNetworks() {
+        if (networkActionProc.running) return;
+        root.networkScanning = true;
+        networkActionProc.command = ["python3", root.networkScriptPath, "scan"];
+        networkActionProc.running = true;
+    }
+
+    function toggleWifiRadio() {
+        var nextState = !root.wifiEnabled;
+        root.wifiEnabled = nextState;
+        if (!nextState) {
+            root.wifiConnected = false;
+            root.wifiNetworks = [];
+        }
+        networkActionProc.command = ["python3", root.networkScriptPath, "toggle_wifi", nextState ? "on" : "off"];
+        networkActionProc.running = false;
+        networkActionProc.running = true;
+    }
+
+    function connectWifi(ssid, password) {
+        if (!ssid) return;
+        root.networkScanning = true;
+        var args = ["python3", root.networkScriptPath, "connect", ssid];
+        if (password && password.length > 0) {
+            args.push(password);
+        }
+        networkActionProc.command = args;
+        networkActionProc.running = false;
+        networkActionProc.running = true;
+    }
+
+    function disconnectWifi(ssidOrDev) {
+        var target = ssidOrDev || root.wifiSsid || root.wifiDevice;
+        if (!target) return;
+        networkActionProc.command = ["python3", root.networkScriptPath, "disconnect", target];
+        networkActionProc.running = false;
+        networkActionProc.running = true;
+    }
+
+    function openNetwork(screenName) {
+        root.toggleNetworkFlyout(screenName);
     }
 
     // ==========================================
@@ -1081,7 +1173,7 @@ Item {
     // ==========================================
     // 9. GENERAL POPUP ACTIONS & FLYOUTS
     // ==========================================
-    property string activeFlyout: "" // "" | "audio" | "calendar"
+    property string activeFlyout: "" // "" | "audio" | "calendar" | "network"
     property string flyoutScreen: ""
     property bool flyoutOpen: false
     property bool flyoutVisible: false
@@ -1124,6 +1216,22 @@ Item {
             root.flyoutVisible = true;
             root.flyoutOpen = true;
             root.refreshNotifications();
+        }
+    }
+
+    function toggleNetworkFlyout(screenName) {
+        if (root.flyoutOpen && root.activeFlyout === "network" && (root.flyoutScreen === screenName || !screenName)) {
+            root.closeFlyouts();
+        } else {
+            flyoutCloseTimer.stop();
+            root.activeFlyout = "network";
+            root.flyoutScreen = screenName || "";
+            root.flyoutVisible = true;
+            root.flyoutOpen = true;
+            root.refreshNetwork();
+            if (root.wifiEnabled && root.wifiNetworks.length === 0) {
+                root.scanWifiNetworks();
+            }
         }
     }
 
