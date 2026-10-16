@@ -13,7 +13,30 @@ Item {
     property bool isTrash: false
     property bool isFolder: false
     property bool isAdd: false
+    property string dragSection: ""
     property int itemIndex: -1
+
+    readonly property bool isDraggable: root.dragSection !== "" && root.itemIndex >= 0
+    property real dragDeltaX: 0
+
+    readonly property real neighborShiftX: {
+        if (!dockState || !dockState.isDraggingItem || dockState.dragSection !== root.dragSection || mouseArea.isDragging) {
+            return 0
+        }
+        let src = dockState.dragSourceIndex
+        let dst = dockState.dragTargetIndex
+        let myIdx = root.itemIndex
+        if (src < 0 || dst < 0 || myIdx < 0 || src === dst) return 0
+        if (src < dst && myIdx > src && myIdx <= dst) return -54
+        if (src > dst && myIdx >= dst && myIdx < src) return 54
+        return 0
+    }
+
+    property real animatedShiftX: neighborShiftX
+    Behavior on animatedShiftX {
+        enabled: !mouseArea.isDragging && (!dockState || dockState.isDraggingItem)
+        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+    }
 
     readonly property string itemId: isTrash ? "trash"
         : isFolder ? "folder"
@@ -50,18 +73,18 @@ Item {
         if (app && app.iconFile) return Qt.resolvedUrl("assets/icons/" + app.iconFile)
         if (app && app.id) {
             let id = app.id.toLowerCase()
-            if (id === "zen" || id === "safari" || id === "firefox" || id === "browser" || id === "chrome") return Qt.resolvedUrl("assets/icons/safari.svg")
-            if (id === "code" || id === "vscodium" || id === "vscode" || id === "editor" || id === "antigravity" || id === "cursor") return Qt.resolvedUrl("assets/icons/code.svg")
-            if (id === "terminal" || id === "kitty" || id === "alacritty" || id === "term" || id === "foot" || id === "ghostty" || id === "wezterm") return Qt.resolvedUrl("assets/icons/terminal.svg")
-            if (id === "finder" || id === "dolphin" || id === "files" || id === "nautilus" || id === "thunar") return Qt.resolvedUrl("assets/icons/finder.svg")
+            if (id.includes("zen") || id === "safari" || id.includes("firefox") || id === "browser" || id.includes("chrome")) return Qt.resolvedUrl("assets/icons/safari.svg")
+            if (id.includes("code") || id.includes("vscodium") || id.includes("vscode") || id === "editor" || id.includes("antigravity") || id.includes("cursor")) return Qt.resolvedUrl("assets/icons/code.svg")
+            if (id.includes("terminal") || id.includes("kitty") || id.includes("alacritty") || id === "term" || id.includes("foot") || id.includes("ghostty") || id.includes("wezterm")) return Qt.resolvedUrl("assets/icons/terminal.svg")
+            if (id === "finder" || id.includes("dolphin") || id === "files" || id.includes("nautilus") || id.includes("thunar")) return Qt.resolvedUrl("assets/icons/finder.svg")
             if (id === "launchpad" || id === "launcher" || id === "rofi" || id === "apps") return Qt.resolvedUrl("assets/icons/launchpad.svg")
             if (id === "settings" || id === "systemsettings") return Qt.resolvedUrl("assets/icons/settings.svg")
-            if (id === "music" || id === "spotify") return Qt.resolvedUrl("assets/icons/music.svg")
-            if (id === "messages" || id === "telegram" || id === "discord" || id === "vesktop") return Qt.resolvedUrl("assets/icons/messages.svg")
-            if (id === "mail" || id === "thunderbird") return Qt.resolvedUrl("assets/icons/mail.svg")
-            if (id === "photos" || id === "gwenview" || id === "loupe") return Qt.resolvedUrl("assets/icons/photos.svg")
+            if (id === "music" || id.includes("spotify")) return Qt.resolvedUrl("assets/icons/music.svg")
+            if (id === "messages" || id.includes("telegram") || id.includes("discord") || id.includes("vesktop")) return Qt.resolvedUrl("assets/icons/messages.svg")
+            if (id === "mail" || id.includes("thunderbird")) return Qt.resolvedUrl("assets/icons/mail.svg")
+            if (id === "photos" || id.includes("gwenview") || id.includes("loupe")) return Qt.resolvedUrl("assets/icons/photos.svg")
             if (id === "facetime" || id === "camera") return Qt.resolvedUrl("assets/icons/facetime.svg")
-            if (id === "phone" || id === "whatsapp") return Qt.resolvedUrl("assets/icons/phone.svg")
+            if (id === "phone" || id.includes("whatsapp")) return Qt.resolvedUrl("assets/icons/phone.svg")
             if (id === "calendar") return Qt.resolvedUrl("assets/icons/calendar.svg")
             if (id === "contacts") return Qt.resolvedUrl("assets/icons/contacts.svg")
             if (id === "reminders") return Qt.resolvedUrl("assets/icons/reminders.svg")
@@ -96,7 +119,7 @@ Item {
 
     Rectangle {
         id: tooltipPill
-        visible: mouseArea.containsMouse && !mouseArea.isDragging && !root.isContextMenuOnScreen
+        visible: mouseArea.containsMouse && !mouseArea.isDragging && (!dockState || !dockState.isDraggingItem) && !root.isContextMenuOnScreen
         z: 999
         anchors.bottom: iconContainer.top
         anchors.bottomMargin: 6
@@ -131,15 +154,16 @@ Item {
 
         transform: Translate {
             id: iconTranslate
-            x: 0
+            x: mouseArea.isDragging ? root.dragDeltaX : root.animatedShiftX
+            y: mouseArea.isDragging ? -5 : 0
         }
 
         // macOS Halo Highlight on Hover & Drag
-        color: mouseArea.isDragging ? "#38ffffff" : (mouseArea.containsMouse ? "#2effffff" : "transparent")
-        border.color: mouseArea.isDragging ? "#66ffffff" : (mouseArea.containsMouse ? "#4dffffff" : "transparent")
+        color: mouseArea.isDragging ? "#42ffffff" : (mouseArea.containsMouse ? "#2effffff" : "transparent")
+        border.color: mouseArea.isDragging ? "#80ffffff" : (mouseArea.containsMouse ? "#4dffffff" : "transparent")
         border.width: 1
 
-        scale: mouseArea.isDragging ? 1.12 : (mouseArea.pressed ? 0.94 : (mouseArea.containsMouse ? 1.04 : 1.0))
+        scale: mouseArea.isDragging ? 1.15 : (mouseArea.pressed ? 0.94 : (mouseArea.containsMouse ? 1.04 : 1.0))
 
         Behavior on color { ColorAnimation { duration: 140 } }
         Behavior on border.color { ColorAnimation { duration: 140 } }
@@ -169,6 +193,10 @@ Item {
         anchors.bottomMargin: 1
         anchors.horizontalCenter: parent.horizontalCenter
 
+        transform: Translate {
+            x: mouseArea.isDragging ? root.dragDeltaX : root.animatedShiftX
+        }
+
         visible: !isTrash && !isFolder && !isAdd
         opacity: root.isRunning ? 0.95 : 0.0
         color: "#ffffff"
@@ -181,6 +209,7 @@ Item {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
+        preventStealing: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: isDragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
 
@@ -192,9 +221,9 @@ Item {
             pressStartX = mouse.x
             pressStartY = mouse.y
             isDragging = false
+            root.dragDeltaX = 0
 
             if (mouse.button === Qt.RightButton) {
-                // Map center of the icon to the screen window
                 let screenW = (panelWindow && panelWindow.screen) ? panelWindow.screen.width : 1920
                 let winW = panelWindow ? panelWindow.width : 540
                 let dockScreenX = (screenW - winW) / 2
@@ -210,33 +239,41 @@ Item {
         }
 
         onPositionChanged: function(mouse) {
-            if (mouse.buttons & Qt.LeftButton && root.app && root.itemIndex >= 0) {
+            if ((mouse.buttons & Qt.LeftButton) && root.isDraggable && dockState) {
                 let dx = mouse.x - pressStartX
-                if (Math.abs(dx) > 6) {
+                if (!isDragging && Math.abs(dx) > 4) {
                     isDragging = true
-                    iconTranslate.x = dx
+                    dockState.startDrag(root.dragSection, root.itemIndex)
+                }
+                if (isDragging) {
+                    root.dragDeltaX = dx
+                    let steps = Math.round(dx / 54)
+                    dockState.updateDragTarget(root.itemIndex + steps)
                 }
             }
         }
 
         onReleased: function(mouse) {
             if (mouse.button === Qt.LeftButton) {
-                if (isDragging && root.app && dockState && root.itemIndex >= 0) {
-                    let dx = iconTranslate.x
-                    let steps = Math.round(dx / 52)
-                    if (steps !== 0) {
-                        let targetIdx = Math.max(0, Math.min(dockState.pinnedList.length - 1, root.itemIndex + steps))
-                        if (targetIdx !== root.itemIndex) {
-                            dockState.reorderPinnedApp(root.itemIndex, targetIdx)
-                        }
+                if (isDragging && dockState) {
+                    isDragging = false
+                    root.dragDeltaX = 0
+                    dockState.commitDrag()
+                } else {
+                    isDragging = false
+                    root.dragDeltaX = 0
+                    if (Math.abs(mouse.x - pressStartX) < 12 && Math.abs(mouse.y - pressStartY) < 12) {
+                        root.triggerAction()
                     }
-                } else if (!isDragging && Math.abs(mouse.x - pressStartX) < 12 && Math.abs(mouse.y - pressStartY) < 12) {
-                    // Trigger click
-                    root.triggerAction()
                 }
+            }
+        }
 
+        onCanceled: {
+            if (isDragging && dockState) {
                 isDragging = false
-                iconTranslate.x = 0
+                root.dragDeltaX = 0
+                dockState.cancelDrag()
             }
         }
     }

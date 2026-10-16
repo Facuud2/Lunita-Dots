@@ -23,8 +23,8 @@ Scope {
                 id: dockWindow
                 screen: screenScope.modelData
                 color: "transparent"
-                implicitWidth: platter.implicitWidth
-                implicitHeight: 68
+                implicitWidth: platter.implicitWidth + 60
+                implicitHeight: 104
 
                 anchors {
                     bottom: true

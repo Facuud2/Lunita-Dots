@@ -20,7 +20,7 @@ Item {
         height: 64
         width: contentRow.implicitWidth + 20
         radius: 18
-        clip: true
+        clip: false
 
         // Multi-layer frosted liquid glass material
         color: "#30ffffff"
@@ -50,6 +50,7 @@ Item {
                     dockState: root.dockState
                     panelWindow: root.panelWindow
                     app: modelData
+                    dragSection: "main"
                     itemIndex: index
                 }
             }
@@ -61,6 +62,8 @@ Item {
                     dockState: root.dockState
                     panelWindow: root.panelWindow
                     runningApp: modelData
+                    dragSection: "main"
+                    itemIndex: dockState.pinnedList.length + index
                 }
             }
 
@@ -91,6 +94,8 @@ Item {
                     dockState: root.dockState
                     panelWindow: root.panelWindow
                     app: modelData
+                    dragSection: "right"
+                    itemIndex: index
                 }
             }
 

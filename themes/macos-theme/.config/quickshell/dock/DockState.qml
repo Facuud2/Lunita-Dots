@@ -22,6 +22,13 @@ Item {
     property real contextMenuX: 0
     property real contextMenuY: 0
 
+    // ── Live Drag & Reorder State ──
+    property bool isDraggingItem: false
+    property string dragSection: ""
+    property int dragSourceIndex: -1
+    property int dragTargetIndex: -1
+    property var runningOrderKeys: []
+
     // ── Add App Modal State (Per-Monitor Isolated) ──
     property bool addModalVisible: false
     property string addModalScreen: ""
@@ -184,7 +191,7 @@ Item {
         }
     ]
 
-    readonly property var rightStackApps: [
+    property var rightStackApps: [
         {
             id: "shortcuts",
             name: "Atajos",
@@ -338,6 +345,108 @@ Item {
         }
     }
 
+    // ── Live Drag & Drop Reordering Engine ──
+    function getSectionCount(section) {
+        if (section === "main") {
+            return root.pinnedList.length + root.runningList.length
+        }
+        if (section === "right") {
+            return root.rightStackApps.length
+        }
+        return 0
+    }
+
+    function startDrag(section, sourceIdx) {
+        root.closeContextMenu()
+        root.dragSection = section
+        root.dragSourceIndex = sourceIdx
+        root.dragTargetIndex = sourceIdx
+        root.isDraggingItem = true
+    }
+
+    function updateDragTarget(targetIdx) {
+        if (!root.isDraggingItem) return
+        let total = root.getSectionCount(root.dragSection)
+        if (total <= 0) return
+        let clamped = Math.max(0, Math.min(total - 1, targetIdx))
+        if (root.dragTargetIndex !== clamped) {
+            root.dragTargetIndex = clamped
+        }
+    }
+
+    function cancelDrag() {
+        root.isDraggingItem = false
+        root.dragSection = ""
+        root.dragSourceIndex = -1
+        root.dragTargetIndex = -1
+    }
+
+    function commitDrag() {
+        if (!root.isDraggingItem) return
+        let sec = root.dragSection
+        let src = root.dragSourceIndex
+        let dst = root.dragTargetIndex
+        root.cancelDrag()
+
+        if (src === dst || src < 0 || dst < 0) return
+
+        if (sec === "right") {
+            if (src < root.rightStackApps.length && dst < root.rightStackApps.length) {
+                let copy = root.rightStackApps.slice()
+                let item = copy.splice(src, 1)[0]
+                copy.splice(dst, 0, item)
+                root.rightStackApps = copy
+            }
+            return
+        }
+
+        if (sec === "main") {
+            let pLen = root.pinnedList.length
+            let rLen = root.runningList.length
+
+            // Case 1: Dragging a pinned app
+            if (src < pLen) {
+                let targetPinnedIdx = Math.max(0, Math.min(pLen - 1, dst))
+                if (src !== targetPinnedIdx) {
+                    root.reorderPinnedApp(src, targetPinnedIdx)
+                }
+                return
+            }
+
+            // Case 2: Dragging a running unpinned app
+            let rSrc = src - pLen
+            if (rSrc >= 0 && rSrc < rLen) {
+                let runObj = root.runningList[rSrc]
+                // If dragged into the pinned apps region, pin & insert at that position
+                if (dst < pLen && runObj) {
+                    let newId = (runObj.clazz || runObj.name || "app").toLowerCase().replace(/[^a-z0-9_-]/g, "-")
+                    let newPinned = {
+                        id: newId,
+                        name: runObj.name || runObj.clazz,
+                        fallbackIcon: runObj.icon || newId,
+                        cmd: "gtk-launch " + runObj.clazz + " || " + runObj.clazz,
+                        matchClasses: [(runObj.clazz || "").toLowerCase()]
+                    }
+                    let copy = root.pinnedList.slice()
+                    copy.splice(dst, 0, newPinned)
+                    root.pinnedList = copy
+                    root.savePinnedApps()
+                    root.updateRunningUnpinned(root.hyprClients)
+                } else {
+                    // Reorder within runningList
+                    let rDst = Math.max(0, Math.min(rLen - 1, dst - pLen))
+                    if (rSrc !== rDst) {
+                        let rCopy = root.runningList.slice()
+                        let moved = rCopy.splice(rSrc, 1)[0]
+                        rCopy.splice(rDst, 0, moved)
+                        root.runningOrderKeys = rCopy.map(function(it) { return (it.clazz || "").toLowerCase() })
+                        root.runningList = rCopy
+                    }
+                }
+            }
+        }
+    }
+
     // ── Hyprland Running Clients Sync ──
     Process {
         id: clientsProc
@@ -348,7 +457,9 @@ Item {
                     let parsed = JSON.parse(text)
                     if (Array.isArray(parsed)) {
                         root.hyprClients = parsed
-                        root.updateRunningUnpinned(parsed)
+                        if (!root.isDraggingItem) {
+                            root.updateRunningUnpinned(parsed)
+                        }
                     }
                 } catch (e) {}
             }
@@ -361,7 +472,9 @@ Item {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            clientsProc.running = true
+            if (!root.isDraggingItem) {
+                clientsProc.running = true
+            }
             root.updateTrashCount()
         }
     }
@@ -491,6 +604,19 @@ Item {
                 }
             }
         }
+
+        if (root.runningOrderKeys && root.runningOrderKeys.length > 0) {
+            unpinned.sort(function(a, b) {
+                let ka = (a.clazz || "").toLowerCase()
+                let kb = (b.clazz || "").toLowerCase()
+                let ia = root.runningOrderKeys.indexOf(ka)
+                let ib = root.runningOrderKeys.indexOf(kb)
+                if (ia === -1) ia = 9999
+                if (ib === -1) ib = 9999
+                return ia - ib
+            })
+        }
+
         root.runningList = unpinned
     }
 

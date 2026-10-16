@@ -267,7 +267,7 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_022_FIX`
 - **Módulo(s):** macOS-Theme / Dock
-- **Archivos Afectados:** `themes/macos-theme/.config/quickshell/dock/shell.qml`, `themes/macos-theme/.config/quickshell/dock/DockState.qml`, `themes/macos-theme/.config/quickshell/dock/DockItem.qml`, `themes/macos-theme/.config/quickshell/dock/DockContextMenu.qml`, `themes/macos-theme/.config/quickshell/dock/DockAddAppModal.qml`
+- **Archivos Afectados:** `themes/macos-theme/.config/quickshell/dock/shell.qml`, `themes/macos-theme/.config/quickshell/dock/DockPlatter.qml`, `themes/macos-theme/.config/quickshell/dock/DockState.qml`, `themes/macos-theme/.config/quickshell/dock/DockItem.qml`, `themes/macos-theme/.config/quickshell/dock/DockContextMenu.qml`, `themes/macos-theme/.config/quickshell/dock/DockAddAppModal.qml`
 - **Descripción:** El estado interactivo del Dock (como la apertura de menús contextuales al hacer clic derecho o estados de hover/activación) se comparte globalmente entre todas las pantallas, provocando que el menú se despliegue simultáneamente en todos los monitores conectados. Se debe encapsular el estado de cada instancia del Dock localmente por monitor (`ShellScreen` / instancia de `PanelWindow`).
 - **Criterios de Aceptación:**
   1. Hacer clic derecho sobre un icono del Dock abre el menú contextual únicamente en el monitor donde ocurrió la interacción.

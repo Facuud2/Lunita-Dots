@@ -191,31 +191,7 @@ Item {
             }
 
             MenuSeparator {
-                visible: dockState ? (!dockState.contextMenuIsTrash && !dockState.contextMenuIsFolder) : false
-            }
-
-            // Reorder: Move Left
-            MenuItemBtn {
-                visible: menuLayout.pinnedIdx > 0
-                label: "Mover a la izquierda"
-                iconSource: "image://icon/go-previous"
-                onClicked: {
-                    let appId = menuLayout.curApp ? menuLayout.curApp.id : ""
-                    dockState.closeContextMenu()
-                    if (appId) dockState.movePinnedApp(appId, -1)
-                }
-            }
-
-            // Reorder: Move Right
-            MenuItemBtn {
-                visible: (dockState && menuLayout.pinnedIdx >= 0 && menuLayout.pinnedIdx < dockState.pinnedList.length - 1)
-                label: "Mover a la derecha"
-                iconSource: "image://icon/go-next"
-                onClicked: {
-                    let appId = menuLayout.curApp ? menuLayout.curApp.id : ""
-                    dockState.closeContextMenu()
-                    if (appId) dockState.movePinnedApp(appId, 1)
-                }
+                visible: dockState ? (!dockState.contextMenuIsTrash && !dockState.contextMenuIsFolder && (menuLayout.pinnedIdx >= 0 || !!menuLayout.curRunning)) : false
             }
 
             // Unpin from Dock
