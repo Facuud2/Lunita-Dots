@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28" fill="none">
-  <!-- Subtle circular outline -->
-  <circle cx="14" cy="14" r="12" stroke="#053B55" stroke-width="1.3" opacity="0.45"/>
-  <!-- Three dots -->
-  <circle cx="9.5" cy="14" r="1.5" fill="#053B55"/>
-  <circle cx="14" cy="14" r="1.5" fill="#053B55"/>
-  <circle cx="18.5" cy="14" r="1.5" fill="#053B55"/>
-</svg>

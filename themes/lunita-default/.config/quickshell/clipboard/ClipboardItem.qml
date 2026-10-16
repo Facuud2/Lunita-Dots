@@ -11,46 +11,99 @@ Item {
 
     readonly property var itemData: modelData
     readonly property bool isSelected: index === clipboardState.selectedIndex
+    readonly property string itemType: (root.itemData && root.itemData.type) ? root.itemData.type : "text"
 
-    implicitWidth: parent ? parent.width : 540
-    implicitHeight: 48
+    readonly property color badgeBgColor: {
+        if (itemType === "image") return root.clipboardState.badgeImageBg;
+        if (itemType === "code") return root.clipboardState.badgeCodeBg;
+        if (itemType === "link" || itemType === "url") return root.clipboardState.badgeLinkBg;
+        return root.clipboardState.badgeTextBg;
+    }
 
-    // ── Selection / Hover Pill Background ──
+    readonly property color badgeFgColor: {
+        if (itemType === "image") return root.clipboardState.badgeImageFg;
+        if (itemType === "code") return root.clipboardState.badgeCodeFg;
+        if (itemType === "link" || itemType === "url") return root.clipboardState.badgeLinkFg;
+        return root.clipboardState.badgeTextFg;
+    }
+
+    readonly property color badgeBorderColor: {
+        if (itemType === "image") return root.clipboardState.badgeImageBorder;
+        if (itemType === "code") return root.clipboardState.badgeCodeBorder;
+        if (itemType === "link" || itemType === "url") return root.clipboardState.badgeLinkBorder;
+        return root.clipboardState.badgeTextBorder;
+    }
+
+    readonly property color tagFgColor: {
+        if (itemType === "image") return root.clipboardState.badgeImageFg;
+        if (itemType === "code") return root.clipboardState.badgeCodeFg;
+        if (itemType === "link" || itemType === "url") return root.clipboardState.badgeLinkFg;
+        return root.clipboardState.badgeTextFg;
+    }
+
+    readonly property string badgeIconGlyph: {
+        if (itemType === "image") return "image";
+        if (itemType === "code") return "code";
+        if (itemType === "link" || itemType === "url") return "link";
+        return "description";
+    }
+
+    readonly property string badgeTagText: {
+        if (root.itemData && root.itemData.tag) return root.itemData.tag;
+        if (itemType === "image") return "IMAGEN";
+        if (itemType === "code") return "CÓDIGO";
+        if (itemType === "link" || itemType === "url") return "ENLACE";
+        return "TEXTO";
+    }
+
+    implicitWidth: parent ? parent.width : 428
+    implicitHeight: 54
+
+    // ── Row Card Background (.cliphist-row) ──
     Rectangle {
-        id: pillBg
+        id: rowBg
         anchors.fill: parent
-        anchors.leftMargin: 8
-        anchors.rightMargin: 8
         anchors.topMargin: 1
         anchors.bottomMargin: 1
-        radius: 10
-        visible: root.isSelected || itemMouseArea.containsMouse
+        radius: 14
         color: root.isSelected
             ? root.clipboardState.selectedBgColor
-            : root.clipboardState.itemHoverBg
+            : (itemMouseArea.containsMouse ? root.clipboardState.itemHoverBg : root.clipboardState.rowBgColor)
         border.color: root.isSelected
             ? root.clipboardState.selectedBorderColor
-            : "transparent"
+            : root.clipboardState.rowBorderColor
         border.width: 1
 
-        Behavior on color {
-            ColorAnimation { duration: 80 }
+        // Vivid left accent pill when selected
+        Rectangle {
+            visible: root.isSelected
+            width: 3
+            height: 24
+            radius: 2
+            anchors.left: parent.left
+            anchors.leftMargin: 3
+            anchors.verticalCenter: parent.verticalCenter
+            color: root.clipboardState.accentRedBright
         }
     }
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 18
-        anchors.rightMargin: 18
-        spacing: 12
+        anchors.leftMargin: 12
+        anchors.rightMargin: 10
+        spacing: 10
 
-        // ── Item Type / App Icon ──
-        Item {
-            implicitWidth: 30
-            implicitHeight: 30
+        // ── 1. Type Badge Icon (.cliphist-type-icon) ──
+        Rectangle {
+            id: typeIconBox
+            Layout.preferredWidth: 32
+            Layout.preferredHeight: 32
             Layout.alignment: Qt.AlignVCenter
+            radius: 10
+            color: root.badgeBgColor
+            border.color: root.badgeBorderColor
+            border.width: 1
 
-            // If it is an image with thumbnail
             Image {
                 id: thumbImg
                 visible: !!(root.itemData && root.itemData.thumbnail && root.itemData.thumbnail.length > 0)
@@ -63,147 +116,94 @@ Item {
                 layer.enabled: true
                 layer.effect: OpacityMask {
                     maskSource: Rectangle {
-                        width: 30
-                        height: 30
-                        radius: 6
+                        width: 32
+                        height: 32
+                        radius: 10
                     }
                 }
             }
 
-            // Normal SVG Icon
-            Image {
-                id: svgIcon
+            Text {
                 visible: !thumbImg.visible
                 anchors.centerIn: parent
-                width: 28
-                height: 28
-                source: {
-                    if (!root.itemData) return "assets/document.svg";
-                    var iconName = root.itemData.icon || "document";
-                    switch(iconName) {
-                        case "safari": return "assets/safari.svg";
-                        case "photo": return "assets/photo.svg";
-                        case "terminal": return "assets/terminal.svg";
-                        case "code": return "assets/code.svg";
-                        default: return "assets/document.svg";
-                    }
-                }
-                sourceSize.width: 56
-                sourceSize.height: 56
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                mipmap: true
+                text: root.badgeIconGlyph
+                font.family: root.clipboardState.fontIcons
+                font.pixelSize: 16
+                color: root.badgeFgColor
             }
         }
 
-        // ── Text Title & Subtitle Column ──
+        // ── 2. Text Content Column (Tag + Timestamp on top, Preview below) ──
         ColumnLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
             spacing: 2
 
-            Text {
-                text: (root.itemData && root.itemData.title) ? root.itemData.title : ""
-                color: root.isSelected ? root.clipboardState.selectedTextColor : root.clipboardState.textColor
-                font.family: "SF Pro Display, Inter, -apple-system, sans-serif"
-                font.styleName: "Regular"
-                font.pixelSize: 13
-                font.weight: Font.Medium
-                font.italic: false
-                elide: Text.ElideRight
+            RowLayout {
                 Layout.fillWidth: true
+                spacing: 8
+
+                Text {
+                    text: root.badgeTagText
+                    font.family: root.clipboardState.fontDots
+                    font.pixelSize: 9
+                    font.letterSpacing: 0.8
+                    font.weight: Font.Bold
+                    color: root.tagFgColor
+                }
+
+                Text {
+                    text: (root.itemData && root.itemData.timestamp) ? root.itemData.timestamp : ""
+                    font.family: root.clipboardState.fontUi
+                    font.pixelSize: 10
+                    font.letterSpacing: 0.2
+                    color: root.clipboardState.textFaintColor
+                }
+
+                Item { Layout.fillWidth: true }
             }
 
             Text {
-                text: (root.itemData && root.itemData.subtitle) ? root.itemData.subtitle : ""
-                color: root.isSelected ? root.clipboardState.selectedSubColor : root.clipboardState.textDimColor
-                font.family: "SF Pro Display, Inter, -apple-system, sans-serif"
-                font.styleName: "Regular"
-                font.pixelSize: 11
-                font.weight: Font.Normal
-                font.italic: false
+                text: (root.itemData && root.itemData.title) ? root.itemData.title : ""
+                color: root.clipboardState.textColor
+                font.family: root.clipboardState.fontUi
+                font.pixelSize: 12
+                font.weight: root.isSelected ? Font.Medium : Font.Normal
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
         }
 
-        // ── Right Action Buttons (Delete "✕" & Copy Badge) ──
+        // ── 3. Action Buttons (.cliphist-row-actions) ──
         RowLayout {
-            implicitHeight: 24
             Layout.alignment: Qt.AlignVCenter
-            spacing: 6
+            spacing: 4
 
-            // ── ✕ Delete Button ──
+            // Copy & Paste Button (.cliphist-copy-btn)
             Rectangle {
-                id: deleteBtn
-                implicitWidth: 22
-                implicitHeight: 22
-                radius: 11
-                color: deleteBtnMouse.containsMouse
-                    ? Qt.rgba(0.85, 0.18, 0.18, 0.90)
-                    : (root.isSelected ? Qt.rgba(5, 59, 85, 0.22) : Qt.rgba(5, 59, 85, 0.12))
+                id: copyBtn
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
+                radius: 8
+                color: copyBtnMouse.containsMouse
+                    ? root.clipboardState.copyBtnHoverBg
+                    : root.clipboardState.actionBtnBg
+                border.color: copyBtnMouse.containsMouse
+                    ? root.clipboardState.copyBtnHoverBorder
+                    : root.clipboardState.actionBtnBorder
+                border.width: 1
 
-                opacity: (root.isSelected || itemMouseArea.containsMouse || deleteBtnMouse.containsMouse) ? 1.0 : 0.40
-                scale: deleteBtnMouse.pressed ? 0.90 : (deleteBtnMouse.containsMouse ? 1.08 : 1.0)
-
-                Behavior on opacity {
-                    NumberAnimation { duration: 100 }
-                }
-                Behavior on scale {
-                    NumberAnimation { duration: 80 }
-                }
-                Behavior on color {
-                    ColorAnimation { duration: 80 }
-                }
+                Behavior on color { ColorAnimation { duration: 140 } }
+                Behavior on border.color { ColorAnimation { duration: 140 } }
 
                 Text {
                     anchors.centerIn: parent
-                    anchors.verticalCenterOffset: -0.5
-                    text: "✕"
-                    font.family: "SF Pro Display, Inter, -apple-system, sans-serif"
-                    font.pixelSize: 10
-                    font.weight: Font.Bold
-                    color: deleteBtnMouse.containsMouse ? "#FFFFFF" : root.clipboardState.textColor
-                }
-
-                MouseArea {
-                    id: deleteBtnMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    preventStealing: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (root.itemData && root.itemData.id) {
-                            root.clipboardState.deleteItem(root.itemData.id);
-                        }
-                    }
-                }
-            }
-
-            // ── Copy Badge ──
-            Rectangle {
-                id: copyBtn
-                implicitWidth: 22
-                implicitHeight: 22
-                radius: 11
-                color: copyBtnMouse.containsMouse
-                    ? Qt.rgba(5, 59, 85, 0.55)
-                    : root.clipboardState.copyBtnBg
-
-                scale: copyBtnMouse.pressed ? 0.90 : (copyBtnMouse.containsMouse ? 1.08 : 1.0)
-                Behavior on scale {
-                    NumberAnimation { duration: 80 }
-                }
-
-                Image {
-                    anchors.centerIn: parent
-                    width: 12
-                    height: 12
-                    source: "assets/copy.svg"
-                    sourceSize.width: 24
-                    sourceSize.height: 24
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
+                    text: "content_copy"
+                    font.family: root.clipboardState.fontIcons
+                    font.pixelSize: 15
+                    color: copyBtnMouse.containsMouse
+                        ? root.clipboardState.textColor
+                        : root.clipboardState.textDimColor
                 }
 
                 MouseArea {
@@ -219,10 +219,48 @@ Item {
                     }
                 }
             }
+
+            // Delete Button (.cliphist-del-btn)
+            Rectangle {
+                id: deleteBtn
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
+                radius: 8
+                color: deleteBtnMouse.containsMouse
+                    ? root.clipboardState.delBtnHoverBg
+                    : root.clipboardState.actionBtnBg
+                border.color: deleteBtnMouse.containsMouse
+                    ? root.clipboardState.delBtnHoverBorder
+                    : root.clipboardState.actionBtnBorder
+                border.width: 1
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "delete"
+                    font.family: root.clipboardState.fontIcons
+                    font.pixelSize: 15
+                    color: deleteBtnMouse.containsMouse
+                        ? root.clipboardState.accentRedBright
+                        : root.clipboardState.textDimColor
+                }
+
+                MouseArea {
+                    id: deleteBtnMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    preventStealing: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (root.itemData && root.itemData.id) {
+                            root.clipboardState.deleteItem(root.itemData.id);
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // ── Row MouseArea for Row Selection / Click-to-Paste ──
+    // ── Row MouseArea for Hover Selection & Click-to-Paste ──
     MouseArea {
         id: itemMouseArea
         anchors.fill: parent
