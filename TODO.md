@@ -325,11 +325,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-027] Vincular botón "Widgets y Aplicaciones" con la edición de widgets de escritorio
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
 - **Rama Sugerida:** `ISSUE_027_FEAT`
 - **Módulo(s):** Modern-Win11-Theme / Dock / Widgets
-- **Archivos Afectados:** `themes/Modern-Win11-Theme/.config/quickshell/dock/` (Archivos QML), `core/.local/bin/lunita-widgets-toggle`, `core/.local/bin/lunita-widgets-manager`
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/dock/TrayPlatter.qml`, `themes/modern-win11-theme/.config/quickshell/dock/DockState.qml`, `core/.local/bin/lunita-widgets-toggle`, `core/.local/bin/lunita-widgets-manager`
 - **Descripción:** Conectar la acción del botón "Widgets y Aplicaciones" presente en la dock bar del tema Windows 11 para que invoque el modo de modificación/gestión de los widgets del escritorio.
 - **Criterios de Aceptación:**
   1. Hacer clic en el botón "Widgets y Aplicaciones" activa la edición o el panel gestor de los widgets en pantalla de forma directa.
