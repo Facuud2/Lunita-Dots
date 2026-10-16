@@ -477,7 +477,12 @@ Item {
 
     function resolveTrayIcons(iconsList) {
         if (!iconsList || iconsList.length === 0) return;
-        var cmd = ["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/tray_resolver.py"].concat(iconsList);
+        var scriptUrl = Qt.resolvedUrl("scripts/tray_resolver.py").toString();
+        var scriptPath = scriptUrl.indexOf("file://") === 0
+            ? scriptUrl.substring(7)
+            : (Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/tray_resolver.py");
+        var cmd = ["python3", scriptPath].concat(iconsList);
+        trayResolveProc.running = false;
         trayResolveProc.command = cmd;
         trayResolveProc.running = true;
     }

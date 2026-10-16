@@ -275,11 +275,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-023] Integración de System Tray Icons en la barra superior de macOS
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
 - **Rama Sugerida:** `ISSUE_023_FEAT`
 - **Módulo(s):** macOS-Theme / Bar (System Tray)
-- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/bar/` (Archivos QML)
+- **Archivos Afectados:** `themes/macos-theme/.config/quickshell/bar/BarView.qml`, `themes/macos-theme/.config/quickshell/bar/BarState.qml`, `themes/macos-theme/.config/quickshell/bar/shell.qml`, `themes/macos-theme/.config/quickshell/bar/scripts/tray_resolver.py`, `themes/macos-theme/.config/quickshell/bar/scripts/resolve_all_tray.sh`
 - **Descripción:** Implementar el contenedor de iconos de bandeja del sistema (`Quickshell.Services.SystemTray`) para procesos en segundo plano dentro de la Status Bar superior. Debe ubicarse inmediatamente a la izquierda del primer icono de control (el botón de acomodar/editar widgets), desplegando cada nuevo icono en dirección hacia la izquierda de la barra.
 - **Criterios de Aceptación:**
   1. Los procesos activos en segundo plano (Discord, clientes de red, etc.) renderizan sus iconos en la barra superior.
