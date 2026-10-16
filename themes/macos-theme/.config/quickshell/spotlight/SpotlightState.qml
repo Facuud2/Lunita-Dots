@@ -136,7 +136,14 @@ Item {
         if (!it) return;
         
         if (it.action) {
-            Quickshell.execDetached(["bash", "-c", it.action]);
+            let envPrefix = "if [ -z \"${DISPLAY:-}\" ]; then " +
+                "disp=\"$(systemctl --user show-environment 2>/dev/null | sed -n 's/^DISPLAY=//p' | head -n 1 || true)\"; " +
+                "if [ -z \"$disp\" ]; then " +
+                "for s in /tmp/.X11-unix/X*[0-9]; do if [ -S \"$s\" ] && [ -O \"$s\" ]; then disp=\":${s##*X}\"; break; fi; done; " +
+                "fi; " +
+                "[ -n \"$disp\" ] && export DISPLAY=\"$disp\"; " +
+                "fi; "
+            Quickshell.execDetached(["bash", "-c", envPrefix + "(" + it.action + ") &"]);
         }
         
         if (it.type === "app" && it.metadata && it.metadata.path) {

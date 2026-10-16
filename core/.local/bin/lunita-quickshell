@@ -137,6 +137,26 @@ wait_for_wayland() {
     return 1
 }
 
+ensure_display() {
+    if [ -z "${DISPLAY:-}" ]; then
+        local disp=""
+        if command -v systemctl >/dev/null 2>&1; then
+            disp="$(systemctl --user show-environment 2>/dev/null | sed -n 's/^DISPLAY=//p' | head -n 1 || true)"
+        fi
+        if [ -z "$disp" ]; then
+            for s in /tmp/.X11-unix/X*[0-9]; do
+                if [ -S "$s" ] && [ -O "$s" ]; then
+                    disp=":${s##*X}"
+                    break
+                fi
+            done
+        fi
+        if [ -n "$disp" ]; then
+            export DISPLAY="$disp"
+        fi
+    fi
+}
+
 get_component_pid() {
     local comp="$1"
     local pid=""
@@ -224,6 +244,7 @@ cmd_start() {
     fi
 
     wait_for_wayland
+    ensure_display
 
     local current_theme
     current_theme="$(get_active_theme)"

@@ -12,8 +12,9 @@ Item {
     property int trashCount: 0
     property var hyprClients: []
 
-    // ── Active Context Menu State ──
+    // ── Active Context Menu State (Per-Monitor Isolated) ──
     property bool contextMenuVisible: false
+    property string contextMenuScreen: ""
     property var contextMenuApp: null
     property var contextMenuRunning: null
     property bool contextMenuIsTrash: false
@@ -21,8 +22,16 @@ Item {
     property real contextMenuX: 0
     property real contextMenuY: 0
 
-    // ── Add App Modal State ──
+    // ── Live Drag & Reorder State ──
+    property bool isDraggingItem: false
+    property string dragSection: ""
+    property int dragSourceIndex: -1
+    property int dragTargetIndex: -1
+    property var runningOrderKeys: []
+
+    // ── Add App Modal State (Per-Monitor Isolated) ──
     property bool addModalVisible: false
+    property string addModalScreen: ""
     property string addModalQuery: ""
     property var installedAppsList: []
 
@@ -45,12 +54,11 @@ Item {
             matchClasses: []
         },
         {
-            id: "safari",
-            name: "Safari",
-            iconFile: "safari.svg",
-            fallbackIcon: "web-browser",
-            cmd: "zen-browser || firefox || google-chrome-stable",
-            matchClasses: ["zen", "zen-alpha", "zen-browser", "firefox", "google-chrome", "chromium", "brave-browser"]
+            id: "zen",
+            name: "Zen Browser",
+            fallbackIcon: "zen-browser",
+            cmd: "zen-browser || gtk-launch zen.desktop || gtk-launch zen",
+            matchClasses: ["zen", "zen-alpha", "zen-browser"]
         },
         {
             id: "messages",
@@ -151,10 +159,16 @@ Item {
         {
             id: "code",
             name: "Visual Studio Code",
-            iconFile: "code.svg",
-            fallbackIcon: "text-editor",
-            cmd: "antigravity || code || vscodium",
-            matchClasses: ["antigravity", "code", "Code", "vscodium", "neovim", "cursor"]
+            fallbackIcon: "vscode",
+            cmd: "code || vscodium",
+            matchClasses: ["code", "Code", "vscodium"]
+        },
+        {
+            id: "antigravity",
+            name: "Antigravity",
+            fallbackIcon: "antigravity",
+            cmd: "antigravity",
+            matchClasses: ["antigravity"]
         },
         {
             id: "appstore",
@@ -182,7 +196,7 @@ Item {
         }
     ]
 
-    readonly property var rightStackApps: [
+    property var rightStackApps: [
         {
             id: "shortcuts",
             name: "Atajos",
@@ -252,8 +266,54 @@ Item {
             const parsed = JSON.parse(raw)
             if (Array.isArray(parsed) && parsed.length > 0) {
                 root.hasLoadedFromDisk = true
+                let cleaned = parsed.map(function(item) {
+                    if (!item) return item
+                    let itemId = (item.id || "").toLowerCase()
+                    let itemName = (item.name || "").toLowerCase()
+                    let itemCmd = (item.cmd || "").toLowerCase()
+
+                    // Corrección específica para Zen Browser
+                    if (itemId === "zen" || itemName.includes("zen") || itemCmd.includes("zen")) {
+                        item.fallbackIcon = "zen-browser"
+                        item.cmd = "zen-browser || gtk-launch zen.desktop || gtk-launch zen"
+                        delete item.iconFile
+                        item.matchClasses = ["zen", "zen-alpha", "zen-browser"]
+                    }
+
+                    // Corrección específica para Visual Studio Code
+                    if (itemId === "code" || itemName.includes("visual studio code")) {
+                        item.fallbackIcon = "vscode"
+                        delete item.iconFile
+                        if (Array.isArray(item.matchClasses)) {
+                            item.matchClasses = item.matchClasses.filter(function(c) { return c.toLowerCase() !== "antigravity" })
+                        }
+                        if (item.cmd && item.cmd.includes("antigravity")) {
+                            item.cmd = "code || vscodium"
+                        }
+                    }
+
+                    // Corrección específica para Antigravity
+                    if (itemId === "antigravity" || itemName.includes("antigravity")) {
+                        item.fallbackIcon = "antigravity"
+                        delete item.iconFile
+                        item.cmd = "antigravity"
+                        item.matchClasses = ["antigravity"]
+                    }
+
+                    // Sanear gtk-launch general (evitar encerrar pipes || o && en comillas)
+                    if (item.cmd) {
+                        let c = item.cmd.trim()
+                        if (c.startsWith("gtk-launch ") && !c.includes("'") && !c.includes('"') && !c.includes("||") && !c.includes("&&") && !c.includes(";")) {
+                            let arg = c.substring(11).trim()
+                            if (arg.includes(" ")) {
+                                item.cmd = "gtk-launch \"" + arg + "\""
+                            }
+                        }
+                    }
+                    return item
+                })
                 root.pinnedList = []
-                root.pinnedList = parsed
+                root.pinnedList = cleaned
             }
         } catch (e) {
             console.warn("[DockState] Falló lectura de dock-pinned.json:", e)
@@ -336,6 +396,118 @@ Item {
         }
     }
 
+    // ── Live Drag & Drop Reordering Engine ──
+    function getSectionCount(section) {
+        if (section === "main") {
+            return root.pinnedList.length + root.runningList.length
+        }
+        if (section === "right") {
+            return root.rightStackApps.length
+        }
+        return 0
+    }
+
+    function startDrag(section, sourceIdx) {
+        root.closeContextMenu()
+        root.dragSection = section
+        root.dragSourceIndex = sourceIdx
+        root.dragTargetIndex = sourceIdx
+        root.isDraggingItem = true
+    }
+
+    function updateDragTarget(targetIdx) {
+        if (!root.isDraggingItem) return
+        let total = root.getSectionCount(root.dragSection)
+        if (total <= 0) return
+        let clamped = Math.max(0, Math.min(total - 1, targetIdx))
+        if (root.dragTargetIndex !== clamped) {
+            root.dragTargetIndex = clamped
+        }
+    }
+
+    function cancelDrag() {
+        root.isDraggingItem = false
+        root.dragSection = ""
+        root.dragSourceIndex = -1
+        root.dragTargetIndex = -1
+    }
+
+    function commitDrag() {
+        if (!root.isDraggingItem) return
+        let sec = root.dragSection
+        let src = root.dragSourceIndex
+        let dst = root.dragTargetIndex
+        root.cancelDrag()
+
+        if (src === dst || src < 0 || dst < 0) return
+
+        if (sec === "right") {
+            if (src < root.rightStackApps.length && dst < root.rightStackApps.length) {
+                let copy = root.rightStackApps.slice()
+                let item = copy.splice(src, 1)[0]
+                copy.splice(dst, 0, item)
+                root.rightStackApps = copy
+            }
+            return
+        }
+
+        if (sec === "main") {
+            let pLen = root.pinnedList.length
+            let rLen = root.runningList.length
+
+            // Case 1: Dragging a pinned app
+            if (src < pLen) {
+                let targetPinnedIdx = Math.max(0, Math.min(pLen - 1, dst))
+                if (src !== targetPinnedIdx) {
+                    root.reorderPinnedApp(src, targetPinnedIdx)
+                }
+                return
+            }
+
+            // Case 2: Dragging a running unpinned app
+            let rSrc = src - pLen
+            if (rSrc >= 0 && rSrc < rLen) {
+                let runObj = root.runningList[rSrc]
+                // If dragged into the pinned apps region, pin & insert at that position
+                if (dst < pLen && runObj) {
+                    let runCls = (runObj.clazz || "").toLowerCase()
+                    let matchedInstalled = null
+                    for (let i = 0; i < root.installedAppsList.length; i++) {
+                        let itm = root.installedAppsList[i]
+                        if (itm.matchClasses && itm.matchClasses.indexOf(runCls) !== -1) {
+                            matchedInstalled = itm
+                            break
+                        }
+                    }
+                    let newId = matchedInstalled ? matchedInstalled.id : (runObj.clazz || runObj.name || "app").toLowerCase().replace(/[^a-z0-9_-]/g, "-")
+                    let newPinned = {
+                        id: newId,
+                        name: matchedInstalled ? matchedInstalled.displayName : (runObj.name || runObj.clazz),
+                        iconPath: matchedInstalled ? matchedInstalled.iconPath : "",
+                        fallbackIcon: matchedInstalled ? matchedInstalled.iconName : (runObj.icon || newId),
+                        cmd: matchedInstalled ? matchedInstalled.cmd : ("gtk-launch " + runObj.clazz + " || " + runObj.clazz),
+                        matchClasses: [runCls]
+                    }
+                    let copy = root.pinnedList.slice()
+                    copy.splice(dst, 0, newPinned)
+                    root.pinnedList = copy
+                    root.savePinnedApps()
+                    root.updateRunningUnpinned(root.hyprClients)
+                } else {
+                    // Reorder within runningList
+                    let rDst = Math.max(0, Math.min(rLen - 1, dst - pLen))
+                    if (rSrc !== rDst) {
+                        let rCopy = root.runningList.slice()
+                        let moved = rCopy.splice(rSrc, 1)[0]
+                        rCopy.splice(rDst, 0, moved)
+                        root.runningOrderKeys = rCopy.map(function(it) { return (it.clazz || "").toLowerCase() })
+                        root.runningList = rCopy
+                    }
+                }
+            }
+        }
+    }
+
     // ── Hyprland Running Clients Sync ──
     Process {
         id: clientsProc
@@ -346,7 +518,9 @@ Item {
                     let parsed = JSON.parse(text)
                     if (Array.isArray(parsed)) {
                         root.hyprClients = parsed
-                        root.updateRunningUnpinned(parsed)
+                        if (!root.isDraggingItem) {
+                            root.updateRunningUnpinned(parsed)
+                        }
                     }
                 } catch (e) {}
             }
@@ -359,7 +533,9 @@ Item {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            clientsProc.running = true
+            if (!root.isDraggingItem) {
+                clientsProc.running = true
+            }
             root.updateTrashCount()
         }
     }
@@ -489,6 +665,19 @@ Item {
                 }
             }
         }
+
+        if (root.runningOrderKeys && root.runningOrderKeys.length > 0) {
+            unpinned.sort(function(a, b) {
+                let ka = (a.clazz || "").toLowerCase()
+                let kb = (b.clazz || "").toLowerCase()
+                let ia = root.runningOrderKeys.indexOf(ka)
+                let ib = root.runningOrderKeys.indexOf(kb)
+                if (ia === -1) ia = 9999
+                if (ib === -1) ib = 9999
+                return ia - ib
+            })
+        }
+
         root.runningList = unpinned
     }
 
@@ -531,12 +720,24 @@ Item {
         if (matching.length > 0) {
             root.focusClient(matching[0])
         } else {
-            Quickshell.execDetached(["bash", "-c", pinned.cmd + " &"])
+            root.launchAppCmd(pinned.cmd)
         }
     }
 
     function launchNew(cmd) {
-        Quickshell.execDetached(["bash", "-c", cmd + " &"])
+        root.launchAppCmd(cmd)
+    }
+
+    function launchAppCmd(cmd) {
+        if (!cmd) return
+        let envPrefix = "if [ -z \"${DISPLAY:-}\" ]; then " +
+            "disp=\"$(systemctl --user show-environment 2>/dev/null | sed -n 's/^DISPLAY=//p' | head -n 1 || true)\"; " +
+            "if [ -z \"$disp\" ]; then " +
+            "for s in /tmp/.X11-unix/X*[0-9]; do if [ -S \"$s\" ] && [ -O \"$s\" ]; then disp=\":${s##*X}\"; break; fi; done; " +
+            "fi; " +
+            "[ -n \"$disp\" ] && export DISPLAY=\"$disp\"; " +
+            "fi; "
+        Quickshell.execDetached(["bash", "-c", envPrefix + "(" + cmd + ") &"])
     }
 
     function closeApp(pinned, runningAddress) {
@@ -584,11 +785,114 @@ Item {
         trashProc.running = true
     }
 
+    // ── Safe Icon Source Resolver (Never returns missing-texture image://icon/) ──
+    function resolveIconSource(iconVal) {
+        if (!iconVal || iconVal.length === 0) {
+            return Qt.resolvedUrl("assets/icons/launchpad.svg")
+        }
+        if (iconVal.startsWith("file://") || iconVal.startsWith("/")) {
+            return iconVal.startsWith("file://") ? iconVal : ("file://" + iconVal)
+        }
+        if (iconVal.startsWith("assets/icons/") || iconVal.startsWith("qrc:/")) {
+            return Qt.resolvedUrl(iconVal)
+        }
+
+        let lower = iconVal.toLowerCase()
+        let candidates = [iconVal, lower]
+        if (lower === "zen" || lower === "zen-alpha" || lower.includes("zen-browser")) {
+            candidates.unshift("zen-browser")
+        } else if (lower === "antigravity" || lower.includes("antigravity")) {
+            candidates.unshift("antigravity")
+        } else if (lower === "code" || lower === "vscode" || lower === "visual-studio-code" || lower === "com.microsoft.vscode") {
+            candidates.unshift("vscode", "code", "visual-studio-code")
+        } else if (lower === "firefox" || lower.includes("firefox")) {
+            candidates.unshift("firefox")
+        } else if (lower === "dolphin" || lower.includes("dolphin")) {
+            candidates.unshift("org.kde.dolphin", "dolphin")
+        } else if (lower === "kitty" || lower.includes("kitty")) {
+            candidates.unshift("kitty")
+        } else if (lower === "spotify" || lower.includes("spotify")) {
+            candidates.unshift("spotify")
+        } else if (lower === "discord" || lower.includes("discord")) {
+            candidates.unshift("discord", "vesktop")
+        }
+
+        // 1. Buscar en apps de escritorio escaneadas
+        for (let c = 0; c < candidates.length; c++) {
+            let cand = candidates[c]
+            for (let i = 0; i < root.installedAppsList.length; i++) {
+                let item = root.installedAppsList[i]
+                if (item.iconPath && item.iconPath.length > 0) {
+                    if (item.iconName === cand || item.id === cand || (item.displayName && item.displayName.toLowerCase() === cand) || (item.matchClasses && item.matchClasses.indexOf(cand) !== -1)) {
+                        return item.iconPath
+                    }
+                }
+            }
+        }
+
+        // 2. Probar Quickshell.iconPath con cada candidato
+        for (let c = 0; c < candidates.length; c++) {
+            let qsPath = Quickshell.iconPath(candidates[c], true)
+            if (qsPath && qsPath.length > 0) {
+                return qsPath
+            }
+        }
+
+        // 3. Fallbacks exclusivos para ítems mockup de macOS si fueron explícitamente solicitados
+        if (lower === "finder") return Qt.resolvedUrl("assets/icons/finder.svg")
+        if (lower === "launchpad") return Qt.resolvedUrl("assets/icons/launchpad.svg")
+        if (lower === "shortcuts") return Qt.resolvedUrl("assets/icons/shortcuts.svg")
+        if (lower === "keychain") return Qt.resolvedUrl("assets/icons/keychain.svg")
+
+        return Qt.resolvedUrl("assets/icons/launchpad.svg")
+    }
+
     // ── Scan System Installed Desktop Applications ──
     Process {
         id: scanProc
         command: ["bash", "-c", "python3 -c '
 import os, glob, json
+
+gtk_theme = None
+try:
+    import gi
+    gi.require_version(\"Gtk\", \"3.0\")
+    from gi.repository import Gtk
+    gtk_theme = Gtk.IconTheme.get_default()
+except Exception:
+    pass
+
+def resolve_icon_path(icon_name):
+    if not icon_name:
+        return \"\"
+    if os.path.isabs(icon_name) and os.path.isfile(icon_name):
+        return \"file://\" + icon_name
+    candidates = [icon_name, icon_name.lower()]
+    lower = icon_name.lower()
+    if lower in (\"zen\", \"zen-browser\"):
+        candidates.extend([\"zen-browser\", \"zen\"])
+    elif lower in (\"code\", \"vscode\", \"visual-studio-code\", \"com.microsoft.vscode\"):
+        candidates.extend([\"vscode\", \"code\", \"visual-studio-code\", \"com.visualstudio.code\"])
+    elif lower in (\"dolphin\", \"org.kde.dolphin\"):
+        candidates.extend([\"org.kde.dolphin\", \"dolphin\"])
+    elif lower in (\"antigravity\",):
+        candidates.extend([\"antigravity\"])
+    if gtk_theme is not None:
+        for candidate in candidates:
+            try:
+                info = gtk_theme.lookup_icon(candidate, 48, 0)
+                if info:
+                    fn = info.get_filename()
+                    if fn and os.path.isfile(fn):
+                        return \"file://\" + fn
+            except Exception:
+                pass
+    for ext in (\".svg\", \".png\"):
+        for cand in candidates:
+            p = f\"/usr/share/pixmaps/{cand}{ext}\"
+            if os.path.isfile(p):
+                return \"file://\" + p
+    return \"\"
 
 apps = []
 paths = glob.glob(\"/usr/share/applications/*.desktop\") + glob.glob(os.path.expanduser(\"~/.local/share/applications/*.desktop\"))
@@ -627,16 +931,21 @@ for p in paths:
         seen.add(desktop_id)
         
         clean_exec = exec_cmd.split(\"%\")[0].strip()
+        icon_val = icon or \"application-x-executable\"
+        icon_path = resolve_icon_path(icon_val)
         
+        escaped_id = desktop_id.replace('\"', '\\\"')
+        match_classes = list(set([desktop_id.replace(\".desktop\", \"\").lower(), clean_exec.split()[0].lower() if clean_exec else \"\", name.lower()] + ([\"steam\"] if \"steam\" in (desktop_id + clean_exec).lower() else [])))
         apps.append({
             \"id\": desktop_id,
             \"name\": name,
             \"displayName\": name,
             \"description\": desc,
             \"executable\": clean_exec,
-            \"iconName\": icon or \"application-x-executable\",
-            \"cmd\": f\"gtk-launch {desktop_id}\",
-            \"matchClasses\": [desktop_id.replace(\".desktop\", \"\").lower(), clean_exec.lower(), name.lower()]
+            \"iconName\": icon_val,
+            \"iconPath\": icon_path,
+            \"cmd\": f'gtk-launch \"{escaped_id}\" || {clean_exec}',
+            \"matchClasses\": match_classes
         })
     except Exception:
         pass
@@ -660,30 +969,35 @@ print(json.dumps(apps))
         scanProc.running = true
     }
 
-    // ── Context Menu Trigger ──
-    function openContextMenu(appObj, runningObj, isTrash, isFolder, posX, posY) {
+    // ── Context Menu Trigger (Scoped to Target Monitor) ──
+    function openContextMenu(appObj, runningObj, isTrash, isFolder, posX, posY, screenName) {
         root.contextMenuApp = appObj
         root.contextMenuRunning = runningObj
         root.contextMenuIsTrash = isTrash
         root.contextMenuIsFolder = isFolder
         root.contextMenuX = posX
         root.contextMenuY = posY
+        root.contextMenuScreen = screenName || ""
         root.contextMenuVisible = true
     }
 
     function closeContextMenu() {
         root.contextMenuVisible = false
+        root.contextMenuScreen = ""
     }
 
-    // ── Modal Actions ──
-    function openAddModal() {
+    // ── Modal Actions (Scoped to Target Monitor) ──
+    function openAddModal(screenName) {
+        root.closeContextMenu()
         root.scanInstalledApps()
         root.addModalQuery = ""
+        root.addModalScreen = screenName || ""
         root.addModalVisible = true
     }
 
     function closeAddModal() {
         root.addModalVisible = false
+        root.addModalScreen = ""
         root.addModalQuery = ""
     }
 

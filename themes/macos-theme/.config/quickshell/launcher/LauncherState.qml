@@ -72,7 +72,97 @@ Item {
     // ── Python Scanner Process ──
     Process {
         id: appScanner
-        command: ["bash", "-c", "python3 -c '\nimport os, glob, json\n\ndef resolve_icon(icon_str, app_id, exec_cmd):\n    id_lower = (app_id + \" \" + exec_cmd + \" \" + icon_str).lower()\n    if any(k in id_lower for k in [\"zen\", \"firefox\", \"safari\", \"chrome\", \"chromium\", \"brave\"]): return \"assets/icons/safari.svg\"\n    if any(k in id_lower for k in [\"antigravity\", \"cursor\", \"vscodium\", \"vscode\", \"code\"]): return \"assets/icons/code.svg\"\n    if any(k in id_lower for k in [\"kitty\", \"alacritty\", \"foot\", \"wezterm\", \"terminal\"]): return \"assets/icons/terminal.svg\"\n    if any(k in id_lower for k in [\"dolphin\", \"nautilus\", \"thunar\", \"finder\"]): return \"assets/icons/finder.svg\"\n    if any(k in id_lower for k in [\"spotify\", \"music\", \"cider\", \"amberol\"]): return \"assets/icons/music.svg\"\n    if any(k in id_lower for k in [\"discord\", \"vesktop\", \"telegram\", \"messages\", \"whatsapp\"]): return \"assets/icons/messages.svg\"\n    if any(k in id_lower for k in [\"gwenview\", \"loupe\", \"photos\", \"eog\"]): return \"assets/icons/photos.svg\"\n    if any(k in id_lower for k in [\"settings\", \"systemsettings\", \"control-center\", \"pavucontrol\", \"displays\", \"bluetooth\"]): return \"assets/icons/settings.svg\"\n    if any(k in id_lower for k in [\"rofi\", \"shortcuts\", \"launcher\"]): return \"assets/icons/shortcuts.svg\"\n    if any(k in id_lower for k in [\"thunderbird\", \"mail\"]): return \"assets/icons/mail.svg\"\n    if any(k in id_lower for k in [\"obsidian\", \"notes\", \"notepadqq\", \"kate\"]): return \"assets/icons/notes.svg\"\n    if any(k in id_lower for k in [\"calendar\", \"korganizer\"]): return \"assets/icons/calendar.svg\"\n    if any(k in id_lower for k in [\"reminders\"]): return \"assets/icons/reminders.svg\"\n    if any(k in id_lower for k in [\"keychain\", \"keepassxc\", \"bitwarden\", \"seahorse\"]): return \"assets/icons/keychain.svg\"\n    if any(k in id_lower for k in [\"appstore\", \"discover\", \"pamac\", \"prism\"]): return \"assets/icons/appstore.svg\"\n    if not icon_str: return \"image://icon/application-x-executable\"\n    if icon_str.startswith(\"/\"):\n        return \"file://\" + icon_str if os.path.exists(icon_str) else \"image://icon/application-x-executable\"\n    for ext in [\"\", \".png\", \".svg\", \".xpm\"]:\n        p = f\"/usr/share/pixmaps/{icon_str}{ext}\"\n        if os.path.exists(p):\n            return f\"file://{p}\"\n    return \"image://icon/\" + icon_str\n\ndef categorize(cats_str, name, exec_cmd, desc, desktop_id):\n    c = (cats_str + \" \" + name + \" \" + exec_cmd + \" \" + desc + \" \" + desktop_id).lower()\n    if any(k in c for k in [\"antigravity\", \"development\", \"ide\", \"debugger\", \"programming\", \"code\", \"terminal\", \"editor\", \"texteditor\", \"neovim\", \"nvim\", \"vim\", \"git\", \"compiler\", \"database\", \"kitty\", \"cmake\", \"studio\", \"vscodium\"]):\n        return \"Development\"\n    if any(k in c for k in [\"office\", \"spreadsheet\", \"wordprocessor\", \"presentation\", \"email\", \"mail\", \"contact\", \"todo\", \"calendar\", \"notes\", \"organizer\", \"reminder\", \"weylus\", \"task\", \"libreoffice\", \"thunderbird\", \"obsidian\", \"kate\", \"notepadqq\"]):\n        return \"Productivity\"\n    if any(k in c for k in [\"graphics\", \"rastergraphics\", \"vectorgraphics\", \"2dgraphics\", \"3dgraphics\", \"video\", \"audiovideoediting\", \"publishing\", \"recorder\", \"blender\", \"gimp\", \"inkscape\", \"krita\", \"paint\", \"draw\", \"wayscriber\", \"songrec\", \"capture\", \"gwenview\", \"loupe\", \"kamoso\", \"cheese\", \"v4l2\", \"hp scan\", \"scan\"]):\n        return \"Creativity\"\n    if any(k in c for k in [\"audiovideo\", \"audio\", \"music\", \"player\", \"multimedia\", \"game\", \"entertainment\", \"media\", \"spotify\", \"mpv\", \"vlc\", \"steam\", \"prism\", \"cider\", \"amberol\", \"celluloid\", \"bedrock\", \"volume control\", \"pavucontrol\"]):\n        return \"Entertainment & Media\"\n    if any(k in c for k in [\"network\", \"webbrowser\", \"browser\", \"news\", \"feed\", \"maps\", \"weather\", \"reader\", \"viewer\", \"document\", \"book\", \"zen\", \"firefox\", \"chrome\", \"discord\", \"vesktop\", \"telegram\", \"whatsapp\", \"signal\", \"cartes\", \"globe\", \"vpn\", \"proton\"]):\n        return \"Information & Reading\"\n    return \"System & Utilities\"\n\npaths = glob.glob(\"/usr/share/applications/*.desktop\") + glob.glob(os.path.expanduser(\"~/.local/share/applications/*.desktop\"))\napps = []\nseen = set()\nignored_apps = [\"kitty URL Launcher\", \"Xwayland\", \"Hardware Locality lstopo\", \"Print Settings\", \"Avahi SSH Server Browser\", \"Avahi VNC Server Browser\", \"xgpsspeed\"]\n\nfor p in paths:\n    try:\n        with open(p, \"r\", encoding=\"utf-8\", errors=\"ignore\") as f: lines = f.readlines()\n        name, icon, exec_cmd, desc, cats_str = \"\", \"\", \"\", \"\", \"\"\n        nodisplay = False\n        for l in lines:\n            l = l.strip()\n            if l.startswith(\"Name=\") and not name: name = l[5:]\n            elif l.startswith(\"Icon=\") and not icon: icon = l[5:]\n            elif l.startswith(\"Exec=\") and not exec_cmd: exec_cmd = l[5:]\n            elif l.startswith(\"Comment=\") and not desc: desc = l[8:]\n            elif l.startswith(\"Categories=\") and not cats_str: cats_str = l[11:]\n            elif l == \"NoDisplay=true\": nodisplay = True\n        if nodisplay or not name or not exec_cmd or name in ignored_apps: continue\n        desktop_id = os.path.basename(p)\n        if desktop_id in seen: continue\n        seen.add(desktop_id)\n        clean_exec = exec_cmd.split(\"%\")[0].strip()\n        cat = categorize(cats_str, name, clean_exec, desc, desktop_id)\n        icon_res = resolve_icon(icon, desktop_id, clean_exec)\n        apps.append({\"id\": desktop_id, \"name\": name, \"displayName\": name, \"description\": desc, \"executable\": clean_exec, \"iconName\": icon, \"resolvedIcon\": icon_res, \"category\": cat, \"desktopPath\": p})\n    except Exception:\n        pass\n\napps.sort(key=lambda x: x[\"displayName\"].lower())\nprint(json.dumps(apps))\n'"]
+        command: ["bash", "-c", "python3 -c '
+import os, glob, json
+
+gtk_theme = None
+try:
+    import gi
+    gi.require_version(\"Gtk\", \"3.0\")
+    from gi.repository import Gtk
+    gtk_theme = Gtk.IconTheme.get_default()
+except Exception:
+    pass
+
+def resolve_icon(icon_str, app_id, exec_cmd):
+    if not icon_str:
+        icon_str = app_id.replace(\".desktop\", \"\")
+    if icon_str.startswith(\"/\") and os.path.exists(icon_str):
+        return \"file://\" + icon_str
+    candidates = [icon_str, icon_str.lower(), app_id.replace(\".desktop\", \"\")]
+    lower = (app_id + \" \" + icon_str).lower()
+    if \"zen\" in lower:
+        candidates.insert(0, \"zen-browser\")
+    if \"antigravity\" in lower:
+        candidates.insert(0, \"antigravity\")
+    if \"code\" in lower or \"vscode\" in lower:
+        candidates.insert(0, \"vscode\")
+        candidates.insert(1, \"code\")
+    if \"dolphin\" in lower:
+        candidates.insert(0, \"org.kde.dolphin\")
+    if gtk_theme is not None:
+        for cand in candidates:
+            try:
+                info = gtk_theme.lookup_icon(cand, 48, 0)
+                if info:
+                    fn = info.get_filename()
+                    if fn and os.path.exists(fn):
+                        return \"file://\" + fn
+            except Exception:
+                pass
+    for ext in [\"\", \".svg\", \".png\", \".xpm\"]:
+        for cand in candidates:
+            p = f\"/usr/share/pixmaps/{cand}{ext}\"
+            if os.path.exists(p):
+                return f\"file://{p}\"
+    return \"assets/icons/launchpad.svg\"
+
+def categorize(cats_str, name, exec_cmd, desc, desktop_id):
+    c = (cats_str + \" \" + name + \" \" + exec_cmd + \" \" + desc + \" \" + desktop_id).lower()
+    if any(k in c for k in [\"antigravity\", \"development\", \"ide\", \"debugger\", \"programming\", \"code\", \"terminal\", \"editor\", \"texteditor\", \"neovim\", \"nvim\", \"vim\", \"git\", \"compiler\", \"database\", \"kitty\", \"cmake\", \"studio\", \"vscodium\"]):
+        return \"Development\"
+    if any(k in c for k in [\"office\", \"spreadsheet\", \"wordprocessor\", \"presentation\", \"email\", \"mail\", \"contact\", \"todo\", \"calendar\", \"notes\", \"organizer\", \"reminder\", \"weylus\", \"task\", \"libreoffice\", \"thunderbird\", \"obsidian\", \"kate\", \"notepadqq\"]):
+        return \"Productivity\"
+    if any(k in c for k in [\"graphics\", \"rastergraphics\", \"vectorgraphics\", \"2dgraphics\", \"3dgraphics\", \"video\", \"audiovideoediting\", \"publishing\", \"recorder\", \"blender\", \"gimp\", \"inkscape\", \"krita\", \"paint\", \"draw\", \"wayscriber\", \"songrec\", \"capture\", \"gwenview\", \"loupe\", \"kamoso\", \"cheese\", \"v4l2\", \"hp scan\", \"scan\"]):
+        return \"Creativity\"
+    if any(k in c for k in [\"audiovideo\", \"audio\", \"music\", \"player\", \"multimedia\", \"game\", \"entertainment\", \"media\", \"spotify\", \"mpv\", \"vlc\", \"steam\", \"prism\", \"cider\", \"amberol\", \"celluloid\", \"bedrock\", \"volume control\", \"pavucontrol\"]):
+        return \"Entertainment & Media\"
+    if any(k in c for k in [\"network\", \"webbrowser\", \"browser\", \"news\", \"feed\", \"maps\", \"weather\", \"reader\", \"viewer\", \"document\", \"book\", \"zen\", \"firefox\", \"chrome\", \"discord\", \"vesktop\", \"telegram\", \"whatsapp\", \"signal\", \"cartes\", \"globe\", \"vpn\", \"proton\"]):
+        return \"Information & Reading\"
+    return \"System & Utilities\"
+
+paths = glob.glob(\"/usr/share/applications/*.desktop\") + glob.glob(os.path.expanduser(\"~/.local/share/applications/*.desktop\"))
+apps = []
+seen = set()
+ignored_apps = [\"kitty URL Launcher\", \"Xwayland\", \"Hardware Locality lstopo\", \"Print Settings\", \"Avahi SSH Server Browser\", \"Avahi VNC Server Browser\", \"xgpsspeed\"]
+
+for p in paths:
+    try:
+        with open(p, \"r\", encoding=\"utf-8\", errors=\"ignore\") as f: lines = f.readlines()
+        name, icon, exec_cmd, desc, cats_str = \"\", \"\", \"\", \"\", \"\"
+        nodisplay = False
+        for l in lines:
+            l = l.strip()
+            if l.startswith(\"Name=\") and not name: name = l[5:]
+            elif l.startswith(\"Icon=\") and not icon: icon = l[5:]
+            elif l.startswith(\"Exec=\") and not exec_cmd: exec_cmd = l[5:]
+            elif l.startswith(\"Comment=\") and not desc: desc = l[8:]
+            elif l.startswith(\"Categories=\") and not cats_str: cats_str = l[11:]
+            elif l == \"NoDisplay=true\": nodisplay = True
+        if nodisplay or not name or not exec_cmd or name in ignored_apps: continue
+        desktop_id = os.path.basename(p)
+        if desktop_id in seen: continue
+        seen.add(desktop_id)
+        clean_exec = exec_cmd.split(\"%\")[0].strip()
+        cat = categorize(cats_str, name, clean_exec, desc, desktop_id)
+        icon_res = resolve_icon(icon, desktop_id, clean_exec)
+        apps.append({\"id\": desktop_id, \"name\": name, \"displayName\": name, \"description\": desc, \"executable\": clean_exec, \"iconName\": icon, \"resolvedIcon\": icon_res, \"category\": cat, \"desktopPath\": p})
+    except Exception:
+        pass
+
+apps.sort(key=lambda x: x[\"displayName\"].lower())
+print(json.dumps(apps))
+'"]
         stdout: SplitParser {
             onRead: function(text) {
                 try {
@@ -177,7 +267,15 @@ Item {
     // ── App Launch & History ──
     function launchApp(app) {
         if (!app) return
-        let cmd = "gtk-launch " + app.id + " 2>/dev/null || " + app.executable + " &"
+        let escapedId = (app.id || "").replace(/'/g, "'\\''")
+        let envPrefix = "if [ -z \"${DISPLAY:-}\" ]; then " +
+            "disp=\"$(systemctl --user show-environment 2>/dev/null | sed -n 's/^DISPLAY=//p' | head -n 1 || true)\"; " +
+            "if [ -z \"$disp\" ]; then " +
+            "for s in /tmp/.X11-unix/X*[0-9]; do if [ -S \"$s\" ] && [ -O \"$s\" ]; then disp=\":${s##*X}\"; break; fi; done; " +
+            "fi; " +
+            "[ -n \"$disp\" ] && export DISPLAY=\"$disp\"; " +
+            "fi; "
+        let cmd = envPrefix + "(gtk-launch '" + escapedId + "' 2>/dev/null || " + app.executable + ") &"
         Quickshell.execDetached(["bash", "-c", cmd])
         root.recordRecent(app.id)
         root.closeLauncher()

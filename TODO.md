@@ -263,11 +263,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-022] Aislamiento de estado por monitor en la Dockbar de macOS
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_022_FIX`
 - **Módulo(s):** macOS-Theme / Dock
-- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/dock/` (Archivos QML)
+- **Archivos Afectados:** `themes/macos-theme/.config/quickshell/dock/shell.qml`, `themes/macos-theme/.config/quickshell/dock/DockPlatter.qml`, `themes/macos-theme/.config/quickshell/dock/DockState.qml`, `themes/macos-theme/.config/quickshell/dock/DockItem.qml`, `themes/macos-theme/.config/quickshell/dock/DockContextMenu.qml`, `themes/macos-theme/.config/quickshell/dock/DockAddAppModal.qml`, `themes/macos-theme/.config/quickshell/launcher/LauncherState.qml`
 - **Descripción:** El estado interactivo del Dock (como la apertura de menús contextuales al hacer clic derecho o estados de hover/activación) se comparte globalmente entre todas las pantallas, provocando que el menú se despliegue simultáneamente en todos los monitores conectados. Se debe encapsular el estado de cada instancia del Dock localmente por monitor (`ShellScreen` / instancia de `PanelWindow`).
 - **Criterios de Aceptación:**
   1. Hacer clic derecho sobre un icono del Dock abre el menú contextual únicamente en el monitor donde ocurrió la interacción.

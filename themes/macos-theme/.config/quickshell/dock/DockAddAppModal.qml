@@ -6,8 +6,9 @@ import Quickshell
 Item {
     id: root
     required property var dockState
+    property string screenName: ""
 
-    visible: dockState.addModalVisible
+    visible: dockState.addModalVisible && (dockState.addModalScreen === "" || dockState.addModalScreen === root.screenName)
     anchors.fill: parent
     z: 10000
 
@@ -76,11 +77,23 @@ Item {
                     color: "#0a84ff"
                     anchors.verticalCenter: parent.verticalCenter
 
-                    Image {
-                        source: "image://icon/list-add"
+                    Canvas {
                         width: 20
                         height: 20
                         anchors.centerIn: parent
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            ctx.reset();
+                            ctx.strokeStyle = "#ffffff";
+                            ctx.lineWidth = 2.2;
+                            ctx.lineCap = "round";
+                            ctx.beginPath();
+                            ctx.moveTo(10, 4);
+                            ctx.lineTo(10, 16);
+                            ctx.moveTo(4, 10);
+                            ctx.lineTo(16, 10);
+                            ctx.stroke();
+                        }
                     }
                 }
 
@@ -145,12 +158,23 @@ Item {
                     anchors.rightMargin: 12
                     spacing: 8
 
-                    Image {
-                        source: "image://icon/system-search"
+                    Canvas {
                         width: 16
                         height: 16
                         anchors.verticalCenter: parent.verticalCenter
-                        opacity: 0.6
+                        opacity: 0.7
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            ctx.reset();
+                            ctx.strokeStyle = "#ffffff";
+                            ctx.lineWidth = 1.6;
+                            ctx.lineCap = "round";
+                            ctx.beginPath();
+                            ctx.arc(6.8, 6.8, 4.6, 0, Math.PI * 2);
+                            ctx.moveTo(10.2, 10.2);
+                            ctx.lineTo(14.0, 14.0);
+                            ctx.stroke();
+                        }
                     }
 
                     TextInput {
@@ -214,7 +238,9 @@ Item {
 
                         // App Icon
                         Image {
-                            source: "image://icon/" + modelData.iconName
+                            source: (modelData.iconPath && modelData.iconPath.length > 0)
+                                ? modelData.iconPath
+                                : dockState.resolveIconSource(modelData.iconName)
                             width: 36
                             height: 36
                             anchors.verticalCenter: parent.verticalCenter
@@ -282,7 +308,7 @@ Item {
                                 dockState.pinApp({
                                     id: modelData.id,
                                     name: modelData.displayName || modelData.name,
-                                    fallbackIcon: modelData.iconName,
+                                    fallbackIcon: modelData.iconPath || modelData.iconName,
                                     cmd: modelData.cmd,
                                     matchClasses: modelData.matchClasses
                                 })
