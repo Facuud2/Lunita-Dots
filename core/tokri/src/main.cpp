@@ -363,7 +363,7 @@ int main(int argc, char *argv[])
         interceptor,
         &LinuxDragShakeDetector::shakeDetected,
         &tokriWindow,
-        &TokriWindow::wakeUp,
+        &TokriWindow::onShakeDetect,
         Qt::QueuedConnection
         );
 #endif

@@ -206,72 +206,7 @@ Item {
             spacing: 5
             Layout.alignment: Qt.AlignVCenter
 
-            // ── 1. System Tray Icons (Discord, Steam, Telegram, etc.) ──
-            Timer {
-                interval: 2000
-                running: true
-                repeat: true
-                triggeredOnStart: true
-                onTriggered: {
-                    var icons = [];
-                    for (var i = 0; i < SystemTray.items.values.length; i++) {
-                        var it = SystemTray.items.values[i];
-                        if (it && it.icon) icons.push(it.icon);
-                    }
-                    if (icons.length > 0) barState.resolveTrayIcons(icons);
-                }
-            }
-
-            RowLayout {
-                spacing: 3
-                Repeater {
-                    model: SystemTray.items.values
-                    delegate: Item {
-                        id: trayItemRoot
-                        required property var modelData
-                        property bool isDuplicateApplet: {
-                            var id = (modelData.id || "").toLowerCase();
-                            var icon = (modelData.icon || "").toLowerCase();
-                            return (id.indexOf("nm_applet") !== -1 || id.indexOf("nm-applet") !== -1 || id.indexOf("blueman") !== -1 || id.indexOf("network") !== -1 || icon.indexOf("nm-device") !== -1 || icon.indexOf("nm-signal") !== -1);
-                        }
-                        visible: !isDuplicateApplet && trayImg.status === Image.Ready
-                        implicitWidth: visible ? 22 : 0
-                        implicitHeight: 22
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: 4
-                            color: trayMouseArea.containsMouse ? root.barState.barHoverColor : "transparent"
-                        }
-
-                        Image {
-                            id: trayImg
-                            anchors.centerIn: parent
-                            width: 15
-                            height: 15
-                            source: root.barState.trayIconsMap[modelData.icon] || ""
-                            fillMode: Image.PreserveAspectFit
-                        }
-
-                        MouseArea {
-                            id: trayMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: mouse => {
-                                if (mouse.button === Qt.RightButton) {
-                                    modelData.secondaryActivate();
-                                } else {
-                                    modelData.activate();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ── 2. Screen Recording Indicator (Purple Pill) ──
+            // ── 1. Screen Recording Indicator (Purple Pill) ──
             Item {
                 visible: barState.isRecording
                 implicitWidth: 30
@@ -295,6 +230,119 @@ Item {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: barState.toggleRecording()
+                }
+            }
+
+            // ── 2. System Tray Icons (Immediately left of Widgets Modifier Icon, growing right-to-left) ──
+            Timer {
+                id: traySyncTimer
+                interval: 1500
+                running: true
+                repeat: true
+                triggeredOnStart: true
+                onTriggered: {
+                    var icons = [];
+                    var items = SystemTray.items.values;
+                    for (var i = 0; i < items.length; i++) {
+                        var it = items[i];
+                        if (it && it.icon && it.icon.indexOf("image://qsimage/") !== 0) {
+                            icons.push(it.icon);
+                        }
+                    }
+                    if (icons.length > 0) barState.resolveTrayIcons(icons);
+                }
+            }
+
+            Row {
+                id: systemTrayRow
+                spacing: 3
+                layoutDirection: Qt.RightToLeft
+                Layout.alignment: Qt.AlignVCenter
+
+                Repeater {
+                    model: SystemTray.items.values
+                    delegate: Item {
+                        id: trayItemRoot
+                        required property var modelData
+
+                        readonly property string resolvedIconSource: {
+                            if (!modelData || !modelData.icon) return "";
+                            var raw = modelData.icon;
+                            if (raw.indexOf("image://qsimage/") === 0) return raw;
+                            if (root.barState.trayIconsMap && root.barState.trayIconsMap[raw]) {
+                                return root.barState.trayIconsMap[raw];
+                            }
+                            return raw;
+                        }
+
+                        visible: !!(modelData && modelData.icon && resolvedIconSource !== "")
+                        width: visible ? 24 : 0
+                        height: 22
+                        implicitWidth: width
+                        implicitHeight: height
+
+                        Component.onCompleted: {
+                            if (modelData && modelData.icon && modelData.icon.indexOf("image://qsimage/") !== 0) {
+                                root.barState.resolveTrayIcons([modelData.icon]);
+                            }
+                        }
+
+                        Connections {
+                            target: modelData
+                            function onIconChanged() {
+                                if (modelData && modelData.icon && modelData.icon.indexOf("image://qsimage/") !== 0) {
+                                    root.barState.resolveTrayIcons([modelData.icon]);
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 4
+                            color: trayMouseArea.containsMouse ? root.barState.barHoverColor : "transparent"
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                        }
+
+                        Image {
+                            id: trayImg
+                            anchors.centerIn: parent
+                            width: 15
+                            height: 15
+                            source: trayItemRoot.resolvedIconSource
+                            sourceSize.width: 30
+                            sourceSize.height: 30
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                        }
+
+                        MouseArea {
+                            id: trayMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: mouse => {
+                                var pos = trayItemRoot.mapToItem(null, 0, trayItemRoot.height);
+                                if (mouse.button === Qt.RightButton) {
+                                    root.barState.openTrayMenu(modelData, trayItemRoot.resolvedIconSource, Math.round(pos.x), panelWindow.screen);
+                                } else if (mouse.button === Qt.MiddleButton) {
+                                    root.barState.closePopups();
+                                    modelData.secondaryActivate();
+                                } else {
+                                    if (modelData.onlyMenu && modelData.hasMenu) {
+                                        root.barState.openTrayMenu(modelData, trayItemRoot.resolvedIconSource, Math.round(pos.x), panelWindow.screen);
+                                    } else {
+                                        root.barState.closePopups();
+                                        modelData.activate();
+                                    }
+                                }
+                            }
+                            onWheel: wheel => {
+                                modelData.scroll(wheel.angleDelta.y, false);
+                            }
+                        }
+                    }
                 }
             }
 

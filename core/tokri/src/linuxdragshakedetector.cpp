@@ -13,6 +13,12 @@
 #include <linux/input.h>
 
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
+
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <string>
 
 namespace {
 constexpr int kPollTimeoutMs = 100;
@@ -22,6 +28,90 @@ bool has_bit(unsigned long *bits, int nr)
 {
     return bits[nr / (8 * sizeof(unsigned long))] &
            (1UL << (nr % (8 * sizeof(unsigned long))));
+}
+
+bool isHyprlandFullscreen()
+{
+    const char *his = std::getenv("HYPRLAND_INSTANCE_SIGNATURE");
+    if (!his || his[0] == '\0') {
+        return false;
+    }
+
+    const char *xrd = std::getenv("XDG_RUNTIME_DIR");
+    std::string sockPath;
+    if (xrd && xrd[0] != '\0') {
+        sockPath = std::string(xrd) + "/hypr/" + his + "/.socket.sock";
+    } else {
+        sockPath = "/run/user/" + std::to_string(getuid()) + "/hypr/" + his + "/.socket.sock";
+    }
+
+    auto querySocket = [&](const char *cmd) -> QByteArray {
+        int s = ::socket(AF_UNIX, SOCK_STREAM, 0);
+        if (s < 0)
+            return {};
+
+        struct timeval tv;
+        tv.tv_sec = 0;
+        tv.tv_usec = 40000; // 40ms timeout
+        setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+        setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+
+        struct sockaddr_un addr;
+        std::memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        std::strncpy(addr.sun_path, sockPath.c_str(), sizeof(addr.sun_path) - 1);
+
+        if (::connect(s, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
+            ::close(s);
+            return {};
+        }
+
+        if (::write(s, cmd, std::strlen(cmd)) <= 0) {
+            ::close(s);
+            return {};
+        }
+
+        QByteArray response;
+        char buf[2048];
+        while (true) {
+            ssize_t n = ::read(s, buf, sizeof(buf));
+            if (n <= 0)
+                break;
+            response.append(buf, n);
+            if (response.size() > 16384)
+                break;
+        }
+        ::close(s);
+        return response;
+    };
+
+    // 1. Check active window fullscreen state
+    QByteArray winData = querySocket("j/activewindow");
+    if (!winData.isEmpty()) {
+        QJsonDocument doc = QJsonDocument::fromJson(winData);
+        if (doc.isObject()) {
+            QJsonObject obj = doc.object();
+            int fullscreen = obj.value("fullscreen").toInt(0);
+            int fullscreenClient = obj.value("fullscreenClient").toInt(0);
+            if (fullscreen > 0 || fullscreenClient > 0) {
+                return true;
+            }
+        }
+    }
+
+    // 2. Check active workspace fullscreen state (covers games capturing focus or mouse grab)
+    QByteArray wsData = querySocket("j/activeworkspace");
+    if (!wsData.isEmpty()) {
+        QJsonDocument doc = QJsonDocument::fromJson(wsData);
+        if (doc.isObject()) {
+            QJsonObject obj = doc.object();
+            if (obj.value("hasfullscreen").toBool(false)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 }
 
@@ -199,8 +289,14 @@ void LinuxDragShakeDetector::workerLoop()
                     continue;
                 }
 
-                if (leftPressed && detector.feed(dx))
+                if (leftPressed && detector.feed(dx)) {
+                    if (isHyprlandFullscreen()) {
+                        log.log() << "Shake ignored: fullscreen active";
+                        detector.reset();
+                        continue;
+                    }
                     emit shakeDetected();
+                }
             }
         }
     }

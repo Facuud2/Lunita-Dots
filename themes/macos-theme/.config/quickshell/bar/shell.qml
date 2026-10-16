@@ -1,3 +1,4 @@
+//@ pragma UseQApplication
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -138,6 +139,11 @@ Scope {
 
                 // Calendar & Clock Flyout
                 CalendarMenu {
+                    barState: globalBarState
+                }
+
+                // System Tray Context Menu
+                TrayContextMenu {
                     barState: globalBarState
                 }
             }

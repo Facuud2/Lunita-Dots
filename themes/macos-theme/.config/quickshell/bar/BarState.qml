@@ -128,18 +128,21 @@ Item {
     }
 
     // ── Active Popup State ──
-    property string activePopup: "" // "apple", "appmenu", "bluetooth", "controlcenter", "calendar"
+    property string activePopup: "" // "apple", "appmenu", "bluetooth", "controlcenter", "calendar", "traymenu"
     property real popupX: 0
     property real popupY: 28
     property string activeMenuTitle: ""
+    property var activeTrayItem: null
+    property string activeTrayIconSource: ""
+    property string activeTrayTitle: ""
     property var activeScreen: null
 
     function togglePopup(name, xPos, yPos, targetScreen) {
         var screenMatches = (targetScreen === undefined || activeScreen === null || activeScreen === targetScreen || (activeScreen && targetScreen && activeScreen.name === targetScreen.name));
         if (activePopup === name && screenMatches) {
-            activePopup = "";
-            activeScreen = null;
+            closePopups();
         } else {
+            closePopups();
             popupX = xPos !== undefined ? xPos : 0;
             popupY = yPos !== undefined ? yPos : 28;
             activeScreen = targetScreen !== undefined ? targetScreen : null;
@@ -150,10 +153,9 @@ Item {
     function openAppMenu(name, xPos, yPos, targetScreen) {
         var screenMatches = (targetScreen === undefined || activeScreen === null || activeScreen === targetScreen || (activeScreen && targetScreen && activeScreen.name === targetScreen.name));
         if (activePopup === "appmenu" && activeMenuTitle === name && screenMatches) {
-            activePopup = "";
-            activeMenuTitle = "";
-            activeScreen = null;
+            closePopups();
         } else {
+            closePopups();
             activeMenuTitle = name;
             popupX = xPos;
             popupY = yPos !== undefined ? yPos : 28;
@@ -162,9 +164,40 @@ Item {
         }
     }
 
+    function openTrayMenu(trayItem, iconSrc, xPos, targetScreen) {
+        var screenMatches = (targetScreen === undefined || activeScreen === null || activeScreen === targetScreen || (activeScreen && targetScreen && activeScreen.name === targetScreen.name));
+        if (activePopup === "traymenu" && activeTrayItem === trayItem && screenMatches) {
+            closePopups();
+        } else {
+            closePopups();
+            activeTrayItem = trayItem;
+            activeTrayIconSource = iconSrc || "";
+            var title = "";
+            if (trayItem) {
+                if (trayItem.tooltipTitle && trayItem.tooltipTitle.trim().length > 0) {
+                    title = trayItem.tooltipTitle.trim();
+                } else if (trayItem.title && trayItem.title.trim().length > 0) {
+                    title = trayItem.title.trim();
+                } else if (trayItem.id && trayItem.id.trim().length > 0 && !trayItem.id.startsWith(":") && !trayItem.id.startsWith("org.freedesktop")) {
+                    title = trayItem.id.trim();
+                } else {
+                    title = "Aplicación";
+                }
+            }
+            activeTrayTitle = title;
+            popupX = xPos !== undefined ? xPos : 0;
+            popupY = 28;
+            activeScreen = targetScreen !== undefined ? targetScreen : null;
+            activePopup = "traymenu";
+        }
+    }
+
     function closePopups() {
         activePopup = "";
         activeMenuTitle = "";
+        activeTrayItem = null;
+        activeTrayIconSource = "";
+        activeTrayTitle = "";
         activeScreen = null;
     }
 
@@ -477,7 +510,12 @@ Item {
 
     function resolveTrayIcons(iconsList) {
         if (!iconsList || iconsList.length === 0) return;
-        var cmd = ["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/tray_resolver.py"].concat(iconsList);
+        var scriptUrl = Qt.resolvedUrl("scripts/tray_resolver.py").toString();
+        var scriptPath = scriptUrl.indexOf("file://") === 0
+            ? scriptUrl.substring(7)
+            : (Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/tray_resolver.py");
+        var cmd = ["python3", scriptPath].concat(iconsList);
+        trayResolveProc.running = false;
         trayResolveProc.command = cmd;
         trayResolveProc.running = true;
     }
