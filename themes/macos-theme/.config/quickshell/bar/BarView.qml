@@ -323,20 +323,17 @@ Item {
                             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                             cursorShape: Qt.PointingHandCursor
                             onClicked: mouse => {
-                                root.barState.closePopups();
                                 var pos = trayItemRoot.mapToItem(null, 0, trayItemRoot.height);
                                 if (mouse.button === Qt.RightButton) {
-                                    if (modelData.hasMenu) {
-                                        modelData.display(root.panelWindow, Math.round(pos.x), Math.round(pos.y));
-                                    } else {
-                                        modelData.secondaryActivate();
-                                    }
+                                    root.barState.openTrayMenu(modelData, trayItemRoot.resolvedIconSource, Math.round(pos.x), panelWindow.screen);
                                 } else if (mouse.button === Qt.MiddleButton) {
+                                    root.barState.closePopups();
                                     modelData.secondaryActivate();
                                 } else {
                                     if (modelData.onlyMenu && modelData.hasMenu) {
-                                        modelData.display(root.panelWindow, Math.round(pos.x), Math.round(pos.y));
+                                        root.barState.openTrayMenu(modelData, trayItemRoot.resolvedIconSource, Math.round(pos.x), panelWindow.screen);
                                     } else {
+                                        root.barState.closePopups();
                                         modelData.activate();
                                     }
                                 }

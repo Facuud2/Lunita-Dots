@@ -141,6 +141,11 @@ Scope {
                 CalendarMenu {
                     barState: globalBarState
                 }
+
+                // System Tray Context Menu
+                TrayContextMenu {
+                    barState: globalBarState
+                }
             }
         }
     }
