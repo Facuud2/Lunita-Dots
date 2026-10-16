@@ -177,7 +177,15 @@ Item {
     // ── App Launch & History ──
     function launchApp(app) {
         if (!app) return
-        let cmd = "gtk-launch " + app.id + " 2>/dev/null || " + app.executable + " &"
+        let escapedId = (app.id || "").replace(/'/g, "'\\''")
+        let envPrefix = "if [ -z \"${DISPLAY:-}\" ]; then " +
+            "disp=\"$(systemctl --user show-environment 2>/dev/null | sed -n 's/^DISPLAY=//p' | head -n 1 || true)\"; " +
+            "if [ -z \"$disp\" ]; then " +
+            "for s in /tmp/.X11-unix/X*[0-9]; do if [ -S \"$s\" ] && [ -O \"$s\" ]; then disp=\":${s##*X}\"; break; fi; done; " +
+            "fi; " +
+            "[ -n \"$disp\" ] && export DISPLAY=\"$disp\"; " +
+            "fi; "
+        let cmd = envPrefix + "(gtk-launch '" + escapedId + "' 2>/dev/null || " + app.executable + ") &"
         Quickshell.execDetached(["bash", "-c", cmd])
         root.recordRecent(app.id)
         root.closeLauncher()

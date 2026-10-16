@@ -6,9 +6,9 @@ function M.setup()
 
     -- Autoinicio de componentes críticos del sistema al inicializar Hyprland
 
-    -- 1. Sincronizar el entorno de Wayland con D-Bus y systemd
-    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP PATH")
-    hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP PATH")
+    -- 1. Sincronizar el entorno de Wayland y XWayland con D-Bus y systemd
+    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP PATH")
+    hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP PATH")
 
     -- 2. Iniciar el agente de Polkit
     hl.exec_cmd("sh -c 'systemctl --user start hyprpolkitagent || /usr/lib/hyprpolkitagent/hyprpolkitagent &'")

@@ -261,8 +261,20 @@ Item {
             const parsed = JSON.parse(raw)
             if (Array.isArray(parsed) && parsed.length > 0) {
                 root.hasLoadedFromDisk = true
+                let cleaned = parsed.map(function(item) {
+                    if (item && item.cmd) {
+                        let c = item.cmd.trim()
+                        if (c.startsWith("gtk-launch ") && !c.includes("'") && !c.includes('"')) {
+                            let arg = c.substring(11).trim()
+                            if (arg.includes(" ")) {
+                                item.cmd = "gtk-launch \"" + arg + "\""
+                            }
+                        }
+                    }
+                    return item
+                })
                 root.pinnedList = []
-                root.pinnedList = parsed
+                root.pinnedList = cleaned
             }
         } catch (e) {
             console.warn("[DockState] Falló lectura de dock-pinned.json:", e)
@@ -659,12 +671,24 @@ Item {
         if (matching.length > 0) {
             root.focusClient(matching[0])
         } else {
-            Quickshell.execDetached(["bash", "-c", pinned.cmd + " &"])
+            root.launchAppCmd(pinned.cmd)
         }
     }
 
     function launchNew(cmd) {
-        Quickshell.execDetached(["bash", "-c", cmd + " &"])
+        root.launchAppCmd(cmd)
+    }
+
+    function launchAppCmd(cmd) {
+        if (!cmd) return
+        let envPrefix = "if [ -z \"${DISPLAY:-}\" ]; then " +
+            "disp=\"$(systemctl --user show-environment 2>/dev/null | sed -n 's/^DISPLAY=//p' | head -n 1 || true)\"; " +
+            "if [ -z \"$disp\" ]; then " +
+            "for s in /tmp/.X11-unix/X*[0-9]; do if [ -S \"$s\" ] && [ -O \"$s\" ]; then disp=\":${s##*X}\"; break; fi; done; " +
+            "fi; " +
+            "[ -n \"$disp\" ] && export DISPLAY=\"$disp\"; " +
+            "fi; "
+        Quickshell.execDetached(["bash", "-c", envPrefix + "(" + cmd + ") &"])
     }
 
     function closeApp(pinned, runningAddress) {
@@ -819,6 +843,8 @@ for p in paths:
         icon_val = icon or \"application-x-executable\"
         icon_path = resolve_icon_path(icon_val)
         
+        escaped_id = desktop_id.replace('\"', '\\\"')
+        match_classes = list(set([desktop_id.replace(\".desktop\", \"\").lower(), clean_exec.split()[0].lower() if clean_exec else \"\", name.lower()] + ([\"steam\"] if \"steam\" in (desktop_id + clean_exec).lower() else [])))
         apps.append({
             \"id\": desktop_id,
             \"name\": name,
@@ -827,8 +853,8 @@ for p in paths:
             \"executable\": clean_exec,
             \"iconName\": icon_val,
             \"iconPath\": icon_path,
-            \"cmd\": f\"gtk-launch {desktop_id}\",
-            \"matchClasses\": [desktop_id.replace(\".desktop\", \"\").lower(), clean_exec.lower(), name.lower()]
+            \"cmd\": f'gtk-launch \"{escaped_id}\" || {clean_exec}',
+            \"matchClasses\": match_classes
         })
     except Exception:
         pass
