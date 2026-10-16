@@ -100,9 +100,10 @@ function M.setup()
 
     hl.layer_rule({
         name  = "macos-clipboard-blur",
-        match = { namespace = "^macos-clipboard$" },
+        match = { namespace = "^(macos-clipboard|lunita-clipboard)$" },
         blur  = true,
         ignore_alpha = 0.05,
+        no_anim = true,
     })
 
     -- Hyprland-run windowrule

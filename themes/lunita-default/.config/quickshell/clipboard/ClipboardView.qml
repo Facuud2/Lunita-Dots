@@ -24,7 +24,17 @@ Item {
         radius: 22
         color: root.clipboardState.panelBgColor
         border.color: root.clipboardState.panelBorderColor
-        border.width: 1
+        border.width: 1.5
+
+        // Subtle inner rim highlight for vivid depth
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 1
+            radius: 21
+            color: "transparent"
+            border.color: root.clipboardState.panelInnerBorderColor
+            border.width: 1
+        }
 
         // Absorb clicks inside the panel so outside click catcher doesn't trigger
         MouseArea {
@@ -63,7 +73,7 @@ Item {
                             text: "content_paste"
                             font.family: root.clipboardState.fontIcons
                             font.pixelSize: 15
-                            color: root.clipboardState.accentRed
+                            color: root.clipboardState.accentRedBright
                             Layout.alignment: Qt.AlignVCenter
                         }
 
@@ -84,9 +94,11 @@ Item {
                 // Contador de elementos (.cliphist-info-badge)
                 Rectangle {
                     Layout.preferredHeight: 24
-                    Layout.preferredWidth: countLabel.implicitWidth + 16
+                    Layout.preferredWidth: countLabel.implicitWidth + 18
                     radius: 12
                     color: root.clipboardState.infoBadgeBg
+                    border.color: root.clipboardState.infoBadgeBorder
+                    border.width: 1
 
                     Text {
                         id: countLabel
@@ -94,7 +106,8 @@ Item {
                         text: root.itemCount + (root.itemCount === 1 ? " elemento" : " elementos")
                         font.family: root.clipboardState.fontUi
                         font.pixelSize: 11
-                        color: root.clipboardState.textDimColor
+                        font.weight: Font.DemiBold
+                        color: root.clipboardState.textColor
                     }
                 }
 
@@ -112,8 +125,8 @@ Item {
                         : root.clipboardState.headerBtnBorder
                     border.width: 1
 
-                    Behavior on color { ColorAnimation { duration: 160 } }
-                    Behavior on border.color { ColorAnimation { duration: 160 } }
+                    Behavior on color { ColorAnimation { duration: 140 } }
+                    Behavior on border.color { ColorAnimation { duration: 140 } }
 
                     Text {
                         anchors.centerIn: parent
@@ -121,8 +134,8 @@ Item {
                         font.family: root.clipboardState.fontIcons
                         font.pixelSize: 15
                         color: clearMouse.containsMouse
-                            ? root.clipboardState.accentRed
-                            : root.clipboardState.textDimColor
+                            ? root.clipboardState.accentRedBright
+                            : root.clipboardState.textColor
                     }
 
                     MouseArea {
@@ -148,17 +161,15 @@ Item {
                         : root.clipboardState.headerBtnBorder
                     border.width: 1
 
-                    Behavior on color { ColorAnimation { duration: 160 } }
-                    Behavior on border.color { ColorAnimation { duration: 160 } }
+                    Behavior on color { ColorAnimation { duration: 140 } }
+                    Behavior on border.color { ColorAnimation { duration: 140 } }
 
                     Text {
                         anchors.centerIn: parent
                         text: "close"
                         font.family: root.clipboardState.fontIcons
                         font.pixelSize: 15
-                        color: closeMouse.containsMouse
-                            ? root.clipboardState.textColor
-                            : root.clipboardState.textDimColor
+                        color: root.clipboardState.textColor
                     }
 
                     MouseArea {
@@ -176,10 +187,12 @@ Item {
             // ════════════════════════════════════════════════════════════
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 36
+                Layout.preferredHeight: 38
                 radius: 12
                 color: root.clipboardState.searchBgColor
-                border.color: root.clipboardState.searchBorderColor
+                border.color: searchField.activeFocus
+                    ? root.clipboardState.accentRedBright
+                    : root.clipboardState.searchBorderColor
                 border.width: 1
 
                 RowLayout {
@@ -192,7 +205,9 @@ Item {
                         text: "search"
                         font.family: root.clipboardState.fontIcons
                         font.pixelSize: 16
-                        color: root.clipboardState.textDimColor
+                        color: searchField.activeFocus
+                            ? root.clipboardState.accentRedBright
+                            : root.clipboardState.textDimColor
                         Layout.alignment: Qt.AlignVCenter
                     }
 
@@ -405,8 +420,10 @@ Item {
                         Rectangle {
                             Layout.preferredHeight: 18
                             Layout.preferredWidth: keyLabel.implicitWidth + 10
-                            radius: 4
-                            color: Qt.rgba(1, 1, 1, 0.08)
+                            radius: 5
+                            color: root.clipboardState.keyPillBg
+                            border.color: root.clipboardState.keyPillBorder
+                            border.width: 1
 
                             Text {
                                 id: keyLabel
@@ -414,7 +431,7 @@ Item {
                                 text: modelData.key
                                 font.family: root.clipboardState.fontDots
                                 font.pixelSize: 9
-                                color: root.clipboardState.textDimColor
+                                color: root.clipboardState.textColor
                             }
                         }
 
@@ -422,7 +439,7 @@ Item {
                             text: modelData.label
                             font.family: root.clipboardState.fontUi
                             font.pixelSize: 11
-                            color: root.clipboardState.textFaintColor
+                            color: root.clipboardState.textDimColor
                         }
                     }
                 }

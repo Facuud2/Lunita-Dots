@@ -12,62 +12,29 @@ Scope {
         id: globalClipboardState
     }
 
-    // Target screen detection (defaults to focused Hyprland monitor or primary screen)
-    property var targetScreen: resolveScreen("")
-
-    function resolveScreen(preferredName) {
-        if (preferredName && preferredName !== "") {
-            for (let i = 0; i < Quickshell.screens.length; i++) {
-                if (Quickshell.screens[i].name === preferredName) {
-                    return Quickshell.screens[i];
-                }
-            }
-        }
-        if (Hyprland.focusedMonitor && Hyprland.focusedMonitor.name) {
-            for (let i = 0; i < Quickshell.screens.length; i++) {
-                if (Quickshell.screens[i].name === Hyprland.focusedMonitor.name) {
-                    return Quickshell.screens[i];
-                }
-            }
-        }
-        return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null;
-    }
-
-    function updateTargetScreen(preferredName) {
-        let s = resolveScreen(preferredName);
-        if (s) root.targetScreen = s;
-    }
-
-    Connections {
-        target: Hyprland
-        function onFocusedMonitorChanged() {
-            if (!globalClipboardState.isOpen) {
-                root.updateTargetScreen("");
-            }
-        }
-    }
-
     // IPC Interface to control Clipboard from CLI, scripts, and Super+V
     IpcHandler {
         target: "clipboard"
 
         function toggle() {
-            root.updateTargetScreen("");
             globalClipboardState.toggleClipboard();
         }
 
         function toggleOn(screenName: string) {
-            root.updateTargetScreen(screenName);
+            if (screenName && screenName !== "") {
+                globalClipboardState.targetScreenName = screenName;
+            }
             globalClipboardState.toggleClipboard();
         }
 
         function open() {
-            root.updateTargetScreen("");
             globalClipboardState.openClipboard();
         }
 
         function openOn(screenName: string) {
-            root.updateTargetScreen(screenName);
+            if (screenName && screenName !== "") {
+                globalClipboardState.targetScreenName = screenName;
+            }
             globalClipboardState.openClipboard();
         }
 
@@ -80,7 +47,7 @@ Scope {
         }
     }
 
-    // ── 1. Fullscreen transparent click-catcher on all active screens (dismiss on outside click) ──
+    // ── Fullscreen transparent surface per monitor (no black backdrop, no Wayland margin interpolation) ──
     Variants {
         model: Quickshell.screens
 
@@ -88,8 +55,18 @@ Scope {
             id: screenScope
             required property var modelData
 
+            readonly property bool isTargetScreen: {
+                if (globalClipboardState.targetScreenName !== "") {
+                    return screenScope.modelData.name === globalClipboardState.targetScreenName;
+                }
+                if (Hyprland.focusedMonitor && Hyprland.focusedMonitor.name) {
+                    return screenScope.modelData.name === Hyprland.focusedMonitor.name;
+                }
+                return Quickshell.screens.length > 0 && screenScope.modelData.name === Quickshell.screens[0].name;
+            }
+
             PanelWindow {
-                id: clickCatcherWindow
+                id: clipboardSurfaceWindow
                 screen: screenScope.modelData
                 color: "transparent"
                 visible: globalClipboardState.windowVisible
@@ -101,61 +78,29 @@ Scope {
                     right: true
                 }
 
-                WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.namespace: "lunita-clipboard-catcher"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.namespace: "lunita-clipboard"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: (globalClipboardState.isOpen && screenScope.isTargetScreen)
+                    ? WlrKeyboardFocus.Exclusive
+                    : WlrKeyboardFocus.None
 
-                Rectangle {
-                    anchors.fill: parent
-                    color: globalClipboardState.backdropColor
-                }
-
+                // Outside click-catcher (100% transparent, no dark overlay)
                 MouseArea {
                     anchors.fill: parent
                     enabled: globalClipboardState.isOpen
                     onClicked: globalClipboardState.closeClipboard()
                 }
+
+                // Floating Clipboard Card positioned directly at cursor without position animations
+                ClipboardView {
+                    id: clipboardView
+                    visible: screenScope.isTargetScreen && globalClipboardState.isOpen
+                    clipboardState: globalClipboardState
+                    x: globalClipboardState.panelX
+                    y: globalClipboardState.panelY
+                }
             }
-        }
-    }
-
-    // ── 2. Floating Nothing OS / Lunita-Default Clipboard Card Window (positioned at cursor) ──
-    PanelWindow {
-        id: clipboardWindow
-        screen: root.targetScreen
-        color: "transparent"
-        visible: globalClipboardState.windowVisible
-
-        implicitWidth: 460
-        implicitHeight: 480
-
-        anchors {
-            top: true
-            left: true
-        }
-        margins {
-            top: globalClipboardState.panelY
-            left: globalClipboardState.panelX
-        }
-
-        mask: Region {
-            width: 460
-            height: 480
-            radius: 22
-        }
-
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "lunita-clipboard"
-        WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.keyboardFocus: globalClipboardState.isOpen
-            ? WlrKeyboardFocus.Exclusive
-            : WlrKeyboardFocus.None
-
-        ClipboardView {
-            id: clipboardView
-            clipboardState: globalClipboardState
-            anchors.fill: parent
         }
     }
 }

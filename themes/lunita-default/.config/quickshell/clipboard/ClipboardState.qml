@@ -8,6 +8,7 @@ Item {
     // ── Visibility & Search State ──
     property bool isOpen: false
     property bool windowVisible: false
+    property bool pendingOpen: false
     property string searchQuery: ""
     property int selectedIndex: 0
     property var clipboardList: []
@@ -17,6 +18,7 @@ Item {
     property int cardHeight: 480
     property int panelX: 120
     property int panelY: 100
+    property string targetScreenName: ""
     property string lastFocusedAddress: ""
     property string lastFocusedClass: ""
 
@@ -35,55 +37,69 @@ Item {
     readonly property string fontUi: cargaUi.name || "Space Grotesk"
     readonly property string fontIcons: cargaIconos.name || "Material Symbols Rounded"
 
-    // ── Nothing OS / Lunita-Default Styling Tokens (from cliphist.scss & Theme.qml) ──
-    readonly property color panelBgColor: Qt.rgba(18 / 255, 18 / 255, 18 / 255, 0.92)
-    readonly property color panelBorderColor: Qt.rgba(1, 1, 1, 0.10)
-    readonly property color panelShadowColor: Qt.rgba(0, 0, 0, 0.65)
-    readonly property color backdropColor: Qt.rgba(0, 0, 0, 0.22)
+    // ── Nothing OS / Lunita-Default Vivid Styling Tokens ──
+    readonly property color panelBgColor: Qt.rgba(14 / 255, 15 / 255, 20 / 255, 0.97)
+    readonly property color panelBorderColor: Qt.rgba(1.0, 0.22, 0.26, 0.42)
+    readonly property color panelInnerBorderColor: Qt.rgba(1, 1, 1, 0.14)
+    readonly property color backdropColor: "transparent"
 
-    readonly property color accentRed: "#D71921"
+    readonly property color accentRed: "#FF2430"
+    readonly property color accentRedBright: "#FF4752"
     readonly property color textColor: "#FFFFFF"
-    readonly property color textDimColor: Qt.rgba(1, 1, 1, 0.65)
-    readonly property color textFaintColor: Qt.rgba(1, 1, 1, 0.42)
-    readonly property color dividerColor: Qt.rgba(1, 1, 1, 0.06)
+    readonly property color textDimColor: Qt.rgba(1, 1, 1, 0.85)
+    readonly property color textFaintColor: Qt.rgba(1, 1, 1, 0.62)
+    readonly property color dividerColor: Qt.rgba(1, 1, 1, 0.14)
 
-    // Header & Search tokens
-    readonly property color titlePillBg: Qt.rgba(1, 1, 1, 0.06)
-    readonly property color titlePillBorder: Qt.rgba(1, 1, 1, 0.08)
-    readonly property color infoBadgeBg: Qt.rgba(1, 1, 1, 0.05)
-    readonly property color headerBtnBg: Qt.rgba(1, 1, 1, 0.05)
-    readonly property color headerBtnBorder: Qt.rgba(1, 1, 1, 0.07)
-    readonly property color headerBtnHoverBg: Qt.rgba(1, 1, 1, 0.15)
-    readonly property color headerBtnHoverBorder: Qt.rgba(1, 1, 1, 0.20)
-    readonly property color clearBtnHoverBg: Qt.rgba(215 / 255, 25 / 255, 33 / 255, 0.25)
-    readonly property color clearBtnHoverBorder: Qt.rgba(215 / 255, 25 / 255, 33 / 255, 0.40)
+    // Header & Search tokens (Vivid)
+    readonly property color titlePillBg: Qt.rgba(1.0, 0.14, 0.19, 0.22)
+    readonly property color titlePillBorder: Qt.rgba(1.0, 0.25, 0.30, 0.55)
+    readonly property color infoBadgeBg: Qt.rgba(1, 1, 1, 0.12)
+    readonly property color infoBadgeBorder: Qt.rgba(1, 1, 1, 0.20)
+    readonly property color headerBtnBg: Qt.rgba(1, 1, 1, 0.10)
+    readonly property color headerBtnBorder: Qt.rgba(1, 1, 1, 0.18)
+    readonly property color headerBtnHoverBg: Qt.rgba(1, 1, 1, 0.24)
+    readonly property color headerBtnHoverBorder: Qt.rgba(1, 1, 1, 0.38)
+    readonly property color clearBtnHoverBg: Qt.rgba(1.0, 0.14, 0.19, 0.35)
+    readonly property color clearBtnHoverBorder: Qt.rgba(1.0, 0.25, 0.30, 0.65)
 
-    readonly property color searchBgColor: Qt.rgba(0, 0, 0, 0.35)
-    readonly property color searchBorderColor: Qt.rgba(1, 1, 1, 0.08)
+    readonly property color searchBgColor: Qt.rgba(26 / 255, 28 / 255, 36 / 255, 0.95)
+    readonly property color searchBorderColor: Qt.rgba(1, 1, 1, 0.18)
 
-    // Row highlights
-    readonly property color rowBgColor: Qt.rgba(1, 1, 1, 0.03)
-    readonly property color itemHoverBg: Qt.rgba(1, 1, 1, 0.08)
-    readonly property color selectedBgColor: Qt.rgba(1, 1, 1, 0.10)
-    readonly property color selectedBorderColor: Qt.rgba(1, 1, 1, 0.18)
+    // Row highlights (Vivid)
+    readonly property color rowBgColor: Qt.rgba(1, 1, 1, 0.06)
+    readonly property color rowBorderColor: Qt.rgba(1, 1, 1, 0.09)
+    readonly property color itemHoverBg: Qt.rgba(1, 1, 1, 0.13)
+    readonly property color selectedBgColor: Qt.rgba(1.0, 0.14, 0.19, 0.20)
+    readonly property color selectedBorderColor: Qt.rgba(1.0, 0.25, 0.30, 0.70)
 
-    // Type Badges (Image, Code, Link, Text)
-    readonly property color badgeImageBg: Qt.rgba(186 / 255, 104 / 255, 200 / 255, 0.18)
-    readonly property color badgeImageFg: "#CE93D8"
-    readonly property color badgeCodeBg: Qt.rgba(100 / 255, 181 / 255, 246 / 255, 0.18)
-    readonly property color badgeCodeFg: "#90CAF9"
-    readonly property color badgeLinkBg: Qt.rgba(129 / 255, 199 / 255, 132 / 255, 0.18)
-    readonly property color badgeLinkFg: "#A5D6A7"
-    readonly property color badgeTextBg: Qt.rgba(1, 1, 1, 0.07)
-    readonly property color badgeTextFg: "#FFFFFF"
+    // Vivid Type Badges (Image, Code, Link, Text)
+    readonly property color badgeImageBg: Qt.rgba(0.76, 0.24, 1.0, 0.28)
+    readonly property color badgeImageFg: "#E580FF"
+    readonly property color badgeImageBorder: Qt.rgba(0.85, 0.40, 1.0, 0.55)
+
+    readonly property color badgeCodeBg: Qt.rgba(0.0, 0.72, 1.0, 0.28)
+    readonly property color badgeCodeFg: "#38D0FF"
+    readonly property color badgeCodeBorder: Qt.rgba(0.20, 0.80, 1.0, 0.55)
+
+    readonly property color badgeLinkBg: Qt.rgba(0.0, 0.90, 0.46, 0.26)
+    readonly property color badgeLinkFg: "#19F08A"
+    readonly property color badgeLinkBorder: Qt.rgba(0.15, 0.95, 0.55, 0.55)
+
+    readonly property color badgeTextBg: Qt.rgba(1.0, 0.20, 0.25, 0.25)
+    readonly property color badgeTextFg: "#FF5C66"
+    readonly property color badgeTextBorder: Qt.rgba(1.0, 0.32, 0.36, 0.52)
 
     // Row action buttons
-    readonly property color actionBtnBg: Qt.rgba(1, 1, 1, 0.04)
-    readonly property color actionBtnBorder: Qt.rgba(1, 1, 1, 0.06)
-    readonly property color copyBtnHoverBg: Qt.rgba(1, 1, 1, 0.16)
-    readonly property color copyBtnHoverBorder: Qt.rgba(1, 1, 1, 0.25)
-    readonly property color delBtnHoverBg: Qt.rgba(215 / 255, 25 / 255, 33 / 255, 0.22)
-    readonly property color delBtnHoverBorder: Qt.rgba(215 / 255, 25 / 255, 33 / 255, 0.40)
+    readonly property color actionBtnBg: Qt.rgba(1, 1, 1, 0.09)
+    readonly property color actionBtnBorder: Qt.rgba(1, 1, 1, 0.16)
+    readonly property color copyBtnHoverBg: Qt.rgba(0.0, 0.72, 1.0, 0.30)
+    readonly property color copyBtnHoverBorder: Qt.rgba(0.20, 0.80, 1.0, 0.65)
+    readonly property color delBtnHoverBg: Qt.rgba(1.0, 0.14, 0.19, 0.34)
+    readonly property color delBtnHoverBorder: Qt.rgba(1.0, 0.25, 0.30, 0.65)
+
+    // Footer key pills
+    readonly property color keyPillBg: Qt.rgba(1, 1, 1, 0.12)
+    readonly property color keyPillBorder: Qt.rgba(1, 1, 1, 0.22)
 
     // Current selected item helper
     readonly property var currentItem: (clipboardList && clipboardList.length > selectedIndex && selectedIndex >= 0) ? clipboardList[selectedIndex] : null
@@ -96,7 +112,7 @@ Item {
         return Quickshell.env("HOME") + "/.config/quickshell/clipboard/scripts/clipboard_manager.py";
     }
 
-    // ── Capture Cursor Position & Focused Window on Open ──
+    // ── Capture Cursor Position & Focused Window BEFORE showing window ──
     Process {
         id: contextProbeProc
         command: [
@@ -133,9 +149,15 @@ Item {
                     var data = JSON.parse(line);
                     if (typeof data.x === "number") root.panelX = data.x;
                     if (typeof data.y === "number") root.panelY = data.y;
+                    if (data.mon) root.targetScreenName = data.mon;
                     root.lastFocusedAddress = data.addr || "";
                     root.lastFocusedClass = data.cls || "";
                 } catch (e) {}
+                if (root.pendingOpen) {
+                    root.pendingOpen = false;
+                    root.isOpen = true;
+                    root.windowVisible = true;
+                }
             }
         }
     }
@@ -263,24 +285,37 @@ Item {
         searchQuery = "";
     }
 
+    Timer {
+        id: closeSurfaceTimer
+        interval: 35
+        repeat: false
+        onTriggered: {
+            if (!root.isOpen && !root.pendingOpen) {
+                root.windowVisible = false;
+            }
+        }
+    }
+
     function openClipboard() {
-        contextProbeProc.running = false;
-        contextProbeProc.running = true;
+        closeSurfaceTimer.stop();
+        root.isOpen = false;
         root.searchQuery = "";
         root.selectedIndex = 0;
-        root.isOpen = true;
-        root.windowVisible = true;
+        root.pendingOpen = true;
+        contextProbeProc.running = false;
+        contextProbeProc.running = true;
         searchDebounce.restart();
     }
 
     function closeClipboard() {
+        root.pendingOpen = false;
         root.isOpen = false;
-        root.windowVisible = false;
         root.searchQuery = "";
+        closeSurfaceTimer.restart();
     }
 
     function toggleClipboard() {
-        if (root.isOpen) {
+        if (root.isOpen || root.pendingOpen) {
             closeClipboard();
         } else {
             openClipboard();

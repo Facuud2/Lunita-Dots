@@ -27,11 +27,18 @@ Item {
         return root.clipboardState.badgeTextFg;
     }
 
+    readonly property color badgeBorderColor: {
+        if (itemType === "image") return root.clipboardState.badgeImageBorder;
+        if (itemType === "code") return root.clipboardState.badgeCodeBorder;
+        if (itemType === "link" || itemType === "url") return root.clipboardState.badgeLinkBorder;
+        return root.clipboardState.badgeTextBorder;
+    }
+
     readonly property color tagFgColor: {
         if (itemType === "image") return root.clipboardState.badgeImageFg;
         if (itemType === "code") return root.clipboardState.badgeCodeFg;
         if (itemType === "link" || itemType === "url") return root.clipboardState.badgeLinkFg;
-        return root.clipboardState.textDimColor;
+        return root.clipboardState.badgeTextFg;
     }
 
     readonly property string badgeIconGlyph: {
@@ -64,20 +71,25 @@ Item {
             : (itemMouseArea.containsMouse ? root.clipboardState.itemHoverBg : root.clipboardState.rowBgColor)
         border.color: root.isSelected
             ? root.clipboardState.selectedBorderColor
-            : "transparent"
+            : root.clipboardState.rowBorderColor
         border.width: 1
 
-        Behavior on color {
-            ColorAnimation { duration: 140 }
-        }
-        Behavior on border.color {
-            ColorAnimation { duration: 140 }
+        // Vivid left accent pill when selected
+        Rectangle {
+            visible: root.isSelected
+            width: 3
+            height: 24
+            radius: 2
+            anchors.left: parent.left
+            anchors.leftMargin: 3
+            anchors.verticalCenter: parent.verticalCenter
+            color: root.clipboardState.accentRedBright
         }
     }
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 10
+        anchors.leftMargin: 12
         anchors.rightMargin: 10
         spacing: 10
 
@@ -89,6 +101,8 @@ Item {
             Layout.alignment: Qt.AlignVCenter
             radius: 10
             color: root.badgeBgColor
+            border.color: root.badgeBorderColor
+            border.width: 1
 
             Image {
                 id: thumbImg
@@ -154,7 +168,7 @@ Item {
                 color: root.clipboardState.textColor
                 font.family: root.clipboardState.fontUi
                 font.pixelSize: 12
-                font.weight: Font.Normal
+                font.weight: root.isSelected ? Font.Medium : Font.Normal
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
@@ -189,7 +203,7 @@ Item {
                     font.pixelSize: 15
                     color: copyBtnMouse.containsMouse
                         ? root.clipboardState.textColor
-                        : root.clipboardState.textFaintColor
+                        : root.clipboardState.textDimColor
                 }
 
                 MouseArea {
@@ -220,17 +234,14 @@ Item {
                     : root.clipboardState.actionBtnBorder
                 border.width: 1
 
-                Behavior on color { ColorAnimation { duration: 140 } }
-                Behavior on border.color { ColorAnimation { duration: 140 } }
-
                 Text {
                     anchors.centerIn: parent
                     text: "delete"
                     font.family: root.clipboardState.fontIcons
                     font.pixelSize: 15
                     color: deleteBtnMouse.containsMouse
-                        ? root.clipboardState.accentRed
-                        : root.clipboardState.textFaintColor
+                        ? root.clipboardState.accentRedBright
+                        : root.clipboardState.textDimColor
                 }
 
                 MouseArea {

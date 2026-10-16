@@ -255,7 +255,7 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_021_FIX`
 - **Módulo(s):** Core / Lunita-Default / Clipboard
-- **Archivos Afectados:** `core/.local/bin/lunita-clipboard`, `themes/lunita-default/.config/quickshell/clipboard/shell.qml`, `themes/lunita-default/.config/quickshell/clipboard/ClipboardState.qml`, `themes/lunita-default/.config/quickshell/clipboard/ClipboardView.qml`, `themes/lunita-default/.config/quickshell/clipboard/ClipboardItem.qml`, `themes/lunita-default/.config/quickshell/clipboard/scripts/clipboard_manager.py`, `themes/lunita-default/.config/quickshell/clipboard/fonts`
+- **Archivos Afectados:** `core/.local/bin/lunita-clipboard`, `core/.config/hypr/modules/rules.lua`, `themes/lunita-default/.config/quickshell/clipboard/shell.qml`, `themes/lunita-default/.config/quickshell/clipboard/ClipboardState.qml`, `themes/lunita-default/.config/quickshell/clipboard/ClipboardView.qml`, `themes/lunita-default/.config/quickshell/clipboard/ClipboardItem.qml`, `themes/lunita-default/.config/quickshell/clipboard/scripts/clipboard_manager.py`, `themes/lunita-default/.config/quickshell/clipboard/fonts`
 - **Descripción:** Al presionar el atajo `SUPER+V` estando activo el tema `lunita-default`, el wrapper invoca la interfaz del portapapeles perteneciente a `macOS-Theme` en lugar del componente nativo de `lunita-default`. El script disparador debe resolver dinámicamente el tema activo y levantar la interfaz QML correspondiente a `lunita-default`.
 - **Criterios de Aceptación:**
   1. Presionar `SUPER+V` en `lunita-default` abre exclusivamente el portapapeles con el diseño e integración de `lunita-default`.
