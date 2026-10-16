@@ -6,8 +6,11 @@ import Quickshell
 Item {
     id: root
     property var dockState: null
+    property string screenName: ""
 
-    visible: dockState ? dockState.contextMenuVisible : false
+    visible: dockState
+        ? (dockState.contextMenuVisible && (dockState.contextMenuScreen === "" || dockState.contextMenuScreen === root.screenName))
+        : false
     anchors.fill: parent
     z: 9999
 

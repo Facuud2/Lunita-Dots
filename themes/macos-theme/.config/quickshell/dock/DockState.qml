@@ -12,8 +12,9 @@ Item {
     property int trashCount: 0
     property var hyprClients: []
 
-    // ── Active Context Menu State ──
+    // ── Active Context Menu State (Per-Monitor Isolated) ──
     property bool contextMenuVisible: false
+    property string contextMenuScreen: ""
     property var contextMenuApp: null
     property var contextMenuRunning: null
     property bool contextMenuIsTrash: false
@@ -21,8 +22,9 @@ Item {
     property real contextMenuX: 0
     property real contextMenuY: 0
 
-    // ── Add App Modal State ──
+    // ── Add App Modal State (Per-Monitor Isolated) ──
     property bool addModalVisible: false
+    property string addModalScreen: ""
     property string addModalQuery: ""
     property var installedAppsList: []
 
@@ -660,30 +662,35 @@ print(json.dumps(apps))
         scanProc.running = true
     }
 
-    // ── Context Menu Trigger ──
-    function openContextMenu(appObj, runningObj, isTrash, isFolder, posX, posY) {
+    // ── Context Menu Trigger (Scoped to Target Monitor) ──
+    function openContextMenu(appObj, runningObj, isTrash, isFolder, posX, posY, screenName) {
         root.contextMenuApp = appObj
         root.contextMenuRunning = runningObj
         root.contextMenuIsTrash = isTrash
         root.contextMenuIsFolder = isFolder
         root.contextMenuX = posX
         root.contextMenuY = posY
+        root.contextMenuScreen = screenName || ""
         root.contextMenuVisible = true
     }
 
     function closeContextMenu() {
         root.contextMenuVisible = false
+        root.contextMenuScreen = ""
     }
 
-    // ── Modal Actions ──
-    function openAddModal() {
+    // ── Modal Actions (Scoped to Target Monitor) ──
+    function openAddModal(screenName) {
+        root.closeContextMenu()
         root.scanInstalledApps()
         root.addModalQuery = ""
+        root.addModalScreen = screenName || ""
         root.addModalVisible = true
     }
 
     function closeAddModal() {
         root.addModalVisible = false
+        root.addModalScreen = ""
         root.addModalQuery = ""
     }
 

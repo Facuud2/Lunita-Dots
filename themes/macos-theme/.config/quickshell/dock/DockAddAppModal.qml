@@ -6,8 +6,9 @@ import Quickshell
 Item {
     id: root
     required property var dockState
+    property string screenName: ""
 
-    visible: dockState.addModalVisible
+    visible: dockState.addModalVisible && (dockState.addModalScreen === "" || dockState.addModalScreen === root.screenName)
     anchors.fill: parent
     z: 10000
 

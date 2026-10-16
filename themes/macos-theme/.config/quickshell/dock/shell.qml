@@ -44,12 +44,18 @@ Scope {
                 }
             }
 
-            // ── 2. Overlay Window (Context Menu & Add App Modal) ──
+            // ── 2. Overlay Window (Context Menu & Add App Modal - Isolated per Monitor) ──
             PanelWindow {
                 id: overlayWindow
                 screen: screenScope.modelData
                 color: "transparent"
-                visible: globalDockState.contextMenuVisible || globalDockState.addModalVisible
+
+                readonly property bool isContextOnThisScreen: globalDockState.contextMenuVisible &&
+                    (globalDockState.contextMenuScreen === "" || globalDockState.contextMenuScreen === screenScope.modelData.name)
+                readonly property bool isModalOnThisScreen: globalDockState.addModalVisible &&
+                    (globalDockState.addModalScreen === "" || globalDockState.addModalScreen === screenScope.modelData.name)
+
+                visible: isContextOnThisScreen || isModalOnThisScreen
 
                 anchors {
                     top: true
@@ -61,16 +67,18 @@ Scope {
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.namespace: "macos-dock-overlay"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: globalDockState.addModalVisible
+                WlrLayershell.keyboardFocus: isModalOnThisScreen
                     ? WlrKeyboardFocus.Exclusive
-                    : WlrKeyboardFocus.OnDemand
+                    : (isContextOnThisScreen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
 
                 DockContextMenu {
                     dockState: globalDockState
+                    screenName: screenScope.modelData.name
                 }
 
                 DockAddAppModal {
                     dockState: globalDockState
+                    screenName: screenScope.modelData.name
                 }
             }
         }

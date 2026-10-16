@@ -32,6 +32,14 @@ Item {
         ? dockState.isAppRunning(app)
         : !!runningApp
 
+    readonly property string screenName: (panelWindow && panelWindow.screen && panelWindow.screen.name)
+        ? panelWindow.screen.name
+        : ""
+
+    readonly property bool isContextMenuOnScreen: dockState
+        ? (dockState.contextMenuVisible && dockState.contextMenuScreen === screenName)
+        : false
+
     readonly property string iconSource: {
         if (isTrash) {
             let tc = dockState ? dockState.trashCount : 0
@@ -84,7 +92,7 @@ Item {
 
     Rectangle {
         id: tooltipPill
-        visible: mouseArea.containsMouse && !mouseArea.isDragging && (dockState ? !dockState.contextMenuVisible : true)
+        visible: mouseArea.containsMouse && !mouseArea.isDragging && !root.isContextMenuOnScreen
         z: 999
         anchors.bottom: iconContainer.top
         anchors.bottomMargin: 6
@@ -190,7 +198,7 @@ Item {
                 let globalX = dockScreenX + mapped.x
 
                 if (dockState) {
-                    dockState.openContextMenu(root.app, root.runningApp, root.isTrash, root.isFolder, globalX, mapped.y)
+                    dockState.openContextMenu(root.app, root.runningApp, root.isTrash, root.isFolder, globalX, mapped.y, root.screenName)
                 }
             } else {
                 if (dockState) dockState.closeContextMenu()
@@ -233,7 +241,7 @@ Item {
         if (!dockState) return
 
         if (root.isAdd) {
-            dockState.openAddModal()
+            dockState.openAddModal(root.screenName)
             return
         }
         if (root.isTrash) {
