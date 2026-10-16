@@ -313,11 +313,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-026] Creación de icono y Flyout interactivo de Bluetooth
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
 - **Rama Sugerida:** `ISSUE_026_FEAT`
 - **Módulo(s):** Modern-Win11-Theme / Flyouts (Bluetooth)
-- **Archivos Afectados:** `themes/Modern-Win11-Theme/.config/quickshell/` (Archivos QML de barra/dock y scripts Bluetooth)
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/dock/BluetoothControlFlyout.qml`, `themes/modern-win11-theme/.config/quickshell/dock/scripts/bluetooth_manager.py`, `themes/modern-win11-theme/.config/quickshell/dock/DockState.qml`, `themes/modern-win11-theme/.config/quickshell/dock/TrayPlatter.qml`, `themes/modern-win11-theme/.config/quickshell/dock/shell.qml`
 - **Descripción:** Diseñar e insertar un icono de estado de Bluetooth ubicado inmediatamente a la derecha del indicador `ENG` en la dock bar. Al hacer clic sobre él, debe desplegar un panel interactivo (Flyout) con la misma línea estética del panel de Sonido/Hora para gestionar dispositivos Bluetooth (`bluetoothctl`).
 - **Criterios de Aceptación:**
   1. El icono de Bluetooth se renderiza a la derecha de la etiqueta `ENG`.

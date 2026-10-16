@@ -1173,7 +1173,7 @@ Item {
     // ==========================================
     // 9. GENERAL POPUP ACTIONS & FLYOUTS
     // ==========================================
-    property string activeFlyout: "" // "" | "audio" | "calendar" | "network"
+    property string activeFlyout: "" // "" | "audio" | "calendar" | "network" | "bluetooth"
     property string flyoutScreen: ""
     property bool flyoutOpen: false
     property bool flyoutVisible: false
@@ -1235,6 +1235,19 @@ Item {
         }
     }
 
+    function toggleBluetoothFlyout(screenName) {
+        if (root.flyoutOpen && root.activeFlyout === "bluetooth" && (root.flyoutScreen === screenName || !screenName)) {
+            root.closeFlyouts();
+        } else {
+            flyoutCloseTimer.stop();
+            root.activeFlyout = "bluetooth";
+            root.flyoutScreen = screenName || "";
+            root.flyoutVisible = true;
+            root.flyoutOpen = true;
+            root.refreshBluetooth();
+        }
+    }
+
     function closeFlyouts() {
         if (!root.flyoutOpen && !root.flyoutVisible) return;
         root.flyoutOpen = false;
@@ -1243,6 +1256,10 @@ Item {
 
     function openCalendar(screenName) {
         root.toggleCalendarFlyout(screenName);
+    }
+
+    function openBluetooth(screenName) {
+        root.toggleBluetoothFlyout(screenName);
     }
 
     function openLauncher() {
@@ -1396,8 +1413,14 @@ Item {
     // ==========================================
     // 13. BLUETOOTH STATUS & CONTROLLER
     // ==========================================
+    readonly property string bluetoothScriptPath: Qt.resolvedUrl("scripts/bluetooth_manager.py").toString().replace("file://", "")
+
+    property bool bluetoothHasAdapter: true
     property bool bluetoothEnabled: true
     property string bluetoothDeviceName: ""
+    property var bluetoothDevices: []
+    property bool bluetoothScanning: false
+    property string bluetoothPendingMac: ""
 
     Timer {
         id: btTimer
@@ -1405,25 +1428,85 @@ Item {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: {
-            if (!btProc.running) btProc.running = true;
-        }
+        onTriggered: root.refreshBluetooth()
+    }
+
+    function parseBluetoothState(raw) {
+        if (!raw || raw.trim().length === 0) return;
+        try {
+            var parsed = JSON.parse(raw.trim());
+            if (parsed.hasAdapter !== undefined) root.bluetoothHasAdapter = !!parsed.hasAdapter;
+            root.bluetoothEnabled = !!parsed.powered;
+            root.bluetoothDeviceName = parsed.connectedDevice || "";
+            if (Array.isArray(parsed.devices)) {
+                root.bluetoothDevices = parsed.devices;
+            }
+        } catch (e) {}
     }
 
     Process {
         id: btProc
-        command: ["bash", "-c", "bluetoothctl show 2>/dev/null | grep 'Powered: yes' >/dev/null && echo 'on' || echo 'off'"]
+        command: ["python3", root.bluetoothScriptPath, "status"]
         stdout: SplitParser {
             onRead: data => {
-                root.bluetoothEnabled = (data.trim() === "on");
+                root.parseBluetoothState(data);
             }
+        }
+    }
+
+    Process {
+        id: btActionProc
+        stdout: SplitParser {
+            onRead: data => {
+                root.bluetoothScanning = false;
+                root.bluetoothPendingMac = "";
+                root.parseBluetoothState(data);
+            }
+        }
+        onExited: {
+            root.bluetoothScanning = false;
+            root.bluetoothPendingMac = "";
+        }
+    }
+
+    function refreshBluetooth() {
+        if (!btProc.running && !btActionProc.running) {
+            btProc.running = true;
         }
     }
 
     function toggleBluetooth() {
         var next = !root.bluetoothEnabled;
         root.bluetoothEnabled = next;
-        Quickshell.execDetached(["bash", "-c", next ? "bluetoothctl power on" : "bluetoothctl power off"]);
+        if (!next) {
+            root.bluetoothDeviceName = "";
+        }
+        btActionProc.command = ["python3", root.bluetoothScriptPath, "power", next ? "on" : "off"];
+        btActionProc.running = false;
+        btActionProc.running = true;
+    }
+
+    function scanBluetoothDevices() {
+        if (btActionProc.running) return;
+        root.bluetoothScanning = true;
+        btActionProc.command = ["python3", root.bluetoothScriptPath, "scan"];
+        btActionProc.running = true;
+    }
+
+    function connectBluetoothDevice(mac) {
+        if (!mac) return;
+        root.bluetoothPendingMac = mac;
+        btActionProc.command = ["python3", root.bluetoothScriptPath, "connect", mac];
+        btActionProc.running = false;
+        btActionProc.running = true;
+    }
+
+    function disconnectBluetoothDevice(mac) {
+        if (!mac) return;
+        root.bluetoothPendingMac = mac;
+        btActionProc.command = ["python3", root.bluetoothScriptPath, "disconnect", mac];
+        btActionProc.running = false;
+        btActionProc.running = true;
     }
 
     // ==========================================
