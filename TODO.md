@@ -249,3 +249,88 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   1. Al transicionar de `lunita-default` (con colores reactivos al wallpaper) a otro tema, no ocurre ningún "bleed" o sangrado de colores en Hyprland ni componentes del entorno.
   2. macOS y Win11 mantienen sus colores temáticos fijos correctamente inyectados (bordes de ventana azul Cupertino `#007AFF` y Fluent `#0078D4`), sin interferencia del daemon de Matugen.
 - **Dependencias:** Ninguna
+
+### [ISSUE-021] Resolución contextual del Clipboard al pulsar SUPER+V en lunita-default
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_021_FIX`
+- **Módulo(s):** Core / Lunita-Default / Clipboard
+- **Archivos Afectados:** `core/.local/bin/lunita-clipboard`, `themes/lunita-default/.config/quickshell/clipboard/shell.qml`, `themes/lunita-default/.config/quickshell/clipboard/ClipboardState.qml`, `themes/lunita-default/.config/quickshell/clipboard/ClipboardView.qml`, `themes/lunita-default/.config/quickshell/clipboard/ClipboardItem.qml`, `themes/lunita-default/.config/quickshell/clipboard/scripts/clipboard_manager.py`, `themes/lunita-default/.config/quickshell/clipboard/fonts`
+- **Descripción:** Al presionar el atajo `SUPER+V` estando activo el tema `lunita-default`, el wrapper invoca la interfaz del portapapeles perteneciente a `macOS-Theme` en lugar del componente nativo de `lunita-default`. El script disparador debe resolver dinámicamente el tema activo y levantar la interfaz QML correspondiente a `lunita-default`.
+- **Criterios de Aceptación:**
+  1. Presionar `SUPER+V` en `lunita-default` abre exclusivamente el portapapeles con el diseño e integración de `lunita-default`.
+  2. El wrapper no tiene rutas ni fallbacks forzados hacia `macOS-Theme`.
+- **Dependencias:** Ninguna
+
+### [ISSUE-022] Aislamiento de estado por monitor en la Dockbar de macOS
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_022_FIX`
+- **Módulo(s):** macOS-Theme / Dock
+- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/dock/` (Archivos QML)
+- **Descripción:** El estado interactivo del Dock (como la apertura de menús contextuales al hacer clic derecho o estados de hover/activación) se comparte globalmente entre todas las pantallas, provocando que el menú se despliegue simultáneamente en todos los monitores conectados. Se debe encapsular el estado de cada instancia del Dock localmente por monitor (`ShellScreen` / instancia de `PanelWindow`).
+- **Criterios de Aceptación:**
+  1. Hacer clic derecho sobre un icono del Dock abre el menú contextual únicamente en el monitor donde ocurrió la interacción.
+  2. Las animaciones e indicadores de interacción operan de forma independiente en configuraciones multimonitor.
+- **Dependencias:** Ninguna
+
+### [ISSUE-023] Integración de System Tray Icons en la barra superior de macOS
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_023_FEAT`
+- **Módulo(s):** macOS-Theme / Bar (System Tray)
+- **Archivos Afectados:** `themes/macOS-Theme/.config/quickshell/bar/` (Archivos QML)
+- **Descripción:** Implementar el contenedor de iconos de bandeja del sistema (`Quickshell.Services.SystemTray`) para procesos en segundo plano dentro de la Status Bar superior. Debe ubicarse inmediatamente a la izquierda del primer icono de control (el botón de acomodar/editar widgets), desplegando cada nuevo icono en dirección hacia la izquierda de la barra.
+- **Criterios de Aceptación:**
+  1. Los procesos activos en segundo plano (Discord, clientes de red, etc.) renderizan sus iconos en la barra superior.
+  2. La fila de iconos crece de derecha a izquierda partiendo desde el límite izquierdo del icono de gestión de widgets.
+  3. Soporta interacciones nativas de clic izquierdo y menú contextual (clic derecho) sobre cada icono.
+- **Dependencias:** Ninguna
+
+### [ISSUE-024] Posicionamiento de System Tray Icons en barra de tareas de Windows 11
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_024_FEAT`
+- **Módulo(s):** Modern-Win11-Theme / Bar-Dock (System Tray)
+- **Archivos Afectados:** `themes/Modern-Win11-Theme/.config/quickshell/dock/`, `themes/Modern-Win11-Theme/.config/quickshell/bar/` (Archivos QML)
+- **Descripción:** Incorporar los iconos de bandeja del sistema (`SystemTray`) para aplicaciones en segundo plano dentro del área de estado de la barra (donde residen los indicadores de Internet, sonido y batería). Deben posicionarse partiendo inmediatamente a la izquierda del indicador de idioma (`ENG`), apilándose uno al lado del otro hacia la izquierda.
+- **Criterios de Aceptación:**
+  1. Los iconos del System Tray aparecen alineados horizontalmente a la izquierda del indicador `ENG`.
+  2. El flujo visual se expande hacia la izquierda sin solapar ni desplazar erróneamente los módulos centrales.
+- **Dependencias:** Ninguna
+
+### [ISSUE-025] Diseño e implementación de Flyout interactivo de Red (Wi-Fi y Ethernet)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_025_FEAT`
+- **Módulo(s):** Modern-Win11-Theme / Flyouts (Network)
+- **Archivos Afectados:** `themes/Modern-Win11-Theme/.config/quickshell/` (Archivos QML de barra/dock y scripts de red)
+- **Descripción:** Reemplazar la invocación de GUIs externas básicas de red por un panel flotante (Flyout) nativo en QML con estética Fluent Design, homologado al diseño actual del panel de Sonido/Hora. Debe ser funcionalmente interactivo (integrado vía `nmcli` o backend equivalente) para escanear/conectar redes Wi-Fi y detectar/mostrar explícitamente el estado de la conexión física Ethernet si el equipo está conectado por cable.
+- **Criterios de Aceptación:**
+  1. Pulsar el icono de red abre el Flyout nativo con el mismo lenguaje visual que el módulo de Sonido/Hora.
+  2. Muestra el estado activo de red cableada (Ethernet) cuando existe conexión física.
+  3. Permite visualizar redes Wi-Fi disponibles, alternar la antena y conectarse de forma interactiva sin abrir aplicaciones externas.
+- **Dependencias:** Ninguna
+
+### [ISSUE-026] Creación de icono y Flyout interactivo de Bluetooth
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_026_FEAT`
+- **Módulo(s):** Modern-Win11-Theme / Flyouts (Bluetooth)
+- **Archivos Afectados:** `themes/Modern-Win11-Theme/.config/quickshell/` (Archivos QML de barra/dock y scripts Bluetooth)
+- **Descripción:** Diseñar e insertar un icono de estado de Bluetooth ubicado inmediatamente a la derecha del indicador `ENG` en la dock bar. Al hacer clic sobre él, debe desplegar un panel interactivo (Flyout) con la misma línea estética del panel de Sonido/Hora para gestionar dispositivos Bluetooth (`bluetoothctl`).
+- **Criterios de Aceptación:**
+  1. El icono de Bluetooth se renderiza a la derecha de la etiqueta `ENG`.
+  2. Al pulsarlo, despliega el Flyout interactivo permitiendo encender/apagar el adaptador Bluetooth y conectar/desconectar dispositivos emparejados.
+- **Dependencias:** Ninguna
+
+### [ISSUE-027] Vincular botón "Widgets y Aplicaciones" con la edición de widgets de escritorio
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_027_FEAT`
+- **Módulo(s):** Modern-Win11-Theme / Dock / Widgets
+- **Archivos Afectados:** `themes/Modern-Win11-Theme/.config/quickshell/dock/` (Archivos QML), `core/.local/bin/lunita-widgets-toggle`, `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Conectar la acción del botón "Widgets y Aplicaciones" presente en la dock bar del tema Windows 11 para que invoque el modo de modificación/gestión de los widgets del escritorio.
+- **Criterios de Aceptación:**
+  1. Hacer clic en el botón "Widgets y Aplicaciones" activa la edición o el panel gestor de los widgets en pantalla de forma directa.
+- **Dependencias:** Ninguna

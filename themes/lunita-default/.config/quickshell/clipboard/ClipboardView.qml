@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -9,12 +8,16 @@ Item {
     required property var clipboardState
     property alias searchInput: searchField
 
-    implicitWidth: 540
-    implicitHeight: 490
-    width: 540
-    height: 490
+    implicitWidth: 460
+    implicitHeight: 480
+    width: 460
+    height: 480
 
-    // ── Main Frosted Glass Card ──
+    readonly property int itemCount: (root.clipboardState.clipboardList && root.clipboardState.clipboardList.length)
+        ? root.clipboardState.clipboardList.length
+        : 0
+
+    // ── Main Floating Panel (.cliphist-panel) ──
     Rectangle {
         id: mainCard
         anchors.fill: parent
@@ -23,45 +26,176 @@ Item {
         border.color: root.clipboardState.panelBorderColor
         border.width: 1
 
-        // Inner Specular Sheen Border
-        Rectangle {
+        // Absorb clicks inside the panel so outside click catcher doesn't trigger
+        MouseArea {
             anchors.fill: parent
-            anchors.margins: 1
-            radius: 21
-            color: "transparent"
-            border.color: root.clipboardState.panelInnerSheen
-            border.width: 1
+            hoverEnabled: false
         }
 
         ColumnLayout {
             anchors.fill: parent
+            anchors.margins: 16
             spacing: 0
 
             // ════════════════════════════════════════════════════════════
-            // ── TOP HEADER / SEARCH BAR ──
+            // ── 1. CABECERA ESTILO LUNITA / NOTHING OS (.cliphist-header) ──
             // ════════════════════════════════════════════════════════════
-            Item {
+            RowLayout {
                 Layout.fillWidth: true
-                implicitHeight: 50
+                Layout.bottomMargin: 12
+                spacing: 10
+
+                // Píldora de estado (.cliphist-title-pill)
+                Rectangle {
+                    Layout.preferredHeight: 28
+                    Layout.preferredWidth: pillRow.implicitWidth + 24
+                    radius: 14
+                    color: root.clipboardState.titlePillBg
+                    border.color: root.clipboardState.titlePillBorder
+                    border.width: 1
+
+                    RowLayout {
+                        id: pillRow
+                        anchors.centerIn: parent
+                        spacing: 6
+
+                        Text {
+                            text: "content_paste"
+                            font.family: root.clipboardState.fontIcons
+                            font.pixelSize: 15
+                            color: root.clipboardState.accentRed
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        Text {
+                            text: "PORTAPAPELES"
+                            font.family: root.clipboardState.fontDots
+                            font.pixelSize: 11
+                            font.letterSpacing: 1.5
+                            font.weight: Font.Bold
+                            color: root.clipboardState.textColor
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                // Contador de elementos (.cliphist-info-badge)
+                Rectangle {
+                    Layout.preferredHeight: 24
+                    Layout.preferredWidth: countLabel.implicitWidth + 16
+                    radius: 12
+                    color: root.clipboardState.infoBadgeBg
+
+                    Text {
+                        id: countLabel
+                        anchors.centerIn: parent
+                        text: root.itemCount + (root.itemCount === 1 ? " elemento" : " elementos")
+                        font.family: root.clipboardState.fontUi
+                        font.pixelSize: 11
+                        color: root.clipboardState.textDimColor
+                    }
+                }
+
+                // Botón para vaciar todo el historial (.cliphist-clear-btn)
+                Rectangle {
+                    id: clearBtn
+                    Layout.preferredWidth: 28
+                    Layout.preferredHeight: 28
+                    radius: 14
+                    color: clearMouse.containsMouse
+                        ? root.clipboardState.clearBtnHoverBg
+                        : root.clipboardState.headerBtnBg
+                    border.color: clearMouse.containsMouse
+                        ? root.clipboardState.clearBtnHoverBorder
+                        : root.clipboardState.headerBtnBorder
+                    border.width: 1
+
+                    Behavior on color { ColorAnimation { duration: 160 } }
+                    Behavior on border.color { ColorAnimation { duration: 160 } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "delete_sweep"
+                        font.family: root.clipboardState.fontIcons
+                        font.pixelSize: 15
+                        color: clearMouse.containsMouse
+                            ? root.clipboardState.accentRed
+                            : root.clipboardState.textDimColor
+                    }
+
+                    MouseArea {
+                        id: clearMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.clipboardState.clearAll()
+                    }
+                }
+
+                // Botón de cerrar (.cliphist-close-btn)
+                Rectangle {
+                    id: closeBtn
+                    Layout.preferredWidth: 28
+                    Layout.preferredHeight: 28
+                    radius: 14
+                    color: closeMouse.containsMouse
+                        ? root.clipboardState.headerBtnHoverBg
+                        : root.clipboardState.headerBtnBg
+                    border.color: closeMouse.containsMouse
+                        ? root.clipboardState.headerBtnHoverBorder
+                        : root.clipboardState.headerBtnBorder
+                    border.width: 1
+
+                    Behavior on color { ColorAnimation { duration: 160 } }
+                    Behavior on border.color { ColorAnimation { duration: 160 } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "close"
+                        font.family: root.clipboardState.fontIcons
+                        font.pixelSize: 15
+                        color: closeMouse.containsMouse
+                            ? root.clipboardState.textColor
+                            : root.clipboardState.textDimColor
+                    }
+
+                    MouseArea {
+                        id: closeMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.clipboardState.closeClipboard()
+                    }
+                }
+            }
+
+            // ════════════════════════════════════════════════════════════
+            // ── 2. BARRA DE BÚSQUEDA (.cliphist-search-wrapper) ──
+            // ════════════════════════════════════════════════════════════
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 36
+                radius: 12
+                color: root.clipboardState.searchBgColor
+                border.color: root.clipboardState.searchBorderColor
+                border.width: 1
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 18
-                    anchors.rightMargin: 18
-                    spacing: 12
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 10
+                    spacing: 8
 
-                    // Top Left Clipboard Icon (Deep Teal Outline)
-                    Image {
-                        source: "assets/clipboard-header.svg"
-                        sourceSize.width: 44
-                        sourceSize.height: 44
-                        Layout.preferredWidth: 22
-                        Layout.preferredHeight: 22
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
+                    Text {
+                        text: "search"
+                        font.family: root.clipboardState.fontIcons
+                        font.pixelSize: 16
+                        color: root.clipboardState.textDimColor
+                        Layout.alignment: Qt.AlignVCenter
                     }
 
-                    // Search Field & Title
                     Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -70,14 +204,12 @@ Item {
                             id: searchField
                             anchors.fill: parent
                             verticalAlignment: TextInput.AlignVCenter
-                            font.family: "SF Pro Display, Inter, -apple-system, sans-serif"
-                            font.styleName: "Regular"
-                            font.pixelSize: 18
-                            font.weight: Font.Medium
-                            font.italic: false
+                            font.family: root.clipboardState.fontUi
+                            font.pixelSize: 13
+                            font.weight: Font.Normal
                             color: root.clipboardState.textColor
-                            selectionColor: Qt.rgba(5, 59, 85, 0.25)
-                            selectedTextColor: root.clipboardState.textColor
+                            selectionColor: Qt.rgba(215 / 255, 25 / 255, 33 / 255, 0.35)
+                            selectedTextColor: "#FFFFFF"
                             clip: true
                             cursorVisible: root.clipboardState.isOpen
 
@@ -88,7 +220,6 @@ Item {
                                 }
                             }
 
-                            // Keys handling
                             Keys.onDownPressed: {
                                 root.clipboardState.moveSelectionDown();
                                 listView.positionViewAtIndex(root.clipboardState.selectedIndex, ListView.Contain);
@@ -100,81 +231,86 @@ Item {
                             Keys.onReturnPressed: {
                                 root.clipboardState.activateCurrentItem();
                             }
-                            Keys.onEscapePressed: {
-                                if (contextMenu.visible) {
-                                    contextMenu.visible = false;
-                                } else {
-                                    root.clipboardState.closeClipboard();
-                                }
+                            Keys.onEnterPressed: {
+                                root.clipboardState.activateCurrentItem();
                             }
                             Keys.onDeletePressed: {
                                 root.clipboardState.deleteCurrentItem();
                             }
+                            Keys.onEscapePressed: {
+                                if (searchField.text.length > 0) {
+                                    root.clipboardState.searchQuery = "";
+                                    root.clipboardState.selectedIndex = 0;
+                                } else {
+                                    root.clipboardState.closeClipboard();
+                                }
+                            }
+                            Keys.onPressed: event => {
+                                if ((event.key === Qt.Key_V) && (event.modifiers & Qt.MetaModifier)) {
+                                    root.clipboardState.closeClipboard();
+                                    event.accepted = true;
+                                }
+                            }
 
-                            // Placeholder Text "Clipboard"
                             Text {
                                 anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
                                 visible: searchField.text.length === 0
-                                text: "Clipboard"
-                                font.family: searchField.font.family
-                                font.pixelSize: searchField.font.pixelSize
-                                font.weight: searchField.font.weight
-                                font.italic: false
-                                color: root.clipboardState.textColor
-                                opacity: 0.85
+                                text: "Buscar en el historial..."
+                                font.family: root.clipboardState.fontUi
+                                font.pixelSize: 13
+                                color: root.clipboardState.textFaintColor
                             }
                         }
                     }
 
-                    // Top Right More Actions Button (···)
-                    Item {
-                        Layout.preferredWidth: 26
-                        Layout.preferredHeight: 26
-                        Layout.alignment: Qt.AlignVCenter
+                    // Botón para limpiar búsqueda (.cliphist-search-clear)
+                    Rectangle {
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
+                        radius: 10
+                        color: "transparent"
+                        visible: searchField.text.length > 0
+                        opacity: searchField.text.length > 0 ? 1.0 : 0.0
 
-                        Rectangle {
-                            id: moreBtnBg
+                        Text {
+                            anchors.centerIn: parent
+                            text: "close"
+                            font.family: root.clipboardState.fontIcons
+                            font.pixelSize: 13
+                            color: clearSearchMouse.containsMouse
+                                ? root.clipboardState.textColor
+                                : root.clipboardState.textDimColor
+                        }
+
+                        MouseArea {
+                            id: clearSearchMouse
                             anchors.fill: parent
-                            radius: 13
-                            color: moreBtnMouse.containsMouse
-                                ? Qt.rgba(255, 255, 255, 0.28)
-                                : "transparent"
-
-                            Image {
-                                anchors.centerIn: parent
-                                width: 22
-                                height: 22
-                                source: "assets/more.svg"
-                                sourceSize.width: 44
-                                sourceSize.height: 44
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                            }
-
-                            MouseArea {
-                                id: moreBtnMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    contextMenu.visible = !contextMenu.visible;
-                                }
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.clipboardState.searchQuery = "";
+                                root.clipboardState.selectedIndex = 0;
+                                searchField.forceActiveFocus();
                             }
                         }
                     }
                 }
             }
 
-            // Subtle Divider Line below Header
+            // ════════════════════════════════════════════════════════════
+            // ── 3. SEPARADOR (.cliphist-separator) ──
+            // ════════════════════════════════════════════════════════════
             Rectangle {
                 Layout.fillWidth: true
+                Layout.topMargin: 10
+                Layout.bottomMargin: 8
                 implicitHeight: 1
                 color: root.clipboardState.dividerColor
             }
 
             // ════════════════════════════════════════════════════════════
-            // ── CLIPBOARD ITEMS LIST ──
+            // ── 4. LISTA DESPLAZABLE DE ELEMENTOS (.cliphist-scroll-area) ──
             // ════════════════════════════════════════════════════════════
             Item {
                 Layout.fillWidth: true
@@ -183,13 +319,10 @@ Item {
                 ListView {
                     id: listView
                     anchors.fill: parent
-                    anchors.topMargin: 4
-                    anchors.bottomMargin: 8
-                    spacing: 8
+                    spacing: 4
                     clip: true
                     model: root.clipboardState.clipboardList
                     currentIndex: root.clipboardState.selectedIndex
-
                     boundsBehavior: Flickable.StopAtBounds
 
                     delegate: ClipboardItem {
@@ -204,181 +337,97 @@ Item {
                         contentItem: Rectangle {
                             implicitWidth: 4
                             radius: 2
-                            color: Qt.rgba(5, 59, 85, 0.28)
+                            color: Qt.rgba(1, 1, 1, 0.22)
                             opacity: vbar.active ? 1.0 : 0.0
                             Behavior on opacity { NumberAnimation { duration: 150 } }
                         }
                     }
                 }
 
-                // Empty State
+                // Estado Vacío (.cliphist-empty-box)
                 ColumnLayout {
                     anchors.centerIn: parent
-                    visible: !root.clipboardState.clipboardList || root.clipboardState.clipboardList.length === 0
+                    visible: root.itemCount === 0
                     spacing: 8
 
-                    Image {
-                        source: "assets/clipboard-header.svg"
-                        Layout.preferredWidth: 36
-                        Layout.preferredHeight: 36
+                    Text {
+                        text: "content_paste"
+                        font.family: root.clipboardState.fontIcons
+                        font.pixelSize: 38
+                        color: root.clipboardState.textFaintColor
                         Layout.alignment: Qt.AlignHCenter
-                        opacity: 0.45
-                        fillMode: Image.PreserveAspectFit
                     }
 
                     Text {
                         text: root.clipboardState.searchQuery.length > 0
-                            ? "Sin resultados para \"" + root.clipboardState.searchQuery + "\""
+                            ? "No se encontraron coincidencias"
                             : "Historial de portapapeles vacío"
-                        font.family: "SF Pro Text, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                        font.family: root.clipboardState.fontUi
                         font.pixelSize: 13
-                        font.weight: Font.Medium
+                        font.weight: Font.DemiBold
                         color: root.clipboardState.textDimColor
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Text {
+                        text: "Copia texto o capturas para guardarlos automáticamente"
+                        font.family: root.clipboardState.fontUi
+                        font.pixelSize: 11
+                        color: root.clipboardState.textFaintColor
                         Layout.alignment: Qt.AlignHCenter
                     }
                 }
             }
-        }
 
-        // ════════════════════════════════════════════════════════════
-        // ── FLOATING CONTEXT MENU (···) ──
-        // ════════════════════════════════════════════════════════════
-        Rectangle {
-            id: contextMenu
-            visible: false
-            width: 210
-            height: menuColumn.implicitHeight + 16
-            anchors.top: parent.top
-            anchors.topMargin: 48
-            anchors.right: parent.right
-            anchors.rightMargin: 16
-            radius: 12
-            color: root.clipboardState.menuBgColor
-            border.color: root.clipboardState.menuBorderColor
-            border.width: 1
-            z: 100
+            // ════════════════════════════════════════════════════════════
+            // ── 5. PIE CON ATAJOS DE TECLADO (.cliphist-footer) ──
+            // ════════════════════════════════════════════════════════════
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: 10
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 14
 
-            RectangularGlow {
-                anchors.fill: parent
-                glowRadius: 16
-                spread: 0.1
-                color: root.clipboardState.panelShadowColor
-                cornerRadius: parent.radius + glowRadius
-                z: -1
-            }
+                Item { Layout.fillWidth: true }
 
-            Column {
-                id: menuColumn
-                anchors.fill: parent
-                anchors.margins: 6
-                spacing: 2
+                Repeater {
+                    model: [
+                        { key: "↑↓", label: "Navegar" },
+                        { key: "↵", label: "Copiar y Pegar" },
+                        { key: "Supr", label: "Borrar" },
+                        { key: "Esc", label: "Cerrar" }
+                    ]
 
-                // Item: Copy Selected
-                Rectangle {
-                    width: parent.width
-                    height: 28
-                    radius: 6
-                    color: copyMouse.containsMouse ? Qt.rgba(5, 59, 85, 0.10) : "transparent"
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        Text {
-                            text: "Copiar seleccionado"
-                            color: root.clipboardState.textColor
-                            font.pixelSize: 12
-                            font.family: "SF Pro Text, system-ui, sans-serif"
-                            Layout.fillWidth: true
+                    delegate: RowLayout {
+                        required property var modelData
+                        spacing: 4
+
+                        Rectangle {
+                            Layout.preferredHeight: 18
+                            Layout.preferredWidth: keyLabel.implicitWidth + 10
+                            radius: 4
+                            color: Qt.rgba(1, 1, 1, 0.08)
+
+                            Text {
+                                id: keyLabel
+                                anchors.centerIn: parent
+                                text: modelData.key
+                                font.family: root.clipboardState.fontDots
+                                font.pixelSize: 9
+                                color: root.clipboardState.textDimColor
+                            }
                         }
+
                         Text {
-                            text: "↵"
-                            color: root.clipboardState.textDimColor
-                            font.pixelSize: 12
-                        }
-                    }
-                    MouseArea {
-                        id: copyMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            contextMenu.visible = false;
-                            root.clipboardState.activateCurrentItem();
+                            text: modelData.label
+                            font.family: root.clipboardState.fontUi
+                            font.pixelSize: 11
+                            color: root.clipboardState.textFaintColor
                         }
                     }
                 }
 
-                // Item: Delete Selected
-                Rectangle {
-                    width: parent.width
-                    height: 28
-                    radius: 6
-                    color: delMouse.containsMouse ? Qt.rgba(5, 59, 85, 0.10) : "transparent"
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        Text {
-                            text: "Eliminar elemento"
-                            color: root.clipboardState.textColor
-                            font.pixelSize: 12
-                            font.family: "SF Pro Text, system-ui, sans-serif"
-                            Layout.fillWidth: true
-                        }
-                        Text {
-                            text: "⌫"
-                            color: root.clipboardState.textDimColor
-                            font.pixelSize: 12
-                        }
-                    }
-                    MouseArea {
-                        id: delMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            contextMenu.visible = false;
-                            root.clipboardState.deleteCurrentItem();
-                        }
-                    }
-                }
-
-                // Divider
-                Rectangle {
-                    width: parent.width
-                    height: 1
-                    color: root.clipboardState.dividerColor
-                }
-
-                // Item: Clear All
-                Rectangle {
-                    width: parent.width
-                    height: 28
-                    radius: 6
-                    color: wipeMouse.containsMouse ? Qt.rgba(215, 0, 21, 0.15) : "transparent"
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        Text {
-                            text: "Limpiar todo el historial"
-                            color: "#D70015"
-                            font.pixelSize: 12
-                            font.family: "SF Pro Text, system-ui, sans-serif"
-                            Layout.fillWidth: true
-                        }
-                    }
-                    MouseArea {
-                        id: wipeMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            contextMenu.visible = false;
-                            root.clipboardState.clearAll();
-                        }
-                    }
-                }
+                Item { Layout.fillWidth: true }
             }
         }
     }
@@ -389,8 +438,6 @@ Item {
         function onIsOpenChanged() {
             if (root.clipboardState.isOpen) {
                 searchField.forceActiveFocus();
-            } else {
-                contextMenu.visible = false;
             }
         }
     }

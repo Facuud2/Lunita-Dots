@@ -7,7 +7,7 @@ import Quickshell.Hyprland
 Scope {
     id: root
 
-    // Global Shared Clipboard State
+    // Global Shared Clipboard State (Lunita-Default)
     ClipboardState {
         id: globalClipboardState
     }
@@ -102,9 +102,14 @@ Scope {
                 }
 
                 WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.namespace: "macos-clipboard-catcher"
+                WlrLayershell.namespace: "lunita-clipboard-catcher"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: globalClipboardState.backdropColor
+                }
 
                 MouseArea {
                     anchors.fill: parent
@@ -115,32 +120,33 @@ Scope {
         }
     }
 
-    // ── 2. Compact Floating Clipboard Card Window (ONLY on focused monitor, BLURRED BY HYPRLAND) ──
-    // Sized ONLY to the card bounds (540x490) so Hyprland blurs ONLY this card!
+    // ── 2. Floating Nothing OS / Lunita-Default Clipboard Card Window (positioned at cursor) ──
     PanelWindow {
         id: clipboardWindow
         screen: root.targetScreen
         color: "transparent"
         visible: globalClipboardState.windowVisible
 
-        implicitWidth: 540
-        implicitHeight: 490
+        implicitWidth: 460
+        implicitHeight: 480
 
         anchors {
             top: true
+            left: true
         }
         margins {
-            top: Math.max(80, Math.round((root.targetScreen ? root.targetScreen.height : 1080) * 0.18))
+            top: globalClipboardState.panelY
+            left: globalClipboardState.panelX
         }
 
         mask: Region {
-            width: 540
-            height: 490
+            width: 460
+            height: 480
             radius: 22
         }
 
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "macos-clipboard"
+        WlrLayershell.namespace: "lunita-clipboard"
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
         WlrLayershell.keyboardFocus: globalClipboardState.isOpen
             ? WlrKeyboardFocus.Exclusive

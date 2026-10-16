@@ -4,7 +4,7 @@
 # Gestor e invocador reactivo para el portapapeles basado en theme.json
 # ==============================================================================
 
-set -e
+set -euo pipefail
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
@@ -13,6 +13,7 @@ while [ -h "$SOURCE" ]; do
     [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
 get_dots_dir() {
     local d="$1"
     while [ "$d" != "/" ] && [ -n "$d" ]; do
@@ -24,18 +25,21 @@ get_dots_dir() {
     done
     return 1
 }
-DOTS_DIR="$(get_dots_dir "$SCRIPT_DIR" 2>/dev/null || (cd "$SCRIPT_DIR/.." && pwd))"
+DOTS_DIR="$(get_dots_dir "$SCRIPT_DIR" 2>/dev/null || (cd "$SCRIPT_DIR/../../.." && pwd))"
 
 get_active_theme() {
-    if [ -f "$DOTS_DIR/.lunita-theme" ]; then
-        tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme"
-    elif [ -f "$HOME/.config/lunita/current_theme" ]; then
-        tr -d '[:space:]' < "$HOME/.config/lunita/current_theme"
+    local theme=""
+    if [ -f "$HOME/.config/lunita/current_theme" ]; then
+        theme="$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")"
+    elif [ -f "$DOTS_DIR/.lunita-theme" ]; then
+        theme="$(tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme")"
     elif [ -f "$HOME/.lunita-theme" ]; then
-        tr -d '[:space:]' < "$HOME/.lunita-theme"
+        theme="$(tr -d '[:space:]' < "$HOME/.lunita-theme")"
     else
-        echo "lunita-default"
+        theme="lunita-default"
     fi
+    theme="${theme,,}"
+    echo "${theme:-lunita-default}"
 }
 
 get_theme_component() {
@@ -52,8 +56,62 @@ get_theme_component() {
     if command -v jq >/dev/null 2>&1; then
         jq -r --arg c "$comp" '.components[$c] // empty' "$theme_file" 2>/dev/null || echo ""
     elif command -v python3 >/dev/null 2>&1; then
-        python3 -c "import json; d=json.load(open('$theme_file')); print(d.get('components', {}).get('$comp', '') or '')" 2>/dev/null || echo ""
+        python3 -c "import json, sys; d=json.load(open(sys.argv[1])); print(d.get('components', {}).get(sys.argv[2], '') or '')" "$theme_file" "$comp" 2>/dev/null || echo ""
     fi
+}
+
+resolve_clipboard_path() {
+    local theme="$1"
+    local theme_dir="$DOTS_DIR/themes/$theme/.config/quickshell/clipboard"
+    local user_dir="$HOME/.config/quickshell/clipboard"
+
+    if [ ! -d "$theme_dir" ]; then
+        echo ""
+        return 0
+    fi
+
+    if [ -d "$user_dir" ]; then
+        local real_user real_theme
+        real_user="$(realpath "$user_dir" 2>/dev/null || echo "")"
+        real_theme="$(realpath "$theme_dir" 2>/dev/null || echo "")"
+        if [ -n "$real_user" ] && [ "$real_user" = "$real_theme" ]; then
+            echo "$user_dir"
+            return 0
+        fi
+    fi
+
+    echo "$theme_dir"
+}
+
+ensure_active_theme_daemon() {
+    local expected_path="$1"
+    local real_expected
+    real_expected="$(realpath "$expected_path" 2>/dev/null || echo "$expected_path")"
+
+    local pids
+    pids="$(pgrep -u "$UID" -f "quickshell.*clipboard" 2>/dev/null || true)"
+    if [ -z "$pids" ]; then
+        return 1
+    fi
+
+    local matched=1
+    for p in $pids; do
+        if [ -f "/proc/$p/cmdline" ]; then
+            local cmd_path
+            cmd_path="$(tr '\0' '\n' < "/proc/$p/cmdline" | awk 'prev=="-p"{print $0; exit} {prev=$0}')"
+            if [ -n "$cmd_path" ]; then
+                local real_cmd
+                real_cmd="$(realpath "${cmd_path%/shell.qml}" 2>/dev/null || echo "$cmd_path")"
+                if [ "$real_cmd" = "$real_expected" ]; then
+                    matched=0
+                else
+                    kill "$p" 2>/dev/null || true
+                fi
+            fi
+        fi
+    done
+
+    return "$matched"
 }
 
 ACTION="${1:-toggle}"
@@ -65,28 +123,15 @@ if [ -z "$CLIPBOARD_COMP" ] || [ "$CLIPBOARD_COMP" = "null" ]; then
     exit 0
 fi
 
-# Soporte para AGS en temas legacy
-if [[ "$CLIPBOARD_COMP" == ags-* ]]; then
-    if command -v ags >/dev/null 2>&1; then
-        ags request toggle-cliphist 2>/dev/null || true
-    fi
+CLIPBOARD_PATH="$(resolve_clipboard_path "$ACTIVE_THEME")"
+if [ -z "$CLIPBOARD_PATH" ] || [ ! -d "$CLIPBOARD_PATH" ]; then
     exit 0
-fi
-
-# Para componentes Quickshell
-CLIPBOARD_PATH="$HOME/.config/quickshell/clipboard"
-if [ ! -d "$CLIPBOARD_PATH" ]; then
-    if [ -d "$DOTS_DIR/themes/$ACTIVE_THEME/.config/quickshell/clipboard" ]; then
-        CLIPBOARD_PATH="$DOTS_DIR/themes/$ACTIVE_THEME/.config/quickshell/clipboard"
-    else
-        exit 0
-    fi
 fi
 
 # Detectar monitor enfocado
 TARGET_MONITOR="${2:-}"
-if [ -z "$TARGET_MONITOR" ]; then
-    TARGET_MONITOR=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null || echo "")
+if [ -z "$TARGET_MONITOR" ] && command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+    TARGET_MONITOR="$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null || echo "")"
 fi
 
 CALL_ACTION="$ACTION"
@@ -96,15 +141,15 @@ if [ -n "$TARGET_MONITOR" ] && [[ "$ACTION" == "toggle" || "$ACTION" == "open" ]
     CALL_ARGS=("$TARGET_MONITOR")
 fi
 
-# 1. Si el portapapeles ya está en ejecución, enviar comando IPC directamente
-if pgrep -u "$UID" -f "quickshell.*clipboard" >/dev/null 2>&1; then
+# 1. Si el portapapeles del tema activo ya está en ejecución, enviar comando IPC directamente
+if ensure_active_theme_daemon "$CLIPBOARD_PATH"; then
     quickshell -p "$CLIPBOARD_PATH" ipc call clipboard "$CALL_ACTION" "${CALL_ARGS[@]}" 2>/dev/null || \
     quickshell -p "$CLIPBOARD_PATH" ipc call clipboard "$ACTION" 2>/dev/null || \
     quickshell ipc call clipboard "$ACTION" 2>/dev/null || true
     exit 0
 fi
 
-# 2. Si no está en ejecución, iniciarlo en modo daemon
+# 2. Si no está en ejecución (o era de otro tema y fue detenido), iniciarlo en modo daemon
 quickshell -d -n -p "$CLIPBOARD_PATH" </dev/null >/dev/null 2>&1 &
 disown -h $! 2>/dev/null || true
 
