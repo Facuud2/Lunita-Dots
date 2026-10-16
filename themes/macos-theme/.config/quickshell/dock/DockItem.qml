@@ -70,34 +70,48 @@ Item {
         }
         if (isFolder) return Qt.resolvedUrl("assets/icons/folder.svg")
         if (isAdd) return Qt.resolvedUrl("assets/icons/add.svg")
-        if (app && app.iconFile) return Qt.resolvedUrl("assets/icons/" + app.iconFile)
-        if (app && app.id) {
-            let id = app.id.toLowerCase()
-            if (id.includes("zen") || id === "safari" || id.includes("firefox") || id === "browser" || id.includes("chrome")) return Qt.resolvedUrl("assets/icons/safari.svg")
-            if (id.includes("code") || id.includes("vscodium") || id.includes("vscode") || id === "editor" || id.includes("antigravity") || id.includes("cursor")) return Qt.resolvedUrl("assets/icons/code.svg")
-            if (id.includes("terminal") || id.includes("kitty") || id.includes("alacritty") || id === "term" || id.includes("foot") || id.includes("ghostty") || id.includes("wezterm")) return Qt.resolvedUrl("assets/icons/terminal.svg")
-            if (id === "finder" || id.includes("dolphin") || id === "files" || id.includes("nautilus") || id.includes("thunar")) return Qt.resolvedUrl("assets/icons/finder.svg")
-            if (id === "launchpad" || id === "launcher" || id === "rofi" || id === "apps") return Qt.resolvedUrl("assets/icons/launchpad.svg")
-            if (id === "settings" || id === "systemsettings") return Qt.resolvedUrl("assets/icons/settings.svg")
-            if (id === "music" || id.includes("spotify")) return Qt.resolvedUrl("assets/icons/music.svg")
-            if (id === "messages" || id.includes("telegram") || id.includes("discord") || id.includes("vesktop")) return Qt.resolvedUrl("assets/icons/messages.svg")
-            if (id === "mail" || id.includes("thunderbird")) return Qt.resolvedUrl("assets/icons/mail.svg")
-            if (id === "photos" || id.includes("gwenview") || id.includes("loupe")) return Qt.resolvedUrl("assets/icons/photos.svg")
-            if (id === "facetime" || id === "camera") return Qt.resolvedUrl("assets/icons/facetime.svg")
-            if (id === "phone" || id.includes("whatsapp")) return Qt.resolvedUrl("assets/icons/phone.svg")
-            if (id === "calendar") return Qt.resolvedUrl("assets/icons/calendar.svg")
-            if (id === "contacts") return Qt.resolvedUrl("assets/icons/contacts.svg")
-            if (id === "reminders") return Qt.resolvedUrl("assets/icons/reminders.svg")
-            if (id === "notes") return Qt.resolvedUrl("assets/icons/notes.svg")
-            if (id === "shortcuts") return Qt.resolvedUrl("assets/icons/shortcuts.svg")
-            if (id === "keychain") return Qt.resolvedUrl("assets/icons/keychain.svg")
+
+        // 1. Prioridad: Icono nativo pre-resuelto si existe
+        if (app && app.iconPath && app.iconPath.length > 0) {
+            return app.iconPath
         }
-        if (app && app.fallbackIcon) {
-            return dockState ? dockState.resolveIconSource(app.fallbackIcon) : Qt.resolvedUrl("assets/icons/launchpad.svg")
+
+        // 2. Elementos del sistema macOS específicos (Launchpad, Atajos, Llavero)
+        if (app && (app.id === "launchpad" || app.id === "shortcuts" || app.id === "keychain")) {
+            return Qt.resolvedUrl("assets/icons/" + app.id + ".svg")
         }
-        if (runningApp && runningApp.icon) {
-            return dockState ? dockState.resolveIconSource(runningApp.icon) : Qt.resolvedUrl("assets/icons/launchpad.svg")
+
+        // 3. Resolución para apps ancladas (Dock items)
+        if (app) {
+            let candidates = [app.iconName, app.fallbackIcon, app.id, app.name]
+            for (let i = 0; i < candidates.length; i++) {
+                let cand = candidates[i]
+                if (cand && cand.length > 0) {
+                    let resolved = dockState ? dockState.resolveIconSource(cand) : ""
+                    if (resolved && resolved.length > 0 && !resolved.endsWith("launchpad.svg")) {
+                        return resolved
+                    }
+                }
+            }
+            if (app.iconFile && app.iconFile.length > 0) {
+                return Qt.resolvedUrl("assets/icons/" + app.iconFile)
+            }
         }
+
+        // 4. Resolución para apps abiertas no ancladas
+        if (runningApp) {
+            let candidates = [runningApp.icon, runningApp.clazz, runningApp.name]
+            for (let i = 0; i < candidates.length; i++) {
+                let cand = candidates[i]
+                if (cand && cand.length > 0) {
+                    let resolved = dockState ? dockState.resolveIconSource(cand) : ""
+                    if (resolved && resolved.length > 0 && !resolved.endsWith("launchpad.svg")) {
+                        return resolved
+                    }
+                }
+            }
+        }
+
         return Qt.resolvedUrl("assets/icons/launchpad.svg")
     }
 

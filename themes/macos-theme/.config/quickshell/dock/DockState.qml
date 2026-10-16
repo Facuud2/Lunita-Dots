@@ -54,12 +54,11 @@ Item {
             matchClasses: []
         },
         {
-            id: "safari",
-            name: "Safari",
-            iconFile: "safari.svg",
-            fallbackIcon: "web-browser",
-            cmd: "zen-browser || firefox || google-chrome-stable",
-            matchClasses: ["zen", "zen-alpha", "zen-browser", "firefox", "google-chrome", "chromium", "brave-browser"]
+            id: "zen",
+            name: "Zen Browser",
+            fallbackIcon: "zen-browser",
+            cmd: "zen-browser || gtk-launch zen.desktop || gtk-launch zen",
+            matchClasses: ["zen", "zen-alpha", "zen-browser"]
         },
         {
             id: "messages",
@@ -160,10 +159,16 @@ Item {
         {
             id: "code",
             name: "Visual Studio Code",
-            iconFile: "code.svg",
-            fallbackIcon: "text-editor",
-            cmd: "antigravity || code || vscodium",
-            matchClasses: ["antigravity", "code", "Code", "vscodium", "neovim", "cursor"]
+            fallbackIcon: "vscode",
+            cmd: "code || vscodium",
+            matchClasses: ["code", "Code", "vscodium"]
+        },
+        {
+            id: "antigravity",
+            name: "Antigravity",
+            fallbackIcon: "antigravity",
+            cmd: "antigravity",
+            matchClasses: ["antigravity"]
         },
         {
             id: "appstore",
@@ -262,9 +267,43 @@ Item {
             if (Array.isArray(parsed) && parsed.length > 0) {
                 root.hasLoadedFromDisk = true
                 let cleaned = parsed.map(function(item) {
-                    if (item && item.cmd) {
+                    if (!item) return item
+                    let itemId = (item.id || "").toLowerCase()
+                    let itemName = (item.name || "").toLowerCase()
+                    let itemCmd = (item.cmd || "").toLowerCase()
+
+                    // Corrección específica para Zen Browser
+                    if (itemId === "zen" || itemName.includes("zen") || itemCmd.includes("zen")) {
+                        item.fallbackIcon = "zen-browser"
+                        item.cmd = "zen-browser || gtk-launch zen.desktop || gtk-launch zen"
+                        delete item.iconFile
+                        item.matchClasses = ["zen", "zen-alpha", "zen-browser"]
+                    }
+
+                    // Corrección específica para Visual Studio Code
+                    if (itemId === "code" || itemName.includes("visual studio code")) {
+                        item.fallbackIcon = "vscode"
+                        delete item.iconFile
+                        if (Array.isArray(item.matchClasses)) {
+                            item.matchClasses = item.matchClasses.filter(function(c) { return c.toLowerCase() !== "antigravity" })
+                        }
+                        if (item.cmd && item.cmd.includes("antigravity")) {
+                            item.cmd = "code || vscodium"
+                        }
+                    }
+
+                    // Corrección específica para Antigravity
+                    if (itemId === "antigravity" || itemName.includes("antigravity")) {
+                        item.fallbackIcon = "antigravity"
+                        delete item.iconFile
+                        item.cmd = "antigravity"
+                        item.matchClasses = ["antigravity"]
+                    }
+
+                    // Sanear gtk-launch general (evitar encerrar pipes || o && en comillas)
+                    if (item.cmd) {
                         let c = item.cmd.trim()
-                        if (c.startsWith("gtk-launch ") && !c.includes("'") && !c.includes('"')) {
+                        if (c.startsWith("gtk-launch ") && !c.includes("'") && !c.includes('"') && !c.includes("||") && !c.includes("&&") && !c.includes(";")) {
                             let arg = c.substring(11).trim()
                             if (arg.includes(" ")) {
                                 item.cmd = "gtk-launch \"" + arg + "\""
@@ -431,13 +470,23 @@ Item {
                 let runObj = root.runningList[rSrc]
                 // If dragged into the pinned apps region, pin & insert at that position
                 if (dst < pLen && runObj) {
-                    let newId = (runObj.clazz || runObj.name || "app").toLowerCase().replace(/[^a-z0-9_-]/g, "-")
+                    let runCls = (runObj.clazz || "").toLowerCase()
+                    let matchedInstalled = null
+                    for (let i = 0; i < root.installedAppsList.length; i++) {
+                        let itm = root.installedAppsList[i]
+                        if (itm.matchClasses && itm.matchClasses.indexOf(runCls) !== -1) {
+                            matchedInstalled = itm
+                            break
+                        }
+                    }
+                    let newId = matchedInstalled ? matchedInstalled.id : (runObj.clazz || runObj.name || "app").toLowerCase().replace(/[^a-z0-9_-]/g, "-")
                     let newPinned = {
                         id: newId,
-                        name: runObj.name || runObj.clazz,
-                        fallbackIcon: runObj.icon || newId,
-                        cmd: "gtk-launch " + runObj.clazz + " || " + runObj.clazz,
-                        matchClasses: [(runObj.clazz || "").toLowerCase()]
+                        name: matchedInstalled ? matchedInstalled.displayName : (runObj.name || runObj.clazz),
+                        iconPath: matchedInstalled ? matchedInstalled.iconPath : "",
+                        fallbackIcon: matchedInstalled ? matchedInstalled.iconName : (runObj.icon || newId),
+                        cmd: matchedInstalled ? matchedInstalled.cmd : ("gtk-launch " + runObj.clazz + " || " + runObj.clazz),
+                        matchClasses: [runCls]
                     }
                     let copy = root.pinnedList.slice()
                     copy.splice(dst, 0, newPinned)
@@ -744,26 +793,57 @@ Item {
         if (iconVal.startsWith("file://") || iconVal.startsWith("/")) {
             return iconVal.startsWith("file://") ? iconVal : ("file://" + iconVal)
         }
-        let lower = iconVal.toLowerCase()
-        if (lower.includes("zen") || lower.includes("safari") || lower.includes("firefox") || lower.includes("chrome") || lower.includes("browser")) return Qt.resolvedUrl("assets/icons/safari.svg")
-        if (lower.includes("code") || lower.includes("antigravity") || lower.includes("cursor") || lower.includes("text-editor")) return Qt.resolvedUrl("assets/icons/code.svg")
-        if (lower.includes("kitty") || lower.includes("terminal") || lower.includes("alacritty") || lower.includes("wezterm")) return Qt.resolvedUrl("assets/icons/terminal.svg")
-        if (lower.includes("dolphin") || lower.includes("file-manager") || lower.includes("nautilus") || lower.includes("thunar") || lower.includes("folder")) return Qt.resolvedUrl("assets/icons/finder.svg")
-        if (lower.includes("spotify") || lower.includes("music") || lower.includes("audio")) return Qt.resolvedUrl("assets/icons/music.svg")
-        if (lower.includes("discord") || lower.includes("vesktop") || lower.includes("telegram") || lower.includes("chat")) return Qt.resolvedUrl("assets/icons/messages.svg")
-        if (lower.includes("settings") || lower.includes("preferences")) return Qt.resolvedUrl("assets/icons/settings.svg")
+        if (iconVal.startsWith("assets/icons/") || iconVal.startsWith("qrc:/")) {
+            return Qt.resolvedUrl(iconVal)
+        }
 
-        for (let i = 0; i < root.installedAppsList.length; i++) {
-            let item = root.installedAppsList[i]
-            if (item.iconPath && (item.iconName === iconVal || item.id === iconVal || (item.matchClasses && item.matchClasses.indexOf(lower) !== -1))) {
-                return item.iconPath
+        let lower = iconVal.toLowerCase()
+        let candidates = [iconVal, lower]
+        if (lower === "zen" || lower === "zen-alpha" || lower.includes("zen-browser")) {
+            candidates.unshift("zen-browser")
+        } else if (lower === "antigravity" || lower.includes("antigravity")) {
+            candidates.unshift("antigravity")
+        } else if (lower === "code" || lower === "vscode" || lower === "visual-studio-code" || lower === "com.microsoft.vscode") {
+            candidates.unshift("vscode", "code", "visual-studio-code")
+        } else if (lower === "firefox" || lower.includes("firefox")) {
+            candidates.unshift("firefox")
+        } else if (lower === "dolphin" || lower.includes("dolphin")) {
+            candidates.unshift("org.kde.dolphin", "dolphin")
+        } else if (lower === "kitty" || lower.includes("kitty")) {
+            candidates.unshift("kitty")
+        } else if (lower === "spotify" || lower.includes("spotify")) {
+            candidates.unshift("spotify")
+        } else if (lower === "discord" || lower.includes("discord")) {
+            candidates.unshift("discord", "vesktop")
+        }
+
+        // 1. Buscar en apps de escritorio escaneadas
+        for (let c = 0; c < candidates.length; c++) {
+            let cand = candidates[c]
+            for (let i = 0; i < root.installedAppsList.length; i++) {
+                let item = root.installedAppsList[i]
+                if (item.iconPath && item.iconPath.length > 0) {
+                    if (item.iconName === cand || item.id === cand || (item.displayName && item.displayName.toLowerCase() === cand) || (item.matchClasses && item.matchClasses.indexOf(cand) !== -1)) {
+                        return item.iconPath
+                    }
+                }
             }
         }
 
-        let qsPath = Quickshell.iconPath(iconVal, true)
-        if (qsPath && qsPath.length > 0) {
-            return qsPath
+        // 2. Probar Quickshell.iconPath con cada candidato
+        for (let c = 0; c < candidates.length; c++) {
+            let qsPath = Quickshell.iconPath(candidates[c], true)
+            if (qsPath && qsPath.length > 0) {
+                return qsPath
+            }
         }
+
+        // 3. Fallbacks exclusivos para ítems mockup de macOS si fueron explícitamente solicitados
+        if (lower === "finder") return Qt.resolvedUrl("assets/icons/finder.svg")
+        if (lower === "launchpad") return Qt.resolvedUrl("assets/icons/launchpad.svg")
+        if (lower === "shortcuts") return Qt.resolvedUrl("assets/icons/shortcuts.svg")
+        if (lower === "keychain") return Qt.resolvedUrl("assets/icons/keychain.svg")
+
         return Qt.resolvedUrl("assets/icons/launchpad.svg")
     }
 
@@ -787,8 +867,18 @@ def resolve_icon_path(icon_name):
         return \"\"
     if os.path.isabs(icon_name) and os.path.isfile(icon_name):
         return \"file://\" + icon_name
+    candidates = [icon_name, icon_name.lower()]
+    lower = icon_name.lower()
+    if lower in (\"zen\", \"zen-browser\"):
+        candidates.extend([\"zen-browser\", \"zen\"])
+    elif lower in (\"code\", \"vscode\", \"visual-studio-code\", \"com.microsoft.vscode\"):
+        candidates.extend([\"vscode\", \"code\", \"visual-studio-code\", \"com.visualstudio.code\"])
+    elif lower in (\"dolphin\", \"org.kde.dolphin\"):
+        candidates.extend([\"org.kde.dolphin\", \"dolphin\"])
+    elif lower in (\"antigravity\",):
+        candidates.extend([\"antigravity\"])
     if gtk_theme is not None:
-        for candidate in (icon_name, icon_name.lower()):
+        for candidate in candidates:
             try:
                 info = gtk_theme.lookup_icon(candidate, 48, 0)
                 if info:
@@ -798,9 +888,10 @@ def resolve_icon_path(icon_name):
             except Exception:
                 pass
     for ext in (\".svg\", \".png\"):
-        p = f\"/usr/share/pixmaps/{icon_name}{ext}\"
-        if os.path.isfile(p):
-            return \"file://\" + p
+        for cand in candidates:
+            p = f\"/usr/share/pixmaps/{cand}{ext}\"
+            if os.path.isfile(p):
+                return \"file://\" + p
     return \"\"
 
 apps = []

@@ -215,12 +215,24 @@ Item {
                     let runObj = menuLayout.curRunning
                     dockState.closeContextMenu()
                     if (runObj) {
+                        let runCls = (runObj.clazz || "").toLowerCase()
+                        let matchedInstalled = null
+                        if (dockState && dockState.installedAppsList) {
+                            for (let i = 0; i < dockState.installedAppsList.length; i++) {
+                                let itm = dockState.installedAppsList[i]
+                                if (itm.matchClasses && itm.matchClasses.indexOf(runCls) !== -1) {
+                                    matchedInstalled = itm
+                                    break
+                                }
+                            }
+                        }
                         dockState.pinApp({
-                            id: runObj.clazz.toLowerCase().replace(/[^a-z0-9_-]/g, "-"),
-                            name: runObj.name,
-                            fallbackIcon: runObj.icon || "application-x-executable",
-                            cmd: "gtk-launch " + runObj.clazz + " || " + runObj.clazz,
-                            matchClasses: [runObj.clazz.toLowerCase()]
+                            id: matchedInstalled ? matchedInstalled.id : runCls.replace(/[^a-z0-9_-]/g, "-"),
+                            name: matchedInstalled ? matchedInstalled.displayName : runObj.name,
+                            iconPath: matchedInstalled ? matchedInstalled.iconPath : "",
+                            fallbackIcon: matchedInstalled ? matchedInstalled.iconName : (runObj.icon || "application-x-executable"),
+                            cmd: matchedInstalled ? matchedInstalled.cmd : ("gtk-launch " + runObj.clazz + " || " + runObj.clazz),
+                            matchClasses: [runCls]
                         })
                     }
                 }
