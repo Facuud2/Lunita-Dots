@@ -85,14 +85,15 @@ if [ -n "$DOTS_DIR" ] && [ -d "$DOTS_DIR/themes/$CURRENT_THEME/wallpaper" ]; the
     ln -sfn "$DOTS_DIR/themes/$CURRENT_THEME/wallpaper" "$HOME/.config/lunita/wallpaper"
 fi
 
-# 3. Garantizar que ~/.config/quickshell/hyprquickpaper exista y sea válido
-if [ ! -d "$HOME/.config/quickshell/hyprquickpaper" ] && [ -n "$DOTS_DIR" ]; then
+# 3. Garantizar que ~/.config/quickshell/hyprquickpaper exista y sea válido (contenga shell.qml)
+if [ ! -f "$HOME/.config/quickshell/hyprquickpaper/shell.qml" ] && [ -n "$DOTS_DIR" ]; then
     mkdir -p "$HOME/.config/quickshell"
+    rm -rf "$HOME/.config/quickshell/hyprquickpaper" 2>/dev/null || true
     # Si core está disponible, vincular mediante GNU Stow o enlace relativo
     if command -v stow &>/dev/null && [ -d "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" ]; then
         stow -d "$DOTS_DIR" -t "$HOME" -S core 2>/dev/null || true
     fi
-    if [ ! -d "$HOME/.config/quickshell/hyprquickpaper" ] && [ -d "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" ]; then
+    if [ ! -f "$HOME/.config/quickshell/hyprquickpaper/shell.qml" ] && [ -d "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" ]; then
         ln -sfn "$DOTS_DIR/core/.config/quickshell/hyprquickpaper" "$HOME/.config/quickshell/hyprquickpaper"
     fi
 fi

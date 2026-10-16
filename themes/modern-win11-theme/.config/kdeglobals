@@ -46,8 +46,8 @@ ForegroundLink=0,120,212
 ForegroundNormal=244,244,245
 
 [General]
-ColorScheme=Modern-Win11-Theme-Dark
-Name=Modern-Win11-Theme Dark
+ColorScheme=modern-win11-theme-Dark
+Name=modern-win11-theme Dark
 TerminalApplication=kitty
 TerminalService=kitty.desktop
 fixed=JetBrainsMono Nerd Font,10,-1,5,50,0,0,0,0,0

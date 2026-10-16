@@ -59,8 +59,6 @@ get_active_qss() {
         echo "$DOTS_DIR/themes/macos-theme/tokri/tokri-$variant.qss"
     elif [ -f "$DOTS_DIR/themes/macos-theme/tokri/tokri-dark.qss" ]; then
         echo "$DOTS_DIR/themes/macos-theme/tokri/tokri-dark.qss"
-    elif [ -f "$DOTS_DIR/themes/macOS-Theme/tokri/tokri-$variant.qss" ]; then
-        echo "$DOTS_DIR/themes/macOS-Theme/tokri/tokri-$variant.qss"
     else
         echo "$DOTS_DIR/themes/macos-theme/tokri/tokri-dark.qss"
     fi
