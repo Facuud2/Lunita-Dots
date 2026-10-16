@@ -288,11 +288,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-024] Posicionamiento de System Tray Icons en barra de tareas de Windows 11
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
 - **Rama Sugerida:** `ISSUE_024_FEAT`
 - **Módulo(s):** Modern-Win11-Theme / Bar-Dock (System Tray)
-- **Archivos Afectados:** `themes/Modern-Win11-Theme/.config/quickshell/dock/`, `themes/Modern-Win11-Theme/.config/quickshell/bar/` (Archivos QML)
+- **Archivos Afectados:** `core/.local/bin/lunita-icon-resolver`, `core/.local/bin/lunita-theme`, `core/.local/share/applications/lunita-theme-selector.desktop`, `core/.local/share/applications/lunita-widgets-manager.desktop`, `themes/modern-win11-theme/.config/quickshell/dock/TrayPlatter.qml`, `themes/modern-win11-theme/.config/quickshell/dock/DockState.qml`, `themes/modern-win11-theme/.config/quickshell/dock/DockItem.qml`, `themes/modern-win11-theme/.config/quickshell/dock/scripts/tray_resolver.py`, `themes/modern-win11-theme/.config/quickshell/launcher/scripts/app_scanner.py`, `themes/macos-theme/.config/quickshell/bar/scripts/tray_resolver.py`, `themes/lunita-default/.config/quickshell/bar/scripts/tray_resolver.py`
 - **Descripción:** Incorporar los iconos de bandeja del sistema (`SystemTray`) para aplicaciones en segundo plano dentro del área de estado de la barra (donde residen los indicadores de Internet, sonido y batería). Deben posicionarse partiendo inmediatamente a la izquierda del indicador de idioma (`ENG`), apilándose uno al lado del otro hacia la izquierda.
 - **Criterios de Aceptación:**
   1. Los iconos del System Tray aparecen alineados horizontalmente a la izquierda del indicador `ENG`.

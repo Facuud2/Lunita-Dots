@@ -134,7 +134,11 @@ if target_pkg and os.path.isdir(target_pkg):
                 try:
                     real_target = os.path.realpath(target_file)
                     if os.path.islink(target_file):
+                        raw_target = os.readlink(target_file)
                         if real_target != os.path.realpath(src_file):
+                            os.unlink(target_file)
+                        elif os.path.isabs(raw_target) and real_target.startswith(dots_prefix):
+                            # Enlace absoluto manual no generado por Stow (Stow genera enlaces relativos)
                             os.unlink(target_file)
                     else:
                         # Si no es un enlace, y NO apunta a la carpeta del repositorio (ej. archivo regular generado por Matugen)

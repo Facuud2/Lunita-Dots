@@ -1,3 +1,4 @@
+//@ pragma UseQApplication
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -112,6 +113,7 @@ Scope {
                     TrayPlatter {
                         id: trayPlatter
                         dockState: globalDockState
+                        panelWindow: dockWindow
                     }
                 }
             }

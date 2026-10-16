@@ -9,3 +9,4 @@ Terminal=false
 Categories=Settings;DesktopSettings;Utility;
 Keywords=widgets;desktop;calendar;github;health;habits;lunita;dots;quickshell;escritorio;
 StartupNotify=true
+StartupWMClass=io.lunita.WidgetsManager

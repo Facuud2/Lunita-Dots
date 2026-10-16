@@ -1,48 +1,32 @@
 #!/usr/bin/env python3
-import sys, os, glob, json
+"""SystemTray Icon Resolver for Quickshell Status Bar (Lunita-Default)."""
 
-search_dirs = [
-    os.path.expanduser("~/.local/share/icons"),
-    os.path.expanduser("~/.icons"),
-    "/usr/share/icons",
-    "/usr/share/pixmaps"
-]
-themes = ["BeautyLine", "hicolor", "breeze", "Adwaita"]
-exts = [".svg", ".png", ".xpm"]
+from __future__ import annotations
 
-def resolve_single(icon_name):
-    if not icon_name:
-        return ""
-    clean = icon_name.split("?")[0]
-    if clean.startswith("/") or clean.startswith("file://"):
-        return clean if clean.startswith("file://") else "file://" + clean
+import json
+import subprocess
+import sys
+from pathlib import Path
 
-    # 1. Search in preferred themes
-    for base in search_dirs:
-        for theme in themes:
-            theme_dir = os.path.join(base, theme)
-            if not os.path.isdir(theme_dir):
-                continue
-            for ext in exts:
-                pattern = os.path.join(theme_dir, "**", f"{clean}{ext}")
-                matches = glob.glob(pattern, recursive=True)
-                if matches:
-                    return "file://" + matches[0]
 
-    # 2. General search
-    for base in search_dirs:
-        for ext in exts:
-            pattern = os.path.join(base, "**", f"{clean}{ext}")
-            matches = glob.glob(pattern, recursive=True)
-            if matches:
-                return "file://" + matches[0]
-    return ""
+def main() -> None:
+    resolver_candidates = [
+        Path.home() / ".local/bin/lunita-icon-resolver",
+        Path(__file__).resolve().parents[6] / "core/.local/bin/lunita-icon-resolver",
+    ]
+
+    for candidate in resolver_candidates:
+        if candidate.is_file():
+            cmd = [sys.executable, str(candidate), "--json"] + sys.argv[1:]
+            res = subprocess.run(cmd)
+            sys.exit(res.returncode)
+
+    res: dict[str, str] = {}
+    for ic in sys.argv[1:]:
+        if ic.startswith("image://qspixmap/") or ic.startswith("image://qsimage/") or ic.startswith("file://"):
+            res[ic] = ic
+    print(json.dumps(res))
+
 
 if __name__ == "__main__":
-    icons = sys.argv[1:]
-    res = {}
-    for ic in icons:
-        resolved = resolve_single(ic)
-        if resolved:
-            res[ic] = resolved
-    print(json.dumps(res))
+    main()

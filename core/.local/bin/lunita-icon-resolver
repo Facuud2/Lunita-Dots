@@ -1,0 +1,320 @@
+#!/usr/bin/env python3
+"""
+Lunita-Dots Unified Icon Resolver
+Standardizes app and system tray icon resolution across all Quickshell themes
+(modern-win11-theme, macos-theme, lunita-default) avoiding missing textures.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+from pathlib import Path
+from urllib.parse import parse_qs, urlparse
+
+# Optional Gtk IconTheme integration
+_gtk_theme = None
+try:
+    import gi
+    gi.require_version("Gtk", "3.0")
+    from gi.repository import Gtk
+    _gtk_theme = Gtk.IconTheme.get_default()
+except Exception:
+    _gtk_theme = None
+
+HOME_DIR = Path.home()
+XDG_DATA_HOME = Path(os.environ.get("XDG_DATA_HOME", str(HOME_DIR / ".local/share")))
+
+# Search roots in order of precedence
+ICON_SEARCH_DIRS: list[Path] = [
+    XDG_DATA_HOME / "icons/hicolor/scalable/apps",
+    XDG_DATA_HOME / "icons",
+    HOME_DIR / ".icons",
+    XDG_DATA_HOME / "flatpak/exports/share/icons",
+    Path("/var/lib/flatpak/exports/share/icons"),
+    Path("/usr/share/icons"),
+    Path("/usr/share/pixmaps"),
+]
+
+PREFERRED_THEMES = [
+    "Fluent-yellow-dark",
+    "Fluent-dark",
+    "Fluent",
+    "WhiteSur",
+    "WhiteSur-dark",
+    "BeautyLine",
+    "Papirus",
+    "Papirus-Dark",
+    "breeze-dark",
+    "breeze",
+    "hicolor",
+    "Adwaita",
+]
+
+EXTENSIONS = (".svg", ".png", ".xpm")
+
+# Cache for desktop app classes -> icon names
+_class_to_icon_cache: dict[str, str] = {}
+_desktop_scanned: bool = False
+
+
+def _scan_desktop_files() -> None:
+    global _desktop_scanned
+    if _desktop_scanned:
+        return
+    _desktop_scanned = True
+
+    desktop_dirs: list[Path] = [
+        XDG_DATA_HOME / "applications",
+        Path("/usr/share/applications"),
+        XDG_DATA_HOME / "flatpak/exports/share/applications",
+        Path("/var/lib/flatpak/exports/share/applications"),
+    ]
+
+    for d in desktop_dirs:
+        if not d.is_dir():
+            continue
+        for p in d.glob("*.desktop"):
+            try:
+                name, icon, exec_cmd, wm_class = "", "", "", ""
+                with p.open("r", encoding="utf-8", errors="ignore") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("Name=") and not name:
+                            name = line[5:]
+                        elif line.startswith("Icon=") and not icon:
+                            icon = line[5:]
+                        elif line.startswith("Exec=") and not exec_cmd:
+                            exec_cmd = line[5:]
+                        elif line.startswith("StartupWMClass=") and not wm_class:
+                            wm_class = line[15:]
+                if not icon:
+                    continue
+
+                base_id = p.stem.lower()
+                clean_exec = exec_cmd.split()[0].split("/")[-1].lower() if exec_cmd else ""
+
+                keys = [base_id]
+                if clean_exec:
+                    keys.append(clean_exec)
+                if wm_class:
+                    keys.append(wm_class.lower())
+                if name:
+                    keys.append(name.lower())
+
+                # Special mappings for common app namespaces
+                if "themeselector" in base_id or "theme-selector" in base_id:
+                    keys.extend(["io.lunita.themeselector", "lunita-theme-selector"])
+                if "widgetsmanager" in base_id or "widgets-manager" in base_id:
+                    keys.extend(["io.lunita.widgetsmanager", "lunita-widgets-manager"])
+
+                for k in keys:
+                    if k and k not in _class_to_icon_cache:
+                        _class_to_icon_cache[k] = icon
+            except Exception:
+                pass
+
+
+def _find_in_dir(directory: Path, stem: str) -> str:
+    if not directory.is_dir():
+        return ""
+    for ext in EXTENSIONS:
+        candidate = directory / f"{stem}{ext}"
+        if candidate.is_file():
+            return f"file://{candidate}"
+    for ext in EXTENSIONS:
+        try:
+            for match in directory.rglob(f"{stem}{ext}"):
+                if match.is_file():
+                    return f"file://{match}"
+        except Exception:
+            pass
+    return ""
+
+
+def resolve_icon(icon_spec: str) -> str:
+    if not icon_spec:
+        return ""
+
+    # Preserve already valid, absolute, or quickshell-internal schemes
+    if (
+        icon_spec.startswith("image://qspixmap/")
+        or icon_spec.startswith("image://qsimage/")
+        or icon_spec.startswith("file://")
+    ):
+        return icon_spec
+
+    custom_paths: list[Path] = []
+    clean = icon_spec
+
+    if "?" in icon_spec:
+        base_part, query_part = icon_spec.split("?", 1)
+        clean = base_part
+        qs = parse_qs(query_part)
+        for p_str in qs.get("path", []):
+            if p_str:
+                custom_paths.append(Path(p_str))
+
+    if clean.startswith("image://icon/"):
+        clean = clean[len("image://icon/") :]
+    elif clean.startswith("file://"):
+        clean = clean[len("file://") :]
+
+    clean = clean.strip()
+    if not clean:
+        return icon_spec
+
+    # Direct absolute file path
+    clean_path = Path(clean)
+    if clean_path.is_absolute():
+        if clean_path.is_file():
+            return f"file://{clean_path}"
+        for ext in EXTENSIONS:
+            cand = Path(f"{clean}{ext}")
+            if cand.is_file():
+                return f"file://{cand}"
+
+    _scan_desktop_files()
+
+    candidates: list[str] = [clean, clean.lower()]
+    low = clean.lower()
+
+    if "." in low:
+        candidates.append(low.split(".")[-1])
+
+    # Desktop mapping lookup
+    if low in _class_to_icon_cache:
+        desktop_icon = _class_to_icon_cache[low]
+        candidates.insert(0, desktop_icon)
+        candidates.insert(1, desktop_icon.lower())
+
+    # Well-known application aliases
+    if "zen" in low:
+        candidates.extend(["zen-browser", "zen", "app.zen_browser.zen", "io.github.zen_browser.zen"])
+    elif "themeselector" in low or "theme-selector" in low:
+        candidates.extend(["lunita-theme-selector", "theme-selector"])
+    elif "widgetsmanager" in low or "widgets-manager" in low:
+        candidates.extend(["lunita-widgets-manager", "widgets-manager"])
+    elif "antigravity" in low:
+        candidates.extend(["antigravity"])
+    elif "vesktop" in low or "discord" in low:
+        candidates.extend(["vesktop", "discord"])
+    elif "code" in low or "vscode" in low:
+        candidates.extend(["vscode", "code", "visual-studio-code", "com.visualstudio.code"])
+    elif "dolphin" in low:
+        candidates.extend(["org.kde.dolphin", "dolphin"])
+    elif "kitty" in low:
+        candidates.extend(["kitty"])
+    elif "tokri" in low:
+        candidates.extend(["com.ysuraj.Tokri", "tokri"])
+
+    # 1. Check custom path from query parameter first
+    for cpath in custom_paths:
+        for cand in candidates:
+            found = _find_in_dir(cpath, cand)
+            if found:
+                return found
+
+    # 2. Query Gtk IconTheme with active user theme
+    if _gtk_theme is not None:
+        for cand in candidates:
+            try:
+                info = _gtk_theme.lookup_icon(cand, 48, 0)
+                if info:
+                    fn = info.get_filename()
+                    if fn and os.path.isfile(fn):
+                        return f"file://{fn}"
+            except Exception:
+                pass
+
+    # 3. Search in preferred icon themes
+    for base in ICON_SEARCH_DIRS:
+        if not base.is_dir():
+            continue
+        for theme in PREFERRED_THEMES:
+            theme_dir = base / theme
+            if not theme_dir.is_dir():
+                continue
+            for cand in candidates:
+                found = _find_in_dir(theme_dir, cand)
+                if found:
+                    return found
+
+    # 4. Search in all search directories directly (pixmaps, hicolor, etc.)
+    for base in ICON_SEARCH_DIRS:
+        if not base.is_dir():
+            continue
+        for cand in candidates:
+            found = _find_in_dir(base, cand)
+            if found:
+                return found
+
+    # 5. Fallback generic executable icon (guarantees no missing magenta texture)
+    for base in ICON_SEARCH_DIRS:
+        found = _find_in_dir(base, "application-x-executable")
+        if found:
+            return found
+
+    return ""
+
+
+def scan_all_apps() -> dict[str, str]:
+    _scan_desktop_files()
+    result: dict[str, str] = {}
+    for key, icon_name in _class_to_icon_cache.items():
+        res = resolve_icon(icon_name)
+        if res:
+            result[key] = res
+            result[icon_name] = res
+            result[icon_name.lower()] = res
+    common = [
+        "zen", "zen-browser", "antigravity", "kitty", "dolphin", "org.kde.dolphin",
+        "vesktop", "discord", "steam", "code", "vscode", "visual-studio-code",
+        "lunita-theme-selector", "io.lunita.themeselector", "lunita-widgets-manager",
+        "io.lunita.widgetsmanager", "spotify", "firefox",
+    ]
+    for c in common:
+        if c not in result:
+            res = resolve_icon(c)
+            if res:
+                result[c] = res
+    return result
+
+
+def main() -> None:
+    if len(sys.argv) < 2:
+        sys.exit(0)
+
+    mode = sys.argv[1]
+    if mode == "--scan-apps":
+        print(json.dumps(scan_all_apps()))
+    elif mode == "--batch":
+        for raw in sys.argv[2:]:
+            if not raw:
+                continue
+            resolved = resolve_icon(raw)
+            if resolved:
+                print(f"{raw}|{resolved}")
+    elif mode == "--json":
+        result: dict[str, str] = {}
+        for raw in sys.argv[2:]:
+            if not raw:
+                continue
+            resolved = resolve_icon(raw)
+            if resolved:
+                result[raw] = resolved
+        print(json.dumps(result))
+    elif mode == "--class":
+        if len(sys.argv) > 2:
+            resolved = resolve_icon(sys.argv[2])
+            if resolved:
+                print(resolved)
+    else:
+        resolved = resolve_icon(mode)
+        if resolved:
+            print(resolved)
+
+
+if __name__ == "__main__":
+    main()

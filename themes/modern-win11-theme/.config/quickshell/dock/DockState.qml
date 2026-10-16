@@ -530,26 +530,57 @@ Item {
         }
     }
 
-    function resolveAppIcon(cls) {
-        if (!cls) return "appstore.svg";
-        cls = cls.toLowerCase();
-        // Preserved Windows icons requested by user
-        if (cls === "dolphin" || cls === "org.kde.dolphin" || cls === "nautilus" || cls === "thunar")
-            return "win11-explorer.svg";
-        if (cls === "kitty" || cls === "alacritty" || cls === "foot" || cls === "wezterm" || cls.indexOf("terminal") !== -1)
-            return "win11-terminal.svg";
-        if (cls === "discover" || cls === "plasma-discover" || cls === "pamac-manager")
-            return "win11-store.svg";
+    // ==========================================
+    // UNIFIED APP ICONS RESOLVER (lunita-icon-resolver)
+    // ==========================================
+    property var appIconsMap: ({})
 
-        // Native icons for applications
-        if (cls === "zen" || cls === "zen-browser")
-            return "image://icon/zen-browser";
-        if (cls === "antigravity")
-            return "image://icon/antigravity";
-        if (cls === "microsoft-edge" || cls === "microsoft-edge-stable" || cls === "msedge")
+    Process {
+        id: appIconsScannerProc
+        command: ["lunita-icon-resolver", "--scan-apps"]
+        running: true
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: data => {
+                var trimmed = data.trim();
+                if (!trimmed) return;
+                try {
+                    var parsed = JSON.parse(trimmed);
+                    if (parsed && typeof parsed === "object") {
+                        root.appIconsMap = Object.assign({}, root.appIconsMap, parsed);
+                        root.updateRunningApps();
+                    }
+                } catch(e) {}
+            }
+        }
+    }
+
+    function resolveAppIcon(cls) {
+        if (!cls) return Qt.resolvedUrl("assets/icons/appstore.svg");
+        var low = cls.toLowerCase();
+        // Preserved Windows icons requested by user
+        if (low === "dolphin" || low === "org.kde.dolphin" || low === "nautilus" || low === "thunar")
+            return "win11-explorer.svg";
+        if (low === "kitty" || low === "alacritty" || low === "foot" || low === "wezterm" || low.indexOf("terminal") !== -1)
+            return "win11-terminal.svg";
+        if (low === "discover" || low === "plasma-discover" || low === "pamac-manager")
+            return "win11-store.svg";
+        if (low === "microsoft-edge" || low === "microsoft-edge-stable" || low === "msedge")
             return "win11-edge.svg";
 
-        return "image://icon/" + cls;
+        // Check unified app icons map
+        if (root.appIconsMap[cls])
+            return root.appIconsMap[cls];
+        if (root.appIconsMap[low])
+            return root.appIconsMap[low];
+
+        // Aliases
+        if (low === "zen" || low === "zen-browser") {
+            if (root.appIconsMap["zen-browser"]) return root.appIconsMap["zen-browser"];
+            if (root.appIconsMap["zen"]) return root.appIconsMap["zen"];
+        }
+
+        return Qt.resolvedUrl("assets/icons/appstore.svg");
     }
 
     function updateRunningApps() {
@@ -1432,5 +1463,53 @@ Item {
         root.displayedYear = now.getFullYear();
         root.displayedMonth = now.getMonth();
         root.selectedDay = now.getDate();
+    }
+
+    // ==========================================
+    // 16. SYSTEM TRAY ICON RESOLVER
+    // ==========================================
+    readonly property string trayResolverScriptPath: Qt.resolvedUrl("scripts/tray_resolver.py").toString().replace("file://", "")
+    property var trayIconsMap: ({})
+
+    Process {
+        id: trayResolverProc
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: data => {
+                var line = data.trim();
+                if (!line || line.indexOf("|") === -1) return;
+                var parts = line.split("|");
+                if (parts.length >= 2) {
+                    var raw = parts[0];
+                    var resolved = parts.slice(1).join("|").trim();
+                    if (resolved !== "") {
+                        var mapCopy = Object.assign({}, root.trayIconsMap);
+                        mapCopy[raw] = resolved;
+                        root.trayIconsMap = mapCopy;
+                    }
+                }
+            }
+        }
+    }
+
+    function resolveTrayIcons(items) {
+        if (!items || items.length === 0) return;
+        var args = ["python3", root.trayResolverScriptPath, "--batch"];
+        var hasArgs = false;
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            if (item && item.icon) {
+                var iconStr = item.icon.toString();
+                if (iconStr !== "") {
+                    args.push(iconStr);
+                    hasArgs = true;
+                }
+            }
+        }
+        if (hasArgs) {
+            trayResolverProc.command = args;
+            trayResolverProc.running = false;
+            trayResolverProc.running = true;
+        }
     }
 }
