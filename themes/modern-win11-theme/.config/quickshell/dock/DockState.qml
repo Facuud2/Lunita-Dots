@@ -1198,7 +1198,7 @@ Item {
         } else {
             flyoutCloseTimer.stop();
             root.activeFlyout = "audio";
-            root.flyoutScreen = screenName || "";
+            root.flyoutScreen = screenName || root.flyoutScreen || "";
             root.flyoutVisible = true;
             root.flyoutOpen = true;
             root.refreshAudioSinks();
@@ -1212,7 +1212,7 @@ Item {
         } else {
             flyoutCloseTimer.stop();
             root.activeFlyout = "calendar";
-            root.flyoutScreen = screenName || "";
+            root.flyoutScreen = screenName || root.flyoutScreen || "";
             root.flyoutVisible = true;
             root.flyoutOpen = true;
             root.refreshNotifications();
@@ -1225,7 +1225,7 @@ Item {
         } else {
             flyoutCloseTimer.stop();
             root.activeFlyout = "network";
-            root.flyoutScreen = screenName || "";
+            root.flyoutScreen = screenName || root.flyoutScreen || "";
             root.flyoutVisible = true;
             root.flyoutOpen = true;
             root.refreshNetwork();
@@ -1241,7 +1241,7 @@ Item {
         } else {
             flyoutCloseTimer.stop();
             root.activeFlyout = "bluetooth";
-            root.flyoutScreen = screenName || "";
+            root.flyoutScreen = screenName || root.flyoutScreen || "";
             root.flyoutVisible = true;
             root.flyoutOpen = true;
             root.refreshBluetooth();
