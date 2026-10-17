@@ -413,7 +413,9 @@ Rectangle {
                         : (root.dockState.bluetoothDeviceName !== ""
                             ? ("Bluetooth: " + root.dockState.bluetoothDeviceName)
                             : "Bluetooth: Activado")
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
