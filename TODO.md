@@ -300,11 +300,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-025] Diseño e implementación de Flyout interactivo de Red (Wi-Fi y Ethernet)
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_025_FEAT`
 - **Módulo(s):** Modern-Win11-Theme / Flyouts (Network)
-- **Archivos Afectados:** `themes/Modern-Win11-Theme/.config/quickshell/` (Archivos QML de barra/dock y scripts de red)
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/dock/NetworkControlFlyout.qml`, `themes/modern-win11-theme/.config/quickshell/dock/scripts/network_manager.py`, `themes/modern-win11-theme/.config/quickshell/dock/DockState.qml`, `themes/modern-win11-theme/.config/quickshell/dock/TrayPlatter.qml`, `themes/modern-win11-theme/.config/quickshell/dock/shell.qml`, `themes/modern-win11-theme/.config/quickshell/dock/assets/ethernet.svg`, `themes/modern-win11-theme/.config/quickshell/dock/assets/tray-wifi-off.svg`, `themes/modern-win11-theme/.config/quickshell/dock/assets/wifi-off.svg`
 - **Descripción:** Reemplazar la invocación de GUIs externas básicas de red por un panel flotante (Flyout) nativo en QML con estética Fluent Design, homologado al diseño actual del panel de Sonido/Hora. Debe ser funcionalmente interactivo (integrado vía `nmcli` o backend equivalente) para escanear/conectar redes Wi-Fi y detectar/mostrar explícitamente el estado de la conexión física Ethernet si el equipo está conectado por cable.
 - **Criterios de Aceptación:**
   1. Pulsar el icono de red abre el Flyout nativo con el mismo lenguaje visual que el módulo de Sonido/Hora.

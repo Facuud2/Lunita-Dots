@@ -40,6 +40,8 @@ Scope {
                 globalDockState.toggleAudioFlyout("");
             } else if (popupName === "calendar" || popupName === "clock" || popupName === "time" || popupName === "notifications") {
                 globalDockState.toggleCalendarFlyout("");
+            } else if (popupName === "network" || popupName === "wifi" || popupName === "ethernet") {
+                globalDockState.toggleNetworkFlyout("");
             } else {
                 globalDockState.closeFlyouts();
             }
@@ -51,6 +53,10 @@ Scope {
 
         function toggleCalendar() {
             globalDockState.toggleCalendarFlyout("");
+        }
+
+        function toggleNetwork() {
+            globalDockState.toggleNetworkFlyout("");
         }
 
         function closeFlyouts() {
@@ -198,12 +204,15 @@ Scope {
                 }
 
                 implicitWidth: 360
-                implicitHeight: Math.max(300, (globalDockState.activeFlyout === "audio" ? mediaFlyout.implicitHeight : calendarFlyout.implicitHeight) + 4)
+                implicitHeight: Math.max(220, (
+                    globalDockState.activeFlyout === "audio" ? mediaFlyout.implicitHeight :
+                    (globalDockState.activeFlyout === "network" ? networkFlyout.implicitHeight : calendarFlyout.implicitHeight)
+                ) + 4)
 
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.namespace: "win11-dock-flyout"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: globalDockState.activeFlyout === "network" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
                 MediaControlFlyout {
                     id: mediaFlyout
@@ -217,6 +226,14 @@ Scope {
                     id: calendarFlyout
                     dockState: globalDockState
                     visible: globalDockState.activeFlyout === "calendar"
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                }
+
+                NetworkControlFlyout {
+                    id: networkFlyout
+                    dockState: globalDockState
+                    visible: globalDockState.activeFlyout === "network"
                     anchors.bottom: parent.bottom
                     anchors.right: parent.right
                 }

@@ -83,7 +83,9 @@ Rectangle {
                     id: widgetsTip
                     anchors.centerIn: parent
                     text: "Widgets y aplicaciones"
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -140,7 +142,9 @@ Rectangle {
                     id: micTip
                     anchors.centerIn: parent
                     text: root.dockState.micMuted ? "Micrófono: Silenciado" : "Micrófono: Activo"
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -265,7 +269,9 @@ Rectangle {
                             id: trayItemTip
                             anchors.centerIn: parent
                             text: parent.tipLabel
-                            font.family: "Segoe UI, Inter, sans-serif"
+                            font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                             font.pixelSize: 11
                             color: "#FFFFFF"
                         }
@@ -295,9 +301,11 @@ Rectangle {
                 id: langText
                 anchors.centerIn: parent
                 text: root.dockState.keyboardLayout || "ESP"
-                font.family: "Segoe UI, Inter, sans-serif"
+                font.family: "Adwaita Sans"
+                font.styleName: "SemiBold"
                 font.pixelSize: 11
                 font.weight: Font.DemiBold
+                font.italic: false
                 color: "#FFFFFF"
             }
 
@@ -326,14 +334,16 @@ Rectangle {
                     id: langTip
                     anchors.centerIn: parent
                     text: "Distribución de teclado: " + (root.dockState.keyboardLayout || "ESP")
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
             }
         }
 
-        // 4. Wi-Fi Status Icon
+        // 4. Network Status Icon (Ethernet / Wi-Fi)
         Item {
             id: wifiBtn
             width: 30
@@ -344,15 +354,19 @@ Rectangle {
             Rectangle {
                 anchors.fill: parent
                 radius: 6
-                color: wifiBtn.isHovered ? Qt.rgba(1, 1, 1, 0.26) : "transparent"
-                border.color: wifiBtn.isHovered ? Qt.rgba(1, 1, 1, 0.35) : "transparent"
+                color: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "network")
+                    ? Qt.rgba(1, 1, 1, 0.42)
+                    : (wifiBtn.isHovered ? Qt.rgba(1, 1, 1, 0.26) : "transparent")
+                border.color: ((root.dockState.flyoutOpen && root.dockState.activeFlyout === "network") || wifiBtn.isHovered) ? Qt.rgba(1, 1, 1, 0.38) : "transparent"
                 border.width: 1
                 Behavior on color { ColorAnimation { duration: 120 } }
             }
 
             Image {
                 anchors.centerIn: parent
-                source: root.dockState.wifiConnected ? "assets/tray-wifi.svg" : "assets/tray-wifi-off.svg"
+                source: root.dockState.ethernetConnected
+                    ? "assets/ethernet.svg"
+                    : (root.dockState.wifiConnected ? "assets/tray-wifi.svg" : "assets/tray-wifi-off.svg")
                 sourceSize.width: 16
                 sourceSize.height: 16
                 smooth: true
@@ -363,7 +377,7 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.dockState.openNetwork()
+                onClicked: root.dockState.openNetwork(root.panelWindow && root.panelWindow.screen ? root.panelWindow.screen.name : "")
             }
 
             // Tooltip
@@ -382,8 +396,12 @@ Rectangle {
                 Text {
                     id: wifiTip
                     anchors.centerIn: parent
-                    text: root.dockState.wifiConnected ? ("Wi-Fi: " + root.dockState.wifiSsid) : "Wi-Fi: Desconectado"
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    text: root.dockState.ethernetConnected
+                        ? ("Ethernet: " + root.dockState.ethernetName + (root.dockState.ethernetIp ? " (" + root.dockState.ethernetIp + ")" : ""))
+                        : (root.dockState.wifiConnected ? ("Wi-Fi: " + root.dockState.wifiSsid) : "Red: Desconectado")
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -422,7 +440,7 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.dockState.openVolumeFlyout()
+                onClicked: root.dockState.openVolumeFlyout(root.panelWindow && root.panelWindow.screen ? root.panelWindow.screen.name : "")
                 onWheel: wheel => {
                     if (wheel.angleDelta.y > 0) {
                         root.dockState.changeVolume(5);
@@ -449,7 +467,9 @@ Rectangle {
                     id: volTip
                     anchors.centerIn: parent
                     text: root.dockState.isVolumeMuted ? "Volumen: Silenciado" : ("Volumen: " + root.dockState.volumePercent + "%")
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -507,7 +527,9 @@ Rectangle {
                     text: root.dockState.hasBattery
                         ? ("Batería: " + root.dockState.batteryPercent + "%" + (root.dockState.batteryCharging ? " (Cargando)" : ""))
                         : "Alimentación: CA (100%)"
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -537,9 +559,11 @@ Rectangle {
                 id: timeText
                 anchors.centerIn: parent
                 text: root.dockState.timeStr || "15:43"
-                font.family: "Segoe UI, Inter, sans-serif"
+                font.family: "Adwaita Sans"
+                font.styleName: "SemiBold"
                 font.pixelSize: 12
                 font.weight: Font.DemiBold
+                font.italic: false
                 color: "#FFFFFF"
             }
 
@@ -548,7 +572,7 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.dockState.openCalendar()
+                onClicked: root.dockState.openCalendar(root.panelWindow && root.panelWindow.screen ? root.panelWindow.screen.name : "")
             }
 
             // Tooltip
@@ -568,7 +592,9 @@ Rectangle {
                     id: clockTip
                     anchors.centerIn: parent
                     text: root.dockState.dateFullStr
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
