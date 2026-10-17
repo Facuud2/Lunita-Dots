@@ -83,7 +83,9 @@ Rectangle {
                     id: widgetsTip
                     anchors.centerIn: parent
                     text: "Widgets y aplicaciones"
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -140,7 +142,9 @@ Rectangle {
                     id: micTip
                     anchors.centerIn: parent
                     text: root.dockState.micMuted ? "Micrófono: Silenciado" : "Micrófono: Activo"
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -265,7 +269,9 @@ Rectangle {
                             id: trayItemTip
                             anchors.centerIn: parent
                             text: parent.tipLabel
-                            font.family: "Segoe UI, Inter, sans-serif"
+                            font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                             font.pixelSize: 11
                             color: "#FFFFFF"
                         }
@@ -295,9 +301,11 @@ Rectangle {
                 id: langText
                 anchors.centerIn: parent
                 text: root.dockState.keyboardLayout || "ESP"
-                font.family: "Segoe UI, Inter, sans-serif"
+                font.family: "Adwaita Sans"
+                font.styleName: "SemiBold"
                 font.pixelSize: 11
                 font.weight: Font.DemiBold
+                font.italic: false
                 color: "#FFFFFF"
             }
 
@@ -326,7 +334,9 @@ Rectangle {
                     id: langTip
                     anchors.centerIn: parent
                     text: "Distribución de teclado: " + (root.dockState.keyboardLayout || "ESP")
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -389,7 +399,9 @@ Rectangle {
                     text: root.dockState.ethernetConnected
                         ? ("Ethernet: " + root.dockState.ethernetName + (root.dockState.ethernetIp ? " (" + root.dockState.ethernetIp + ")" : ""))
                         : (root.dockState.wifiConnected ? ("Wi-Fi: " + root.dockState.wifiSsid) : "Red: Desconectado")
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -455,7 +467,9 @@ Rectangle {
                     id: volTip
                     anchors.centerIn: parent
                     text: root.dockState.isVolumeMuted ? "Volumen: Silenciado" : ("Volumen: " + root.dockState.volumePercent + "%")
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -513,7 +527,9 @@ Rectangle {
                     text: root.dockState.hasBattery
                         ? ("Batería: " + root.dockState.batteryPercent + "%" + (root.dockState.batteryCharging ? " (Cargando)" : ""))
                         : "Alimentación: CA (100%)"
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
@@ -543,9 +559,11 @@ Rectangle {
                 id: timeText
                 anchors.centerIn: parent
                 text: root.dockState.timeStr || "15:43"
-                font.family: "Segoe UI, Inter, sans-serif"
+                font.family: "Adwaita Sans"
+                font.styleName: "SemiBold"
                 font.pixelSize: 12
                 font.weight: Font.DemiBold
+                font.italic: false
                 color: "#FFFFFF"
             }
 
@@ -574,7 +592,9 @@ Rectangle {
                     id: clockTip
                     anchors.centerIn: parent
                     text: root.dockState.dateFullStr
-                    font.family: "Segoe UI, Inter, sans-serif"
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
                     font.pixelSize: 11
                     color: "#FFFFFF"
                 }
