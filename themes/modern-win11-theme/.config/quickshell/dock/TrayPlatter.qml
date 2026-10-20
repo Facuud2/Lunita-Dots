@@ -343,6 +343,85 @@ Rectangle {
             }
         }
 
+        // 3.5. Bluetooth Status Icon (Right of Language Indicator)
+        Item {
+            id: bluetoothBtn
+            width: 30
+            height: 38
+            anchors.verticalCenter: parent.verticalCenter
+            property bool isHovered: btMouse.containsMouse
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 6
+                color: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "bluetooth")
+                    ? Qt.rgba(1, 1, 1, 0.42)
+                    : (bluetoothBtn.isHovered ? Qt.rgba(1, 1, 1, 0.26) : "transparent")
+                border.color: ((root.dockState.flyoutOpen && root.dockState.activeFlyout === "bluetooth") || bluetoothBtn.isHovered) ? Qt.rgba(1, 1, 1, 0.38) : "transparent"
+                border.width: 1
+                Behavior on color { ColorAnimation { duration: 120 } }
+            }
+
+            Image {
+                anchors.centerIn: parent
+                source: "assets/bluetooth.svg"
+                sourceSize.width: 16
+                sourceSize.height: 16
+                opacity: root.dockState.bluetoothEnabled ? 1.0 : 0.45
+                smooth: true
+            }
+
+            // Connected Device Indicator Dot
+            Rectangle {
+                visible: root.dockState.bluetoothEnabled && root.dockState.bluetoothDeviceName !== ""
+                width: 5
+                height: 5
+                radius: 2.5
+                color: "#00E5FF"
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.rightMargin: 5
+                anchors.topMargin: 8
+            }
+
+            MouseArea {
+                id: btMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.dockState.openBluetooth(root.panelWindow && root.panelWindow.screen ? root.panelWindow.screen.name : "")
+            }
+
+            // Tooltip
+            Rectangle {
+                anchors.bottom: parent.top
+                anchors.bottomMargin: 8
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: btTip.implicitWidth + 14
+                height: 22
+                radius: 5
+                color: Qt.rgba(0.12, 0.13, 0.16, 0.95)
+                border.color: Qt.rgba(1, 1, 1, 0.16)
+                border.width: 1
+                visible: bluetoothBtn.isHovered
+                z: 999
+                Text {
+                    id: btTip
+                    anchors.centerIn: parent
+                    text: !root.dockState.bluetoothEnabled
+                        ? "Bluetooth: Apagado"
+                        : (root.dockState.bluetoothDeviceName !== ""
+                            ? ("Bluetooth: " + root.dockState.bluetoothDeviceName)
+                            : "Bluetooth: Activado")
+                    font.family: "Adwaita Sans"
+                    font.styleName: "Regular"
+                    font.italic: false
+                    font.pixelSize: 11
+                    color: "#FFFFFF"
+                }
+            }
+        }
+
         // 4. Network Status Icon (Ethernet / Wi-Fi)
         Item {
             id: wifiBtn

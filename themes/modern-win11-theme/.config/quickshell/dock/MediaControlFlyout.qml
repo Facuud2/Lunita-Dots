@@ -297,7 +297,7 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.dockState.openNetwork()
+                            onClicked: root.dockState.openNetwork(root.dockState.flyoutScreen)
                         }
                     }
 
@@ -320,7 +320,7 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.dockState.toggleBluetooth()
+                            onClicked: root.dockState.openBluetooth(root.dockState.flyoutScreen)
                         }
                     }
 

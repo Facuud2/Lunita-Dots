@@ -42,6 +42,8 @@ Scope {
                 globalDockState.toggleCalendarFlyout("");
             } else if (popupName === "network" || popupName === "wifi" || popupName === "ethernet") {
                 globalDockState.toggleNetworkFlyout("");
+            } else if (popupName === "bluetooth" || popupName === "bt") {
+                globalDockState.toggleBluetoothFlyout("");
             } else {
                 globalDockState.closeFlyouts();
             }
@@ -57,6 +59,10 @@ Scope {
 
         function toggleNetwork() {
             globalDockState.toggleNetworkFlyout("");
+        }
+
+        function toggleBluetooth() {
+            globalDockState.toggleBluetoothFlyout("");
         }
 
         function closeFlyouts() {
@@ -206,7 +212,8 @@ Scope {
                 implicitWidth: 360
                 implicitHeight: Math.max(220, (
                     globalDockState.activeFlyout === "audio" ? mediaFlyout.implicitHeight :
-                    (globalDockState.activeFlyout === "network" ? networkFlyout.implicitHeight : calendarFlyout.implicitHeight)
+                    (globalDockState.activeFlyout === "network" ? networkFlyout.implicitHeight :
+                    (globalDockState.activeFlyout === "bluetooth" ? bluetoothFlyout.implicitHeight : calendarFlyout.implicitHeight))
                 ) + 4)
 
                 WlrLayershell.layer: WlrLayer.Overlay
@@ -234,6 +241,14 @@ Scope {
                     id: networkFlyout
                     dockState: globalDockState
                     visible: globalDockState.activeFlyout === "network"
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                }
+
+                BluetoothControlFlyout {
+                    id: bluetoothFlyout
+                    dockState: globalDockState
+                    visible: globalDockState.activeFlyout === "bluetooth"
                     anchors.bottom: parent.bottom
                     anchors.right: parent.right
                 }
