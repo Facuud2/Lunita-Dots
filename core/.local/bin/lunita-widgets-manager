@@ -1234,6 +1234,12 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         row_daemon.set_title("Servicio de Widgets Quickshell")
         row_daemon.set_subtitle("Gestiona los widgets dinámicos sobre el escritorio")
 
+        btn_edit_mode = Gtk.Button(label="Modo Edición")
+        btn_edit_mode.set_valign(Gtk.Align.CENTER)
+        btn_edit_mode.add_css_class("wm-btn-primary")
+        btn_edit_mode.connect("clicked", self.on_toggle_edit_mode)
+        row_daemon.add_suffix(btn_edit_mode)
+
         btn_restart = Gtk.Button(label="Reiniciar Servicio")
         btn_restart.set_valign(Gtk.Align.CENTER)
         btn_restart.connect("clicked", self.on_restart_widgets)
@@ -1377,11 +1383,28 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
         self.on_restart_widgets(None)
 
+    def _resolve_widgets_qml_dir(self) -> Path:
+        candidates = [
+            WIDGETS_DIR,
+            DOTS_DIR / "core/.config/quickshell/widgets",
+            DOTS_DIR / "themes/macos-theme/.config/quickshell/widgets",
+        ]
+        for cand in candidates:
+            if (cand / "shell.qml").is_file():
+                return cand
+        return WIDGETS_DIR
+
+    def on_toggle_edit_mode(self, _):
+        toggle_bin = SCRIPT_DIR / "lunita-widgets-toggle"
+        cmd = [str(toggle_bin)] if toggle_bin.is_file() else ["lunita-widgets-toggle"]
+        subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.show_toast("Modo de edición de widgets alternado en el escritorio")
+
     def on_restart_widgets(self, _):
         def _restart():
-            subprocess.run(["pkill", "-f", "quickshell.*widgets"])
-            cfg_path = os.path.expanduser("~/.config/quickshell/widgets")
-            subprocess.Popen(["quickshell", "-d", "-n", "-p", cfg_path])
+            subprocess.run(["pkill", "-f", "quickshell.*widgets"], check=False)
+            cfg_path = self._resolve_widgets_qml_dir()
+            subprocess.Popen(["quickshell", "-d", "-n", "-p", str(cfg_path)])
 
         threading.Thread(target=_restart, daemon=True).start()
         self.show_toast("Daemon de widgets reiniciado correctamente")

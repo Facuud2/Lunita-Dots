@@ -33,7 +33,7 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 4
 
-        // 1. Widgets / Copilot Icon
+        // 1. Widgets / Copilot Icon (Left-click: Toggle Widgets Edit Mode, Right-click: Open Widgets Manager)
         Item {
             id: widgetsBtn
             width: 30
@@ -44,8 +44,12 @@ Rectangle {
             Rectangle {
                 anchors.fill: parent
                 radius: 6
-                color: widgetsBtn.isHovered ? Qt.rgba(1, 1, 1, 0.26) : "transparent"
-                border.color: widgetsBtn.isHovered ? Qt.rgba(1, 1, 1, 0.35) : "transparent"
+                color: root.dockState.widgetsEditing
+                    ? Qt.rgba(0.0, 0.75, 1.0, 0.42)
+                    : (widgetsBtn.isHovered ? Qt.rgba(1, 1, 1, 0.26) : "transparent")
+                border.color: root.dockState.widgetsEditing
+                    ? "#00E5FF"
+                    : (widgetsBtn.isHovered ? Qt.rgba(1, 1, 1, 0.35) : "transparent")
                 border.width: 1
                 Behavior on color { ColorAnimation { duration: 120 } }
             }
@@ -62,8 +66,15 @@ Rectangle {
                 id: widgetsMouse
                 anchors.fill: parent
                 hoverEnabled: true
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.dockState.openLauncher()
+                onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton) {
+                        root.dockState.openWidgetsManager();
+                    } else {
+                        root.dockState.toggleWidgetsEdit();
+                    }
+                }
             }
 
             // Tooltip
@@ -82,7 +93,9 @@ Rectangle {
                 Text {
                     id: widgetsTip
                     anchors.centerIn: parent
-                    text: "Widgets y aplicaciones"
+                    text: root.dockState.widgetsEditing
+                        ? "Widgets: Modo edición activo (Clic der.: Gestor)"
+                        : "Widgets y aplicaciones (Clic der.: Gestor)"
                     font.family: "Adwaita Sans"
                     font.styleName: "Regular"
                     font.italic: false

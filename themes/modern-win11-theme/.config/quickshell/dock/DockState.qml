@@ -1703,4 +1703,40 @@ Item {
             trayResolverProc.running = true;
         }
     }
+
+    // ==========================================
+    // 17. DESKTOP WIDGETS EDITING & MANAGEMENT
+    // ==========================================
+    property bool widgetsEditing: false
+
+    Timer {
+        id: widgetsEditTimer
+        interval: 350
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!checkWidgetsEditingProc.running) {
+                checkWidgetsEditingProc.running = true;
+            }
+        }
+    }
+
+    Process {
+        id: checkWidgetsEditingProc
+        command: ["bash", "-c", "if [ -f /tmp/lunita_widgets_editing ]; then cat /tmp/lunita_widgets_editing; else echo 0; fi"]
+        stdout: SplitParser {
+            onRead: data => {
+                root.widgetsEditing = (data.trim() === "1");
+            }
+        }
+    }
+
+    function toggleWidgetsEdit() {
+        Quickshell.execDetached(["lunita-widgets-toggle"]);
+    }
+
+    function openWidgetsManager() {
+        Quickshell.execDetached(["lunita-widgets-manager", "--tab", "desktop"]);
+    }
 }
