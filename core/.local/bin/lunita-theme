@@ -599,7 +599,7 @@ cmd_apply() {
             ags quit 2>/dev/null || true
             sleep 0.3
         fi
-        hyprctl dispatch 'hl.dsp.exec_cmd("env PATH=$HOME/.local/bin:$PATH ags run")' >/dev/null 2>&1 || true
+        hyprctl dispatch exec "env PATH=$HOME/.local/bin:$PATH ags run" >/dev/null 2>&1 || true
         success "AGS iniciado/reiniciado con los nuevos componentes."
     else
         if pgrep -x ags > /dev/null; then
