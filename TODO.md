@@ -334,3 +334,60 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Criterios de Aceptación:**
   1. Hacer clic en el botón "Widgets y Aplicaciones" activa la edición o el panel gestor de los widgets en pantalla de forma directa.
 - **Dependencias:** Ninguna
+
+### [ISSUE-028] Auditoría General de Código, Errores de Sintaxis, Rutas y Refinamiento Multitema
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `AUDITORY_FIXES`
+- **Módulo(s):** Core / Temas (`lunita-default`, `macos-theme`, `modern-win11-theme`) / Quickshell / Scripts
+- **Archivos Afectados:**
+  - `core/.config/hypr/hyprlock-colors.conf`
+  - `core/.config/hypr/modules/autostart.lua`
+  - `core/.config/hypr/modules/keybinds.lua`
+  - `core/.config/quickshell/hyprquickpaper/commands.sh`
+  - `core/.config/quickshell/widgets/scripts/git_activity_provider.py`
+  - `core/.local/bin/hyprquickpaper`
+  - `core/.local/bin/lunita-clipboard`
+  - `core/.local/bin/lunita-launcher`
+  - `core/.local/bin/lunita-osd`
+  - `core/.local/bin/lunita-theme`
+  - `core/.local/bin/lunita-theme-selector`
+  - `core/.local/bin/lunita-widgets-manager`
+  - `core/.oh-my-zsh/custom/themes/lunita.zsh-theme`
+  - `themes/lunita-default/.config/gtk-3.0/bookmarks.template`
+  - `themes/lunita-default/.config/qt6ct/qt6ct.conf`
+  - `themes/lunita-default/.config/quickshell/bar/AppLauncher.qml`
+  - `themes/lunita-default/.config/quickshell/bar/AudioPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/ConnPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/Exec.qml`
+  - `themes/lunita-default/.config/quickshell/bar/ExpandedPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/QuickActions.qml`
+  - `themes/lunita-default/.config/quickshell/bar/Recorder.qml`
+  - `themes/lunita-default/.config/quickshell/bar/Weather.qml`
+  - `themes/lunita-default/.config/quickshell/osd/OSDState.qml`
+  - `themes/lunita-default/.local/share/user-places.xbel.template`
+  - `themes/lunita-default/README.md`
+  - `themes/macos-theme/.config/gtk-3.0/bookmarks.template`
+  - `themes/macos-theme/.config/qt6ct/qt6ct.conf`
+  - `themes/macos-theme/.config/quickshell/bar/popups/AppMenuDropdown.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/AppleMenu.qml`
+  - `themes/macos-theme/.config/quickshell/dock/DockState.qml`
+  - `themes/macos-theme/.config/quickshell/lockscreen/LockView.qml`
+  - `themes/macos-theme/.config/quickshell/osd/OSDState.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/scripts/spotlight_search.py`
+  - `themes/macos-theme/.config/quickshell/widgets/scripts/*` (13 scripts purgados y centralizados en core)
+  - `themes/macos-theme/.oh-my-zsh/custom/macos.zsh`
+  - `themes/modern-win11-theme/.config/gtk-3.0/bookmarks.template`
+  - `themes/modern-win11-theme/.config/qt6ct/qt6ct.conf`
+  - `themes/modern-win11-theme/.config/quickshell/dock/DockState.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/LauncherState.qml`
+  - `themes/modern-win11-theme/.local/share/user-places.xbel.template`
+  - `themes/modern-win11-theme/theme.json`
+- **Descripción:** Corrección exhaustiva de errores de sintaxis en QML detectados por `qmlformat` (operadores opcionales `?.`, `??` y firmas TypeScript no soportadas), dinamización de todas las rutas hardcodeadas de desarrollo y usuario (`/mnt/Desarrollo`, `/mnt/Disco2`, `/home/facuud2`), purgado de 13 scripts duplicados y archivos huérfanos, soporte e integración de OSD de brillo y autostart del wallpaper, estandarización de despachadores de Hyprland (`hyprctl dispatch`) reemplazando llamadas a `hl.dsp.*` en CLI/QML, e incorporación de fallback automático para el historial de portapapeles (`lunita-clipboard`) en `modern-win11-theme`.
+- **Criterios de Aceptación:**
+  1. Los 159 archivos QML del proyecto compilan y formatean con 0 errores bajo `qmlformat`.
+  2. No existen rutas estáticas de desarrollo en plantillas ni ejecutables.
+  3. `lunita-osd` soporta brillo y volumen fluidamente.
+  4. Los tres temas (`lunita-default`, `macos-theme` y `modern-win11-theme`) operan con comandos válidos de Hyprland sin excepciones en stderr.
+  5. Ningún cambio fue pusheado al repositorio remoto.
+- **Dependencias:** Ninguna
