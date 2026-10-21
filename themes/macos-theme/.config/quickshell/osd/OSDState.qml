@@ -45,8 +45,25 @@ Item {
         return "assets/speaker-wave-3.svg";
     }
 
+    Process {
+        id: brightnessProc
+        command: ["bash", "-c", "command -v brightnessctl >/dev/null 2>&1 && brightnessctl -m | cut -d, -f4 | tr -d '%' || echo 50"]
+        stdout: SplitParser {
+            onRead: data => {
+                let v = parseInt(data.trim());
+                if (!isNaN(v)) {
+                    root.volume = Math.max(0, Math.min(100, v));
+                    root.muted = false;
+                }
+            }
+        }
+    }
+
     function show(type) {
         if (type) root.osdType = type;
+        if (root.osdType === "brightness") {
+            brightnessProc.running = true;
+        }
         
         // Cancelar timer de ocultamiento si el usuario sigue rotando la rueda del teclado
         hideTimer.stop();

@@ -29,7 +29,7 @@ THEMES_DIR = DOTS_DIR / "themes"
 STATE_FILE = DOTS_DIR / ".lunita-theme"
 USER_STATE_DIR = Path.home() / ".config/lunita"
 USER_STATE_FILE = USER_STATE_DIR / "current_theme"
-AGS_COLORS_FILE = Path.home() / ".config/ags/colors.scss"
+ACTIVE_TOKENS_FILE = Path.home() / ".config/lunita/active_tokens.json"
 
 def get_current_theme_id() -> str:
     if STATE_FILE.exists():
@@ -59,17 +59,22 @@ def load_theme_colors():
         "outline_variant": "#3a3a3c",
     }
     
-    # Try reading from ags colors.scss if present
-    if AGS_COLORS_FILE.exists():
+    # Try reading from active_tokens.json
+    if ACTIVE_TOKENS_FILE.exists():
         try:
-            for line in AGS_COLORS_FILE.read_text().splitlines():
-                line = line.strip()
-                if line.startswith("$") and ":" in line:
-                    key, val = line.split(":", 1)
-                    key = key.lstrip("$").strip()
-                    val = val.rstrip(";").strip()
-                    if key in colors:
-                        colors[key] = val
+            tokens = json.loads(ACTIVE_TOKENS_FILE.read_text(encoding="utf-8"))
+            if "accent" in tokens:
+                colors["primary"] = tokens["accent"]
+            if "surface" in tokens:
+                colors["surface"] = tokens["surface"]
+            if "surface_container" in tokens:
+                colors["surface_container"] = tokens["surface_container"]
+            if "surface_container_high" in tokens:
+                colors["surface_container_high"] = tokens["surface_container_high"]
+            if "on_surface" in tokens:
+                colors["on_surface"] = tokens["on_surface"]
+            if "on_surface_dim" in tokens:
+                colors["on_surface_variant"] = tokens["on_surface_dim"]
         except Exception:
             pass
             

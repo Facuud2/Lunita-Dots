@@ -16,8 +16,9 @@ function M.setup()
     -- 3. Cursor y tema de sistema (dinámico según el tema activo)
     hl.exec_cmd("sh -c 'CT=$(grep -s \"^gtk-cursor-theme-name=\" ~/.config/gtk-3.0/settings.ini | cut -d= -f2 | tr -d \" \"); CS=$(grep -s \"^gtk-cursor-theme-size=\" ~/.config/gtk-3.0/settings.ini | cut -d= -f2 | tr -d \" \"); CT=${CT:-Bibata-Modern-Ice}; CS=${CS:-40}; hyprctl setcursor \"$CT\" \"$CS\"; gsettings set org.gnome.desktop.interface cursor-theme \"$CT\"; gsettings set org.gnome.desktop.interface cursor-size \"$CS\"'")
 
-    -- 4. Demonio de fondo de pantalla (awww)
+    -- 4. Demonio de fondo de pantalla (awww) y restauración automática en frío
     hl.exec_cmd("sh -c 'systemctl --user start awww || pgrep -x awww-daemon >/dev/null || awww-daemon &'")
+    hl.exec_cmd("sh -c 'sleep 0.8; export PATH=\"" .. home .. "/.local/bin:$PATH\"; command -v lunita-dynamic-wallpaper >/dev/null 2>&1 && lunita-dynamic-wallpaper init || true'")
 
     -- 5. Quickshell (Barra Superior, Dock, Notificaciones, OSD, Spotlight, Launcher)
     hl.exec_cmd("sh -c 'sleep 0.5; export PATH=\"" .. home .. "/.local/bin:$PATH\"; lunita-quickshell start'")
