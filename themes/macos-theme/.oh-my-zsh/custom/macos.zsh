@@ -7,8 +7,8 @@
 _lunita_current_theme="lunita-default"
 if [[ -f "$HOME/.config/lunita/current_theme" ]]; then
   _lunita_current_theme=$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")
-elif [[ -f "/mnt/Desarrollo/Lunita-Dots/.lunita-theme" ]]; then
-  _lunita_current_theme=$(tr -d '[:space:]' < "/mnt/Desarrollo/Lunita-Dots/.lunita-theme")
+elif [[ -f "$HOME/.lunita-theme" ]]; then
+  _lunita_current_theme=$(tr -d '[:space:]' < "$HOME/.lunita-theme")
 fi
 
 if [[ "$_lunita_current_theme" != "macos-theme" && "$_lunita_current_theme" != "macOS-Theme" && "$_lunita_current_theme" != "macos" ]]; then

@@ -8,15 +8,15 @@
 
 | Componente | Framework / Herramienta | Función Principal |
 |---|---|---|
-| **Barra Superior** | [Quickshell (Qt6/QML)](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/quickshell/bar) | Dynamic Island interactiva de 36px con pastillas dinámicas |
-| **Notificaciones** | [Quickshell Notifications](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/quickshell/notifications) | Demonio D-Bus integrado con pastilla animada |
-| **Lanzador & PowerMenu** | [Quickshell Launcher](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/quickshell/launcher) | Búsqueda por teclado, monitor de recursos y menú de apagado |
-| **Widget de Escritorio** | [Eww + CAVA](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/eww) | Reproductor multimedia y espectro de audio fijado en el escritorio |
-| **Motor de Temas** | [Matugen](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/matugen) | Extracción de paleta armónica desde el wallpaper activo |
-| **Compositor** | [Hyprland (Lua)](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/hypr) | Animaciones Bezier macOS, blur frosted glass y reglas de ventana |
-| **Selector de Fondos** | [HyprQuickPaper (Quickshell)](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/quickshell) | Selector de wallpapers 3D interactivo por GPU |
-| **Terminal & Shell** | [Kitty](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/kitty) & [Zsh](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/zsh) | Recarga en vivo por `SIGUSR1` y prompt de pastillas `pills` |
-| **Cierre de Sesión** | [Wlogout](file:///mnt/Desarrollo/Lunita-Dots/themes/lunita-default/wlogout) | Botones redondeados con desenfoque de fondo |
+| **Barra Superior** | Quickshell (Qt6/QML) | Dynamic Island interactiva de 36px con pastillas dinámicas |
+| **Notificaciones** | Quickshell Notifications | Demonio D-Bus integrado con pastilla animada |
+| **Lanzador & PowerMenu** | Quickshell Launcher | Búsqueda por teclado, monitor de recursos y menú de apagado |
+| **Widget de Escritorio** | Eww + CAVA | Reproductor multimedia y espectro de audio fijado en el escritorio |
+| **Motor de Temas** | Matugen | Extracción de paleta armónica desde el wallpaper activo |
+| **Compositor** | Hyprland (Lua) | Animaciones Bezier macOS, blur frosted glass y reglas de ventana |
+| **Selector de Fondos** | HyprQuickPaper (Quickshell) | Selector de wallpapers 3D interactivo por GPU |
+| **Terminal & Shell** | Kitty & Zsh | Recarga en vivo por `SIGUSR1` y prompt de pastillas `pills` |
+| **Cierre de Sesión** | Wlogout | Botones redondeados con desenfoque de fondo |
 
 ---
 

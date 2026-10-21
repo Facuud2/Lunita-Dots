@@ -8,8 +8,8 @@ _lunita_current_theme="lunita-default"
 
 if [[ -f "$HOME/.config/lunita/current_theme" ]]; then
   _lunita_current_theme=$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")
-elif [[ -f "/mnt/Desarrollo/Lunita-Dots/.lunita-theme" ]]; then
-  _lunita_current_theme=$(tr -d '[:space:]' < "/mnt/Desarrollo/Lunita-Dots/.lunita-theme")
+elif [[ -f "$HOME/.lunita-theme" ]]; then
+  _lunita_current_theme=$(tr -d '[:space:]' < "$HOME/.lunita-theme")
 fi
 
 case "$_lunita_current_theme" in

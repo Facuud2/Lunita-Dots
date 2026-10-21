@@ -321,7 +321,6 @@ SEARCH_DIRS = [
     os.path.join(HOME, "Pictures"),
     os.path.join(HOME, "Music"),
     os.path.join(HOME, "Videos"),
-    "/mnt/Desarrollo",
     HOME
 ]
 

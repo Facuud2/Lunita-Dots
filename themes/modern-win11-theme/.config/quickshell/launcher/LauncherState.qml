@@ -48,7 +48,7 @@ Item {
     Process {
         id: userAvatarProcess
         running: true
-        command: ["bash", "-c", "if [ -f $HOME/.face ]; then echo \"file://$HOME/.face\"; elif [ -f $HOME/.config/hypr/avatar.jpg ]; then echo \"file://$HOME/.config/hypr/avatar.jpg\"; elif [ -f /mnt/Desarrollo/Lunita-Dots/core/hypr/avatar.jpg ]; then echo \"file:///mnt/Desarrollo/Lunita-Dots/core/hypr/avatar.jpg\"; else echo \"\"; fi"]
+        command: ["bash", "-c", "if [ -f $HOME/.face ]; then echo \"file://$HOME/.face\"; elif [ -f $HOME/.config/hypr/avatar.jpg ]; then echo \"file://$HOME/.config/hypr/avatar.jpg\"; else echo \"\"; fi"]
         stdout: SplitParser {
             onRead: data => {
                 let val = data.trim();

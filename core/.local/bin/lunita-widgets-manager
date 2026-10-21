@@ -1072,7 +1072,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
         self.git_local_row = Adw.EntryRow()
         self.git_local_row.set_title("Ruta del Repositorio Local")
-        self.git_local_row.set_text(git_cfg.get("local_repo", "/mnt/Desarrollo/Lunita-Dots"))
+        self.git_local_row.set_text(git_cfg.get("local_repo") or str(DOTS_DIR))
         group_repos.add(self.git_local_row)
 
         self.git_ci_repo_row = Adw.EntryRow()
@@ -1127,7 +1127,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             "token": "",
             "repos": ["Lunita-Dots", "Comitas-App", "FocuseAR"],
             "ci_repo": "Comitas-App",
-            "local_repo": "/mnt/Desarrollo/Lunita-Dots",
+            "local_repo": str(DOTS_DIR),
             "show_ci": True
         }
         if GIT_CONFIG_FILE.exists():
@@ -1186,7 +1186,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             "token": self.git_token_row.get_text().strip(),
             "repos": self.tracked_repos,
             "ci_repo": self.git_ci_repo_row.get_text().strip() or "Comitas-App",
-            "local_repo": self.git_local_row.get_text().strip() or "/mnt/Desarrollo/Lunita-Dots",
+            "local_repo": self.git_local_row.get_text().strip() or str(DOTS_DIR),
             "show_ci": self.git_show_ci_row.get_active()
         }
         ensure_config_dir()

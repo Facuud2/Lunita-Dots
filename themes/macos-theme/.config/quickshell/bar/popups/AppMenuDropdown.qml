@@ -168,7 +168,7 @@ Item {
         }
         if (title === "Help") {
             return [
-                { text: "Lunita Keybindings Cheatsheet", shortcut: "⌘/", cmd: "kitty -e less /mnt/Desarrollo/Lunita-Dots/core/hypr/modules/keybinds.lua" },
+                { text: "Lunita Keybindings Cheatsheet", shortcut: "⌘/", cmd: "kitty -e sh -c 'less ~/.config/hypr/modules/keybinds.lua'" },
                 { text: "Hyprland Documentation", shortcut: "", cmd: "xdg-open https://wiki.hyprland.org" },
                 { text: "Lunita-Dots GitHub Repository", shortcut: "", cmd: "xdg-open https://github.com/Facuud2/Lunita-Dots" },
                 { separator: true },
