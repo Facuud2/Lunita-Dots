@@ -7,7 +7,7 @@ import Quickshell.Io
 QtObject {
     id: root
 
-    function run(cmd: string): void {
+    function run(cmd) {
         Quickshell.execDetached(["bash", "-c", cmd]);
     }
 }

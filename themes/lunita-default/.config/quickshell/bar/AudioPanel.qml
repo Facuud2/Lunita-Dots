@@ -19,8 +19,9 @@ Item {
     }
     Component.onDestruction: Audio.watchers--
 
-    function label(node): string {
-        return node?.description ?? node?.name ?? Cfg.t("Desconocido");
+    function label(node) {
+        if (!node) return Cfg.t("Desconocido");
+        return node.description ? node.description : (node.name ? node.name : Cfg.t("Desconocido"));
     }
 
     Column {
@@ -167,7 +168,16 @@ Item {
             property var node: null
             property bool isOutput: true
 
-            readonly property bool current: dr.isOutput ? (Audio.defaultSink === String(dr.node?.id) || Audio.defaultSink === String(dr.node?.name)) : (Audio.defaultSource === String(dr.node?.id) || Audio.defaultSource === String(dr.node?.name))
+            readonly property bool current: {
+                if (!dr.node) return false;
+                var nodeId = String(dr.node.id !== undefined ? dr.node.id : "");
+                var nodeName = String(dr.node.name || "");
+                if (dr.isOutput) {
+                    return (nodeId !== "" && Audio.defaultSink === nodeId) || (nodeName !== "" && Audio.defaultSink === nodeName);
+                } else {
+                    return (nodeId !== "" && Audio.defaultSource === nodeId) || (nodeName !== "" && Audio.defaultSource === nodeName);
+                }
+            }
 
             width: col.width
             height: 42
@@ -186,10 +196,13 @@ Item {
                 anchors.leftMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
                 text: {
-                    if (dr.node?.type === "headphones") return "headphones";
-                    if (dr.node?.type === "hdmi") return "tv";
-                    if (dr.node?.type === "mic") return "mic";
-                    const n = ((dr.node?.name ?? "") + " " + (dr.node?.description ?? "")).toLowerCase();
+                    var nodeType = dr.node ? dr.node.type : "";
+                    if (nodeType === "headphones") return "headphones";
+                    if (nodeType === "hdmi") return "tv";
+                    if (nodeType === "mic") return "mic";
+                    var nodeName = dr.node && dr.node.name ? dr.node.name : "";
+                    var nodeDesc = dr.node && dr.node.description ? dr.node.description : "";
+                    const n = (nodeName + " " + nodeDesc).toLowerCase();
                     if (n.includes("bluez") || n.includes("anc") || n.includes("head") || n.includes("buds"))
                         return "headphones";
                     if (n.includes("hdmi") || n.includes("tv"))
@@ -236,9 +249,9 @@ Item {
                     if (!dr.node)
                         return;
                     if (dr.isOutput)
-                        Audio.setDefaultSink(dr.node.id ?? dr.node.name);
+                        Audio.setDefaultSink(dr.node.id !== undefined ? dr.node.id : dr.node.name);
                     else
-                        Audio.setDefaultSource(dr.node.id ?? dr.node.name);
+                        Audio.setDefaultSource(dr.node.id !== undefined ? dr.node.id : dr.node.name);
                 }
             }
         }

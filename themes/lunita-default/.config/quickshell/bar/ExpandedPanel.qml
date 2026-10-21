@@ -72,7 +72,7 @@ Item {
 
                     Text {
                         width: parent.width
-                        text: Notifs.current?.summary ?? ""
+                        text: (Notifs.current && Notifs.current.summary) ? Notifs.current.summary : ""
                         color: Theme.fg
                         font.family: Theme.fontUi
                         font.pixelSize: Theme.bodySmall
@@ -81,7 +81,7 @@ Item {
                     }
                     Text {
                         width: parent.width
-                        text: Notifs.current?.body ?? ""
+                        text: (Notifs.current && Notifs.current.body) ? Notifs.current.body : ""
                         color: Theme.fgDim
                         font.family: Theme.fontUi
                         font.pixelSize: Theme.labelSmall

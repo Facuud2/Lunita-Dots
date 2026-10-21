@@ -48,7 +48,7 @@ Item {
     // fila abierta con clic derecho, una sola a la vez
     property string detail: ""
 
-    function toggle(): void {
+    function toggle() {
         if (mode === "wifi")
             Net.toggleWifi();
         else
@@ -266,9 +266,9 @@ Item {
                 property bool isKnown: false
 
                 // nombre para redes, mac para dispositivos
-                readonly property string ident: popup.mode === "wifi" ? (item?.name ?? "") : (item?.mac ?? "")
+                readonly property string ident: popup.mode === "wifi" ? ((item && item.name) ? item.name : "") : ((item && item.mac) ? item.mac : "")
 
-                readonly property bool isConnected: item?.connected ?? false
+                readonly property bool isConnected: (item && item.connected) ? true : false
                 readonly property bool isBusy: ident !== "" && Net.connecting === ident
                 readonly property bool didFail: ident !== "" && Net.failed === ident
                 readonly property bool askingPass: popup.asking !== "" && popup.asking === ident
@@ -278,16 +278,16 @@ Item {
 
                 readonly property string detalleTexto: {
                     if (popup.mode !== "wifi")
-                        return cr.item?.mac ?? "";
+                        return (cr.item && cr.item.mac) ? cr.item.mac : "";
                     const partes = [];
-                    if (cr.item?.signal !== undefined)
+                    if (cr.item && cr.item.signal !== undefined)
                         partes.push(Cfg.t("Señal") + " " + cr.item.signal + "%");
-                    if (cr.item?.secure !== undefined)
+                    if (cr.item && cr.item.secure !== undefined)
                         partes.push(cr.item.secure ? Cfg.t("Protegida") : Cfg.t("Abierta"));
                     return partes.join(" · ");
                 }
 
-                function conectar(): void {
+                function conectar() {
                     const it = cr.item;
                     if (!it)
                         return;
@@ -312,7 +312,7 @@ Item {
                         Net.pairBt(it.mac);
                 }
 
-                function desconectar(): void {
+                function desconectar() {
                     if (!cr.item)
                         return;
                     if (popup.mode === "wifi")
@@ -321,7 +321,7 @@ Item {
                         Net.disconnectBt(cr.item.mac);
                 }
 
-                function olvidar(): void {
+                function olvidar() {
                     if (!cr.item)
                         return;
                     if (popup.mode === "wifi")
@@ -365,8 +365,8 @@ Item {
                         visible: !cr.isBusy
                         text: {
                             if (popup.mode === "wifi")
-                                return cr.isConnected ? "wifi" : (cr.item?.secure ?? false) ? "lock" : "wifi_find";
-                            const n = (cr.item?.name ?? "").toLowerCase();
+                                return cr.isConnected ? "wifi" : ((cr.item && cr.item.secure) ? "lock" : "wifi_find");
+                            const n = ((cr.item && cr.item.name) ? cr.item.name : "").toLowerCase();
                             if (n.includes("head") || n.includes("buds") || n.includes("audio"))
                                 return "headphones";
                             if (n.includes("phone"))
@@ -432,7 +432,7 @@ Item {
 
                         Text {
                             width: parent.width
-                            text: cr.item?.name || Cfg.t("Desconocido")
+                            text: (cr.item && cr.item.name) ? cr.item.name : Cfg.t("Desconocido")
                             color: Theme.fg
                             font.family: Theme.font
                             font.pixelSize: Theme.bodySmall

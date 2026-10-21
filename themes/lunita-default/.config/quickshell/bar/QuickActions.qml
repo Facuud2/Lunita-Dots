@@ -143,8 +143,8 @@ Row {
 
     // ── 3. Botón Notificaciones ──
     ActionButton {
-        icon: (Notifs.all?.length ?? 0) > 0 ? "notifications_active" : (Notifs.muted ? "notifications_off" : "notifications")
-        activeState: (Notifs.all?.length ?? 0) > 0
+        icon: (Notifs.all && Notifs.all.length ? Notifs.all.length : 0) > 0 ? "notifications_active" : (Notifs.muted ? "notifications_off" : "notifications")
+        activeState: (Notifs.all && Notifs.all.length ? Notifs.all.length : 0) > 0
         onActivated: root.requestNotifs()
     }
 
