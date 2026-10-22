@@ -437,3 +437,44 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   4. Los temporizadores de systemd gestionan la rotación horaria nativa (06:00, 13:00, 20:00).
   5. Cero procesos huérfanos al apagar o reiniciar el equipo, garantizando un shutdown instantáneo.
 - **Dependencias:** [ISSUE-029]
+
+---
+
+### [ISSUE-031] Rediseño Integral de Menús, Popups y Flyouts con Anti-Slop Taste Skill
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `AUDITORY_FIXES`
+- **Módulo(s):** Temas (`lunita-default`, `macos-theme`, `modern-win11-theme`) / Quickshell / UI-UX
+- **Archivos Afectados:**
+  - `themes/lunita-default/.config/quickshell/bar/ExpandedPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/AudioPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/ConnPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/CalendarPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/NotifPanel.qml`
+  - `themes/lunita-default/.config/quickshell/launcher/SearchMenuView.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/AppleMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/AppMenuDropdown.qml`
+  - `themes/macos-theme/.config/quickshell/dock/DockContextMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/TrayContextMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/CalendarMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/SoundMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/NetworkMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/BluetoothMenu.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/PowerFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/DockContextMenu.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/NetworkControlFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/BluetoothControlFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/MediaControlFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/CalendarNotificationFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/bar/panels/LeftSoundFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/bar/panels/RightBrightnessFlyout.qml`
+- **Descripción:** Rediseño estético y funcional exhaustivo de todos los 22 menús, popups y flyouts interactivos de los 3 ecosistemas de escritorio en Quickshell, aplicando los principios de la `design-taste-frontend` skill (jerarquía tipográfica estricta, superficies tonales intencionadas, erradicación de brillos y bordes plásticos `RectangularGlow` o `#47ffffff`, y sustitución de emojis crudos por iconografía vectorial auténtica):
+  1. **`lunita-default`:** Enfatizada la identidad Nothing OS brutalista/monocromática de alto contraste. Se perfeccionó la isla `ExpandedPanel`, se rediseñó el buscador `SearchMenuView` eliminando cajas genéricas cuadradas y dotándolo de cápsulas y píldoras Nothing con atajos visuales nítidos, y se añadieron bordes de 1px a tarjetas y controles de `AudioPanel`, `ConnPanel`, `CalendarPanel` y `NotifPanel`.
+  2. **`macos-theme`:** Depuración de la estética Cupertino. Se erradicó el `RectangularGlow` artificial de 16px con `#99000000` en `DockContextMenu`, implementando elevación de capa ambiental limpia con borde de 1px y 12px de radio, selección en `#007AFF`, tipografía SF Pro Text/Display e interacción suave.
+  3. **`modern-win11-theme`:** Implementación pura de Fluent Design. Se refactorizó completamente `PowerFlyout` erradicando emojis desalineados (`🔒`, `🌙`, `🔄`, etc.) y fuentes sustitutas, reemplazándolos por iconos vectoriales SVG oficiales, Segoe UI Variable, acento suave al hover y bordes de radio 8px/6px. Se optimizó el dimensionamiento y sizing reactivo de `DockContextMenu` y flyouts de control.
+- **Criterios de Aceptación:**
+  1. Todos los archivos QML pasan `qmlformat` con 0 errores de sintaxis y formateo limpio.
+  2. Ningún menú contiene emojis o brillos plásticos artificiales.
+  3. Cada tema mantiene una coherencia visual y táctil inmaculada con su respectivo lenguaje de diseño.
+  4. Ningún cambio fue pusheado al repositorio remoto.
+- **Dependencias:** [ISSUE-028], [ISSUE-030]
