@@ -9,21 +9,6 @@ Item {
 
     required property var launcherState
 
-    implicitHeight: 310
-    width: parent.width
-
-    Component.onCompleted: {
-        searchInput.forceActiveFocus();
-    }
-
-    Timer {
-        id: focusTimer
-        interval: 30
-        running: true
-        repeat: false
-        onTriggered: searchInput.forceActiveFocus()
-    }
-
     function launchCurrent() {
         if (launcherState.filteredApps.length > 0) {
             var selectedApp = launcherState.filteredApps[launcherState.searchSelectedIndex];
@@ -31,73 +16,101 @@ Item {
         }
     }
 
+    implicitHeight: 310
+    width: parent.width
+    Component.onCompleted: {
+        searchInput.forceActiveFocus();
+    }
+
+    Timer {
+        id: focusTimer
+
+        interval: 30
+        running: true
+        repeat: false
+        onTriggered: searchInput.forceActiveFocus()
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 10
 
-        // ── Inputbar estilo Rofi Slate ──
+        // ── Inputbar estilo Nothing OS ──
         RowLayout {
             Layout.fillWidth: true
-            spacing: 0
+            spacing: 8
 
             Rectangle {
                 Layout.preferredWidth: 84
-                Layout.preferredHeight: 36
-                radius: 0
+                Layout.preferredHeight: 38
+                radius: 8
                 color: backMouseArea.containsMouse ? launcherState.cellHoverBg : launcherState.accentColor
+                border.width: 1
+                border.color: backMouseArea.containsMouse ? launcherState.accentColor : "transparent"
 
                 RowLayout {
                     anchors.centerIn: parent
                     spacing: 6
 
                     Text {
-                        text: ""
-                        font.family: launcherState.fontFeather
-                        font.pixelSize: 14
+                        text: "arrow_back"
+                        font.family: "Material Symbols Outlined, Material Icons, monospace"
+                        font.pixelSize: 16
                         color: backMouseArea.containsMouse ? launcherState.accentColor : launcherState.accentFg
                     }
 
                     Text {
-                        text: "Back"
+                        text: "Volver"
                         font.family: launcherState.fontComfortaa
                         font.pixelSize: 11
-                        font.weight: Font.Bold
+                        font.weight: Font.DemiBold
                         color: backMouseArea.containsMouse ? launcherState.fgColor : launcherState.accentFg
                     }
+
                 }
 
                 MouseArea {
                     id: backMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: launcherState.closeSearch()
                 }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 120
+                    }
+
+                }
+
             }
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 36
-                radius: 0
+                Layout.preferredHeight: 38
+                radius: 8
                 color: launcherState.cellBg
-                border.width: 2
+                border.width: 1
                 border.color: searchInput.activeFocus ? launcherState.accentColor : launcherState.cellBorder
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                    spacing: 8
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 12
+                    spacing: 10
 
                     Text {
-                        text: "\ue9cc"
-                        font.family: launcherState.fontFeather
-                        font.pixelSize: 15
+                        text: "search"
+                        font.family: "Material Symbols Outlined, Material Icons, monospace"
+                        font.pixelSize: 18
                         color: searchInput.activeFocus ? launcherState.accentColor : launcherState.fgDimColor
                     }
 
                     TextInput {
                         id: searchInput
+
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         verticalAlignment: TextInput.AlignVCenter
@@ -109,84 +122,89 @@ Item {
                         onTextChanged: {
                             launcherState.searchQuery = text;
                         }
-
-                        Text {
-                            anchors.fill: parent
-                            verticalAlignment: Text.AlignVCenter
-                            visible: !searchInput.text
-                            text: "Search Applications…"
-                            color: launcherState.fgFaintColor
-                            font.family: launcherState.fontComfortaa
-                            font.pixelSize: 12
-                        }
-
                         Keys.onDownPressed: {
                             if (launcherState.filteredApps.length > 0) {
-                                launcherState.searchSelectedIndex = Math.min(
-                                    launcherState.filteredApps.length - 1, 
-                                    launcherState.searchSelectedIndex + 1
-                                );
+                                launcherState.searchSelectedIndex = Math.min(launcherState.filteredApps.length - 1, launcherState.searchSelectedIndex + 1);
                                 appList.positionViewAtIndex(launcherState.searchSelectedIndex, ListView.Contain);
                             }
                         }
-
                         Keys.onUpPressed: {
                             if (launcherState.filteredApps.length > 0) {
                                 launcherState.searchSelectedIndex = Math.max(0, launcherState.searchSelectedIndex - 1);
                                 appList.positionViewAtIndex(launcherState.searchSelectedIndex, ListView.Contain);
                             }
                         }
-
                         Keys.onReturnPressed: root.launchCurrent()
                         Keys.onEnterPressed: root.launchCurrent()
-
                         Keys.onPressed: function(event) {
                             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 root.launchCurrent();
                                 event.accepted = true;
                             }
                         }
-
                         Keys.onEscapePressed: {
-                            if (launcherState.searchQuery !== "") {
+                            if (launcherState.searchQuery !== "")
                                 launcherState.searchQuery = "";
-                            }
+
                             launcherState.closeSearch();
                         }
+
+                        Text {
+                            anchors.fill: parent
+                            verticalAlignment: Text.AlignVCenter
+                            visible: !searchInput.text
+                            text: "Buscar aplicaciones…"
+                            color: launcherState.fgFaintColor
+                            font.family: launcherState.fontComfortaa
+                            font.pixelSize: 12
+                        }
+
                     }
+
                 }
+
+                Behavior on border.color {
+                    ColorAnimation {
+                        duration: 140
+                    }
+
+                }
+
             }
+
         }
 
-        // ── Lista de Resultados Cuadrada ──
+        // ── Lista de Resultados Estilo Nothing OS ──
         ListView {
             id: appList
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            spacing: 2
+            spacing: 3
             model: launcherState.filteredApps
+
+            Text {
+                anchors.centerIn: parent
+                visible: launcherState.filteredApps.length === 0
+                text: "No se encontraron aplicaciones"
+                font.family: launcherState.fontComfortaa
+                font.pixelSize: 12
+                color: launcherState.fgFaintColor
+            }
 
             delegate: Rectangle {
                 id: rowDelegate
+
                 required property int index
                 required property var modelData
-
-                width: appList.width
-                height: 38
-                radius: 0
-
                 readonly property bool isSelected: launcherState.searchSelectedIndex === rowDelegate.index
                 readonly property bool isHovered: rowMouseArea.containsMouse
 
-                color: isSelected 
-                    ? launcherState.accentColor 
-                    : isHovered 
-                        ? launcherState.cellHoverBg 
-                        : launcherState.cellBg
-
-                Behavior on color { ColorAnimation { duration: 100 } }
-
+                width: appList.width
+                height: 40
+                radius: 8
+                color: isSelected ? launcherState.accentColor : isHovered ? launcherState.cellHoverBg : "transparent"
                 border.width: isSelected ? 1 : 0
                 border.color: launcherState.accentColor
 
@@ -203,12 +221,17 @@ Item {
 
                         Image {
                             id: appIconImg
+
                             anchors.fill: parent
                             anchors.margins: 1
                             source: {
                                 var ic = rowDelegate.modelData.icon;
-                                if (!ic) return "image://icon/application-x-executable";
-                                if (ic.startsWith("/") || ic.startsWith("file://") || ic.startsWith("image://")) return ic;
+                                if (!ic)
+                                    return "image://icon/application-x-executable";
+
+                                if (ic.startsWith("/") || ic.startsWith("file://") || ic.startsWith("image://"))
+                                    return ic;
+
                                 return "image://icon/" + ic;
                             }
                             sourceSize: Qt.size(48, 48)
@@ -216,6 +239,7 @@ Item {
                             smooth: true
                             mipmap: true
                         }
+
                     }
 
                     RowLayout {
@@ -239,25 +263,37 @@ Item {
                             Layout.fillWidth: true
                             font.family: launcherState.fontComfortaa
                             font.pixelSize: 10
-                            color: rowDelegate.isSelected ? Qt.rgba(launcherState.accentFg.r, launcherState.accentFg.g, launcherState.accentFg.b, 0.70) : launcherState.fgDimColor
+                            color: rowDelegate.isSelected ? Qt.rgba(launcherState.accentFg.r, launcherState.accentFg.g, launcherState.accentFg.b, 0.7) : launcherState.fgDimColor
                             elide: Text.ElideRight
                             verticalAlignment: Text.AlignVCenter
                         }
+
                     }
 
-                    Text {
-                        text: "↵"
+                    Rectangle {
                         visible: rowDelegate.isSelected
-                        font.family: launcherState.fontComfortaa
-                        font.pixelSize: 12
-                        font.weight: Font.Bold
-                        color: launcherState.accentFg
+                        Layout.preferredWidth: 20
+                        Layout.preferredHeight: 20
+                        radius: 4
+                        color: Qt.rgba(launcherState.accentFg.r, launcherState.accentFg.g, launcherState.accentFg.b, 0.2)
                         Layout.alignment: Qt.AlignVCenter
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "↵"
+                            font.family: launcherState.fontComfortaa
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                            color: launcherState.accentFg
+                        }
+
                     }
+
                 }
 
                 MouseArea {
                     id: rowMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -266,16 +302,18 @@ Item {
                         launcherState.launchSelectedApp(rowDelegate.modelData);
                     }
                 }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 100
+                    }
+
+                }
+
             }
 
-            Text {
-                anchors.centerIn: parent
-                visible: launcherState.filteredApps.length === 0
-                text: "No applications found"
-                font.family: launcherState.fontComfortaa
-                font.pixelSize: 12
-                color: launcherState.fgFaintColor
-            }
         }
+
     }
+
 }

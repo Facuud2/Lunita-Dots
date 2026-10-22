@@ -1,45 +1,45 @@
-import QtQuick
 import "."
+import QtQuick
 
 // calendario, mismo overlay que wifi/bt
 // dos vistas: cuadrícula del mes, y los doce meses tocando el título
 Item {
     id: popup
 
-    signal closed
-
-    implicitHeight: col.implicitHeight + 44
-
     // ── fechas ──
     // reviso hoy cada minuto, así no se pega en el día de ayer si queda toda la noche abierto
     property date hoy: new Date()
-
-    Timer {
-        interval: 60000
-        running: true
-        repeat: true
-        onTriggered: {
-            const ahora = new Date();
-            if (ahora.getDate() !== popup.hoy.getDate() || ahora.getMonth() !== popup.hoy.getMonth() || ahora.getFullYear() !== popup.hoy.getFullYear())
-                popup.hoy = ahora;
-        }
-    }
-
     // mes que se está mirando
     property int verMes: hoy.getMonth()
     property int verAnio: hoy.getFullYear()
-
     // día elegido a mano, vacío = ninguno
     property date elegido: new Date(NaN)
     readonly property bool haySeleccion: !isNaN(elegido.getTime())
-
     // false = cuadrícula del mes, true = los doce meses
     property bool eligiendoMes: false
-
     readonly property var loc: Cfg.locale
-
     // lunes primero en español, domingo si no
     readonly property int primerDia: loc.firstDayOfWeek
+    // 42 días fijos (6 semanas), si no el panel cambia de alto al pasar de página
+    readonly property var dias: {
+        const primero = new Date(popup.verAnio, popup.verMes, 1);
+        let corrimiento = primero.getDay() - popup.primerDia;
+        if (corrimiento < 0)
+            corrimiento += 7;
+
+        const salida = [];
+        for (var i = 0; i < 42; i++) {
+            const d = new Date(popup.verAnio, popup.verMes, 1 - corrimiento + i);
+            salida.push({
+                "fecha": d,
+                "dia": d.getDate(),
+                "esteMes": d.getMonth() === popup.verMes
+            });
+        }
+        return salida;
+    }
+
+    signal closed()
 
     function mover(meses) {
         let m = popup.verMes + meses;
@@ -70,35 +70,31 @@ Item {
     // semana iso: la 1 contiene el primer jueves del año
     function semanaDe(d) {
         const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const dia = (x.getDay() + 6) % 7;     // lunes = 0
-        x.setDate(x.getDate() - dia + 3);     // jueves de esta semana
+        const dia = (x.getDay() + 6) % 7; // lunes = 0
+        x.setDate(x.getDate() - dia + 3); // jueves de esta semana
         const primerJueves = new Date(x.getFullYear(), 0, 4);
         const dia2 = (primerJueves.getDay() + 6) % 7;
         primerJueves.setDate(primerJueves.getDate() - dia2 + 3);
         return 1 + Math.round((x - primerJueves) / (7 * 24 * 3600 * 1000));
     }
 
-    // 42 días fijos (6 semanas), si no el panel cambia de alto al pasar de página
-    readonly property var dias: {
-        const primero = new Date(popup.verAnio, popup.verMes, 1);
-        let corrimiento = primero.getDay() - popup.primerDia;
-        if (corrimiento < 0)
-            corrimiento += 7;
+    implicitHeight: col.implicitHeight + 44
 
-        const salida = [];
-        for (var i = 0; i < 42; i++) {
-            const d = new Date(popup.verAnio, popup.verMes, 1 - corrimiento + i);
-            salida.push({
-                fecha: d,
-                dia: d.getDate(),
-                esteMes: d.getMonth() === popup.verMes
-            });
+    Timer {
+        interval: 60000
+        running: true
+        repeat: true
+        onTriggered: {
+            const ahora = new Date();
+            if (ahora.getDate() !== popup.hoy.getDate() || ahora.getMonth() !== popup.hoy.getMonth() || ahora.getFullYear() !== popup.hoy.getFullYear())
+                popup.hoy = ahora;
+
         }
-        return salida;
     }
 
     Column {
         id: col
+
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
@@ -133,14 +129,9 @@ Item {
                     color: hoyMa.containsMouse ? Theme.inverted : Theme.surfaceAlt
                     visible: popup.verMes !== popup.hoy.getMonth() || popup.verAnio !== popup.hoy.getFullYear()
 
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Theme.durShort
-                        }
-                    }
-
                     Text {
                         id: hoyTxt
+
                         anchors.centerIn: parent
                         text: Cfg.t("HOY")
                         color: hoyMa.containsMouse ? Theme.invertedFg : Theme.fgDim
@@ -151,11 +142,20 @@ Item {
 
                     MouseArea {
                         id: hoyMa
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: popup.volverAHoy()
                     }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Theme.durShort
+                        }
+
+                    }
+
                 }
 
                 Rectangle {
@@ -164,12 +164,6 @@ Item {
                     height: 26
                     radius: height / 2
                     color: closeMa.containsMouse ? Theme.surfaceHigh : Theme.surfaceAlt
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Theme.durShort
-                        }
-                    }
 
                     Text {
                         anchors.centerIn: parent
@@ -181,47 +175,24 @@ Item {
 
                     MouseArea {
                         id: closeMa
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: popup.closed()
                     }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Theme.durShort
+                        }
+
+                    }
+
                 }
-            }
-        }
 
-        // ── mes y año, con flechas ──
-        component Flecha: Rectangle {
-            id: fl
-            property string icono: ""
-            signal apretada
-
-            width: 30
-            height: 30
-            radius: height / 2
-            color: fMa.containsMouse ? Qt.alpha(Theme.fg, Theme.stateHover) : Qt.alpha(Theme.fg, 0)
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: Theme.durShort
-                }
             }
 
-            Text {
-                anchors.centerIn: parent
-                text: fl.icono
-                color: fMa.containsMouse ? Theme.fg : Theme.fgDim
-                font.family: Theme.fontIcons
-                font.pixelSize: 20
-            }
-
-            MouseArea {
-                id: fMa
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: fl.apretada()
-            }
         }
 
         Item {
@@ -230,6 +201,7 @@ Item {
 
             Flecha {
                 id: atras
+
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 icono: "chevron_left"
@@ -248,17 +220,12 @@ Item {
                 radius: height / 2
                 color: tituloMa.containsMouse || popup.eligiendoMes ? Qt.alpha(Theme.fg, Theme.stateHover) : Qt.alpha(Theme.fg, 0)
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Theme.durShort
-                    }
-                }
-
                 Text {
                     anchors.centerIn: parent
                     text: {
                         if (popup.eligiendoMes)
                             return String(popup.verAnio);
+
                         const d = new Date(popup.verAnio, popup.verMes, 1);
                         return (popup.loc.standaloneMonthName(d.getMonth(), Locale.LongFormat) + " " + popup.verAnio).toUpperCase();
                     }
@@ -271,20 +238,31 @@ Item {
 
                 MouseArea {
                     id: tituloMa
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: popup.eligiendoMes = !popup.eligiendoMes
                 }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Theme.durShort
+                    }
+
+                }
+
             }
 
             Flecha {
                 id: adelante
+
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 icono: "chevron_right"
                 onApretada: popup.eligiendoMes ? popup.verAnio++ : popup.mover(1)
             }
+
         }
 
         // ── vista de los días ──
@@ -296,25 +274,12 @@ Item {
             // las dos vistas se cruzan, días sube mientras entran los meses
             Column {
                 id: vistaDias
+
                 width: parent.width
                 spacing: 4
-
                 opacity: popup.eligiendoMes ? 0 : 1
                 visible: opacity > 0
                 y: popup.eligiendoMes ? -14 : 0
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: Theme.durShort
-                    }
-                }
-                Behavior on y {
-                    NumberAnimation {
-                        duration: Theme.durMedium
-                        easing.type: Easing.Bezier
-                        easing.bezierCurve: Theme.emphasizedDecel
-                    }
-                }
 
                 // iniciales de los días de la semana
                 Row {
@@ -325,6 +290,7 @@ Item {
 
                         Text {
                             required property int index
+
                             width: vistaDias.width / 7
                             height: 22
                             horizontalAlignment: Text.AlignHCenter
@@ -339,7 +305,9 @@ Item {
                             font.pixelSize: Theme.labelSmall
                             font.letterSpacing: Theme.labelSpacing
                         }
+
                     }
+
                 }
 
                 // cuadrícula de seis semanas
@@ -353,31 +321,24 @@ Item {
 
                         Item {
                             id: celda
+
                             required property var modelData
                             required property int index
+                            readonly property bool esHoy: popup.mismoDia(modelData.fecha, popup.hoy)
+                            readonly property bool esElegido: popup.haySeleccion && popup.mismoDia(modelData.fecha, popup.elegido)
 
                             width: vistaDias.width / 7
                             height: 30
-
-                            readonly property bool esHoy: popup.mismoDia(modelData.fecha, popup.hoy)
-                            readonly property bool esElegido: popup.haySeleccion && popup.mismoDia(modelData.fecha, popup.elegido)
 
                             Rectangle {
                                 anchors.centerIn: parent
                                 width: 28
                                 height: 28
                                 radius: height / 2
-
                                 // hoy relleno, elegido a mano solo con contorno
                                 color: celda.esHoy ? Theme.inverted : dMa.containsMouse ? Qt.alpha(Theme.fg, Theme.stateHover) : Qt.alpha(Theme.fg, 0)
                                 border.width: celda.esElegido && !celda.esHoy ? 1.5 : 0
                                 border.color: Theme.fgDim
-
-                                Behavior on color {
-                                    ColorAnimation {
-                                        duration: Theme.durShort
-                                    }
-                                }
 
                                 Text {
                                     anchors.centerIn: parent
@@ -385,6 +346,7 @@ Item {
                                     color: {
                                         if (celda.esHoy)
                                             return Theme.invertedFg;
+
                                         return celda.modelData.esteMes ? Theme.fg : Theme.fgFaint;
                                     }
                                     font.family: Theme.fontDots
@@ -394,6 +356,7 @@ Item {
 
                                 MouseArea {
                                     id: dMa
+
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
@@ -406,46 +369,62 @@ Item {
                                         }
                                     }
                                 }
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Theme.durShort
+                                    }
+
+                                }
+
                             }
+
                         }
+
                     }
+
                 }
-            }
-
-            // ── vista de los doce meses ──
-            Grid {
-                id: vistaMeses
-                width: parent.width
-                columns: 4
-                rows: 3
-
-                opacity: popup.eligiendoMes ? 1 : 0
-                visible: opacity > 0
-                y: popup.eligiendoMes ? 0 : 14
 
                 Behavior on opacity {
                     NumberAnimation {
                         duration: Theme.durShort
                     }
+
                 }
+
                 Behavior on y {
                     NumberAnimation {
                         duration: Theme.durMedium
                         easing.type: Easing.Bezier
                         easing.bezierCurve: Theme.emphasizedDecel
                     }
+
                 }
+
+            }
+
+            // ── vista de los doce meses ──
+            Grid {
+                id: vistaMeses
+
+                width: parent.width
+                columns: 4
+                rows: 3
+                opacity: popup.eligiendoMes ? 1 : 0
+                visible: opacity > 0
+                y: popup.eligiendoMes ? 0 : 14
 
                 Repeater {
                     model: 12
 
                     Item {
                         id: mesItem
+
                         required property int index
+                        readonly property bool esteMes: index === popup.hoy.getMonth() && popup.verAnio === popup.hoy.getFullYear()
+
                         width: vistaMeses.width / 4
                         height: 66
-
-                        readonly property bool esteMes: index === popup.hoy.getMonth() && popup.verAnio === popup.hoy.getFullYear()
 
                         Rectangle {
                             anchors.centerIn: parent
@@ -455,16 +434,11 @@ Item {
                             color: {
                                 if (mesItem.index === popup.verMes)
                                     return Theme.inverted;
+
                                 return mMa.containsMouse ? Theme.surfaceHigh : Theme.surfaceAlt;
                             }
                             border.width: mesItem.esteMes && mesItem.index !== popup.verMes ? 1.5 : 0
                             border.color: Theme.fgDim
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: Theme.durShort
-                                }
-                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -478,6 +452,7 @@ Item {
 
                             MouseArea {
                                 id: mMa
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
@@ -486,24 +461,54 @@ Item {
                                     popup.eligiendoMes = false;
                                 }
                             }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.durShort
+                                }
+
+                            }
+
                         }
+
                     }
+
                 }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: Theme.durShort
+                    }
+
+                }
+
+                Behavior on y {
+                    NumberAnimation {
+                        duration: Theme.durMedium
+                        easing.type: Easing.Bezier
+                        easing.bezierCurve: Theme.emphasizedDecel
+                    }
+
+                }
+
             }
+
         }
 
         // ── pie: día elegido, escrito entero ──
         Rectangle {
             id: pie
+
+            readonly property date foco: popup.haySeleccion ? popup.elegido : popup.hoy
+
             width: parent.width
             height: 46
             radius: Theme.shapeLg
             color: Theme.surfaceAlt
 
-            readonly property date foco: popup.haySeleccion ? popup.elegido : popup.hoy
-
             Text {
                 id: numGrande
+
                 anchors.left: parent.left
                 anchors.leftMargin: 14
                 anchors.verticalCenter: parent.verticalCenter
@@ -545,7 +550,50 @@ Item {
                     font.letterSpacing: Theme.labelSpacing
                     elide: Text.ElideRight
                 }
+
             }
+
         }
+
+        // ── mes y año, con flechas ──
+        component Flecha: Rectangle {
+            id: fl
+
+            property string icono: ""
+
+            signal apretada()
+
+            width: 30
+            height: 30
+            radius: height / 2
+            color: fMa.containsMouse ? Qt.alpha(Theme.fg, Theme.stateHover) : Qt.alpha(Theme.fg, 0)
+
+            Text {
+                anchors.centerIn: parent
+                text: fl.icono
+                color: fMa.containsMouse ? Theme.fg : Theme.fgDim
+                font.family: Theme.fontIcons
+                font.pixelSize: 20
+            }
+
+            MouseArea {
+                id: fMa
+
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: fl.apretada()
+            }
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.durShort
+                }
+
+            }
+
+        }
+
     }
+
 }
