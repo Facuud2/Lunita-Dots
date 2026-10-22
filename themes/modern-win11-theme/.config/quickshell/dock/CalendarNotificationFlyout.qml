@@ -5,30 +5,7 @@ Item {
     id: root
 
     required property var dockState
-
-    width: 360
-    height: mainCol.implicitHeight
-    implicitWidth: 360
-    implicitHeight: mainCol.implicitHeight
-
-    // Smooth Appearance & Disappearance (Windows 11 Fluent Motion)
-    opacity: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "calendar") ? 1.0 : 0.0
-    scale: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "calendar") ? 1.0 : 0.96
-    transformOrigin: Item.BottomRight
-
-    Behavior on opacity {
-        NumberAnimation {
-            duration: root.dockState.flyoutOpen ? 240 : 150
-            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
-        }
-    }
-
-    Behavior on scale {
-        NumberAnimation {
-            duration: root.dockState.flyoutOpen ? 260 : 170
-            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
-        }
-    }
+    readonly property var monthsNames: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 
     // Helper JavaScript function for calendar calculation
     function getCalendarCells(year, month) {
@@ -36,47 +13,48 @@ Item {
         var firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sunday
         var daysInCurrentMonth = new Date(year, month + 1, 0).getDate();
         var daysInPrevMonth = new Date(year, month, 0).getDate();
-
         // 1. Previous month trailing days
         for (var p = firstDayIndex - 1; p >= 0; p--) {
             cells.push({
-                day: daysInPrevMonth - p,
-                isCurrentMonth: false,
-                isSelected: false
+                "day": daysInPrevMonth - p,
+                "isCurrentMonth": false,
+                "isSelected": false
             });
         }
-
         // 2. Current month days
         for (var d = 1; d <= daysInCurrentMonth; d++) {
             var isSelected = (d === root.dockState.selectedDay);
             cells.push({
-                day: d,
-                isCurrentMonth: true,
-                isSelected: isSelected
+                "day": d,
+                "isCurrentMonth": true,
+                "isSelected": isSelected
             });
         }
-
         // 3. Next month leading days (fill to 35 or 42)
         var totalNeeded = cells.length > 35 ? 42 : 35;
         var nextDay = 1;
-        while (cells.length < totalNeeded) {
+        while (cells.length < totalNeeded)
             cells.push({
-                day: nextDay++,
-                isCurrentMonth: false,
-                isSelected: false
+                "day": nextDay++,
+                "isCurrentMonth": false,
+                "isSelected": false
             });
-        }
 
         return cells;
     }
 
-    readonly property var monthsNames: [
-        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ]
+    width: 360
+    height: mainCol.implicitHeight
+    implicitWidth: 360
+    implicitHeight: mainCol.implicitHeight
+    // Smooth Appearance & Disappearance (Windows 11 Fluent Motion)
+    opacity: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "calendar") ? 1 : 0
+    scale: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "calendar") ? 1 : 0.96
+    transformOrigin: Item.BottomRight
 
     ColumnLayout {
         id: mainCol
+
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -87,13 +65,13 @@ Item {
         // ==========================================
         Rectangle {
             id: notifCard
+
             Layout.fillWidth: true
             Layout.preferredHeight: notifCol.implicitHeight + 24
             radius: 18
-
             // Pure Transparent Liquid Glass Base
             color: Qt.rgba(0.12, 0.13, 0.17, 0.45)
-            border.color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+            border.color: Qt.rgba(1, 1, 1, 0.16)
             border.width: 1
 
             // Specular Top Rim Line
@@ -104,11 +82,12 @@ Item {
                 anchors.leftMargin: 18
                 anchors.rightMargin: 18
                 height: 1
-                color: Qt.rgba(1.0, 1.0, 1.0, 0.22)
+                color: Qt.rgba(1, 1, 1, 0.22)
             }
 
             ColumnLayout {
                 id: notifCol
+
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
@@ -128,7 +107,7 @@ Item {
                             sourceSize.width: 15
                             sourceSize.height: 15
                             anchors.verticalCenter: parent.verticalCenter
-                            opacity: 0.90
+                            opacity: 0.9
                         }
 
                         Text {
@@ -147,13 +126,14 @@ Item {
                             width: countText.implicitWidth + 10
                             height: 18
                             radius: 9
-                            color: Qt.rgba(0.0, 0.90, 1.0, 0.30)
+                            color: Qt.rgba(0, 0.9, 1, 0.3)
                             border.color: "#00E5FF"
                             border.width: 1
                             anchors.verticalCenter: parent.verticalCenter
 
                             Text {
                                 id: countText
+
                                 anchors.centerIn: parent
                                 text: root.dockState.notificationsList.length
                                 font.family: "Segoe UI, Inter, Roboto, Cantarell, sans-serif"
@@ -162,10 +142,14 @@ Item {
                                 font.italic: false
                                 color: "#FFFFFF"
                             }
+
                         }
+
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     // "Borrar todo" Pill Button (Frosted Glass Inset)
                     Rectangle {
@@ -173,12 +157,13 @@ Item {
                         width: clearText.implicitWidth + 18
                         height: 24
                         radius: 12
-                        color: clearHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.18) : Qt.rgba(1.0, 1.0, 1.0, 0.08)
-                        border.color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+                        color: clearHover.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(1, 1, 1, 0.08)
+                        border.color: Qt.rgba(1, 1, 1, 0.16)
                         border.width: 1
 
                         Text {
                             id: clearText
+
                             anchors.centerIn: parent
                             text: "Borrar todo"
                             font.family: "Segoe UI, Inter, Roboto, Cantarell, sans-serif"
@@ -190,12 +175,15 @@ Item {
 
                         MouseArea {
                             id: clearHover
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.clearAllNotifications()
                         }
+
                     }
+
                 }
 
                 // Empty State (When no notifications)
@@ -204,21 +192,21 @@ Item {
                     Layout.preferredHeight: 48
                     radius: 12
                     visible: root.dockState.notificationsList.length === 0
-                    color: Qt.rgba(1.0, 1.0, 1.0, 0.06)
-                    border.color: Qt.rgba(1.0, 1.0, 1.0, 0.12)
+                    color: Qt.rgba(1, 1, 1, 0.06)
+                    border.color: Qt.rgba(1, 1, 1, 0.12)
                     border.width: 1
 
                     Row {
                         anchors.centerIn: parent
                         spacing: 8
-                        opacity: 0.70
+                        opacity: 0.7
 
                         Image {
                             source: "assets/bell.svg"
                             sourceSize.width: 14
                             sourceSize.height: 14
                             anchors.verticalCenter: parent.verticalCenter
-                            opacity: 0.70
+                            opacity: 0.7
                         }
 
                         Text {
@@ -229,12 +217,15 @@ Item {
                             color: "#FFFFFF"
                             anchors.verticalCenter: parent.verticalCenter
                         }
+
                     }
+
                 }
 
                 // Notification Items List (Scrollable if > 2 items)
                 Flickable {
                     id: notifFlickable
+
                     visible: root.dockState.notificationsList.length > 0
                     Layout.fillWidth: true
                     Layout.preferredHeight: Math.min(itemsCol.implicitHeight, 180)
@@ -245,6 +236,7 @@ Item {
 
                     ColumnLayout {
                         id: itemsCol
+
                         width: notifFlickable.width
                         spacing: 8
 
@@ -255,12 +247,13 @@ Item {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: itemCol.implicitHeight + 16
                                 radius: 12
-                                color: notifItemHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.12) : Qt.rgba(1.0, 1.0, 1.0, 0.05)
-                                border.color: Qt.rgba(1.0, 1.0, 1.0, 0.14)
+                                color: notifItemHover.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.05)
+                                border.color: Qt.rgba(1, 1, 1, 0.14)
                                 border.width: 1
 
                                 ColumnLayout {
                                     id: itemCol
+
                                     anchors.fill: parent
                                     anchors.margins: 10
                                     spacing: 4
@@ -272,11 +265,19 @@ Item {
 
                                         Image {
                                             source: {
-                                                if (modelData.iconPath && modelData.iconPath.length > 0) return modelData.iconPath;
+                                                if (modelData.iconPath && modelData.iconPath.length > 0)
+                                                    return modelData.iconPath;
+
                                                 var app = (modelData.appName || "").toLowerCase();
-                                                if (app.indexOf("whatsapp") !== -1) return "assets/icons/whatsapp.svg";
-                                                if (app.indexOf("spotify") !== -1) return "assets/icons/win11-spotify.svg";
-                                                if (app.indexOf("firefox") !== -1) return "assets/icons/win11-firefox.svg";
+                                                if (app.indexOf("whatsapp") !== -1)
+                                                    return "assets/icons/whatsapp.svg";
+
+                                                if (app.indexOf("spotify") !== -1)
+                                                    return "assets/icons/win11-spotify.svg";
+
+                                                if (app.indexOf("firefox") !== -1)
+                                                    return "assets/icons/win11-firefox.svg";
+
                                                 return "assets/icons/win11-start.svg";
                                             }
                                             sourceSize.width: 16
@@ -301,7 +302,7 @@ Item {
                                             font.family: "SF Pro Display, Adwaita Sans, Roboto, sans-serif"
                                             font.pixelSize: 11
                                             font.italic: false
-                                            color: Qt.rgba(1.0, 1.0, 1.0, 0.70)
+                                            color: Qt.rgba(1, 1, 1, 0.7)
                                             Layout.alignment: Qt.AlignVCenter
                                         }
 
@@ -310,8 +311,8 @@ Item {
                                             width: 18
                                             height: 18
                                             radius: 9
-                                            color: dismissHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.35) : "transparent"
-                                            border.color: dismissHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.50) : "transparent"
+                                            color: dismissHover.containsMouse ? Qt.rgba(1, 1, 1, 0.35) : "transparent"
+                                            border.color: dismissHover.containsMouse ? Qt.rgba(1, 1, 1, 0.5) : "transparent"
                                             border.width: 1
                                             Layout.alignment: Qt.AlignVCenter
 
@@ -321,17 +322,20 @@ Item {
                                                 font.pixelSize: 10
                                                 font.weight: Font.Bold
                                                 font.italic: false
-                                                color: Qt.rgba(1.0, 1.0, 1.0, 0.90)
+                                                color: Qt.rgba(1, 1, 1, 0.9)
                                             }
 
                                             MouseArea {
                                                 id: dismissHover
+
                                                 anchors.fill: parent
                                                 hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
                                                 onClicked: root.dockState.dismissNotification(modelData.id)
                                             }
+
                                         }
+
                                     }
 
                                     // Notification Title/Summary (if different from appName)
@@ -353,17 +357,19 @@ Item {
                                         font.family: "SF Pro Display, Adwaita Sans, Roboto, sans-serif"
                                         font.pixelSize: 12
                                         font.italic: false
-                                        color: Qt.rgba(1.0, 1.0, 1.0, 0.90)
+                                        color: Qt.rgba(1, 1, 1, 0.9)
                                         Layout.fillWidth: true
                                         wrapMode: Text.WordWrap
                                         maximumLineCount: 3
                                         elide: Text.ElideRight
                                         visible: text.length > 0
                                     }
+
                                 }
 
                                 MouseArea {
                                     id: notifItemHover
+
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
@@ -372,11 +378,17 @@ Item {
                                         root.dockState.invokeNotification(modelData.id, 0);
                                     }
                                 }
+
                             }
+
                         }
+
                     }
+
                 }
+
             }
+
         }
 
         // ==========================================
@@ -384,13 +396,13 @@ Item {
         // ==========================================
         Rectangle {
             id: calCard
+
             Layout.fillWidth: true
             Layout.preferredHeight: calCol.implicitHeight + 24
             radius: 18
-
             // Pure Transparent Liquid Glass Base
             color: Qt.rgba(0.12, 0.13, 0.17, 0.45)
-            border.color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+            border.color: Qt.rgba(1, 1, 1, 0.16)
             border.width: 1
 
             // Specular Top Rim Line
@@ -401,11 +413,12 @@ Item {
                 anchors.leftMargin: 18
                 anchors.rightMargin: 18
                 height: 1
-                color: Qt.rgba(1.0, 1.0, 1.0, 0.22)
+                color: Qt.rgba(1, 1, 1, 0.22)
             }
 
             ColumnLayout {
                 id: calCol
+
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
@@ -419,8 +432,7 @@ Item {
                     Text {
                         text: {
                             var days = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-                            var months = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
-                                          "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+                            var months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
                             var d = new Date(root.dockState.displayedYear, root.dockState.displayedMonth, root.dockState.selectedDay);
                             return days[d.getDay()] + ", " + root.dockState.selectedDay + " de " + months[root.dockState.displayedMonth];
                         }
@@ -428,10 +440,12 @@ Item {
                         font.pixelSize: 13
                         font.weight: Font.DemiBold
                         font.italic: false
-                        color: Qt.rgba(1.0, 1.0, 1.0, 0.90)
+                        color: Qt.rgba(1, 1, 1, 0.9)
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     // Collapse / Chevron Icon
                     Rectangle {
@@ -446,9 +460,11 @@ Item {
                             sourceSize.width: 11
                             sourceSize.height: 11
                             rotation: 90
-                            opacity: 0.70
+                            opacity: 0.7
                         }
+
                     }
+
                 }
 
                 // 2. Month Selector Row (e.g. "Octubre de 2026" + ▲ ▼)
@@ -464,7 +480,9 @@ Item {
                         color: "#FFFFFF"
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     // Month Navigation Arrows
                     Row {
@@ -475,8 +493,8 @@ Item {
                             width: 22
                             height: 22
                             radius: 4
-                            color: prevMonthHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.25) : "transparent"
-                            border.color: prevMonthHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.35) : "transparent"
+                            color: prevMonthHover.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                            border.color: prevMonthHover.containsMouse ? Qt.rgba(1, 1, 1, 0.35) : "transparent"
                             border.width: 1
 
                             Text {
@@ -484,16 +502,18 @@ Item {
                                 text: "▲"
                                 font.pixelSize: 10
                                 font.italic: false
-                                color: Qt.rgba(1.0, 1.0, 1.0, 0.90)
+                                color: Qt.rgba(1, 1, 1, 0.9)
                             }
 
                             MouseArea {
                                 id: prevMonthHover
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.dockState.prevMonth()
                             }
+
                         }
 
                         // Down / Next Month Arrow
@@ -501,8 +521,8 @@ Item {
                             width: 22
                             height: 22
                             radius: 4
-                            color: nextMonthHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.25) : "transparent"
-                            border.color: nextMonthHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.35) : "transparent"
+                            color: nextMonthHover.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                            border.color: nextMonthHover.containsMouse ? Qt.rgba(1, 1, 1, 0.35) : "transparent"
                             border.width: 1
 
                             Text {
@@ -510,24 +530,29 @@ Item {
                                 text: "▼"
                                 font.pixelSize: 10
                                 font.italic: false
-                                color: Qt.rgba(1.0, 1.0, 1.0, 0.90)
+                                color: Qt.rgba(1, 1, 1, 0.9)
                             }
 
                             MouseArea {
                                 id: nextMonthHover
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.dockState.nextMonth()
                             }
+
                         }
+
                     }
+
                 }
 
                 // 3. Days of the Week Header Row (Strictly Non-Italic)
                 Row {
-                    Layout.fillWidth: true
                     readonly property var daysHeader: ["DO", "LU", "MA", "MI", "JU", "VI", "SA"]
+
+                    Layout.fillWidth: true
 
                     Repeater {
                         model: 7
@@ -543,19 +568,23 @@ Item {
                                 font.pixelSize: 11
                                 font.weight: Font.DemiBold
                                 font.italic: false
-                                color: Qt.rgba(1.0, 1.0, 1.0, 0.75)
+                                color: Qt.rgba(1, 1, 1, 0.75)
                             }
+
                         }
+
                     }
+
                 }
 
                 // 4. Days Grid (7 columns x 5/6 rows)
                 Grid {
                     id: daysGrid
-                    Layout.fillWidth: true
-                    columns: 7
 
                     property var cellsData: root.getCalendarCells(root.dockState.displayedYear, root.dockState.displayedMonth)
+
+                    Layout.fillWidth: true
+                    columns: 7
 
                     Repeater {
                         model: daysGrid.cellsData
@@ -570,8 +599,8 @@ Item {
                                 width: 28
                                 height: 28
                                 radius: 14
-                                color: modelData.isSelected ? Qt.rgba(0.0, 0.75, 1.0, 0.85) : (dayHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.14) : "transparent")
-                                border.color: dayHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.20) : "transparent"
+                                color: modelData.isSelected ? Qt.rgba(0, 0.75, 1, 0.85) : (dayHover.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : "transparent")
+                                border.color: dayHover.containsMouse ? Qt.rgba(1, 1, 1, 0.2) : "transparent"
                                 border.width: 1
                             }
 
@@ -582,24 +611,26 @@ Item {
                                 font.pixelSize: 11
                                 font.weight: modelData.isSelected ? Font.Bold : Font.Normal
                                 font.italic: false
-                                color: modelData.isSelected
-                                    ? "#FFFFFF"
-                                    : (modelData.isCurrentMonth ? "#FFFFFF" : Qt.rgba(1.0, 1.0, 1.0, 0.40))
+                                color: modelData.isSelected ? "#FFFFFF" : (modelData.isCurrentMonth ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.4))
                             }
 
                             MouseArea {
                                 id: dayHover
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    if (modelData.isCurrentMonth) {
+                                    if (modelData.isCurrentMonth)
                                         root.dockState.selectedDay = modelData.day;
-                                    }
+
                                 }
                             }
+
                         }
+
                     }
+
                 }
 
                 // 5. Bottom Focus / Concentration Bar
@@ -617,8 +648,8 @@ Item {
                             width: 22
                             height: 22
                             radius: 11
-                            color: minusHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.18) : Qt.rgba(1.0, 1.0, 1.0, 0.08)
-                            border.color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+                            color: minusHover.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(1, 1, 1, 0.08)
+                            border.color: Qt.rgba(1, 1, 1, 0.16)
                             border.width: 1
 
                             Text {
@@ -632,11 +663,13 @@ Item {
 
                             MouseArea {
                                 id: minusHover
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.dockState.adjustFocus(-5)
                             }
+
                         }
 
                         // Minutes Text
@@ -655,8 +688,8 @@ Item {
                             width: 22
                             height: 22
                             radius: 11
-                            color: plusHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.18) : Qt.rgba(1.0, 1.0, 1.0, 0.08)
-                            border.color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+                            color: plusHover.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(1, 1, 1, 0.08)
+                            border.color: Qt.rgba(1, 1, 1, 0.16)
                             border.width: 1
 
                             Text {
@@ -670,29 +703,33 @@ Item {
 
                             MouseArea {
                                 id: plusHover
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.dockState.adjustFocus(5)
                             }
+
                         }
+
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     // Concentration / Focus Action Button
                     Rectangle {
                         width: focusContent.implicitWidth + 20
                         height: 30
                         radius: 15
-                        color: root.dockState.focusActive
-                            ? Qt.rgba(0.0, 0.75, 1.0, 0.85)
-                            : (focusHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.18) : Qt.rgba(1.0, 1.0, 1.0, 0.08))
-                        border.color: root.dockState.focusActive ? Qt.rgba(0.0, 0.85, 1.0, 0.90) : Qt.rgba(1.0, 1.0, 1.0, 0.18)
+                        color: root.dockState.focusActive ? Qt.rgba(0, 0.75, 1, 0.85) : (focusHover.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(1, 1, 1, 0.08))
+                        border.color: root.dockState.focusActive ? Qt.rgba(0, 0.85, 1, 0.9) : Qt.rgba(1, 1, 1, 0.18)
                         border.width: 1
 
                         Row {
                             id: focusContent
+
                             anchors.centerIn: parent
                             spacing: 6
 
@@ -705,9 +742,7 @@ Item {
                             }
 
                             Text {
-                                text: root.dockState.focusActive
-                                    ? (Math.floor(root.dockState.focusSecondsRemaining / 60) + ":" + ((root.dockState.focusSecondsRemaining % 60 < 10 ? "0" : "") + (root.dockState.focusSecondsRemaining % 60)))
-                                    : "Concentración"
+                                text: root.dockState.focusActive ? (Math.floor(root.dockState.focusSecondsRemaining / 60) + ":" + ((root.dockState.focusSecondsRemaining % 60 < 10 ? "0" : "") + (root.dockState.focusSecondsRemaining % 60))) : "Concentración"
                                 font.family: "Segoe UI, Inter, Roboto, Cantarell, sans-serif"
                                 font.pixelSize: 11
                                 font.weight: Font.DemiBold
@@ -715,18 +750,42 @@ Item {
                                 color: "#FFFFFF"
                                 anchors.verticalCenter: parent.verticalCenter
                             }
+
                         }
 
                         MouseArea {
                             id: focusHover
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.toggleFocus()
                         }
+
                     }
+
                 }
+
             }
+
         }
+
     }
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: root.dockState.flyoutOpen ? 240 : 150
+            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
+        }
+
+    }
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: root.dockState.flyoutOpen ? 260 : 170
+            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
+        }
+
+    }
+
 }

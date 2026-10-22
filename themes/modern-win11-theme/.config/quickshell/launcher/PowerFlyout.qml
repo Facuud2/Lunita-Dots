@@ -6,197 +6,150 @@ Item {
 
     required property var launcherState
 
-    width: 170
-    height: 180
+    width: 190
+    implicitWidth: 190
+    implicitHeight: flyoutCol.implicitHeight + 14
+    height: implicitHeight
 
     Rectangle {
         id: flyoutBg
+
         anchors.fill: parent
         radius: 8
-        color: Qt.rgba(24/255, 24/255, 28/255, 0.88)
-        border.color: Qt.rgba(255, 255, 255, 0.12)
+        color: Qt.rgba(0.12, 0.13, 0.16, 0.94)
+        border.color: Qt.rgba(1, 1, 1, 0.14)
         border.width: 1
 
-        Column {
+        // Ambient contact shadow
+        Rectangle {
             anchors.fill: parent
+            anchors.margins: -1
+            radius: 9
+            color: "transparent"
+            border.color: Qt.rgba(0, 0, 0, 0.4)
+            border.width: 1
+            z: -1
+        }
+
+        Column {
+            id: flyoutCol
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
             anchors.margins: 6
             spacing: 2
 
             // Lock Action
-            Rectangle {
-                width: parent.width
-                height: 32
-                radius: 6
-                color: lockMouse.containsMouse ? root.launcherState.appHoverBg : "transparent"
-
-                Row {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    spacing: 10
-
-                    Text {
-                        text: "🔒"
-                        font.pixelSize: 13
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "Bloquear"
-                        color: root.launcherState.appTitleColor
-                        font.pixelSize: 12
-                        font.family: "Adwaita Sans, sans-serif"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                MouseArea {
-                    id: lockMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.launcherState.powerAction("lock")
-                }
+            PowerItemBtn {
+                label: "Bloquear"
+                iconSrc: Qt.resolvedUrl("../dock/assets/lock.svg")
+                onTriggered: root.launcherState.powerAction("lock")
             }
 
             // Sleep / Suspend Action
-            Rectangle {
-                width: parent.width
-                height: 32
-                radius: 6
-                color: sleepMouse.containsMouse ? root.launcherState.appHoverBg : "transparent"
-
-                Row {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    spacing: 10
-
-                    Text {
-                        text: "🌙"
-                        font.pixelSize: 13
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "Suspender"
-                        color: root.launcherState.appTitleColor
-                        font.pixelSize: 12
-                        font.family: "Adwaita Sans, sans-serif"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                MouseArea {
-                    id: sleepMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.launcherState.powerAction("suspend")
-                }
+            PowerItemBtn {
+                label: "Suspender"
+                iconSrc: Qt.resolvedUrl("../dock/assets/moon.svg")
+                onTriggered: root.launcherState.powerAction("suspend")
             }
 
             // Reboot Action
-            Rectangle {
-                width: parent.width
-                height: 32
-                radius: 6
-                color: rebootMouse.containsMouse ? root.launcherState.appHoverBg : "transparent"
-
-                Row {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    spacing: 10
-
-                    Text {
-                        text: "🔄"
-                        font.pixelSize: 13
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "Reiniciar"
-                        color: root.launcherState.appTitleColor
-                        font.pixelSize: 12
-                        font.family: "Adwaita Sans, sans-serif"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                MouseArea {
-                    id: rebootMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.launcherState.powerAction("reboot")
-                }
+            PowerItemBtn {
+                label: "Reiniciar"
+                iconSrc: Qt.resolvedUrl("../dock/assets/reload.svg")
+                onTriggered: root.launcherState.powerAction("reboot")
             }
 
             // Shutdown Action
+            PowerItemBtn {
+                label: "Apagar"
+                iconSrc: Qt.resolvedUrl("../dock/assets/power.svg")
+                isDanger: true
+                onTriggered: root.launcherState.powerAction("shutdown")
+            }
+
             Rectangle {
                 width: parent.width
-                height: 32
-                radius: 6
-                color: shutdownMouse.containsMouse ? root.launcherState.appHoverBg : "transparent"
-
-                Row {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    spacing: 10
-
-                    Text {
-                        text: "⏻"
-                        font.pixelSize: 13
-                        color: "#FF5555"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "Apagar"
-                        color: root.launcherState.appTitleColor
-                        font.pixelSize: 12
-                        font.family: "Adwaita Sans, sans-serif"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                MouseArea {
-                    id: shutdownMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.launcherState.powerAction("shutdown")
-                }
+                height: 1
+                color: Qt.rgba(1, 1, 1, 0.1)
+                anchors.leftMargin: 6
+                anchors.rightMargin: 6
             }
 
             // Sign out / Logout Action
-            Rectangle {
-                width: parent.width
-                height: 32
-                radius: 6
-                color: logoutMouse.containsMouse ? root.launcherState.appHoverBg : "transparent"
-
-                Row {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    spacing: 10
-
-                    Text {
-                        text: "🚪"
-                        font.pixelSize: 13
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "Cerrar sesión"
-                        color: root.launcherState.appTitleColor
-                        font.pixelSize: 12
-                        font.family: "Adwaita Sans, sans-serif"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                MouseArea {
-                    id: logoutMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.launcherState.powerAction("logout")
-                }
+            PowerItemBtn {
+                label: "Cerrar sesión"
+                iconSrc: Qt.resolvedUrl("../dock/assets/minimize.svg")
+                onTriggered: root.launcherState.powerAction("logout")
             }
+
         }
+
     }
+
+    component PowerItemBtn: Rectangle {
+        id: btnRoot
+
+        property string label: ""
+        property var iconSrc: ""
+        property bool isDanger: false
+
+        signal triggered()
+
+        width: parent ? parent.width : 178
+        height: 32
+        radius: 6
+        color: btnMouse.containsMouse ? (btnRoot.isDanger ? Qt.rgba(1, 0.23, 0.23, 0.2) : Qt.rgba(1, 1, 1, 0.08)) : "transparent"
+        border.width: btnMouse.containsMouse ? 1 : 0
+        border.color: btnRoot.isDanger ? Qt.rgba(1, 0.23, 0.23, 0.35) : Qt.rgba(1, 1, 1, 0.08)
+
+        Row {
+            anchors.fill: parent
+            anchors.leftMargin: 10
+            anchors.rightMargin: 10
+            spacing: 10
+
+            Image {
+                source: btnRoot.iconSrc
+                width: 14
+                height: 14
+                sourceSize.width: 14
+                sourceSize.height: 14
+                anchors.verticalCenter: parent.verticalCenter
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                opacity: btnMouse.containsMouse ? 1 : 0.85
+            }
+
+            Text {
+                text: btnRoot.label
+                color: btnRoot.isDanger && btnMouse.containsMouse ? "#FF6B6B" : "#FFFFFF"
+                font.pixelSize: 12
+                font.weight: Font.Normal
+                font.family: "Segoe UI Variable, Segoe UI, Inter, sans-serif"
+                anchors.verticalCenter: parent.verticalCenter
+                elide: Text.ElideRight
+            }
+
+        }
+
+        MouseArea {
+            id: btnMouse
+
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: btnRoot.triggered()
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 100
+            }
+
+        }
+
+    }
+
 }
