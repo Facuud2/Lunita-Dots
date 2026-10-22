@@ -454,20 +454,40 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   - `themes/lunita-default/.config/quickshell/launcher/SearchMenuView.qml`
   - `themes/macos-theme/.config/quickshell/bar/popups/AppleMenu.qml`
   - `themes/macos-theme/.config/quickshell/bar/popups/AppMenuDropdown.qml`
-  - `themes/macos-theme/.config/quickshell/dock/DockContextMenu.qml`
-  - `themes/macos-theme/.config/quickshell/bar/popups/TrayContextMenu.qml`
-  - `themes/macos-theme/.config/quickshell/bar/popups/CalendarMenu.qml`
-  - `themes/macos-theme/.config/quickshell/bar/popups/SoundMenu.qml`
-  - `themes/macos-theme/.config/quickshell/bar/popups/NetworkMenu.qml`
   - `themes/macos-theme/.config/quickshell/bar/popups/BluetoothMenu.qml`
-  - `themes/modern-win11-theme/.config/quickshell/launcher/PowerFlyout.qml`
-  - `themes/modern-win11-theme/.config/quickshell/dock/DockContextMenu.qml`
-  - `themes/modern-win11-theme/.config/quickshell/dock/NetworkControlFlyout.qml`
-  - `themes/modern-win11-theme/.config/quickshell/dock/BluetoothControlFlyout.qml`
-  - `themes/modern-win11-theme/.config/quickshell/dock/MediaControlFlyout.qml`
-  - `themes/modern-win11-theme/.config/quickshell/dock/CalendarNotificationFlyout.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/CalendarMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/NetworkMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/SoundMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/TrayContextMenu.qml`
+  - `themes/macos-theme/.config/quickshell/dock/DockContextMenu.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/AppItem.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/CategoryDetailView.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/CategorySection.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/HeaderBar.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/LauncherState.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/LauncherView.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/shell.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/SpotlightItem.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/SpotlightPreview.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/SpotlightState.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/SpotlightView.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/shell.qml`
   - `themes/modern-win11-theme/.config/quickshell/bar/panels/LeftSoundFlyout.qml`
   - `themes/modern-win11-theme/.config/quickshell/bar/panels/RightBrightnessFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/BluetoothControlFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/CalendarNotificationFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/DockContextMenu.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/MediaControlFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/NetworkControlFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/AppItem.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/CategoryDetailView.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/CategoryFolderCard.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/CategorySection.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/HeaderBar.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/LauncherState.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/LauncherView.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/PowerFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/shell.qml`
 - **Descripción:** Rediseño estético y funcional exhaustivo de todos los 22 menús, popups y flyouts interactivos de los 3 ecosistemas de escritorio en Quickshell, aplicando los principios de la `design-taste-frontend` skill (jerarquía tipográfica estricta, superficies tonales intencionadas, erradicación de brillos y bordes plásticos `RectangularGlow` o `#47ffffff`, y sustitución de emojis crudos por iconografía vectorial auténtica):
   1. **`lunita-default`:** Enfatizada la identidad Nothing OS brutalista/monocromática de alto contraste. Se perfeccionó la isla `ExpandedPanel`, se rediseñó el buscador `SearchMenuView` eliminando cajas genéricas cuadradas y dotándolo de cápsulas y píldoras Nothing con atajos visuales nítidos, y se añadieron bordes de 1px a tarjetas y controles de `AudioPanel`, `ConnPanel`, `CalendarPanel` y `NotifPanel`.
   2. **`macos-theme`:** Depuración de la estética Cupertino. Se erradicó el `RectangularGlow` artificial de 16px con `#99000000` en `DockContextMenu`, implementando elevación de capa ambiental limpia con borde de 1px y 12px de radio, selección en `#007AFF`, tipografía SF Pro Text/Display e interacción suave.
