@@ -40,7 +40,7 @@ function M.setup()
 
     -- 4. Demonio de fondo de pantalla (awww) y restauración automática en frío
     hl.exec_cmd("sh -c 'systemctl --user start awww || pgrep -x awww-daemon >/dev/null || awww-daemon &'")
-    hl.exec_cmd("sh -c 'sleep 0.8; export PATH=\"" .. home .. "/.local/bin:$PATH\"; command -v lunita-dynamic-wallpaper >/dev/null 2>&1 && lunita-dynamic-wallpaper init || true'")
+    hl.exec_cmd("sh -c 'sleep 0.8; export PATH=\"" .. home .. "/.local/bin:$PATH\"; command -v lunita-wallpaper >/dev/null 2>&1 && lunita-wallpaper restore || true'")
 
     -- 5. Quickshell (Barra Superior, Dock, Notificaciones, OSD, Spotlight, Launcher)
     hl.exec_cmd("sh -c 'sleep 0.5; export PATH=\"" .. home .. "/.local/bin:$PATH\"; lunita-quickshell start'")

@@ -1,0 +1,12 @@
+[Unit]
+Description=Temporizador de cambio de fondo de pantalla horario para Lunita
+PartOf=graphical-session.target
+
+[Timer]
+OnCalendar=*-*-* 06:00:00
+OnCalendar=*-*-* 13:00:00
+OnCalendar=*-*-* 20:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

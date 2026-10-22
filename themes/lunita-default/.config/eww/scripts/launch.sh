@@ -47,7 +47,3 @@ if hyprctl monitors 2>/dev/null | grep -q "Monitor HDMI-A-1"; then
     fi
 fi
 
-# 7. Start wallpaper watcher in background if not already running
-if ! pgrep -f "watch_wallpaper.sh" > /dev/null; then
-    nohup "$HOME/.config/eww/scripts/watch_wallpaper.sh" >/dev/null 2>&1 &
-fi

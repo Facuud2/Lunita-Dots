@@ -1,0 +1,367 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🌙 LUNITA WALLPAPER ORCHESTRATOR
+# Gestor de fondos de pantalla rápido, ligero y 100% libre de daemons en bucle.
+# Previene bloqueos de shutdown (A stop job is running...) y opera bajo demanda.
+# ==============================================================================
+
+set -euo pipefail
+
+# Colores para CLI
+BOLD="\033[1m"
+GREEN="\033[32m"
+BLUE="\033[34m"
+CYAN="\033[36m"
+YELLOW="\033[33m"
+RED="\033[31m"
+MAGENTA="\033[35m"
+RESET="\033[0m"
+
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/lunita"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/hyprquickpaper"
+CURRENT_WALL_CACHE="$CACHE_DIR/current_wallpaper"
+STABLE_HYPR_WALL="$HOME/.config/hypr/current_wallpaper.png"
+WALLPAPER_CONF="$CONFIG_DIR/wallpaper.conf"
+
+# Cargar configuración personalizada si existe
+MORNING_HOUR=6
+AFTERNOON_HOUR=13
+NIGHT_HOUR=20
+WALLPAPER_PRESET="apple"
+TRANSITION_TYPE="fade"
+TRANSITION_DURATION="1.2"
+TRANSITION_FPS=60
+WALLPAPER_DIR=""
+
+if [ -f "$WALLPAPER_CONF" ]; then
+    # shellcheck source=/dev/null
+    source "$WALLPAPER_CONF" 2>/dev/null || true
+fi
+
+# Detectar el directorio de fondos
+find_wallpaper_dir() {
+    if [ -n "$WALLPAPER_DIR" ] && [ -d "$WALLPAPER_DIR" ]; then
+        echo "$WALLPAPER_DIR"
+        return 0
+    fi
+
+    local theme_wall_dir="$HOME/.config/lunita/wallpaper"
+    if [ -d "$theme_wall_dir" ]; then
+        local has_imgs
+        has_imgs=$(find -L "$theme_wall_dir" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null | head -n 1)
+        if [ -n "$has_imgs" ]; then
+            echo "$theme_wall_dir"
+            return 0
+        fi
+    fi
+
+    local candidate_dirs=(
+        "$HOME/Imagenes/Wallpapers"
+        "$HOME/Imágenes/Wallpapers"
+        "$HOME/Pictures/Wallpapers"
+        "$HOME/Imágenes"
+        "$HOME/Imagenes"
+        "$HOME/Pictures"
+    )
+
+    for dir in "${candidate_dirs[@]}"; do
+        if [ -d "$dir" ]; then
+            local has_imgs
+            has_imgs=$(find "$dir" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null | head -n 1)
+            if [ -n "$has_imgs" ]; then
+                echo "$dir"
+                return 0
+            fi
+        fi
+    done
+
+    echo "$HOME/.config/lunita/wallpaper"
+}
+
+ACTIVE_WALL_DIR="$(find_wallpaper_dir)"
+
+# Determinar slot horario actual (morning, afternoon, night)
+get_current_slot() {
+    local hour
+    hour=$(date +%-H)
+
+    if [ "$hour" -ge "$MORNING_HOUR" ] && [ "$hour" -lt "$AFTERNOON_HOUR" ]; then
+        echo "morning"
+    elif [ "$hour" -ge "$AFTERNOON_HOUR" ] && [ "$hour" -lt "$NIGHT_HOUR" ]; then
+        echo "afternoon"
+    else
+        echo "night"
+    fi
+}
+
+# Resolver archivo de wallpaper para el slot dado
+resolve_slot_file() {
+    local slot="$1"
+    local preset="${2:-$WALLPAPER_PRESET}"
+    local extensions=("jpg" "jpeg" "png" "webp" "avif")
+
+    if [ ! -d "$ACTIVE_WALL_DIR" ]; then
+        echo ""
+        return 0
+    fi
+
+    local aliases=("$slot")
+    case "$slot" in
+        morning)   aliases+=("day" "light" "sunrise" "dawn") ;;
+        afternoon) aliases+=("day" "light" "noon" "midday" "morning") ;;
+        night)     aliases+=("dark" "evening" "sunset" "dusk") ;;
+    esac
+
+    # 1. Búsqueda exacta con preset
+    if [ -n "$preset" ]; then
+        for alias in "${aliases[@]}"; do
+            for ext in "${extensions[@]}"; do
+                local target="$ACTIVE_WALL_DIR/${preset}_${alias}.${ext}"
+                if [ -f "$target" ]; then
+                    echo "$target"
+                    return 0
+                fi
+            done
+        done
+    fi
+
+    # 2. Búsqueda exacta sin preset
+    for alias in "${aliases[@]}"; do
+        for ext in "${extensions[@]}"; do
+            local target="$ACTIVE_WALL_DIR/${alias}.${ext}"
+            if [ -f "$target" ]; then
+                echo "$target"
+                return 0
+            fi
+        done
+    done
+
+    # 3. Búsqueda flexible case-insensitive
+    for alias in "${aliases[@]}"; do
+        local found
+        found=$(find "$ACTIVE_WALL_DIR" -maxdepth 2 -type f -iname "*${alias}*" 2>/dev/null | head -n 1)
+        if [ -n "$found" ] && [ -f "$found" ]; then
+            echo "$found"
+            return 0
+        fi
+    done
+
+    # 4. Fallback: cualquier fondo en el directorio
+    local any_wall
+    any_wall=$(find -L "$ACTIVE_WALL_DIR" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null | sort | head -n 1)
+    if [ -n "$any_wall" ] && [ -f "$any_wall" ]; then
+        echo "$any_wall"
+        return 0
+    fi
+
+    echo ""
+}
+
+# Garantizar que el backend awww esté activo
+ensure_backend() {
+    if command -v awww-daemon &>/dev/null; then
+        if ! pgrep -x awww-daemon >/dev/null; then
+            if systemctl --user is-active --quiet awww 2>/dev/null; then
+                :
+            elif command -v systemctl &>/dev/null && systemctl --user start awww 2>/dev/null; then
+                :
+            else
+                awww-daemon >/dev/null 2>&1 &
+            fi
+        fi
+
+        for _ in {1..20}; do
+            if awww query >/dev/null 2>&1; then
+                return 0
+            fi
+            sleep 0.05
+        done
+        return 0
+    elif command -v swww-daemon &>/dev/null; then
+        if ! pgrep -x swww-daemon >/dev/null; then
+            swww-daemon >/dev/null 2>&1 &
+        fi
+        for _ in {1..20}; do
+            if swww query >/dev/null 2>&1; then
+                return 0
+            fi
+            sleep 0.05
+        done
+        return 0
+    fi
+}
+
+# Aplicar el wallpaper especificado de forma segura y atómica
+apply_file() {
+    local file_path="$1"
+    local force="${2:-false}"
+
+    if [ -z "$file_path" ] || [ ! -f "$file_path" ]; then
+        echo -e "${RED}✗ Error:${RESET} Archivo de fondo no encontrado: '$file_path'" >&2
+        return 1
+    fi
+
+    ensure_backend
+
+    local canon_target
+    canon_target="$(realpath "$file_path" 2>/dev/null || echo "$file_path")"
+
+    # Verificar si ya está desplegado en pantalla
+    if [ "$force" != "true" ]; then
+        if command -v awww &>/dev/null; then
+            local curr_awww
+            curr_awww="$(awww query 2>/dev/null | awk -F 'image: ' '{print $2}' | head -n 1 || true)"
+            local canon_curr
+            canon_curr="$(realpath "$curr_awww" 2>/dev/null || echo "$curr_awww")"
+            if [ -n "$canon_curr" ] && [ "$canon_curr" = "$canon_target" ]; then
+                return 0
+            fi
+        fi
+    fi
+
+    # Aplicar según backend
+    if command -v awww &>/dev/null; then
+        awww img "$file_path" \
+            --transition-type "$TRANSITION_TYPE" \
+            --transition-duration "$TRANSITION_DURATION" \
+            --transition-fps "$TRANSITION_FPS" 2>/dev/null || true
+    elif command -v swww &>/dev/null; then
+        swww img "$file_path" \
+            --transition-type "$TRANSITION_TYPE" \
+            --transition-duration "$TRANSITION_DURATION" \
+            --transition-fps "$TRANSITION_FPS" 2>/dev/null || true
+    elif command -v hyprctl &>/dev/null && pgrep -x hyprpaper &>/dev/null; then
+        hyprctl hyprpaper preload "$file_path" 2>/dev/null || true
+        hyprctl hyprpaper wallpaper ",$file_path" 2>/dev/null || true
+    fi
+
+    # Actualizar cachés persistentes
+    mkdir -p "$CACHE_DIR"
+    echo "$file_path" > "$CURRENT_WALL_CACHE"
+
+    mkdir -p "$(dirname "$STABLE_HYPR_WALL")"
+    local canon_stable
+    canon_stable="$(realpath "$STABLE_HYPR_WALL" 2>/dev/null || echo "$STABLE_HYPR_WALL")"
+    if [ "$canon_target" != "$canon_stable" ]; then
+        cp -f "$file_path" "$STABLE_HYPR_WALL" 2>/dev/null || true
+    fi
+
+    # Si lunita-default está activo, compilar colores Matugen de forma desacoplada
+    local active_theme="lunita-default"
+    if [ -f "$HOME/.config/lunita/current_theme" ]; then
+        active_theme="$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")"
+    fi
+    active_theme="${active_theme,,}"
+
+    if [ "$active_theme" = "lunita-default" ] && command -v matugen &>/dev/null; then
+        matugen image "$file_path" --source-color-index 0 >/dev/null 2>&1 &
+    fi
+
+    return 0
+}
+
+# Comando: RESTORE (Al arrancar Hyprland o iniciar sesión)
+cmd_restore() {
+    # 1. Probar el último wallpaper guardado en caché
+    if [ -f "$CURRENT_WALL_CACHE" ]; then
+        local cached
+        cached="$(cat "$CURRENT_WALL_CACHE" 2>/dev/null || true)"
+        if [ -n "$cached" ] && [ -f "$cached" ]; then
+            apply_file "$cached" "false"
+            echo -e "${GREEN}✓ Fondo restaurado desde caché:${RESET} $(basename "$cached")"
+            return 0
+        fi
+    fi
+
+    # 2. Si no hay caché válido, aplicar según la hora actual
+    cmd_apply "false"
+}
+
+# Comando: APPLY (Aplica wallpaper horario o por defecto)
+cmd_apply() {
+    local force="${1:-true}"
+    local slot
+    slot="$(get_current_slot)"
+    local wall_file
+    wall_file="$(resolve_slot_file "$slot" "$WALLPAPER_PRESET")"
+
+    if [ -z "$wall_file" ]; then
+        echo -e "${RED}✗ No se encontró ningún wallpaper válido en ${ACTIVE_WALL_DIR}${RESET}" >&2
+        return 1
+    fi
+
+    apply_file "$wall_file" "$force"
+    echo -e "${GREEN}✓ Wallpaper aplicado (${slot}):${RESET} $(basename "$wall_file")"
+}
+
+# Comando: SET (Establece una imagen específica)
+cmd_set() {
+    local target_img="${1:-}"
+    target_img="${target_img#file://}"
+    if [ -z "$target_img" ] || [ ! -f "$target_img" ]; then
+        echo -e "${RED}Uso:${RESET} lunita-wallpaper set <ruta-de-imagen>" >&2
+        return 1
+    fi
+
+    apply_file "$target_img" "true"
+    echo -e "${GREEN}✓ Wallpaper establecido:${RESET} $(basename "$target_img")"
+}
+
+# Comando: STATUS
+cmd_status() {
+    local current_slot
+    current_slot="$(get_current_slot)"
+    local current_wall="Desconocido"
+
+    if [ -f "$CURRENT_WALL_CACHE" ]; then
+        current_wall="$(cat "$CURRENT_WALL_CACHE" 2>/dev/null || echo "Desconocido")"
+    fi
+
+    echo -e "${BOLD}${MAGENTA}🌙 Lunita-Dots — Estado de Wallpaper${RESET}"
+    echo "=================================================="
+    echo -e "${CYAN}Hora actual:${RESET}      $(date +'%H:%M')"
+    echo -e "${CYAN}Franja activa:${RESET}    ${BOLD}${current_slot}${RESET}"
+    echo -e "${CYAN}Preset:${RESET}           $WALLPAPER_PRESET"
+    echo -e "${CYAN}Directorio:${RESET}       $ACTIVE_WALL_DIR"
+    echo -e "${CYAN}Fondo en caché:${RESET}   $current_wall"
+    echo ""
+    echo -e "${BOLD}Esquema horario:${RESET}"
+    echo -e "  🌅 Morning   ($MORNING_HOUR:00 - $((AFTERNOON_HOUR - 1)):59) -> $(resolve_slot_file "morning" || echo "No configurado")"
+    echo -e "  ☀️  Afternoon ($AFTERNOON_HOUR:00 - $((NIGHT_HOUR - 1)):59) -> $(resolve_slot_file "afternoon" || echo "No configurado")"
+    echo -e "  🌙 Night     ($NIGHT_HOUR:00 - $((MORNING_HOUR - 1)):59) -> $(resolve_slot_file "night" || echo "No configurado")"
+}
+
+# Dispatcher principal
+ACTION="${1:-restore}"
+shift || true
+
+case "$ACTION" in
+    restore|init)
+        cmd_restore
+        ;;
+    apply|now)
+        cmd_apply "true"
+        ;;
+    set)
+        cmd_set "${1:-}"
+        ;;
+    status)
+        cmd_status
+        ;;
+    help|-h|--help)
+        echo -e "${BOLD}Uso:${RESET} lunita-wallpaper [restore|apply|set <ruta>|status|help]"
+        echo ""
+        echo "  restore, init    Restaura el fondo al iniciar sesión (0 demonios en bucle)"
+        echo "  apply            Aplica el fondo correspondiente a la hora actual"
+        echo "  set <archivo>    Establece un fondo de pantalla manualmente"
+        echo "  status           Muestra el estado horario y archivo activo"
+        ;;
+    *)
+        if [ -f "$ACTION" ]; then
+            cmd_set "$ACTION"
+        else
+            echo -e "${RED}Comando desconocido:${RESET} '$ACTION'. Usa 'lunita-wallpaper help'." >&2
+            exit 1
+        fi
+        ;;
+esac

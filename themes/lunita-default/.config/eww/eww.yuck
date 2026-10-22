@@ -16,8 +16,8 @@
 (deflisten media :initial '{"status":"Stopped","player":"","title":"No Music Playing","artist":"","cover":"~/.config/eww/assets/default_cover.png","has_media":false}'
   "scripts/media.py")
 
-(deflisten wallpaper_theme :initial ""
-  "scripts/watch_wallpaper.sh")
+(defpoll wallpaper_theme :interval "30s" :initial ""
+  "cat ~/.cache/hyprquickpaper/current_wallpaper 2>/dev/null | xargs basename 2>/dev/null || echo ''")
 
 ;; ====================================================================
 ;; 1. ANIME SIDEBAR WIDGETS
