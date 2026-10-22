@@ -1,6 +1,28 @@
 local M = {}
 
 function M.setup()
+    -- ── Session Guard (Equivalente a exec-once) ──
+    -- Previene que hyprctl reload vuelva a relanzar daemons, plugins y wallpapers en bucle infinito
+    if _G.__LUNITA_AUTOSTART_DONE then
+        return
+    end
+
+    local runtime_dir = os.getenv("XDG_RUNTIME_DIR") or ("/tmp/lunita-" .. (os.getenv("USER") or "default"))
+    local hypr_sig = os.getenv("HYPRLAND_INSTANCE_SIGNATURE") or "default"
+    local lock_dir = runtime_dir .. "/hypr/" .. hypr_sig
+    local lock_file = lock_dir .. "/.autostart_done"
+
+    -- Verificar si ya se ejecutó en esta instancia de Hyprland
+    local f_check = io.open(lock_file, "r")
+    if f_check then
+        f_check:close()
+        _G.__LUNITA_AUTOSTART_DONE = true
+        return
+    end
+
+    _G.__LUNITA_AUTOSTART_DONE = true
+    os.execute("mkdir -p '" .. lock_dir .. "' && touch '" .. lock_file .. "' 2>/dev/null")
+
     -- See https://wiki.hypr.land/Configuring/Basics/Autostart/
     local home = os.getenv("HOME")
 

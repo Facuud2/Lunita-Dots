@@ -232,6 +232,9 @@ stop_component() {
         kill "$pid" 2>/dev/null || true
         success "Detenido Quickshell [$comp] (PID: $pid)"
     fi
+    if [ "$comp" = "osd" ]; then
+        pkill -u "$UID" -f "osd_listener.py" 2>/dev/null || true
+    fi
 }
 
 cmd_start() {
@@ -275,6 +278,7 @@ cmd_stop() {
     done
     pkill -u "$UID" -x quickshell 2>/dev/null || true
     pkill -u "$UID" -x qs 2>/dev/null || true
+    pkill -u "$UID" -f "osd_listener.py" 2>/dev/null || true
     success "Instancias de Quickshell finalizadas."
 }
 

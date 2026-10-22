@@ -352,7 +352,7 @@ cmd_apply() {
 # Inicialización completa (para autostart de Hyprland)
 cmd_init() {
     ensure_backend
-    cmd_apply "true"
+    cmd_apply "false"
 
     # Iniciar demonio de fondo si no está activo ya
     if ! is_daemon_running; then

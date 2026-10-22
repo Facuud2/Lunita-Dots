@@ -473,7 +473,14 @@ cmd_apply() {
     # 4.1. Normalizar dinámicamente rutas de usuario en archivos de configuración
     for conf_file in "$HOME/.config/qt6ct/qt6ct.conf" "$HOME/.config/gtk-3.0/bookmarks" "$HOME/.local/share/user-places.xbel"; do
         if [ -e "$conf_file" ]; then
-            sed --follow-symlinks -i "s|{{HOME}}|$HOME|g; s|/home/[a-zA-Z0-9._-]\+|$HOME|g" "$conf_file" 2>/dev/null || true
+            if [ -L "$conf_file" ]; then
+                local real_src
+                real_src="$(readlink -f "$conf_file" 2>/dev/null || echo "")"
+                if [[ "$real_src" == "$DOTS_DIR"* ]]; then
+                    cp --remove-destination "$real_src" "$conf_file" 2>/dev/null || true
+                fi
+            fi
+            sed -i "s|{{HOME}}|$HOME|g; s|/home/[a-zA-Z0-9._-]\+|$HOME|g" "$conf_file" 2>/dev/null || true
         fi
     done
 
