@@ -1,6 +1,6 @@
+import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
 import Quickshell
 
 Item {
@@ -12,35 +12,29 @@ Item {
     implicitHeight: 640
     width: 580
     height: 640
+    onVisibleChanged: {
+        if (!visible) {
+            headerBar.searchInputField.text = "";
+            if (launcherState)
+                launcherState.searchQuery = "";
+
+        }
+    }
+    Keys.onEscapePressed: launcherState.closeLauncher()
 
     // ── Main Frosted Acrylic / Liquid Glass Card ──
     Rectangle {
         id: panelCard
+
         anchors.fill: parent
         radius: 26
         color: launcherState.panelBgColor
         border.color: launcherState.panelBorderColor
         border.width: 1
-
         // Smooth Cupertino Appearance & Exit Animations
-        opacity: launcherState.isOpen ? 1.0 : 0.0
-        scale: launcherState.isOpen ? 1.0 : 0.94
+        opacity: launcherState.isOpen ? 1 : 0
+        scale: launcherState.isOpen ? 1 : 0.94
         transformOrigin: Item.Center
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: launcherState.isOpen ? 220 : 160
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: launcherState.isOpen ? 240 : 170
-                easing.type: launcherState.isOpen ? Easing.OutBack : Easing.InQuad
-                easing.overshoot: 1.12
-            }
-        }
 
         // Inner Specular Sheen Border
         Rectangle {
@@ -55,7 +49,8 @@ Item {
         // Prevent clicking inside panel from bubbling to backdrop
         MouseArea {
             anchors.fill: parent
-            onClicked: {}
+            onClicked: {
+            }
         }
 
         Column {
@@ -66,6 +61,7 @@ Item {
             // ── Top Header Bar (App Store icon, Title, Actions, Search) ──
             HeaderBar {
                 id: headerBar
+
                 launcherState: root.launcherState
                 width: parent.width
             }
@@ -103,6 +99,7 @@ Item {
                 // 4. Categorized Sections (Standard Reference Layout)
                 ListView {
                     id: sectionsList
+
                     anchors.fill: parent
                     visible: launcherState.searchQuery.trim().length === 0 && launcherState.activeViewMode === "categorized"
                     model: launcherState.categoriesList
@@ -113,6 +110,7 @@ Item {
                     delegate: CategorySection {
                         required property var modelData
                         required property int index
+
                         launcherState: root.launcherState
                         category: modelData
                         isLastSection: index === (launcherState.categoriesList ? launcherState.categoriesList.length - 1 : 0)
@@ -124,32 +122,44 @@ Item {
                         anchors.right: sectionsList.right
                         anchors.rightMargin: 2
                     }
+
                 }
+
             }
+
         }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: launcherState.isOpen ? 220 : 160
+                easing.type: Easing.InOutQuad
+            }
+
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: launcherState.isOpen ? 240 : 170
+                easing.type: launcherState.isOpen ? Easing.OutBack : Easing.InQuad
+                easing.overshoot: 1.12
+            }
+
+        }
+
     }
 
     // Auto focus search field and clear search query when opened or closed
     Connections {
-        target: launcherState
         function onIsOpenChanged() {
             if (launcherState.isOpen) {
-                headerBar.searchInputField.text = ""
-                headerBar.searchInputField.forceActiveFocus()
+                headerBar.searchInputField.text = "";
+                headerBar.searchInputField.forceActiveFocus();
             } else {
-                headerBar.searchInputField.text = ""
+                headerBar.searchInputField.text = "";
             }
         }
+
+        target: launcherState
     }
 
-    onVisibleChanged: {
-        if (!visible) {
-            headerBar.searchInputField.text = ""
-            if (launcherState) {
-                launcherState.searchQuery = ""
-            }
-        }
-    }
-
-    Keys.onEscapePressed: launcherState.closeLauncher()
 }

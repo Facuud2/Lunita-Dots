@@ -11,67 +11,226 @@ Item {
     property string searchQuery: ""
     property string activeViewMode: "categorized" // "categorized" | "detail" | "all"
     property var activeCategoryDetail: null
-
-    Timer {
-        id: closeTimer
-        interval: 240
-        repeat: false
-        onTriggered: {
-            if (!root.isOpen) {
-                root.windowVisible = false
-            }
-        }
-    }
-
     // ── Scanned Apps & Categorized Datasets ──
     property var allAppsList: []
     property var categoriesList: []
     property var recentAppsList: []
-
     // ── Dark/Light Theme Awareness ──
     property bool isDarkTheme: true
+    // Dynamic Theme Tokens
+    readonly property color panelBgColor: isDarkTheme ? Qt.rgba(30 / 255, 30 / 255, 30 / 255, 0.65) : Qt.rgba(1, 1, 1, 0.7)
+    readonly property color panelInnerSheen: isDarkTheme ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(1, 1, 1, 0.45)
+    readonly property color panelBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(1, 1, 1, 0.1)
+    readonly property color panelShadowColor: isDarkTheme ? Qt.rgba(0, 0, 0, 0.6) : Qt.rgba(0, 0, 0, 0.25)
+    readonly property color headerTitleColor: isDarkTheme ? "#FFFFFF" : "#1D1D1F"
+    readonly property color headerSubColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.55) : Qt.rgba(0, 0, 0, 0.5)
+    readonly property color categoryHeaderColor: isDarkTheme ? "#E5E5EA" : "#1D1D1F"
+    readonly property color categoryActionColor: isDarkTheme ? "#0A84FF" : "#007AFF"
+    readonly property color categoryActionHover: isDarkTheme ? "#409CFF" : "#0062CC"
+    readonly property color appTitleColor: isDarkTheme ? "#F2F2F7" : "#1D1D1F"
+    readonly property color appHoverBg: isDarkTheme ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.07)
+    readonly property color appActiveBg: isDarkTheme ? Qt.rgba(1, 1, 1, 0.2) : Qt.rgba(0, 0, 0, 0.14)
+    readonly property color dividerColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.09) : Qt.rgba(0, 0, 0, 0.08)
+    readonly property color searchBgColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(0, 0, 0, 0.06)
+    readonly property color searchBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(0, 0, 0, 0.1)
+    readonly property color searchTextColor: isDarkTheme ? "#FFFFFF" : "#1D1D1F"
+    readonly property color searchPlaceholderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.45) : Qt.rgba(0, 0, 0, 0.4)
+    // ── History & Favorites Persistence ──
+    readonly property string historyFilePath: Quickshell.env("HOME") + "/.config/lunita/launcher-history.json"
+
+    // ── Build Structured Categories ──
+    function buildCategories(apps) {
+        let catOrder = [{
+            "id": "suggestions",
+            "name": "Suggestions",
+            "showMoreAction": "Show More"
+        }, {
+            "id": "productivity",
+            "name": "Productivity",
+            "showMoreAction": "Show All"
+        }, {
+            "id": "creativity",
+            "name": "Creativity",
+            "showMoreAction": "Show All"
+        }, {
+            "id": "information",
+            "name": "Information & Reading",
+            "showMoreAction": "Show All"
+        }, {
+            "id": "development",
+            "name": "Development",
+            "showMoreAction": "Show All"
+        }, {
+            "id": "system",
+            "name": "System & Utilities",
+            "showMoreAction": "Show All"
+        }, {
+            "id": "entertainment",
+            "name": "Entertainment & Media",
+            "showMoreAction": "Show All"
+        }];
+        let catMap = {
+            "Productivity": [],
+            "Creativity": [],
+            "Information & Reading": [],
+            "Development": [],
+            "System & Utilities": [],
+            "Entertainment & Media": []
+        };
+        for (let i = 0; i < apps.length; i++) {
+            let a = apps[i];
+            let c = a.category || "System & Utilities";
+            if (catMap[c])
+                catMap[c].push(a);
+            else
+                catMap["System & Utilities"].push(a);
+        }
+        // Suggestions: take top curated / most accessed apps
+        let suggestions = [];
+        let curatedSuggestions = ["zen", "firefox", "antigravity", "code", "kitty", "dolphin", "spotify", "discord", "vesktop", "neovim", "htop", "songrec"];
+        for (let k = 0; k < curatedSuggestions.length; k++) {
+            let match = apps.find(function(a) {
+                let s = (a.id + " " + a.executable + " " + a.name).toLowerCase();
+                return s.includes(curatedSuggestions[k]);
+            });
+            if (match && !suggestions.includes(match))
+                suggestions.push(match);
+
+        }
+        // Fill up to 5 suggestions
+        for (let i = 0; i < apps.length && suggestions.length < 5; i++) {
+            if (!suggestions.includes(apps[i]))
+                suggestions.push(apps[i]);
+
+        }
+        let result = [];
+        for (let i = 0; i < catOrder.length; i++) {
+            let meta = catOrder[i];
+            let list = [];
+            if (meta.id === "suggestions")
+                list = suggestions;
+            else
+                list = catMap[meta.name] || [];
+            if (list.length > 0)
+                result.push({
+                    "id": meta.id,
+                    "name": meta.name,
+                    "displayName": meta.name,
+                    "actionText": meta.showMoreAction,
+                    "allApps": list,
+                    "previewApps": list.slice(0, 5)
+                });
+
+        }
+        root.categoriesList = result;
+    }
+
+    // ── Search & Filter Logic ──
+    function getFilteredApps() {
+        let q = root.searchQuery.trim().toLowerCase();
+        if (!q)
+            return root.allAppsList;
+
+        return root.allAppsList.filter(function(a) {
+            return (a.displayName || "").toLowerCase().includes(q) || (a.name || "").toLowerCase().includes(q) || (a.executable || "").toLowerCase().includes(q) || (a.description || "").toLowerCase().includes(q) || (a.category || "").toLowerCase().includes(q);
+        });
+    }
+
+    // ── App Launch & History ──
+    function launchApp(app) {
+        if (!app)
+            return ;
+
+        let escapedId = (app.id || "").replace(/'/g, "'\\''");
+        let envPrefix = "if [ -z \"${DISPLAY:-}\" ]; then " + "disp=\"$(systemctl --user show-environment 2>/dev/null | sed -n 's/^DISPLAY=//p' | head -n 1 || true)\"; " + "if [ -z \"$disp\" ]; then " + "for s in /tmp/.X11-unix/X*[0-9]; do if [ -S \"$s\" ] && [ -O \"$s\" ]; then disp=\":${s##*X}\"; break; fi; done; " + "fi; " + "[ -n \"$disp\" ] && export DISPLAY=\"$disp\"; " + "fi; ";
+        let cmd = envPrefix + "(gtk-launch '" + escapedId + "' 2>/dev/null || " + app.executable + ") &";
+        Quickshell.execDetached(["bash", "-c", cmd]);
+        root.recordRecent(app.id);
+        root.closeLauncher();
+    }
+
+    function recordRecent(appId) {
+        let cmd = "python3 -c 'import os, json; p = os.path.expanduser(\"~/.config/lunita/launcher-history.json\"); os.makedirs(os.path.dirname(p), exist_ok=True); data = [];\ntry:\n    with open(p, \"r\") as f: data = json.load(f)\nexcept: pass\ndata = [x for x in data if x != \"" + appId + "\"]\ndata.insert(0, \"" + appId + "\")\nwith open(p, \"w\") as f: json.dump(data[:20], f)'";
+        Quickshell.execDetached(["bash", "-c", cmd]);
+    }
+
+    // ── Navigation & View Controls ──
+    function openLauncher() {
+        closeTimer.stop();
+        appScanner.running = true;
+        root.searchQuery = "";
+        root.activeViewMode = "categorized";
+        root.activeCategoryDetail = null;
+        root.windowVisible = true;
+        root.isOpen = true;
+    }
+
+    function closeLauncher() {
+        root.isOpen = false;
+        root.searchQuery = "";
+        root.activeCategoryDetail = null;
+        closeTimer.restart();
+    }
+
+    function toggleLauncher() {
+        if (root.isOpen)
+            root.closeLauncher();
+        else
+            root.openLauncher();
+    }
+
+    function showCategoryDetail(catObj) {
+        root.activeCategoryDetail = catObj;
+        root.activeViewMode = "detail";
+    }
+
+    function backToCategories() {
+        root.activeCategoryDetail = null;
+        root.activeViewMode = "categorized";
+    }
+
+    function toggleAllApps() {
+        if (root.activeViewMode === "all")
+            root.activeViewMode = "categorized";
+        else
+            root.activeViewMode = "all";
+    }
+
+    Component.onCompleted: {
+        appScanner.running = true;
+    }
+
+    Timer {
+        id: closeTimer
+
+        interval: 240
+        repeat: false
+        onTriggered: {
+            if (!root.isOpen)
+                root.windowVisible = false;
+
+        }
+    }
+
     Process {
         id: themeMonitor
+
         running: true
         command: ["bash", "-c", "if [ -f $HOME/.config/lunita/color_scheme ]; then cat $HOME/.config/lunita/color_scheme; else gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null || echo 'prefer-dark'; fi"]
+
         stdout: SplitParser {
-            onRead: data => {
+            onRead: (data) => {
                 var str = data.trim().toLowerCase();
                 root.isDarkTheme = str.indexOf("light") === -1;
             }
         }
+
     }
-
-    // Dynamic Theme Tokens
-    readonly property color panelBgColor: isDarkTheme ? Qt.rgba(30/255, 30/255, 30/255, 0.65) : Qt.rgba(1, 1, 1, 0.70)
-    readonly property color panelInnerSheen: isDarkTheme ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(1, 1, 1, 0.45)
-    readonly property color panelBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.10)
-    readonly property color panelShadowColor: isDarkTheme ? Qt.rgba(0, 0, 0, 0.60) : Qt.rgba(0, 0, 0, 0.25)
-
-    readonly property color headerTitleColor: isDarkTheme ? "#FFFFFF" : "#1D1D1F"
-    readonly property color headerSubColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.55) : Qt.rgba(0, 0, 0, 0.50)
-    
-    readonly property color categoryHeaderColor: isDarkTheme ? "#E5E5EA" : "#1D1D1F"
-    readonly property color categoryActionColor: isDarkTheme ? "#0A84FF" : "#007AFF"
-    readonly property color categoryActionHover: isDarkTheme ? "#409CFF" : "#0062CC"
-    
-    readonly property color appTitleColor: isDarkTheme ? "#F2F2F7" : "#1D1D1F"
-    readonly property color appHoverBg: isDarkTheme ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.07)
-    readonly property color appActiveBg: isDarkTheme ? Qt.rgba(1, 1, 1, 0.20) : Qt.rgba(0, 0, 0, 0.14)
-    
-    readonly property color dividerColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.09) : Qt.rgba(0, 0, 0, 0.08)
-    
-    readonly property color searchBgColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(0, 0, 0, 0.06)
-    readonly property color searchBorderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(0, 0, 0, 0.10)
-    readonly property color searchTextColor: isDarkTheme ? "#FFFFFF" : "#1D1D1F"
-    readonly property color searchPlaceholderColor: isDarkTheme ? Qt.rgba(1, 1, 1, 0.45) : Qt.rgba(0, 0, 0, 0.40)
-
-    // ── History & Favorites Persistence ──
-    readonly property string historyFilePath: Quickshell.env("HOME") + "/.config/lunita/launcher-history.json"
 
     // ── Python Scanner Process ──
     Process {
         id: appScanner
+
         command: ["bash", "-c", "python3 -c '
 import os, glob, json
 
@@ -163,174 +322,20 @@ for p in paths:
 apps.sort(key=lambda x: x[\"displayName\"].lower())
 print(json.dumps(apps))
 '"]
+
         stdout: SplitParser {
             onRead: function(text) {
                 try {
-                    let parsed = JSON.parse(text)
+                    let parsed = JSON.parse(text);
                     if (Array.isArray(parsed) && parsed.length > 0) {
-                        root.allAppsList = parsed
-                        root.buildCategories(parsed)
+                        root.allAppsList = parsed;
+                        root.buildCategories(parsed);
                     }
-                } catch (e) {}
-            }
-        }
-    }
-
-    // ── Build Structured Categories ──
-    function buildCategories(apps) {
-        let catOrder = [
-            { id: "suggestions", name: "Suggestions", showMoreAction: "Show More" },
-            { id: "productivity", name: "Productivity", showMoreAction: "Show All" },
-            { id: "creativity", name: "Creativity", showMoreAction: "Show All" },
-            { id: "information", name: "Information & Reading", showMoreAction: "Show All" },
-            { id: "development", name: "Development", showMoreAction: "Show All" },
-            { id: "system", name: "System & Utilities", showMoreAction: "Show All" },
-            { id: "entertainment", name: "Entertainment & Media", showMoreAction: "Show All" }
-        ]
-
-        let catMap = {
-            "Productivity": [],
-            "Creativity": [],
-            "Information & Reading": [],
-            "Development": [],
-            "System & Utilities": [],
-            "Entertainment & Media": []
-        }
-
-        for (let i = 0; i < apps.length; i++) {
-            let a = apps[i]
-            let c = a.category || "System & Utilities"
-            if (catMap[c]) {
-                catMap[c].push(a)
-            } else {
-                catMap["System & Utilities"].push(a)
+                } catch (e) {
+                }
             }
         }
 
-        // Suggestions: take top curated / most accessed apps
-        let suggestions = []
-        let curatedSuggestions = ["zen", "firefox", "antigravity", "code", "kitty", "dolphin", "spotify", "discord", "vesktop", "neovim", "htop", "songrec"]
-        for (let k = 0; k < curatedSuggestions.length; k++) {
-            let match = apps.find(function(a) {
-                let s = (a.id + " " + a.executable + " " + a.name).toLowerCase()
-                return s.includes(curatedSuggestions[k])
-            })
-            if (match && !suggestions.includes(match)) {
-                suggestions.push(match)
-            }
-        }
-        // Fill up to 5 suggestions
-        for (let i = 0; i < apps.length && suggestions.length < 5; i++) {
-            if (!suggestions.includes(apps[i])) {
-                suggestions.push(apps[i])
-            }
-        }
-
-        let result = []
-        for (let i = 0; i < catOrder.length; i++) {
-            let meta = catOrder[i]
-            let list = []
-            if (meta.id === "suggestions") {
-                list = suggestions
-            } else {
-                list = catMap[meta.name] || []
-            }
-
-            if (list.length > 0) {
-                result.push({
-                    id: meta.id,
-                    name: meta.name,
-                    displayName: meta.name,
-                    actionText: meta.showMoreAction,
-                    allApps: list,
-                    previewApps: list.slice(0, 5)
-                })
-            }
-        }
-
-        root.categoriesList = result
     }
 
-    // ── Search & Filter Logic ──
-    function getFilteredApps() {
-        let q = root.searchQuery.trim().toLowerCase()
-        if (!q) return root.allAppsList
-        return root.allAppsList.filter(function(a) {
-            return (a.displayName || "").toLowerCase().includes(q) ||
-                   (a.name || "").toLowerCase().includes(q) ||
-                   (a.executable || "").toLowerCase().includes(q) ||
-                   (a.description || "").toLowerCase().includes(q) ||
-                   (a.category || "").toLowerCase().includes(q)
-        })
-    }
-
-    // ── App Launch & History ──
-    function launchApp(app) {
-        if (!app) return
-        let escapedId = (app.id || "").replace(/'/g, "'\\''")
-        let envPrefix = "if [ -z \"${DISPLAY:-}\" ]; then " +
-            "disp=\"$(systemctl --user show-environment 2>/dev/null | sed -n 's/^DISPLAY=//p' | head -n 1 || true)\"; " +
-            "if [ -z \"$disp\" ]; then " +
-            "for s in /tmp/.X11-unix/X*[0-9]; do if [ -S \"$s\" ] && [ -O \"$s\" ]; then disp=\":${s##*X}\"; break; fi; done; " +
-            "fi; " +
-            "[ -n \"$disp\" ] && export DISPLAY=\"$disp\"; " +
-            "fi; "
-        let cmd = envPrefix + "(gtk-launch '" + escapedId + "' 2>/dev/null || " + app.executable + ") &"
-        Quickshell.execDetached(["bash", "-c", cmd])
-        root.recordRecent(app.id)
-        root.closeLauncher()
-    }
-
-    function recordRecent(appId) {
-        let cmd = "python3 -c 'import os, json; p = os.path.expanduser(\"~/.config/lunita/launcher-history.json\"); os.makedirs(os.path.dirname(p), exist_ok=True); data = [];\ntry:\n    with open(p, \"r\") as f: data = json.load(f)\nexcept: pass\ndata = [x for x in data if x != \"" + appId + "\"]\ndata.insert(0, \"" + appId + "\")\nwith open(p, \"w\") as f: json.dump(data[:20], f)'"
-        Quickshell.execDetached(["bash", "-c", cmd])
-    }
-
-    // ── Navigation & View Controls ──
-    function openLauncher() {
-        closeTimer.stop()
-        appScanner.running = true
-        root.searchQuery = ""
-        root.activeViewMode = "categorized"
-        root.activeCategoryDetail = null
-        root.windowVisible = true
-        root.isOpen = true
-    }
-
-    function closeLauncher() {
-        root.isOpen = false
-        root.searchQuery = ""
-        root.activeCategoryDetail = null
-        closeTimer.restart()
-    }
-
-    function toggleLauncher() {
-        if (root.isOpen) {
-            root.closeLauncher()
-        } else {
-            root.openLauncher()
-        }
-    }
-
-    function showCategoryDetail(catObj) {
-        root.activeCategoryDetail = catObj
-        root.activeViewMode = "detail"
-    }
-
-    function backToCategories() {
-        root.activeCategoryDetail = null
-        root.activeViewMode = "categorized"
-    }
-
-    function toggleAllApps() {
-        if (root.activeViewMode === "all") {
-            root.activeViewMode = "categorized"
-        } else {
-            root.activeViewMode = "all"
-        }
-    }
-
-    Component.onCompleted: {
-        appScanner.running = true
-    }
 }

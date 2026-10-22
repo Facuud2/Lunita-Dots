@@ -1,6 +1,6 @@
+import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -8,7 +8,6 @@ Item {
     required property var spotlightState
     required property var modelData
     required property int index
-
     readonly property var itemData: modelData
     readonly property bool isSelected: index === spotlightState.selectedIndex
 
@@ -18,19 +17,22 @@ Item {
     // Selection / Hover Pill Background
     Rectangle {
         id: pillBg
+
         anchors.fill: parent
         anchors.leftMargin: 6
         anchors.rightMargin: 6
         anchors.topMargin: 2
         anchors.bottomMargin: 2
         radius: 8
-        color: root.isSelected
-            ? root.spotlightState.selectedBgColor
-            : (mouseArea.containsMouse ? root.spotlightState.itemHoverBg : "transparent")
+        color: root.isSelected ? root.spotlightState.selectedBgColor : (mouseArea.containsMouse ? root.spotlightState.itemHoverBg : "transparent")
 
         Behavior on color {
-            ColorAnimation { duration: 100 }
+            ColorAnimation {
+                duration: 100
+            }
+
         }
+
     }
 
     RowLayout {
@@ -47,6 +49,7 @@ Item {
 
             Image {
                 id: itemImg
+
                 anchors.fill: parent
                 source: (root.itemData && root.itemData.icon) ? root.itemData.icon : "assets/document.svg"
                 sourceSize.width: 52
@@ -55,6 +58,7 @@ Item {
                 smooth: true
                 mipmap: true
             }
+
         }
 
         // ── Title & Subtitle Column ──
@@ -83,6 +87,7 @@ Item {
                 elide: Text.ElideMiddle
                 Layout.fillWidth: true
             }
+
         }
 
         // ── Category / Shortcut Hint Tag ──
@@ -95,6 +100,7 @@ Item {
 
             Text {
                 id: catTagText
+
                 anchors.centerIn: parent
                 text: (root.itemData && root.itemData.type === "calc") ? "↵ Copiar" : "Top Hit"
                 color: root.isSelected ? "#FFFFFF" : root.spotlightState.textDimColor
@@ -102,26 +108,27 @@ Item {
                 font.pixelSize: 9
                 font.weight: Font.Medium
             }
+
         }
+
     }
 
     MouseArea {
         id: mouseArea
+
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
-
         onEntered: {
-            root.spotlightState.selectIndex(root.index)
+            root.spotlightState.selectIndex(root.index);
         }
-
-        onClicked: mouse => {
-            if (mouse.button === Qt.RightButton) {
-                root.spotlightState.revealCurrentItem()
-            } else {
-                root.spotlightState.activateCurrentItem()
-            }
+        onClicked: (mouse) => {
+            if (mouse.button === Qt.RightButton)
+                root.spotlightState.revealCurrentItem();
+            else
+                root.spotlightState.activateCurrentItem();
         }
     }
+
 }

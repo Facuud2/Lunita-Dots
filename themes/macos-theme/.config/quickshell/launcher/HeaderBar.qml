@@ -37,9 +37,7 @@ Item {
 
                 // Title
                 Text {
-                    text: launcherState.activeViewMode === "detail" && launcherState.activeCategoryDetail
-                        ? launcherState.activeCategoryDetail.displayName
-                        : (launcherState.activeViewMode === "all" ? "Todas las Apps" : "Apps")
+                    text: launcherState.activeViewMode === "detail" && launcherState.activeCategoryDetail ? launcherState.activeCategoryDetail.displayName : (launcherState.activeViewMode === "all" ? "Todas las Apps" : "Apps")
                     anchors.verticalCenter: parent.verticalCenter
                     color: launcherState.headerTitleColor
                     font.pixelSize: 19
@@ -47,6 +45,7 @@ Item {
                     font.italic: false
                     font.family: "SF Pro Display, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif"
                 }
+
             }
 
             // Right Action Controls: Back button or Grid/Category Switcher
@@ -69,6 +68,7 @@ Item {
                     Row {
                         anchors.centerIn: parent
                         spacing: 4
+
                         Text {
                             text: "‹"
                             color: launcherState.categoryActionColor
@@ -76,8 +76,10 @@ Item {
                             font.weight: Font.Bold
                             anchors.verticalCenter: parent.verticalCenter
                         }
+
                         Text {
                             id: backText
+
                             text: "Categorías"
                             color: launcherState.categoryActionColor
                             font.pixelSize: 12
@@ -85,15 +87,18 @@ Item {
                             font.family: "SF Pro Text, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif"
                             anchors.verticalCenter: parent.verticalCenter
                         }
+
                     }
 
                     MouseArea {
                         id: backMouse
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: launcherState.backToCategories()
                     }
+
                 }
 
                 // Grid / Categorized Toggle Button (matching `[ ] [ ] v` in reference)
@@ -113,16 +118,45 @@ Item {
                         Column {
                             spacing: 2
                             anchors.verticalCenter: parent.verticalCenter
+
                             Row {
                                 spacing: 2
-                                Rectangle { width: 4; height: 4; radius: 1; color: launcherState.headerSubColor }
-                                Rectangle { width: 4; height: 4; radius: 1; color: launcherState.headerSubColor }
+
+                                Rectangle {
+                                    width: 4
+                                    height: 4
+                                    radius: 1
+                                    color: launcherState.headerSubColor
+                                }
+
+                                Rectangle {
+                                    width: 4
+                                    height: 4
+                                    radius: 1
+                                    color: launcherState.headerSubColor
+                                }
+
                             }
+
                             Row {
                                 spacing: 2
-                                Rectangle { width: 4; height: 4; radius: 1; color: launcherState.headerSubColor }
-                                Rectangle { width: 4; height: 4; radius: 1; color: launcherState.headerSubColor }
+
+                                Rectangle {
+                                    width: 4
+                                    height: 4
+                                    radius: 1
+                                    color: launcherState.headerSubColor
+                                }
+
+                                Rectangle {
+                                    width: 4
+                                    height: 4
+                                    radius: 1
+                                    color: launcherState.headerSubColor
+                                }
+
                             }
+
                         }
 
                         // Small Chevron
@@ -133,17 +167,22 @@ Item {
                             font.weight: Font.Bold
                             anchors.verticalCenter: parent.verticalCenter
                         }
+
                     }
 
                     MouseArea {
                         id: gridToggleMouse
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: launcherState.toggleAllApps()
                     }
+
                 }
+
             }
+
         }
 
         // ── Integrated macOS Search Field ──
@@ -154,10 +193,6 @@ Item {
             color: launcherState.searchBgColor
             border.color: searchInput.activeFocus ? launcherState.categoryActionColor : launcherState.searchBorderColor
             border.width: 1
-
-            Behavior on border.color {
-                ColorAnimation { duration: 150 }
-            }
 
             Row {
                 anchors.fill: parent
@@ -177,6 +212,7 @@ Item {
                 // Search Input Field
                 TextInput {
                     id: searchInput
+
                     width: parent.width - 48
                     anchors.verticalCenter: parent.verticalCenter
                     color: launcherState.searchTextColor
@@ -185,6 +221,18 @@ Item {
                     clip: true
                     text: launcherState.searchQuery
                     onTextChanged: launcherState.searchQuery = text
+                    Keys.onReturnPressed: {
+                        let filtered = launcherState.getFilteredApps();
+                        if (filtered.length > 0)
+                            launcherState.launchApp(filtered[0]);
+
+                    }
+                    Keys.onEscapePressed: {
+                        if (text.length > 0)
+                            text = "";
+                        else
+                            launcherState.closeLauncher();
+                    }
 
                     Text {
                         text: "Buscar en todas las aplicaciones..."
@@ -194,20 +242,6 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    Keys.onReturnPressed: {
-                        let filtered = launcherState.getFilteredApps()
-                        if (filtered.length > 0) {
-                            launcherState.launchApp(filtered[0])
-                        }
-                    }
-
-                    Keys.onEscapePressed: {
-                        if (text.length > 0) {
-                            text = ""
-                        } else {
-                            launcherState.closeLauncher()
-                        }
-                    }
                 }
 
                 // Clear Search Button (✕)
@@ -228,16 +262,29 @@ Item {
 
                     MouseArea {
                         id: clearMouse
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            searchInput.text = ""
-                            searchInput.forceActiveFocus()
+                            searchInput.text = "";
+                            searchInput.forceActiveFocus();
                         }
                     }
+
                 }
+
             }
+
+            Behavior on border.color {
+                ColorAnimation {
+                    duration: 150
+                }
+
+            }
+
         }
+
     }
+
 }
