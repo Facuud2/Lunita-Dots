@@ -391,3 +391,25 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   4. Los tres temas (`lunita-default`, `macos-theme` y `modern-win11-theme`) operan con comandos válidos de Hyprland sin excepciones en stderr.
   5. Ningún cambio fue pusheado al repositorio remoto.
 - **Dependencias:** Ninguna
+
+### [ISSUE-029] Erradicación de Bucle Infinito de Recarga de Plugins y Componentes en lunita-default
+- **Estado:** COMPLETADO
+- **Prioridad:** CRÍTICA
+- **Rama Sugerida:** `AUDITORY_FIXES`
+- **Módulo(s):** Core / Autostart / Hyprland / Matugen / Eww
+- **Archivos Afectados:**
+  - `core/.config/hypr/modules/autostart.lua`
+  - `core/.local/bin/lunita-dynamic-wallpaper`
+  - `core/.local/bin/lunita-quickshell`
+  - `core/.local/bin/lunita-theme`
+  - `themes/lunita-default/.config/eww/scripts/launch.sh`
+  - `themes/lunita-default/.config/eww/scripts/watch_wallpaper.sh`
+  - `themes/lunita-default/.config/matugen/hooks/update-theme.sh`
+- **Descripción:** Al cambiar a `lunita-default`, el sistema entraba en un bucle infinito donde se recargaban continuamente todos los componentes, plugins de Hyprland (`hyprpm reload -n`) y Quickshell. El origen radicaba en una cascada de retroalimentación circular: `autostart.lua` se re-ejecutaba en cada `hyprctl reload` (invocando `lunita-dynamic-wallpaper init` con `force=true`, `lunita-quickshell start` y `hyprpm reload`), lo que provocaba que `awww` emitiera eventos de cambio de fondo que `watch_wallpaper.sh` detectaba, disparando `matugen image`, cuyo hook `update-theme.sh` volvía a forzar `hyprctl reload`, `lunita-quickshell restart` y `lunita-palette-sync sync`, repitiendo el ciclo perpetuamente.
+- **Criterios de Aceptación:**
+  1. `autostart.lua` cuenta con Session Guard (`_G.__LUNITA_AUTOSTART_DONE` y lockfile de instancia) emulando `exec-once` estricto y no se ejecuta durante `hyprctl reload`.
+  2. `update-theme.sh` de Matugen no relanza destructivamente Quickshell ni llama circularmente a `lunita-palette-sync sync`.
+  3. `watch_wallpaper.sh` cuenta con PID singleton lock y compara rutas canónicas (`realpath`) evitando falsos positivos de cambio de wallpaper.
+  4. `lunita-dynamic-wallpaper init` no fuerza recarga si el wallpaper ya está activo en pantalla.
+  5. `lunita-quickshell` limpia procesos huérfanos de listeners (`osd_listener.py`).
+- **Dependencias:** [ISSUE-028]
