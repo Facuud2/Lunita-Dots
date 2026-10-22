@@ -13,6 +13,7 @@ Item {
 
     Column {
         id: sectionColumn
+
         width: parent.width
         spacing: 10
 
@@ -43,6 +44,7 @@ Item {
 
                 Text {
                     id: actionLabel
+
                     anchors.centerIn: parent
                     text: (root.category && root.category.actionText) ? root.category.actionText : "Show All"
                     color: actionMouse.containsMouse ? launcherState.categoryActionHover : launcherState.categoryActionColor
@@ -52,38 +54,50 @@ Item {
                     font.family: "SF Pro Text, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif"
 
                     Behavior on color {
-                        ColorAnimation { duration: 120 }
+                        ColorAnimation {
+                            duration: 120
+                        }
+
                     }
+
                 }
 
                 MouseArea {
                     id: actionMouse
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        if (root.category) {
-                            launcherState.showCategoryDetail(root.category)
-                        }
+                        if (root.category)
+                            launcherState.showCategoryDetail(root.category);
+
                     }
                 }
+
             }
+
         }
 
         // ── App Items Row (5-column Grid) ──
         Row {
             id: appsRow
+
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: Math.max(2, Math.floor((root.width - (5 * 96)) / 4))
 
             Repeater {
                 model: root.category ? root.category.previewApps : []
+
                 delegate: AppItem {
                     required property var modelData
+
                     launcherState: root.launcherState
                     app: modelData
                 }
+
             }
+
         }
 
         // ── Subtle Divider Line ──
@@ -94,5 +108,7 @@ Item {
             color: launcherState.dividerColor
             visible: !root.isLastSection
         }
+
     }
+
 }

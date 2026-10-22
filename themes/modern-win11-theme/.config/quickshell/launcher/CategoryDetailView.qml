@@ -31,6 +31,7 @@ Item {
                 Row {
                     anchors.centerIn: parent
                     spacing: 6
+
                     Text {
                         text: "‹"
                         color: root.launcherState.accentColor
@@ -38,23 +39,28 @@ Item {
                         font.weight: Font.Bold
                         anchors.verticalCenter: parent.verticalCenter
                     }
+
                     Text {
                         id: backLabel
+
                         text: "Volver a Inicio"
                         color: root.launcherState.headerTitleColor
                         font.pixelSize: 12
                         font.family: "Segoe UI Variable Text, Segoe UI, Inter, sans-serif"
                         anchors.verticalCenter: parent.verticalCenter
                     }
+
                 }
 
                 MouseArea {
                     id: backMouse
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.launcherState.backToStandard()
                 }
+
             }
 
             Text {
@@ -67,11 +73,13 @@ Item {
                 font.weight: Font.DemiBold
                 font.family: "Segoe UI Variable Text, Segoe UI, Inter, sans-serif"
             }
+
         }
 
         // Apps Grid Flickable
         Flickable {
             id: flick
+
             width: parent.width
             height: parent.height - (root.launcherState.activeViewMode === "detail" ? 40 : 0)
             contentWidth: width
@@ -81,6 +89,7 @@ Item {
 
             Grid {
                 id: appsGrid
+
                 width: parent.width
                 columns: 6
                 spacing: Math.max(2, Math.floor((root.width - (6 * 94)) / 5))
@@ -90,12 +99,16 @@ Item {
 
                 Repeater {
                     model: root.appsList
+
                     delegate: AppItem {
                         required property var modelData
+
                         launcherState: root.launcherState
                         app: modelData
                     }
+
                 }
+
             }
 
             ScrollBar.vertical: ScrollBar {
@@ -104,6 +117,9 @@ Item {
                 anchors.right: flick.right
                 anchors.rightMargin: 2
             }
+
         }
+
     }
+
 }
