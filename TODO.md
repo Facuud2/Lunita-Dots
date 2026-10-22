@@ -413,3 +413,27 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   4. `lunita-dynamic-wallpaper init` no fuerza recarga si el wallpaper ya está activo en pantalla.
   5. `lunita-quickshell` limpia procesos huérfanos de listeners (`osd_listener.py`).
 - **Dependencias:** [ISSUE-028]
+
+### [ISSUE-030] Orquestador de Wallpaper Bajo Demanda y Erradicación de Demoras de 90s en Shutdown
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `AUDITORY_FIXES`
+- **Módulo(s):** Core / Wallpaper / Systemd / Eww
+- **Archivos Afectados:**
+  - `core/.config/hypr/modules/autostart.lua`
+  - `core/.config/systemd/user.conf.d/timeout.conf`
+  - `core/.config/systemd/user/lunita-wallpaper.service`
+  - `core/.config/systemd/user/lunita-wallpaper.timer`
+  - `core/.local/bin/lunita-wallpaper`
+  - `core/.local/bin/lunita-dynamic-wallpaper`
+  - `themes/lunita-default/.config/eww/eww.yuck`
+  - `themes/lunita-default/.config/eww/scripts/launch.sh`
+  - `themes/lunita-default/.config/eww/scripts/watch_wallpaper.sh`
+- **Descripción:** Al reiniciar o apagar el equipo, systemd quedaba bloqueado durante 90 segundos esperando el watchdog de `user@1000.service` debido a demonios huérfanos ejecutados con `setsid ... sleep 60` (`lunita-dynamic-wallpaper daemon`) y scripts de observación continua (`watch_wallpaper.sh`) que no procesaban `SIGTERM` mientras dormían en `sleep`. Se desarrolló desde cero un orquestador 100% libre de demonios en bucle (`lunita-wallpaper`) con ejecución atómica bajo demanda (One-Shot: restaura o aplica en <0.2s y termina con `exit 0`), rotación horaria delegada a temporizadores nativos de systemd (`lunita-wallpaper.timer`), timeout de seguridad de 5s en `user.conf.d/timeout.conf`, y eliminación de bucles persistentes en Eww.
+- **Criterios de Aceptación:**
+  1. `lunita-wallpaper` restaura y aplica fondos en modo One-Shot sin dejar procesos en segundo plano.
+  2. `lunita-dynamic-wallpaper` actúa como wrapper compatible y seguro sin bucles infinitos.
+  3. `core/.config/systemd/user.conf.d/timeout.conf` limita a 5s el timeout máximo de cierre del User Manager.
+  4. Los temporizadores de systemd gestionan la rotación horaria nativa (06:00, 13:00, 20:00).
+  5. Cero procesos huérfanos al apagar o reiniciar el equipo, garantizando un shutdown instantáneo.
+- **Dependencias:** [ISSUE-029]
