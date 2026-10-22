@@ -80,6 +80,18 @@ def load_theme_colors():
             
     return colors
 
+def hex_to_rgba(hex_color: str, alpha: float) -> str:
+    hex_color = hex_color.lstrip("#")
+    if len(hex_color) >= 6:
+        try:
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+            return f"rgba({r}, {g}, {b}, {alpha})"
+        except ValueError:
+            pass
+    return f"rgba(255, 255, 255, {alpha})"
+
 class ThemeInfo:
     def __init__(self, theme_id: str, directory: Path):
         self.id = theme_id
@@ -130,6 +142,7 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
 
     def setup_css(self):
         colors = load_theme_colors()
+        primary_accent = colors.get("primary", "#007aff")
         css = f"""
         window.theme-selector {{
             background-color: {colors["surface"]};
@@ -139,13 +152,13 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
         
         .ts-sidebar {{
             background-color: {colors["surface"]};
-            border-right: 1px solid rgba(213, 187, 252, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
             padding: 12px;
         }}
 
         .ts-theme-card {{
             background-color: {colors["surface_container"]};
-            border: 1px solid rgba(213, 187, 252, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 14px;
             padding: 14px 16px;
             margin-bottom: 8px;
@@ -154,13 +167,13 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
 
         .ts-theme-card:hover {{
             background-color: {colors["surface_container_high"]};
-            border-color: rgba(213, 187, 252, 0.28);
+            border-color: {hex_to_rgba(primary_accent, 0.35)};
         }}
 
         .ts-theme-card.selected {{
             background-color: {colors["surface_container_highest"]};
-            border: 1.5px solid {colors["primary"]};
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            border: 1.5px solid {primary_accent};
+            box-shadow: 0 4px 16px {hex_to_rgba(primary_accent, 0.25)};
         }}
 
         .ts-badge-active {{
@@ -189,7 +202,7 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
 
         .ts-hero-card {{
             background: linear-gradient(135deg, {colors["surface_container"]} 0%, {colors["surface_container_high"]} 100%);
-            border: 1px solid rgba(213, 187, 252, 0.16);
+            border: 1px solid {hex_to_rgba(primary_accent, 0.22)};
             border-radius: 20px;
             padding: 24px 28px;
             margin-bottom: 20px;
@@ -209,7 +222,7 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
         }}
 
         .ts-btn-apply {{
-            background-color: {colors["primary"]};
+            background-color: {primary_accent};
             color: {colors["on_primary"]};
             border-radius: 12px;
             padding: 10px 24px;
@@ -220,8 +233,8 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
         }}
 
         .ts-btn-apply:hover {{
-            background-color: #ecdcff;
-            box-shadow: 0 4px 14px rgba(213, 187, 252, 0.35);
+            opacity: 0.90;
+            box-shadow: 0 4px 14px {hex_to_rgba(primary_accent, 0.40)};
         }}
 
         .ts-btn-applied {{
