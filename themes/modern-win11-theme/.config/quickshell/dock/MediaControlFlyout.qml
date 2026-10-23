@@ -10,28 +10,14 @@ Item {
     height: mainCol.implicitHeight
     implicitWidth: 360
     implicitHeight: mainCol.implicitHeight
-
     // Smooth Appearance & Disappearance (Windows 11 Fluent Motion)
-    opacity: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "audio") ? 1.0 : 0.0
-    scale: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "audio") ? 1.0 : 0.96
+    opacity: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "audio") ? 1 : 0
+    scale: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "audio") ? 1 : 0.96
     transformOrigin: Item.BottomRight
-
-    Behavior on opacity {
-        NumberAnimation {
-            duration: root.dockState.flyoutOpen ? 240 : 150
-            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
-        }
-    }
-
-    Behavior on scale {
-        NumberAnimation {
-            duration: root.dockState.flyoutOpen ? 260 : 170
-            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
-        }
-    }
 
     ColumnLayout {
         id: mainCol
+
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -42,13 +28,13 @@ Item {
         // ==========================================
         Rectangle {
             id: mediaCard
+
             Layout.fillWidth: true
             Layout.preferredHeight: 395
             radius: 18
-
             // Pure Transparent Liquid Glass Base
             color: Qt.rgba(0.12, 0.13, 0.17, 0.45)
-            border.color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+            border.color: Qt.rgba(1, 1, 1, 0.16)
             border.width: 1
 
             // Specular Top Rim Line
@@ -59,7 +45,7 @@ Item {
                 anchors.leftMargin: 18
                 anchors.rightMargin: 18
                 height: 1
-                color: Qt.rgba(1.0, 1.0, 1.0, 0.22)
+                color: Qt.rgba(1, 1, 1, 0.22)
             }
 
             ColumnLayout {
@@ -88,7 +74,10 @@ Item {
                         color: "#FFFFFF"
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
                 }
 
                 // Album Art Cover (Centered Rounded Square with Glass Inset)
@@ -99,19 +88,19 @@ Item {
                     radius: 14
                     clip: true
                     color: Qt.rgba(0, 0, 0, 0.25)
-                    border.color: Qt.rgba(1.0, 1.0, 1.0, 0.20)
+                    border.color: Qt.rgba(1, 1, 1, 0.2)
                     border.width: 1
 
                     Image {
                         id: coverImage
+
                         anchors.fill: parent
-                        source: root.dockState.mprisArtUrl && root.dockState.mprisArtUrl !== ""
-                            ? root.dockState.mprisArtUrl
-                            : "assets/default-album-art.png"
+                        source: root.dockState.mprisArtUrl && root.dockState.mprisArtUrl !== "" ? root.dockState.mprisArtUrl : "assets/default-album-art.png"
                         fillMode: Image.PreserveAspectCrop
                         smooth: true
                         asynchronous: true
                     }
+
                 }
 
                 // Track Title & Artist (Centered, Strict Non-Italic)
@@ -138,11 +127,12 @@ Item {
                         font.pixelSize: 11
                         font.weight: Font.Normal
                         font.italic: false
-                        color: Qt.rgba(1.0, 1.0, 1.0, 0.80)
+                        color: Qt.rgba(1, 1, 1, 0.8)
                         horizontalAlignment: Text.AlignHCenter
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
+
                 }
 
                 // Playback Controls (Prev, Play/Pause, Next - Generous padding & perfectly centered)
@@ -160,8 +150,8 @@ Item {
                             Layout.preferredHeight: 36
                             Layout.alignment: Qt.AlignVCenter
                             radius: 18
-                            color: prevMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.18) : "transparent"
-                            border.color: prevMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.25) : "transparent"
+                            color: prevMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : "transparent"
+                            border.color: prevMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
                             border.width: 1
 
                             Image {
@@ -169,16 +159,18 @@ Item {
                                 source: "assets/prev.svg"
                                 sourceSize.width: 19
                                 sourceSize.height: 19
-                                opacity: prevMouse.containsMouse ? 1.0 : 0.90
+                                opacity: prevMouse.containsMouse ? 1 : 0.9
                             }
 
                             MouseArea {
                                 id: prevMouse
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.dockState.previousTrack()
                             }
+
                         }
 
                         // Play / Pause Button
@@ -187,8 +179,8 @@ Item {
                             Layout.preferredHeight: 46
                             Layout.alignment: Qt.AlignVCenter
                             radius: 23
-                            color: playMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.25) : Qt.rgba(1.0, 1.0, 1.0, 0.12)
-                            border.color: Qt.rgba(1.0, 1.0, 1.0, 0.26)
+                            color: playMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : Qt.rgba(1, 1, 1, 0.12)
+                            border.color: Qt.rgba(1, 1, 1, 0.26)
                             border.width: 1
 
                             Image {
@@ -197,16 +189,18 @@ Item {
                                 source: root.dockState.mprisPlaying ? "assets/pause.svg" : "assets/play.svg"
                                 sourceSize.width: root.dockState.mprisPlaying ? 22 : 24
                                 sourceSize.height: root.dockState.mprisPlaying ? 22 : 24
-                                opacity: 1.0
+                                opacity: 1
                             }
 
                             MouseArea {
                                 id: playMouse
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.dockState.playPause()
                             }
+
                         }
 
                         // Next Track Button
@@ -215,8 +209,8 @@ Item {
                             Layout.preferredHeight: 36
                             Layout.alignment: Qt.AlignVCenter
                             radius: 18
-                            color: nextMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.18) : "transparent"
-                            border.color: nextMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.25) : "transparent"
+                            color: nextMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : "transparent"
+                            border.color: nextMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
                             border.width: 1
 
                             Image {
@@ -224,20 +218,26 @@ Item {
                                 source: "assets/next.svg"
                                 sourceSize.width: 19
                                 sourceSize.height: 19
-                                opacity: nextMouse.containsMouse ? 1.0 : 0.90
+                                opacity: nextMouse.containsMouse ? 1 : 0.9
                             }
 
                             MouseArea {
                                 id: nextMouse
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.dockState.nextTrack()
                             }
+
                         }
+
                     }
+
                 }
+
             }
+
         }
 
         // ==========================================
@@ -245,13 +245,13 @@ Item {
         // ==========================================
         Rectangle {
             id: controlCard
+
             Layout.fillWidth: true
             Layout.preferredHeight: contentCol.implicitHeight + 28
             radius: 18
-
             // Pure Transparent Liquid Glass Base
             color: Qt.rgba(0.12, 0.13, 0.17, 0.45)
-            border.color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+            border.color: Qt.rgba(1, 1, 1, 0.16)
             border.width: 1
 
             // Specular Top Rim Line
@@ -262,11 +262,12 @@ Item {
                 anchors.leftMargin: 18
                 anchors.rightMargin: 18
                 height: 1
-                color: Qt.rgba(1.0, 1.0, 1.0, 0.22)
+                color: Qt.rgba(1, 1, 1, 0.22)
             }
 
             ColumnLayout {
                 id: contentCol
+
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
@@ -283,8 +284,8 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 38
                         radius: 19
-                        color: root.dockState.wifiConnected ? Qt.rgba(0.0, 0.75, 1.0, 0.85) : Qt.rgba(1.0, 1.0, 1.0, 0.08)
-                        border.color: root.dockState.wifiConnected ? Qt.rgba(0.0, 0.85, 1.0, 0.90) : Qt.rgba(1.0, 1.0, 1.0, 0.16)
+                        color: root.dockState.wifiConnected ? Qt.rgba(0, 0.75, 1, 0.85) : Qt.rgba(1, 1, 1, 0.08)
+                        border.color: root.dockState.wifiConnected ? Qt.rgba(0, 0.85, 1, 0.9) : Qt.rgba(1, 1, 1, 0.16)
                         border.width: 1
 
                         Image {
@@ -299,6 +300,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.openNetwork(root.dockState.flyoutScreen)
                         }
+
                     }
 
                     // Pill 2: Bluetooth
@@ -306,8 +308,8 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 38
                         radius: 19
-                        color: root.dockState.bluetoothEnabled ? Qt.rgba(0.0, 0.75, 1.0, 0.85) : Qt.rgba(1.0, 1.0, 1.0, 0.08)
-                        border.color: root.dockState.bluetoothEnabled ? Qt.rgba(0.0, 0.85, 1.0, 0.90) : Qt.rgba(1.0, 1.0, 1.0, 0.16)
+                        color: root.dockState.bluetoothEnabled ? Qt.rgba(0, 0.75, 1, 0.85) : Qt.rgba(1, 1, 1, 0.08)
+                        border.color: root.dockState.bluetoothEnabled ? Qt.rgba(0, 0.85, 1, 0.9) : Qt.rgba(1, 1, 1, 0.16)
                         border.width: 1
 
                         Image {
@@ -322,6 +324,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.openBluetooth(root.dockState.flyoutScreen)
                         }
+
                     }
 
                     // Pill 3: Audio Sources Selector (Glass Pill)
@@ -329,8 +332,8 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 38
                         radius: 19
-                        color: root.dockState.audioSinksExpanded ? Qt.rgba(0.0, 0.75, 1.0, 0.85) : Qt.rgba(1.0, 1.0, 1.0, 0.08)
-                        border.color: root.dockState.audioSinksExpanded ? Qt.rgba(0.0, 0.85, 1.0, 0.90) : Qt.rgba(1.0, 1.0, 1.0, 0.16)
+                        color: root.dockState.audioSinksExpanded ? Qt.rgba(0, 0.75, 1, 0.85) : Qt.rgba(1, 1, 1, 0.08)
+                        border.color: root.dockState.audioSinksExpanded ? Qt.rgba(0, 0.85, 1, 0.9) : Qt.rgba(1, 1, 1, 0.16)
                         border.width: 1
 
                         Row {
@@ -350,8 +353,16 @@ Item {
                                 sourceSize.height: 12
                                 rotation: root.dockState.audioSinksExpanded ? 90 : 0
                                 anchors.verticalCenter: parent.verticalCenter
-                                Behavior on rotation { NumberAnimation { duration: 180 } }
+
+                                Behavior on rotation {
+                                    NumberAnimation {
+                                        duration: 180
+                                    }
+
+                                }
+
                             }
+
                         }
 
                         MouseArea {
@@ -359,7 +370,9 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.toggleAudioSinksExpanded()
                         }
+
                     }
+
                 }
 
                 // 2. Brightness Slider Row
@@ -371,11 +384,12 @@ Item {
                         source: "assets/brightness.svg"
                         sourceSize.width: 18
                         sourceSize.height: 18
-                        opacity: 0.90
+                        opacity: 0.9
                     }
 
                     Item {
                         id: brightTrack
+
                         Layout.fillWidth: true
                         Layout.preferredHeight: 24
 
@@ -385,16 +399,17 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             height: 4
                             radius: 2
-                            color: Qt.rgba(1.0, 1.0, 1.0, 0.12)
+                            color: Qt.rgba(1, 1, 1, 0.12)
 
                             Rectangle {
                                 anchors.left: parent.left
                                 anchors.top: parent.top
                                 anchors.bottom: parent.bottom
-                                width: parent.width * (root.dockState.brightnessPercent / 100.0)
+                                width: parent.width * (root.dockState.brightnessPercent / 100)
                                 radius: 2
-                                color: Qt.rgba(0.0, 0.75, 1.0, 0.85)
+                                color: Qt.rgba(0, 0.75, 1, 0.85)
                             }
+
                         }
 
                         // Thumb Knob (Solid White Circle with Refined Blue Glow)
@@ -403,27 +418,29 @@ Item {
                             height: 14
                             radius: 7
                             color: "#FFFFFF"
-                            border.color: Qt.rgba(0.0, 0.75, 1.0, 0.85)
+                            border.color: Qt.rgba(0, 0.75, 1, 0.85)
                             border.width: 1.5
                             anchors.verticalCenter: parent.verticalCenter
-                            x: Math.max(0, Math.min(parent.width - width, (parent.width * (root.dockState.brightnessPercent / 100.0)) - (width / 2)))
+                            x: Math.max(0, Math.min(parent.width - width, (parent.width * (root.dockState.brightnessPercent / 100)) - (width / 2)))
                         }
 
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: mouse => {
-                                var ratio = Math.max(0, Math.min(1.0, mouse.x / width));
+                            onClicked: (mouse) => {
+                                var ratio = Math.max(0, Math.min(1, mouse.x / width));
                                 root.dockState.setBrightness(ratio * 100);
                             }
-                            onPositionChanged: mouse => {
+                            onPositionChanged: (mouse) => {
                                 if (pressed) {
-                                    var ratio = Math.max(0, Math.min(1.0, mouse.x / width));
+                                    var ratio = Math.max(0, Math.min(1, mouse.x / width));
                                     root.dockState.setBrightness(ratio * 100);
                                 }
                             }
                         }
+
                     }
+
                 }
 
                 // 3. Volume Slider & Output Sources Row
@@ -441,7 +458,7 @@ Item {
                             source: root.dockState.isVolumeMuted ? "assets/tray-volume-muted.svg" : "assets/tray-volume.svg"
                             sourceSize.width: 18
                             sourceSize.height: 18
-                            opacity: 0.90
+                            opacity: 0.9
                         }
 
                         MouseArea {
@@ -449,11 +466,13 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.toggleVolumeMute()
                         }
+
                     }
 
                     // Volume Track Slider
                     Item {
                         id: volTrack
+
                         Layout.fillWidth: true
                         Layout.preferredHeight: 24
 
@@ -463,16 +482,17 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             height: 4
                             radius: 2
-                            color: Qt.rgba(1.0, 1.0, 1.0, 0.12)
+                            color: Qt.rgba(1, 1, 1, 0.12)
 
                             Rectangle {
                                 anchors.left: parent.left
                                 anchors.top: parent.top
                                 anchors.bottom: parent.bottom
-                                width: parent.width * (root.dockState.volumePercent / 100.0)
+                                width: parent.width * (root.dockState.volumePercent / 100)
                                 radius: 2
-                                color: Qt.rgba(0.0, 0.75, 1.0, 0.85)
+                                color: Qt.rgba(0, 0.75, 1, 0.85)
                             }
+
                         }
 
                         // Thumb Knob
@@ -481,28 +501,29 @@ Item {
                             height: 14
                             radius: 7
                             color: "#FFFFFF"
-                            border.color: Qt.rgba(0.0, 0.75, 1.0, 0.85)
+                            border.color: Qt.rgba(0, 0.75, 1, 0.85)
                             border.width: 1.5
                             anchors.verticalCenter: parent.verticalCenter
-                            x: Math.max(0, Math.min(parent.width - width, (parent.width * (root.dockState.volumePercent / 100.0)) - (width / 2)))
+                            x: Math.max(0, Math.min(parent.width - width, (parent.width * (root.dockState.volumePercent / 100)) - (width / 2)))
                         }
 
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: mouse => {
-                                var ratio = Math.max(0, Math.min(1.0, mouse.x / width));
+                            onClicked: (mouse) => {
+                                var ratio = Math.max(0, Math.min(1, mouse.x / width));
                                 var target = Math.round(ratio * 100);
                                 root.dockState.changeVolume(target - root.dockState.volumePercent);
                             }
-                            onPositionChanged: mouse => {
+                            onPositionChanged: (mouse) => {
                                 if (pressed) {
-                                    var ratio = Math.max(0, Math.min(1.0, mouse.x / width));
+                                    var ratio = Math.max(0, Math.min(1, mouse.x / width));
                                     var target = Math.round(ratio * 100);
                                     root.dockState.changeVolume(target - root.dockState.volumePercent);
                                 }
                             }
                         }
+
                     }
 
                     // Output Selector Trigger Button (Mixer Icon + Chevron)
@@ -510,8 +531,8 @@ Item {
                         width: 28
                         height: 28
                         radius: 6
-                        color: root.dockState.audioSinksExpanded ? Qt.rgba(0.0, 0.75, 1.0, 0.85) : (outputMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.15) : "transparent")
-                        border.color: root.dockState.audioSinksExpanded ? Qt.rgba(0.0, 0.85, 1.0, 0.90) : (outputMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.22) : "transparent")
+                        color: root.dockState.audioSinksExpanded ? Qt.rgba(0, 0.75, 1, 0.85) : (outputMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.15) : "transparent")
+                        border.color: root.dockState.audioSinksExpanded ? Qt.rgba(0, 0.85, 1, 0.9) : (outputMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.22) : "transparent")
                         border.width: 1
 
                         Image {
@@ -524,12 +545,15 @@ Item {
 
                         MouseArea {
                             id: outputMouse
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.toggleAudioSinksExpanded()
                         }
+
                     }
+
                 }
 
                 // 4. Collapsible Audio Sinks (Fuentes de reproducción) Drawer
@@ -541,7 +565,7 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 1
-                        color: Qt.rgba(1.0, 1.0, 1.0, 0.25)
+                        color: Qt.rgba(1, 1, 1, 0.25)
                     }
 
                     Text {
@@ -550,7 +574,7 @@ Item {
                         font.pixelSize: 11
                         font.weight: Font.DemiBold
                         font.italic: false
-                        color: Qt.rgba(1.0, 1.0, 1.0, 0.85)
+                        color: Qt.rgba(1, 1, 1, 0.85)
                         Layout.topMargin: 2
                     }
 
@@ -561,8 +585,8 @@ Item {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 34
                             radius: 8
-                            color: modelData.active ? Qt.rgba(0, 0.9, 1, 0.25) : (sinkHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.20) : Qt.rgba(1.0, 1.0, 1.0, 0.08))
-                            border.color: modelData.active ? "#00E5FF" : Qt.rgba(1.0, 1.0, 1.0, 0.18)
+                            color: modelData.active ? Qt.rgba(0, 0.9, 1, 0.25) : (sinkHover.containsMouse ? Qt.rgba(1, 1, 1, 0.2) : Qt.rgba(1, 1, 1, 0.08))
+                            border.color: modelData.active ? "#00E5FF" : Qt.rgba(1, 1, 1, 0.18)
                             border.width: 1
 
                             RowLayout {
@@ -593,7 +617,7 @@ Item {
                                     height: 14
                                     radius: 7
                                     color: modelData.active ? "#00E5FF" : "transparent"
-                                    border.color: modelData.active ? "#00E5FF" : Qt.rgba(1.0, 1.0, 1.0, 0.45)
+                                    border.color: modelData.active ? "#00E5FF" : Qt.rgba(1, 1, 1, 0.45)
                                     border.width: 1.5
 
                                     Rectangle {
@@ -604,18 +628,24 @@ Item {
                                         color: "#0E1218"
                                         visible: modelData.active
                                     }
+
                                 }
+
                             }
 
                             MouseArea {
                                 id: sinkHover
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.dockState.setAudioSink(modelData.id)
                             }
+
                         }
+
                     }
+
                 }
 
                 // 5. Bottom Status Bar (Battery + Settings)
@@ -644,17 +674,20 @@ Item {
                             color: "#FFFFFF"
                             anchors.verticalCenter: parent.verticalCenter
                         }
+
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     // Settings Gear Button
                     Rectangle {
                         width: 28
                         height: 28
                         radius: 6
-                        color: gearMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.25) : "transparent"
-                        border.color: gearMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.35) : "transparent"
+                        color: gearMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                        border.color: gearMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.35) : "transparent"
                         border.width: 1
 
                         Image {
@@ -666,6 +699,7 @@ Item {
 
                         MouseArea {
                             id: gearMouse
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -673,9 +707,31 @@ Item {
                                 Quickshell.execDetached(["bash", "-c", "hyprland-run || pavucontrol || kitty &"]);
                             }
                         }
+
                     }
+
                 }
+
             }
+
         }
+
     }
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: root.dockState.flyoutOpen ? 240 : 150
+            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
+        }
+
+    }
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: root.dockState.flyoutOpen ? 260 : 170
+            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
+        }
+
+    }
+
 }

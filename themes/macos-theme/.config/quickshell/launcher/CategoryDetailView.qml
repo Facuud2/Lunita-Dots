@@ -12,6 +12,7 @@ Item {
 
     Flickable {
         id: flick
+
         anchors.fill: parent
         contentWidth: width
         contentHeight: appsGrid.implicitHeight + 20
@@ -20,6 +21,7 @@ Item {
 
         Grid {
             id: appsGrid
+
             width: parent.width
             columns: 5
             spacing: Math.max(2, Math.floor((root.width - (5 * 96)) / 4))
@@ -29,13 +31,17 @@ Item {
 
             Repeater {
                 model: root.appsList
+
                 delegate: AppItem {
                     required property var modelData
+
                     launcherState: root.launcherState
                     app: modelData
                     isDetailed: true
                 }
+
             }
+
         }
 
         ScrollBar.vertical: ScrollBar {
@@ -44,5 +50,7 @@ Item {
             anchors.right: flick.right
             anchors.rightMargin: 2
         }
+
     }
+
 }

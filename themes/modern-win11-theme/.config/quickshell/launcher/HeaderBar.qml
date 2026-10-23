@@ -12,13 +12,12 @@ Item {
 
     Rectangle {
         id: searchContainer
+
         anchors.fill: parent
         radius: 8
         color: root.launcherState.searchBgColor
         border.color: searchInput.activeFocus ? root.launcherState.accentColor : root.launcherState.searchBorderColor
         border.width: 1
-
-        Behavior on border.color { ColorAnimation { duration: 150 } }
 
         // Windows 11 Fluent active focus indicator bar at bottom
         Rectangle {
@@ -31,8 +30,13 @@ Item {
             visible: width > 0
 
             Behavior on width {
-                NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
+                NumberAnimation {
+                    duration: 180
+                    easing.type: Easing.OutQuad
+                }
+
             }
+
         }
 
         Row {
@@ -58,16 +62,29 @@ Item {
 
                 TextInput {
                     id: searchInput
+
                     anchors.fill: parent
                     verticalAlignment: TextInput.AlignVCenter
                     color: root.launcherState.searchTextColor
                     font.pixelSize: 13
                     font.weight: Font.Normal
                     font.italic: false
-                    font.family: "Adwaita Sans, sans-serif"
+                    font.family: "Segoe UI Variable, Segoe UI, Inter, sans-serif"
                     clip: true
                     text: root.launcherState.searchQuery
                     onTextChanged: root.launcherState.searchQuery = text
+                    Keys.onReturnPressed: {
+                        let filtered = root.launcherState.getFilteredApps();
+                        if (filtered.length > 0)
+                            root.launcherState.launchApp(filtered[0]);
+
+                    }
+                    Keys.onEscapePressed: {
+                        if (text.length > 0)
+                            text = "";
+                        else
+                            root.launcherState.closeLauncher();
+                    }
 
                     Text {
                         text: "Buscar aplicaciones, configuraciones y documentos"
@@ -77,21 +94,8 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    Keys.onReturnPressed: {
-                        let filtered = root.launcherState.getFilteredApps();
-                        if (filtered.length > 0) {
-                            root.launcherState.launchApp(filtered[0]);
-                        }
-                    }
-
-                    Keys.onEscapePressed: {
-                        if (text.length > 0) {
-                            text = "";
-                        } else {
-                            root.launcherState.closeLauncher();
-                        }
-                    }
                 }
+
             }
 
             // Clear Button (✕)
@@ -113,6 +117,7 @@ Item {
 
                 MouseArea {
                     id: clearMouse
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -121,7 +126,18 @@ Item {
                         searchInput.forceActiveFocus();
                     }
                 }
+
             }
+
         }
+
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 150
+            }
+
+        }
+
     }
+
 }

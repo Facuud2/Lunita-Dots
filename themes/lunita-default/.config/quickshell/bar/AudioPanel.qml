@@ -1,17 +1,23 @@
-import QtQuick
 import "."
+import QtQuick
 
 // panel de sonido: elegir salida y entrada
 Item {
     id: popup
 
-    signal closed
-
-    implicitHeight: col.implicitHeight + 44
-
     readonly property var sinks: Audio.sinks
     readonly property var sources: Audio.sources
 
+    signal closed()
+
+    function label(node) {
+        if (!node)
+            return Cfg.t("Desconocido");
+
+        return node.description ? node.description : (node.name ? node.name : Cfg.t("Desconocido"));
+    }
+
+    implicitHeight: col.implicitHeight + 44
     // mientras el panel está abierto, Audio refresca la lista de aparatos
     Component.onCompleted: {
         Audio.watchers++;
@@ -19,12 +25,9 @@ Item {
     }
     Component.onDestruction: Audio.watchers--
 
-    function label(node): string {
-        return node?.description ?? node?.name ?? Cfg.t("Desconocido");
-    }
-
     Column {
         id: col
+
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
@@ -53,12 +56,6 @@ Item {
                 radius: height / 2
                 color: closeMa.containsMouse ? Theme.surfaceHigh : Theme.surfaceAlt
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Theme.durShort
-                    }
-                }
-
                 Text {
                     anchors.centerIn: parent
                     text: "close"
@@ -69,28 +66,42 @@ Item {
 
                 MouseArea {
                     id: closeMa
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: popup.closed()
                 }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Theme.durShort
+                    }
+
+                }
+
             }
+
         }
 
         // ── volumen de la salida activa ──
         Rectangle {
             id: volCard
+
+            readonly property real vol: Audio.volume
+            readonly property bool muted: Audio.muted
+            readonly property real maxVolume: 1
+
             width: parent.width
             height: 56
             radius: Theme.shapeLg
             color: Theme.surfaceAlt
-
-            readonly property real vol: Audio.volume
-            readonly property bool muted: Audio.muted
-            readonly property real maxVolume: 1.0
+            border.width: 1
+            border.color: Theme.outline
 
             Text {
                 id: volIcon
+
                 anchors.left: parent.left
                 anchors.leftMargin: 14
                 anchors.verticalCenter: parent.verticalCenter
@@ -105,10 +116,12 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: Audio.toggleMute()
                 }
+
             }
 
             Text {
                 id: volNum
+
                 anchors.right: parent.right
                 anchors.rightMargin: 14
                 anchors.verticalCenter: parent.verticalCenter
@@ -123,6 +136,7 @@ Item {
 
             Rectangle {
                 id: track
+
                 anchors.left: volIcon.right
                 anchors.leftMargin: 12
                 anchors.right: volNum.left
@@ -133,67 +147,157 @@ Item {
                 color: Theme.surfaceHigh
 
                 Rectangle {
-                    width: track.width * (volCard.muted ? 0 : Math.min(volCard.vol, 1.0))
+                    width: track.width * (volCard.muted ? 0 : Math.min(volCard.vol, 1))
                     height: parent.height
                     radius: parent.radius
                     color: Theme.fg
                 }
 
                 MouseArea {
+                    function apply(mx) {
+                        Audio.setVolume(Math.max(0, Math.min(1, mx / track.width)));
+                    }
+
                     anchors.fill: parent
                     anchors.margins: -8
                     cursorShape: Qt.PointingHandCursor
-
-                    function apply(mx) {
-                        Audio.setVolume(Math.max(0, Math.min(1.0, mx / track.width)));
-                    }
-
-                    onPressed: mouse => {
+                    onPressed: (mouse) => {
                         Audio.holding = true;
                         apply(mouse.x);
                     }
-                    onPositionChanged: mouse => {
+                    onPositionChanged: (mouse) => {
                         if (pressed)
                             apply(mouse.x);
+
                     }
                     onReleased: Audio.holding = false
                 }
+
             }
+
+        }
+
+        // ── salida ──
+        SectionLabel {
+            text: Cfg.t("SALIDA")
+        }
+
+        Column {
+            width: parent.width
+            spacing: 2
+
+            Repeater {
+                model: popup.sinks
+
+                DeviceRow {
+                    required property var modelData
+
+                    node: modelData
+                    isOutput: true
+                }
+
+            }
+
+            Text {
+                width: parent.width
+                visible: popup.sinks.length === 0
+                horizontalAlignment: Text.AlignHCenter
+                topPadding: 8
+                bottomPadding: 8
+                text: Cfg.t("Sin salidas")
+                color: Theme.outline
+                font.family: Theme.font
+                font.pixelSize: Theme.bodySmall
+            }
+
+        }
+
+        // ── entrada ──
+        SectionLabel {
+            text: Cfg.t("ENTRADA")
+        }
+
+        Column {
+            width: parent.width
+            spacing: 2
+
+            Repeater {
+                model: popup.sources
+
+                DeviceRow {
+                    required property var modelData
+
+                    node: modelData
+                    isOutput: false
+                }
+
+            }
+
+            Text {
+                width: parent.width
+                visible: popup.sources.length === 0
+                horizontalAlignment: Text.AlignHCenter
+                topPadding: 8
+                bottomPadding: 8
+                text: Cfg.t("Sin entradas")
+                color: Theme.outline
+                font.family: Theme.font
+                font.pixelSize: Theme.bodySmall
+            }
+
         }
 
         // ── fila reutilizable de dispositivo ──
         component DeviceRow: Rectangle {
             id: dr
+
             property var node: null
             property bool isOutput: true
+            readonly property bool current: {
+                if (!dr.node)
+                    return false;
 
-            readonly property bool current: dr.isOutput ? (Audio.defaultSink === String(dr.node?.id) || Audio.defaultSink === String(dr.node?.name)) : (Audio.defaultSource === String(dr.node?.id) || Audio.defaultSource === String(dr.node?.name))
+                var nodeId = String(dr.node.id !== undefined ? dr.node.id : "");
+                var nodeName = String(dr.node.name || "");
+                if (dr.isOutput)
+                    return (nodeId !== "" && Audio.defaultSink === nodeId) || (nodeName !== "" && Audio.defaultSink === nodeName);
+                else
+                    return (nodeId !== "" && Audio.defaultSource === nodeId) || (nodeName !== "" && Audio.defaultSource === nodeName);
+            }
 
             width: col.width
             height: 42
             radius: Theme.shapeMd
             color: dr.current ? Theme.inverted : drMa.containsMouse ? Qt.alpha(Theme.fg, Theme.stateHover) : Qt.alpha(Theme.fg, 0)
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: Theme.durShort
-                }
-            }
+            border.width: dr.current ? 1 : (drMa.containsMouse ? 1 : 0)
+            border.color: dr.current ? Theme.inverted : Theme.outline
 
             Text {
                 id: drIcon
+
                 anchors.left: parent.left
                 anchors.leftMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
                 text: {
-                    if (dr.node?.type === "headphones") return "headphones";
-                    if (dr.node?.type === "hdmi") return "tv";
-                    if (dr.node?.type === "mic") return "mic";
-                    const n = ((dr.node?.name ?? "") + " " + (dr.node?.description ?? "")).toLowerCase();
+                    var nodeType = dr.node ? dr.node.type : "";
+                    if (nodeType === "headphones")
+                        return "headphones";
+
+                    if (nodeType === "hdmi")
+                        return "tv";
+
+                    if (nodeType === "mic")
+                        return "mic";
+
+                    var nodeName = dr.node && dr.node.name ? dr.node.name : "";
+                    var nodeDesc = dr.node && dr.node.description ? dr.node.description : "";
+                    const n = (nodeName + " " + nodeDesc).toLowerCase();
                     if (n.includes("bluez") || n.includes("anc") || n.includes("head") || n.includes("buds"))
                         return "headphones";
+
                     if (n.includes("hdmi") || n.includes("tv"))
                         return "tv";
+
                     return dr.isOutput ? "speaker" : "mic";
                 }
                 color: dr.current ? Theme.invertedFg : Theme.fgFaint
@@ -217,6 +321,7 @@ Item {
 
             Text {
                 id: drCheck
+
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
@@ -229,18 +334,28 @@ Item {
 
             MouseArea {
                 id: drMa
+
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     if (!dr.node)
-                        return;
+                        return ;
+
                     if (dr.isOutput)
-                        Audio.setDefaultSink(dr.node.id ?? dr.node.name);
+                        Audio.setDefaultSink(dr.node.id !== undefined ? dr.node.id : dr.node.name);
                     else
-                        Audio.setDefaultSource(dr.node.id ?? dr.node.name);
+                        Audio.setDefaultSource(dr.node.id !== undefined ? dr.node.id : dr.node.name);
                 }
             }
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Theme.durShort
+                }
+
+            }
+
         }
 
         component SectionLabel: Text {
@@ -251,68 +366,6 @@ Item {
             font.letterSpacing: 0.6
         }
 
-        // ── salida ──
-        SectionLabel {
-            text: Cfg.t("SALIDA")
-        }
-
-        Column {
-            width: parent.width
-            spacing: 2
-
-            Repeater {
-                model: popup.sinks
-
-                DeviceRow {
-                    required property var modelData
-                    node: modelData
-                    isOutput: true
-                }
-            }
-
-            Text {
-                width: parent.width
-                visible: popup.sinks.length === 0
-                horizontalAlignment: Text.AlignHCenter
-                topPadding: 8
-                bottomPadding: 8
-                text: Cfg.t("Sin salidas")
-                color: Theme.outline
-                font.family: Theme.font
-                font.pixelSize: Theme.bodySmall
-            }
-        }
-
-        // ── entrada ──
-        SectionLabel {
-            text: Cfg.t("ENTRADA")
-        }
-
-        Column {
-            width: parent.width
-            spacing: 2
-
-            Repeater {
-                model: popup.sources
-
-                DeviceRow {
-                    required property var modelData
-                    node: modelData
-                    isOutput: false
-                }
-            }
-
-            Text {
-                width: parent.width
-                visible: popup.sources.length === 0
-                horizontalAlignment: Text.AlignHCenter
-                topPadding: 8
-                bottomPadding: 8
-                text: Cfg.t("Sin entradas")
-                color: Theme.outline
-                font.family: Theme.font
-                font.pixelSize: Theme.bodySmall
-            }
-        }
     }
+
 }

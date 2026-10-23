@@ -1,0 +1,9 @@
+[Unit]
+Description=Aplicar fondo de pantalla según la hora del día (Lunita)
+After=awww.service graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/lunita-wallpaper apply
+TimeoutStopSec=2s

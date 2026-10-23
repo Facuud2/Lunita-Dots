@@ -1,11 +1,12 @@
-import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Quickshell
 
 Item {
     id: root
+
     required property var barState
 
     visible: barState.activePopup === "controlcenter"
@@ -15,22 +16,17 @@ Item {
     implicitHeight: mainCol.implicitHeight + 24
     height: implicitHeight
     z: 10
-
     opacity: visible ? 1 : 0
     scale: visible ? 1 : 0.96
-    Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
     Rectangle {
         id: bg
+
         anchors.fill: parent
         radius: 16
         color: barState.popupBgColor
         border.color: barState.popupBorderColor
         border.width: 1
-
-        Behavior on color { ColorAnimation { duration: 200 } }
-        Behavior on border.color { ColorAnimation { duration: 200 } }
 
         Rectangle {
             anchors.fill: parent
@@ -41,40 +37,26 @@ Item {
             border.width: 1
             z: -1
         }
-    }
 
-    component CIcon: Item {
-        id: cIconRoot
-        property string source: ""
-        property color iconColor: barState.popupTextColor
-        property real iconWidth: 14
-        property real iconHeight: 14
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
 
-        implicitWidth: iconWidth
-        implicitHeight: iconHeight
-
-        Image {
-            id: rawSvg
-            anchors.fill: parent
-            source: cIconRoot.source
-            sourceSize.width: Math.round(cIconRoot.iconWidth * 2)
-            sourceSize.height: Math.round(cIconRoot.iconHeight * 2)
-            visible: false
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-            mipmap: true
         }
 
-        ColorOverlay {
-            anchors.fill: rawSvg
-            source: rawSvg
-            color: cIconRoot.iconColor
-            Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 200
+            }
+
         }
+
     }
 
     ColumnLayout {
         id: mainCol
+
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -96,7 +78,6 @@ Item {
                 color: barState.popupCardBg
                 border.color: barState.popupCardBorder
                 border.width: 1
-                Behavior on color { ColorAnimation { duration: 200 } }
 
                 Column {
                     anchors.fill: parent
@@ -108,9 +89,7 @@ Item {
                         width: parent.width
                         height: 38
                         radius: 8
-                        color: netRowMouse.containsMouse 
-                            ? (barState.isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.06)) 
-                            : "transparent"
+                        color: netRowMouse.containsMouse ? (barState.isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.06)) : "transparent"
 
                         Row {
                             anchors.fill: parent
@@ -129,11 +108,10 @@ Item {
                                     anchors.centerIn: parent
                                     iconWidth: 14
                                     iconHeight: 14
-                                    source: barState.isEthernet 
-                                        ? "../assets/ethernet.svg" 
-                                        : (barState.networkConnected ? "../assets/wifi.svg" : "../assets/wifi-off.svg")
+                                    source: barState.isEthernet ? "../assets/ethernet.svg" : (barState.networkConnected ? "../assets/wifi.svg" : "../assets/wifi-off.svg")
                                     iconColor: barState.networkConnected ? "#FFFFFF" : barState.popupTextColor
                                 }
+
                             }
 
                             Column {
@@ -147,7 +125,14 @@ Item {
                                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                     font.pixelSize: 11
                                     font.weight: Font.DemiBold
-                                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+                                        }
+
+                                    }
+
                                 }
 
                                 Text {
@@ -157,13 +142,23 @@ Item {
                                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                     font.pixelSize: 10
                                     elide: Text.ElideRight
-                                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+                                        }
+
+                                    }
+
                                 }
+
                             }
+
                         }
 
                         MouseArea {
                             id: netRowMouse
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -171,6 +166,7 @@ Item {
                                 barState.togglePopup("network", root.x, 28, root.parent.screen);
                             }
                         }
+
                     }
 
                     // 2. Bluetooth Row
@@ -178,9 +174,7 @@ Item {
                         width: parent.width
                         height: 38
                         radius: 8
-                        color: btRowMouse.containsMouse 
-                            ? (barState.isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.06)) 
-                            : "transparent"
+                        color: btRowMouse.containsMouse ? (barState.isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.06)) : "transparent"
 
                         Row {
                             anchors.fill: parent
@@ -202,6 +196,7 @@ Item {
                                     source: "../assets/bluetooth.svg"
                                     iconColor: barState.bluetoothEnabled ? "#FFFFFF" : barState.popupTextColor
                                 }
+
                             }
 
                             Column {
@@ -215,25 +210,40 @@ Item {
                                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                     font.pixelSize: 11
                                     font.weight: Font.DemiBold
-                                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+                                        }
+
+                                    }
+
                                 }
 
                                 Text {
                                     width: parent.width
-                                    text: barState.bluetoothEnabled 
-                                        ? (barState.bluetoothConnectedDevice !== "" ? barState.bluetoothConnectedDevice : "Activado") 
-                                        : "Desactivado"
+                                    text: barState.bluetoothEnabled ? (barState.bluetoothConnectedDevice !== "" ? barState.bluetoothConnectedDevice : "Activado") : "Desactivado"
                                     color: barState.popupTextDim
                                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                     font.pixelSize: 10
                                     elide: Text.ElideRight
-                                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+                                        }
+
+                                    }
+
                                 }
+
                             }
+
                         }
 
                         MouseArea {
                             id: btRowMouse
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -241,6 +251,7 @@ Item {
                                 barState.togglePopup("bluetooth", root.x, 28, root.parent.screen);
                             }
                         }
+
                     }
 
                     // 3. Night Shift Row
@@ -248,9 +259,7 @@ Item {
                         width: parent.width
                         height: 38
                         radius: 8
-                        color: nsRowMouse.containsMouse 
-                            ? (barState.isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.06)) 
-                            : "transparent"
+                        color: nsRowMouse.containsMouse ? (barState.isDarkTheme ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.06)) : "transparent"
 
                         Row {
                             anchors.fill: parent
@@ -272,6 +281,7 @@ Item {
                                     source: "../assets/moon.svg"
                                     iconColor: barState.nightLightEnabled ? "#FFFFFF" : barState.popupTextColor
                                 }
+
                             }
 
                             Column {
@@ -285,7 +295,14 @@ Item {
                                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                     font.pixelSize: 11
                                     font.weight: Font.DemiBold
-                                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+                                        }
+
+                                    }
+
                                 }
 
                                 Text {
@@ -295,13 +312,23 @@ Item {
                                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                     font.pixelSize: 10
                                     elide: Text.ElideRight
-                                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                                    Behavior on color {
+                                        ColorAnimation {
+                                            duration: 200
+                                        }
+
+                                    }
+
                                 }
+
                             }
+
                         }
 
                         MouseArea {
                             id: nsRowMouse
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -310,8 +337,18 @@ Item {
                                 barState.runSilent("hyprsunset -t 4000 || hyprshade toggle blue-light-filter");
                             }
                         }
+
                     }
+
                 }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 200
+                    }
+
+                }
+
             }
 
             // Right Block: Dark Mode & Screen Record Cards
@@ -330,7 +367,6 @@ Item {
                     color: barState.popupCardBg
                     border.color: barState.popupCardBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 200 } }
 
                     Row {
                         anchors.fill: parent
@@ -343,7 +379,6 @@ Item {
                             height: 32
                             radius: 16
                             color: barState.isDarkTheme ? "#007AFF" : Qt.rgba(0, 0, 0, 0.08)
-                            Behavior on color { ColorAnimation { duration: 200 } }
 
                             CIcon {
                                 anchors.centerIn: parent
@@ -352,6 +387,14 @@ Item {
                                 source: barState.isDarkTheme ? "../assets/moon.svg" : "../assets/brightness.svg"
                                 iconColor: barState.isDarkTheme ? "#FFFFFF" : "#1D1D1F"
                             }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 200
+                                }
+
+                            }
+
                         }
 
                         Column {
@@ -365,7 +408,14 @@ Item {
                                 font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                 font.pixelSize: 11
                                 font.weight: Font.DemiBold
-                                Behavior on color { ColorAnimation { duration: 200 } }
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 200
+                                    }
+
+                                }
+
                             }
 
                             Text {
@@ -373,9 +423,18 @@ Item {
                                 color: barState.popupTextDim
                                 font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                 font.pixelSize: 10
-                                Behavior on color { ColorAnimation { duration: 200 } }
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 200
+                                    }
+
+                                }
+
                             }
+
                         }
+
                     }
 
                     MouseArea {
@@ -384,6 +443,14 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: barState.toggleThemeMode()
                     }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                        }
+
+                    }
+
                 }
 
                 // Screen Capture / Record Card
@@ -394,7 +461,6 @@ Item {
                     color: barState.popupCardBg
                     border.color: barState.popupCardBorder
                     border.width: 1
-                    Behavior on color { ColorAnimation { duration: 200 } }
 
                     Row {
                         anchors.fill: parent
@@ -415,6 +481,7 @@ Item {
                                 source: "../assets/camera.svg"
                                 iconColor: barState.isRecording ? "#FFFFFF" : barState.popupTextColor
                             }
+
                         }
 
                         Column {
@@ -428,7 +495,14 @@ Item {
                                 font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                 font.pixelSize: 11
                                 font.weight: Font.DemiBold
-                                Behavior on color { ColorAnimation { duration: 200 } }
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 200
+                                    }
+
+                                }
+
                             }
 
                             Text {
@@ -437,7 +511,9 @@ Item {
                                 font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                 font.pixelSize: 10
                             }
+
                         }
+
                     }
 
                     MouseArea {
@@ -446,8 +522,18 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: barState.toggleRecording()
                     }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                        }
+
+                    }
+
                 }
+
             }
+
         }
 
         // ── DISPLAY BRIGHTNESS SLIDER CARD ──
@@ -458,7 +544,6 @@ Item {
             color: barState.popupCardBg
             border.color: barState.popupCardBorder
             border.width: 1
-            Behavior on color { ColorAnimation { duration: 200 } }
 
             ColumnLayout {
                 anchors.fill: parent
@@ -471,7 +556,14 @@ Item {
                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                     font.pixelSize: 11
                     font.weight: Font.DemiBold
-                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                        }
+
+                    }
+
                 }
 
                 MacSlider {
@@ -479,9 +571,20 @@ Item {
                     Layout.preferredHeight: 24
                     value: barState.brightnessPercent
                     iconSource: "../assets/brightness.svg"
-                    onMoved: val => barState.setBrightness(val)
+                    onMoved: (val) => {
+                        return barState.setBrightness(val);
+                    }
                 }
+
             }
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+
+            }
+
         }
 
         // ── SOUND VOLUME SLIDER CARD ──
@@ -492,7 +595,6 @@ Item {
             color: barState.popupCardBg
             border.color: barState.popupCardBorder
             border.width: 1
-            Behavior on color { ColorAnimation { duration: 200 } }
 
             ColumnLayout {
                 anchors.fill: parent
@@ -501,16 +603,26 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
+
                     Text {
                         text: "Sonido"
                         color: barState.popupTextColor
                         font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                         font.pixelSize: 11
                         font.weight: Font.DemiBold
-                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                            }
+
+                        }
+
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     Text {
                         text: barState.activeAudioSink || ""
@@ -518,8 +630,16 @@ Item {
                         font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                         font.pixelSize: 10
                         elide: Text.ElideRight
-                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                            }
+
+                        }
+
                     }
+
                 }
 
                 MacSlider {
@@ -527,9 +647,20 @@ Item {
                     Layout.preferredHeight: 24
                     value: barState.isMuted ? 0 : barState.volumePercent
                     iconSource: barState.isMuted ? "../assets/volume-muted.svg" : "../assets/volume.svg"
-                    onMoved: val => barState.setVolume(val)
+                    onMoved: (val) => {
+                        return barState.setVolume(val);
+                    }
                 }
+
             }
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+
+            }
+
         }
 
         // ── NOW PLAYING / MUSIC CARD ──
@@ -540,7 +671,6 @@ Item {
             color: barState.popupCardBg
             border.color: barState.popupCardBorder
             border.width: 1
-            Behavior on color { ColorAnimation { duration: 200 } }
 
             RowLayout {
                 anchors.fill: parent
@@ -570,6 +700,7 @@ Item {
                         source: "../assets/music.svg"
                         iconColor: "#FFFFFF"
                     }
+
                 }
 
                 // Track Info
@@ -585,7 +716,14 @@ Item {
                         font.pixelSize: 12
                         font.weight: Font.DemiBold
                         elide: Text.ElideRight
-                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                            }
+
+                        }
+
                     }
 
                     Text {
@@ -595,8 +733,16 @@ Item {
                         font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                         font.pixelSize: 11
                         elide: Text.ElideRight
-                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                            }
+
+                        }
+
                     }
+
                 }
 
                 // Playback Controls
@@ -607,11 +753,13 @@ Item {
                         text: "⏮"
                         color: barState.popupTextColor
                         font.pixelSize: 14
+
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: barState.mediaPrevious()
                         }
+
                     }
 
                     Rectangle {
@@ -632,34 +780,107 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: barState.mediaPlayPause()
                         }
+
                     }
 
                     Text {
                         text: "⏭"
                         color: barState.popupTextColor
                         font.pixelSize: 14
+
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: barState.mediaNext()
                         }
+
                     }
+
                 }
+
             }
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+
+            }
+
         }
+
+    }
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutCubic
+        }
+
+    }
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutCubic
+        }
+
+    }
+
+    component CIcon: Item {
+        id: cIconRoot
+
+        property string source: ""
+        property color iconColor: barState.popupTextColor
+        property real iconWidth: 14
+        property real iconHeight: 14
+
+        implicitWidth: iconWidth
+        implicitHeight: iconHeight
+
+        Image {
+            id: rawSvg
+
+            anchors.fill: parent
+            source: cIconRoot.source
+            sourceSize.width: Math.round(cIconRoot.iconWidth * 2)
+            sourceSize.height: Math.round(cIconRoot.iconHeight * 2)
+            visible: false
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            mipmap: true
+        }
+
+        ColorOverlay {
+            anchors.fill: rawSvg
+            source: rawSvg
+            color: cIconRoot.iconColor
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+
+            }
+
+        }
+
     }
 
     // ── Helper: macOS Slider Component ──
     component MacSlider: Item {
         id: sliderRoot
+
         property int value: 50
         property string iconSource: ""
+
         signal moved(int val)
 
         implicitHeight: 24
 
         Rectangle {
             id: track
+
             anchors.fill: parent
             radius: 12
             color: barState.sliderTrackColor
@@ -667,13 +888,21 @@ Item {
 
             Rectangle {
                 id: fillRect
+
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 width: Math.max(24, track.width * (sliderRoot.value / 100))
                 radius: 12
                 color: barState.sliderFillColor
-                Behavior on color { ColorAnimation { duration: 200 } }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 200
+                    }
+
+                }
+
             }
 
             CIcon {
@@ -685,19 +914,26 @@ Item {
                 source: sliderRoot.iconSource
                 iconColor: (sliderRoot.value > 12) ? barState.sliderIconCovered : barState.sliderIconUncovered
             }
+
         }
 
         MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onPositionChanged: mouse => updateValue(mouse.x)
-            onClicked: mouse => updateValue(mouse.x)
-
             function updateValue(mX) {
                 var ratio = Math.max(0, Math.min(1, mX / track.width));
                 var newVal = Math.round(ratio * 100);
                 sliderRoot.moved(newVal);
             }
+
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onPositionChanged: (mouse) => {
+                return updateValue(mouse.x);
+            }
+            onClicked: (mouse) => {
+                return updateValue(mouse.x);
+            }
         }
+
     }
+
 }

@@ -1,16 +1,15 @@
+import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
 import Quickshell
 
 Item {
     id: root
+
     property var dockState: null
     property string screenName: ""
 
-    visible: dockState
-        ? (dockState.contextMenuVisible && (dockState.contextMenuScreen === "" || dockState.contextMenuScreen === root.screenName))
-        : false
+    visible: dockState ? (dockState.contextMenuVisible && (dockState.contextMenuScreen === "" || dockState.contextMenuScreen === root.screenName)) : false
     anchors.fill: parent
     z: 9999
 
@@ -18,44 +17,54 @@ Item {
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onPressed: if (dockState) dockState.closeContextMenu()
-    }
-
-    // Shadow Glow behind Context Menu
-    RectangularGlow {
-        anchors.fill: menuBox
-        anchors.topMargin: 4
-        glowRadius: 16
-        spread: 0.1
-        color: "#99000000"
-        cornerRadius: menuBox.radius + glowRadius
-        scale: menuBox.scale
-        opacity: menuBox.opacity
+        onPressed: {
+            if (dockState) {
+                dockState.closeContextMenu();
+            }
+        }
     }
 
     // Context Menu Capsule Container
     Rectangle {
         id: menuBox
+
         width: 210
         height: menuLayout.implicitHeight + 16
-        radius: 14
-        color: "#eb181a24"
-        border.color: "#47ffffff"
+        radius: 12
+        color: Qt.rgba(0.12, 0.13, 0.16, 0.9)
+        border.color: Qt.rgba(1, 1, 1, 0.14)
         border.width: 1
-
         // Position clamped right on top of the dock and clicked icon
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 72
         x: dockState ? Math.max(12, Math.min(parent.width - width - 12, dockState.contextMenuX - width / 2)) : 12
-
         // Smooth fade / pop animation
-        scale: root.visible ? 1.0 : 0.94
-        opacity: root.visible ? 1.0 : 0.0
-        Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+        scale: root.visible ? 1 : 0.94
+        opacity: root.visible ? 1 : 0
+
+        // Subtle Ambient Elevation Rim
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -1
+            radius: parent.radius + 1
+            color: "transparent"
+            border.color: Qt.rgba(0, 0, 0, 0.35)
+            border.width: 1
+            z: -1
+        }
 
         Column {
             id: menuLayout
+
+            // ── 3. App Actions (Pinned or Running) ──
+            readonly property var curApp: dockState ? dockState.contextMenuApp : null
+            readonly property var curRunning: dockState ? dockState.contextMenuRunning : null
+            readonly property var matchingClients: (dockState && curApp) ? dockState.getMatchingClients(curApp) : []
+            readonly property bool isAppRunning: (matchingClients.length > 0) || !!curRunning
+            readonly property int pinnedIdx: (dockState && curApp) ? dockState.getPinnedIndex(curApp.id) : -1
+
+            spacing: 3
+
             anchors {
                 top: parent.top
                 left: parent.left
@@ -64,7 +73,6 @@ Item {
                 leftMargin: 8
                 rightMargin: 8
             }
-            spacing: 3
 
             // ── Header (App Name / Item Name) ──
             Item {
@@ -73,13 +81,24 @@ Item {
 
                 Text {
                     id: headerTitle
+
                     text: {
-                        if (!dockState) return ""
-                        if (dockState.contextMenuIsTrash) return "Papelera"
-                        if (dockState.contextMenuIsFolder) return "Descargas"
-                        if (dockState.contextMenuApp) return dockState.contextMenuApp.name || ""
-                        if (dockState.contextMenuRunning) return dockState.contextMenuRunning.name || ""
-                        return ""
+                        if (!dockState)
+                            return "";
+
+                        if (dockState.contextMenuIsTrash)
+                            return "Papelera";
+
+                        if (dockState.contextMenuIsFolder)
+                            return "Descargas";
+
+                        if (dockState.contextMenuApp)
+                            return dockState.contextMenuApp.name || "";
+
+                        if (dockState.contextMenuRunning)
+                            return dockState.contextMenuRunning.name || "";
+
+                        return "";
                     }
                     color: "#ccffffff"
                     font.pixelSize: 12
@@ -92,9 +111,11 @@ Item {
                     anchors.rightMargin: 8
                     elide: Text.ElideRight
                 }
+
             }
 
-            MenuSeparator {}
+            MenuSeparator {
+            }
 
             // ── 1. Trash Actions ──
             MenuItemBtn {
@@ -102,8 +123,8 @@ Item {
                 label: "Abrir Papelera"
                 iconSource: "image://icon/folder-open"
                 onClicked: {
-                    dockState.closeContextMenu()
-                    dockState.openTrash()
+                    dockState.closeContextMenu();
+                    dockState.openTrash();
                 }
             }
 
@@ -113,8 +134,8 @@ Item {
                 iconSource: "image://icon/user-trash"
                 isDestructive: true
                 onClicked: {
-                    dockState.closeContextMenu()
-                    dockState.emptyTrash()
+                    dockState.closeContextMenu();
+                    dockState.emptyTrash();
                 }
             }
 
@@ -124,8 +145,8 @@ Item {
                 label: "Abrir «Descargas»"
                 iconSource: "image://icon/folder-download"
                 onClicked: {
-                    dockState.closeContextMenu()
-                    dockState.openDownloads()
+                    dockState.closeContextMenu();
+                    dockState.openDownloads();
                 }
             }
 
@@ -134,30 +155,25 @@ Item {
                 label: "Mostrar en gestor de archivos"
                 iconSource: "image://icon/system-file-manager"
                 onClicked: {
-                    dockState.closeContextMenu()
-                    dockState.openDownloads()
+                    dockState.closeContextMenu();
+                    dockState.openDownloads();
                 }
             }
-
-            // ── 3. App Actions (Pinned or Running) ──
-            readonly property var curApp: dockState ? dockState.contextMenuApp : null
-            readonly property var curRunning: dockState ? dockState.contextMenuRunning : null
-            readonly property var matchingClients: (dockState && curApp) ? dockState.getMatchingClients(curApp) : []
-            readonly property bool isAppRunning: (matchingClients.length > 0) || !!curRunning
-            readonly property int pinnedIdx: (dockState && curApp) ? dockState.getPinnedIndex(curApp.id) : -1
 
             // Multiple window instances
             Repeater {
                 model: (menuLayout.matchingClients.length > 1) ? menuLayout.matchingClients : 0
+
                 MenuItemBtn {
                     label: (modelData.title || "Ventana").slice(0, 24)
                     iconSource: "image://icon/window-new"
                     onClicked: {
-                        let addr = modelData.address
-                        dockState.closeContextMenu()
-                        dockState.focusAddress(addr)
+                        let addr = modelData.address;
+                        dockState.closeContextMenu();
+                        dockState.focusAddress(addr);
                     }
                 }
+
             }
 
             MenuSeparator {
@@ -170,11 +186,13 @@ Item {
                 label: menuLayout.isAppRunning ? "Traer al frente" : "Abrir"
                 iconSource: "image://icon/media-playback-start"
                 onClicked: {
-                    let appObj = menuLayout.curApp
-                    let runObj = menuLayout.curRunning
-                    dockState.closeContextMenu()
-                    if (appObj) dockState.focusOrLaunch(appObj)
-                    else if (runObj) dockState.focusAddress(runObj.address)
+                    let appObj = menuLayout.curApp;
+                    let runObj = menuLayout.curRunning;
+                    dockState.closeContextMenu();
+                    if (appObj)
+                        dockState.focusOrLaunch(appObj);
+                    else if (runObj)
+                        dockState.focusAddress(runObj.address);
                 }
             }
 
@@ -184,9 +202,11 @@ Item {
                 label: "Nueva ventana"
                 iconSource: "image://icon/window-new"
                 onClicked: {
-                    let cmdStr = menuLayout.curApp ? menuLayout.curApp.cmd : ""
-                    dockState.closeContextMenu()
-                    if (cmdStr) dockState.launchNew(cmdStr)
+                    let cmdStr = menuLayout.curApp ? menuLayout.curApp.cmd : "";
+                    dockState.closeContextMenu();
+                    if (cmdStr)
+                        dockState.launchNew(cmdStr);
+
                 }
             }
 
@@ -200,9 +220,11 @@ Item {
                 label: "Quitar del Dock"
                 iconSource: "image://icon/list-remove"
                 onClicked: {
-                    let appId = menuLayout.curApp ? menuLayout.curApp.id : ""
-                    dockState.closeContextMenu()
-                    if (appId) dockState.unpinApp(appId)
+                    let appId = menuLayout.curApp ? menuLayout.curApp.id : "";
+                    dockState.closeContextMenu();
+                    if (appId)
+                        dockState.unpinApp(appId);
+
                 }
             }
 
@@ -212,28 +234,28 @@ Item {
                 label: "Mantener en el Dock"
                 iconSource: "image://icon/bookmark-new"
                 onClicked: {
-                    let runObj = menuLayout.curRunning
-                    dockState.closeContextMenu()
+                    let runObj = menuLayout.curRunning;
+                    dockState.closeContextMenu();
                     if (runObj) {
-                        let runCls = (runObj.clazz || "").toLowerCase()
-                        let matchedInstalled = null
+                        let runCls = (runObj.clazz || "").toLowerCase();
+                        let matchedInstalled = null;
                         if (dockState && dockState.installedAppsList) {
                             for (let i = 0; i < dockState.installedAppsList.length; i++) {
-                                let itm = dockState.installedAppsList[i]
+                                let itm = dockState.installedAppsList[i];
                                 if (itm.matchClasses && itm.matchClasses.indexOf(runCls) !== -1) {
-                                    matchedInstalled = itm
-                                    break
+                                    matchedInstalled = itm;
+                                    break;
                                 }
                             }
                         }
                         dockState.pinApp({
-                            id: matchedInstalled ? matchedInstalled.id : runCls.replace(/[^a-z0-9_-]/g, "-"),
-                            name: matchedInstalled ? matchedInstalled.displayName : runObj.name,
-                            iconPath: matchedInstalled ? matchedInstalled.iconPath : "",
-                            fallbackIcon: matchedInstalled ? matchedInstalled.iconName : (runObj.icon || "application-x-executable"),
-                            cmd: matchedInstalled ? matchedInstalled.cmd : ("gtk-launch " + runObj.clazz + " || " + runObj.clazz),
-                            matchClasses: [runCls]
-                        })
+                            "id": matchedInstalled ? matchedInstalled.id : runCls.replace(/[^a-z0-9_-]/g, "-"),
+                            "name": matchedInstalled ? matchedInstalled.displayName : runObj.name,
+                            "iconPath": matchedInstalled ? matchedInstalled.iconPath : "",
+                            "fallbackIcon": matchedInstalled ? matchedInstalled.iconName : (runObj.icon || "application-x-executable"),
+                            "cmd": matchedInstalled ? matchedInstalled.cmd : ("gtk-launch " + runObj.clazz + " || " + runObj.clazz),
+                            "matchClasses": [runCls]
+                        });
                     }
                 }
             }
@@ -249,14 +271,34 @@ Item {
                 iconSource: "image://icon/application-exit"
                 isDestructive: true
                 onClicked: {
-                    let appObj = menuLayout.curApp
-                    let runObj = menuLayout.curRunning
-                    dockState.closeContextMenu()
-                    if (appObj) dockState.closeApp(appObj)
-                    else if (runObj) dockState.closeApp(null, runObj.address)
+                    let appObj = menuLayout.curApp;
+                    let runObj = menuLayout.curRunning;
+                    dockState.closeContextMenu();
+                    if (appObj)
+                        dockState.closeApp(appObj);
+                    else if (runObj)
+                        dockState.closeApp(null, runObj.address);
                 }
             }
+
         }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 140
+                easing.type: Easing.OutCubic
+            }
+
+        }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 140
+                easing.type: Easing.OutCubic
+            }
+
+        }
+
     }
 
     // ── Helper Components ──
@@ -264,16 +306,13 @@ Item {
         property string label: ""
         property string iconSource: ""
         property bool isDestructive: false
+
         signal clicked()
 
         width: parent ? parent.width : 194
         height: visible ? 28 : 0
         radius: 6
-        color: mouseArea.containsMouse
-            ? (isDestructive ? "#e6ff453a" : "#e60a84ff")
-            : "transparent"
-
-        Behavior on color { ColorAnimation { duration: 90 } }
+        color: mouseArea.containsMouse ? (isDestructive ? "#e6ff453a" : "#e60a84ff") : "transparent"
 
         Row {
             anchors.fill: parent
@@ -294,6 +333,7 @@ Item {
 
             Image {
                 id: iconImg
+
                 source: (!iconSource.startsWith("image://icon/")) ? iconSource : ""
                 width: 14
                 height: 14
@@ -304,15 +344,15 @@ Item {
 
             Canvas {
                 id: vectorIcon
+
+                property string iconKind: iconSource.replace("image://icon/", "")
+
                 width: 14
                 height: 14
                 anchors.verticalCenter: parent.verticalCenter
                 visible: iconSource.startsWith("image://icon/")
-                opacity: 0.90
-
-                property string iconKind: iconSource.replace("image://icon/", "")
+                opacity: 0.9
                 onIconKindChanged: requestPaint()
-
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.reset();
@@ -321,65 +361,64 @@ Item {
                     ctx.lineWidth = 1.45;
                     ctx.lineCap = "round";
                     ctx.lineJoin = "round";
-
                     var k = iconKind;
                     if (k === "media-playback-start") {
                         // Play / Bring to front triangle
                         ctx.beginPath();
-                        ctx.moveTo(4.0, 2.5);
-                        ctx.lineTo(11.5, 7.0);
-                        ctx.lineTo(4.0, 11.5);
+                        ctx.moveTo(4, 2.5);
+                        ctx.lineTo(11.5, 7);
+                        ctx.lineTo(4, 11.5);
                         ctx.closePath();
                         ctx.fill();
                     } else if (k === "window-new") {
                         // Window frame with top bar & plus
-                        ctx.strokeRect(1.8, 2.5, 10.4, 9.0);
+                        ctx.strokeRect(1.8, 2.5, 10.4, 9);
                         ctx.beginPath();
                         ctx.moveTo(1.8, 5.2);
                         ctx.lineTo(12.2, 5.2);
-                        ctx.moveTo(7.0, 6.8);
-                        ctx.lineTo(7.0, 10.0);
+                        ctx.moveTo(7, 6.8);
+                        ctx.lineTo(7, 10);
                         ctx.moveTo(5.4, 8.4);
                         ctx.lineTo(8.6, 8.4);
                         ctx.stroke();
                     } else if (k === "go-previous") {
                         // Left arrow
                         ctx.beginPath();
-                        ctx.moveTo(11.5, 7.0);
-                        ctx.lineTo(2.8, 7.0);
+                        ctx.moveTo(11.5, 7);
+                        ctx.lineTo(2.8, 7);
                         ctx.moveTo(6.2, 3.5);
-                        ctx.lineTo(2.5, 7.0);
+                        ctx.lineTo(2.5, 7);
                         ctx.lineTo(6.2, 10.5);
                         ctx.stroke();
                     } else if (k === "go-next") {
                         // Right arrow
                         ctx.beginPath();
-                        ctx.moveTo(2.5, 7.0);
-                        ctx.lineTo(11.2, 7.0);
+                        ctx.moveTo(2.5, 7);
+                        ctx.lineTo(11.2, 7);
                         ctx.moveTo(7.8, 3.5);
-                        ctx.lineTo(11.5, 7.0);
+                        ctx.lineTo(11.5, 7);
                         ctx.lineTo(7.8, 10.5);
                         ctx.stroke();
                     } else if (k === "list-remove") {
                         // Minus in circle
                         ctx.beginPath();
-                        ctx.arc(7.0, 7.0, 5.2, 0, Math.PI * 2);
-                        ctx.moveTo(4.4, 7.0);
-                        ctx.lineTo(9.6, 7.0);
+                        ctx.arc(7, 7, 5.2, 0, Math.PI * 2);
+                        ctx.moveTo(4.4, 7);
+                        ctx.lineTo(9.6, 7);
                         ctx.stroke();
                     } else if (k === "bookmark-new" || k === "list-add") {
                         // Plus in circle
                         ctx.beginPath();
-                        ctx.arc(7.0, 7.0, 5.2, 0, Math.PI * 2);
-                        ctx.moveTo(7.0, 4.4);
-                        ctx.lineTo(7.0, 9.6);
-                        ctx.moveTo(4.4, 7.0);
-                        ctx.lineTo(9.6, 7.0);
+                        ctx.arc(7, 7, 5.2, 0, Math.PI * 2);
+                        ctx.moveTo(7, 4.4);
+                        ctx.lineTo(7, 9.6);
+                        ctx.moveTo(4.4, 7);
+                        ctx.lineTo(9.6, 7);
                         ctx.stroke();
                     } else if (k === "application-exit") {
                         // Close / Quit X in circle
                         ctx.beginPath();
-                        ctx.arc(7.0, 7.0, 5.2, 0, Math.PI * 2);
+                        ctx.arc(7, 7, 5.2, 0, Math.PI * 2);
                         ctx.moveTo(5.1, 5.1);
                         ctx.lineTo(8.9, 8.9);
                         ctx.moveTo(8.9, 5.1);
@@ -388,24 +427,24 @@ Item {
                     } else if (k === "user-trash") {
                         // Trash can
                         ctx.beginPath();
-                        ctx.moveTo(2.5, 4.0);
-                        ctx.lineTo(11.5, 4.0);
-                        ctx.moveTo(5.2, 4.0);
+                        ctx.moveTo(2.5, 4);
+                        ctx.lineTo(11.5, 4);
+                        ctx.moveTo(5.2, 4);
                         ctx.lineTo(5.2, 2.5);
                         ctx.lineTo(8.8, 2.5);
-                        ctx.lineTo(8.8, 4.0);
-                        ctx.moveTo(3.6, 4.0);
+                        ctx.lineTo(8.8, 4);
+                        ctx.moveTo(3.6, 4);
                         ctx.lineTo(4.2, 11.8);
                         ctx.lineTo(9.8, 11.8);
-                        ctx.lineTo(10.4, 4.0);
+                        ctx.lineTo(10.4, 4);
                         ctx.stroke();
                     } else {
                         // Folder icon (folder-open, folder-download, system-file-manager)
                         ctx.beginPath();
                         ctx.moveTo(1.8, 3.5);
                         ctx.lineTo(5.5, 3.5);
-                        ctx.lineTo(6.8, 5.0);
-                        ctx.lineTo(12.2, 5.0);
+                        ctx.lineTo(6.8, 5);
+                        ctx.lineTo(12.2, 5);
                         ctx.lineTo(12.2, 11.2);
                         ctx.lineTo(1.8, 11.2);
                         ctx.closePath();
@@ -413,15 +452,25 @@ Item {
                     }
                 }
             }
+
         }
 
         MouseArea {
             id: mouseArea
+
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: parent.clicked()
         }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 90
+            }
+
+        }
+
     }
 
     component MenuSeparator: Rectangle {
@@ -430,4 +479,5 @@ Item {
         color: "#24ffffff"
         anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
     }
+
 }

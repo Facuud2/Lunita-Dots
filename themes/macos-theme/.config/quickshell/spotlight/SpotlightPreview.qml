@@ -1,7 +1,7 @@
-import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     id: root
@@ -42,7 +42,9 @@ Item {
                     font.pixelSize: 14
                     font.weight: Font.Medium
                 }
+
             }
+
         }
 
         // ── ACTIVE ITEM PREVIEW ──
@@ -96,16 +98,17 @@ Item {
 
                         Text {
                             id: kindText
+
                             anchors.centerIn: parent
-                            text: (root.itemData && root.itemData.metadata && root.itemData.metadata.kind) 
-                                ? root.itemData.metadata.kind 
-                                : ((root.itemData && root.itemData.category) ? root.itemData.category : "Item")
+                            text: (root.itemData && root.itemData.metadata && root.itemData.metadata.kind) ? root.itemData.metadata.kind : ((root.itemData && root.itemData.category) ? root.itemData.category : "Item")
                             color: root.spotlightState.textDimColor
                             font.family: "SF Pro Text, Inter, -apple-system, system-ui, sans-serif"
                             font.pixelSize: 10
                             font.weight: Font.Medium
                         }
+
                     }
+
                 }
 
                 // 2. Metadata / Information Card
@@ -158,7 +161,9 @@ Item {
                                         font.family: "SF Pro Text, Inter, -apple-system, system-ui, sans-serif"
                                         font.pixelSize: 11
                                     }
+
                                 }
+
                             }
 
                             // ── APPLICATION PREVIEW ──
@@ -170,12 +175,14 @@ Item {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 2
+
                                     Text {
                                         text: "Description"
                                         color: root.spotlightState.textDimColor
                                         font.family: "SF Pro Text, Inter, -apple-system, system-ui, sans-serif"
                                         font.pixelSize: 11
                                     }
+
                                     Text {
                                         Layout.fillWidth: true
                                         text: (root.itemData && root.itemData.metadata && root.itemData.metadata.description) ? root.itemData.metadata.description : "None"
@@ -184,17 +191,20 @@ Item {
                                         font.pixelSize: 12
                                         wrapMode: Text.Wrap
                                     }
+
                                 }
 
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 2
+
                                     Text {
                                         text: "Executable"
                                         color: root.spotlightState.textDimColor
                                         font.family: "SF Pro Text, Inter, -apple-system, system-ui, sans-serif"
                                         font.pixelSize: 11
                                     }
+
                                     Text {
                                         Layout.fillWidth: true
                                         text: (root.itemData && root.itemData.metadata && root.itemData.metadata.executable) ? root.itemData.metadata.executable : ""
@@ -203,7 +213,9 @@ Item {
                                         font.pixelSize: 11
                                         elide: Text.ElideMiddle
                                     }
+
                                 }
+
                             }
 
                             // ── FILE / FOLDER PREVIEW ──
@@ -215,12 +227,14 @@ Item {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 2
+
                                     Text {
                                         text: "Where"
                                         color: root.spotlightState.textDimColor
                                         font.family: "SF Pro Text, Inter, -apple-system, system-ui, sans-serif"
                                         font.pixelSize: 11
                                     }
+
                                     Text {
                                         Layout.fillWidth: true
                                         text: (root.itemData && root.itemData.metadata && root.itemData.metadata.path) ? root.itemData.metadata.path : ""
@@ -229,6 +243,7 @@ Item {
                                         font.pixelSize: 11
                                         wrapMode: Text.WrapAnywhere
                                     }
+
                                 }
 
                                 RowLayout {
@@ -237,34 +252,42 @@ Item {
 
                                     ColumnLayout {
                                         spacing: 2
+
                                         Text {
                                             text: "Size"
                                             color: root.spotlightState.textDimColor
                                             font.pixelSize: 11
                                         }
+
                                         Text {
                                             text: (root.itemData && root.itemData.metadata && root.itemData.metadata.size) ? root.itemData.metadata.size : "-"
                                             color: root.spotlightState.textColor
                                             font.pixelSize: 12
                                             font.weight: Font.Medium
                                         }
+
                                     }
 
                                     ColumnLayout {
                                         spacing: 2
+
                                         Text {
                                             text: "Modified"
                                             color: root.spotlightState.textDimColor
                                             font.pixelSize: 11
                                         }
+
                                         Text {
                                             text: (root.itemData && root.itemData.metadata && root.itemData.metadata.modified) ? root.itemData.metadata.modified : "-"
                                             color: root.spotlightState.textColor
                                             font.pixelSize: 12
                                             font.weight: Font.Medium
                                         }
+
                                     }
+
                                 }
+
                             }
 
                             // ── SYSTEM / WEB PREVIEW ──
@@ -279,6 +302,7 @@ Item {
                                     font.family: "SF Pro Text, Inter, -apple-system, system-ui, sans-serif"
                                     font.pixelSize: 11
                                 }
+
                                 Text {
                                     Layout.fillWidth: true
                                     text: (root.itemData && root.itemData.metadata && root.itemData.metadata.description) ? root.itemData.metadata.description : (root.itemData ? root.itemData.subtitle : "")
@@ -287,9 +311,13 @@ Item {
                                     font.pixelSize: 12
                                     wrapMode: Text.Wrap
                                 }
+
                             }
+
                         }
+
                     }
+
                 }
 
                 // 3. Bottom Action Buttons
@@ -319,6 +347,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.spotlightState.activateCurrentItem()
                         }
+
                     }
 
                     // Secondary Action Button (Show in Finder / Copy)
@@ -343,9 +372,15 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.spotlightState.revealCurrentItem()
                         }
+
                     }
+
                 }
+
             }
+
         }
+
     }
+
 }

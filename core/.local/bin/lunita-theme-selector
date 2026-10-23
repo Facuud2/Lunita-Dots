@@ -29,7 +29,7 @@ THEMES_DIR = DOTS_DIR / "themes"
 STATE_FILE = DOTS_DIR / ".lunita-theme"
 USER_STATE_DIR = Path.home() / ".config/lunita"
 USER_STATE_FILE = USER_STATE_DIR / "current_theme"
-AGS_COLORS_FILE = Path.home() / ".config/ags/colors.scss"
+ACTIVE_TOKENS_FILE = Path.home() / ".config/lunita/active_tokens.json"
 
 def get_current_theme_id() -> str:
     if STATE_FILE.exists():
@@ -59,21 +59,38 @@ def load_theme_colors():
         "outline_variant": "#3a3a3c",
     }
     
-    # Try reading from ags colors.scss if present
-    if AGS_COLORS_FILE.exists():
+    # Try reading from active_tokens.json
+    if ACTIVE_TOKENS_FILE.exists():
         try:
-            for line in AGS_COLORS_FILE.read_text().splitlines():
-                line = line.strip()
-                if line.startswith("$") and ":" in line:
-                    key, val = line.split(":", 1)
-                    key = key.lstrip("$").strip()
-                    val = val.rstrip(";").strip()
-                    if key in colors:
-                        colors[key] = val
+            tokens = json.loads(ACTIVE_TOKENS_FILE.read_text(encoding="utf-8"))
+            if "accent" in tokens:
+                colors["primary"] = tokens["accent"]
+            if "surface" in tokens:
+                colors["surface"] = tokens["surface"]
+            if "surface_container" in tokens:
+                colors["surface_container"] = tokens["surface_container"]
+            if "surface_container_high" in tokens:
+                colors["surface_container_high"] = tokens["surface_container_high"]
+            if "on_surface" in tokens:
+                colors["on_surface"] = tokens["on_surface"]
+            if "on_surface_dim" in tokens:
+                colors["on_surface_variant"] = tokens["on_surface_dim"]
         except Exception:
             pass
             
     return colors
+
+def hex_to_rgba(hex_color: str, alpha: float) -> str:
+    hex_color = hex_color.lstrip("#")
+    if len(hex_color) >= 6:
+        try:
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+            return f"rgba({r}, {g}, {b}, {alpha})"
+        except ValueError:
+            pass
+    return f"rgba(255, 255, 255, {alpha})"
 
 class ThemeInfo:
     def __init__(self, theme_id: str, directory: Path):
@@ -125,171 +142,200 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
 
     def setup_css(self):
         colors = load_theme_colors()
+        primary_accent = colors.get("primary", "#007aff")
         css = f"""
-        window.theme-selector {{
-            background-color: {colors["surface"]};
-            color: {colors["on_surface"]};
-            font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        window.theme-selector,
+        window.theme-selector > contents,
+        .theme-selector,
+        .ts-sidebar,
+        .ts-details-area,
+        paned,
+        scrolledwindow,
+        scrolledwindow > viewport {{
+            background-color: #121316;
+            color: #F1F5F9;
+            font-family: "Inter", "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }}
         
+        headerbar {{
+            background-color: #16171B;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            color: #F1F5F9;
+        }}
+
         .ts-sidebar {{
-            background-color: {colors["surface"]};
-            border-right: 1px solid rgba(213, 187, 252, 0.08);
-            padding: 12px;
+            background-color: #141519;
+            border-right: 1px solid rgba(255, 255, 255, 0.07);
+            padding: 16px 14px;
         }}
 
         .ts-theme-card {{
-            background-color: {colors["surface_container"]};
-            border: 1px solid rgba(213, 187, 252, 0.12);
-            border-radius: 14px;
-            padding: 14px 16px;
+            background-color: #1A1B21;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 12px 14px;
             margin-bottom: 8px;
-            transition: all 200ms ease;
+            transition: all 180ms ease;
         }}
 
         .ts-theme-card:hover {{
-            background-color: {colors["surface_container_high"]};
-            border-color: rgba(213, 187, 252, 0.28);
+            background-color: #22232B;
+            border-color: rgba(255, 255, 255, 0.14);
         }}
 
         .ts-theme-card.selected {{
-            background-color: {colors["surface_container_highest"]};
-            border: 1.5px solid {colors["primary"]};
+            background-color: #262833;
+            border: 1px solid {primary_accent};
+            border-left: 3.5px solid {primary_accent};
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
         }}
 
         .ts-badge-active {{
-            background-color: rgba(129, 199, 132, 0.18);
-            color: #81c784;
-            border: 1px solid rgba(129, 199, 132, 0.35);
+            background-color: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.28);
             border-radius: 9999px;
-            padding: 2px 10px;
+            padding: 2px 8px;
             font-weight: 700;
-            font-size: 11px;
+            font-size: 10.5px;
             letter-spacing: 0.5px;
         }}
 
         .ts-badge-ver {{
-            background-color: rgba(255, 255, 255, 0.06);
-            color: {colors["on_surface_variant"]};
-            border-radius: 9999px;
-            padding: 2px 8px;
-            font-size: 11px;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #94A3B8;
+            border-radius: 6px;
+            padding: 1px 6px;
+            font-size: 10px;
+            font-family: "JetBrainsMono Nerd Font", monospace;
+        }}
+
+        .ts-tag-eco {{
+            color: #94A3B8;
+            font-size: 11.5px;
+            font-weight: 500;
         }}
 
         .ts-details-area {{
-            background-color: {colors["surface"]};
-            padding: 24px 32px;
+            background-color: #121316;
+            padding: 24px 28px;
         }}
 
         .ts-hero-card {{
-            background: linear-gradient(135deg, {colors["surface_container"]} 0%, {colors["surface_container_high"]} 100%);
-            border: 1px solid rgba(213, 187, 252, 0.16);
-            border-radius: 20px;
-            padding: 24px 28px;
-            margin-bottom: 20px;
+            background-color: #17181F;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 18px;
         }}
 
         .ts-hero-title {{
-            font-size: 26px;
-            font-weight: 800;
-            color: #ffffff;
-            letter-spacing: -0.5px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFFFFF;
+            letter-spacing: -0.3px;
         }}
 
         .ts-hero-sub {{
-            font-size: 14px;
-            color: {colors["on_surface_variant"]};
-            margin-top: 4px;
+            font-size: 13px;
+            color: #94A3B8;
+            margin-top: 3px;
         }}
 
         .ts-btn-apply {{
-            background-color: {colors["primary"]};
-            color: {colors["on_primary"]};
-            border-radius: 12px;
-            padding: 10px 24px;
-            font-weight: 700;
-            font-size: 14px;
-            border: none;
-            transition: all 180ms ease;
+            background-color: {primary_accent};
+            color: #FFFFFF;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid {hex_to_rgba(primary_accent, 0.6)};
+            box-shadow: 0 2px 8px {hex_to_rgba(primary_accent, 0.25)};
+            transition: all 150ms ease;
         }}
 
         .ts-btn-apply:hover {{
-            background-color: #ecdcff;
-            box-shadow: 0 4px 14px rgba(213, 187, 252, 0.35);
+            opacity: 0.92;
+            box-shadow: 0 4px 14px {hex_to_rgba(primary_accent, 0.45)};
         }}
 
         .ts-btn-applied {{
-            background-color: rgba(129, 199, 132, 0.18);
-            color: #81c784;
-            border: 1px solid rgba(129, 199, 132, 0.4);
-            border-radius: 12px;
-            padding: 10px 20px;
-            font-weight: 700;
-            font-size: 14px;
+            background-color: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.28);
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 13px;
         }}
 
         .ts-btn-secondary {{
-            background-color: {colors["surface_container"]};
-            color: {colors["on_surface"]};
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 10px 18px;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #E2E8F0;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 10px;
+            padding: 8px 16px;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 500;
+            transition: all 150ms ease;
         }}
 
         .ts-btn-secondary:hover {{
-            background-color: {colors["surface_container_high"]};
-            border-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.10);
+            border-color: rgba(255, 255, 255, 0.18);
+            color: #FFFFFF;
         }}
 
         .ts-section-card {{
-            background-color: {colors["surface_container"]};
+            background-color: #17181F;
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 16px;
-            padding: 20px;
+            padding: 18px 20px;
             margin-bottom: 16px;
         }}
 
         .ts-section-header {{
-            font-size: 15px;
+            font-size: 11px;
             font-weight: 700;
-            color: {colors["primary"]};
-            margin-bottom: 12px;
+            color: #94A3B8;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }}
+
+        .ts-chip {{
+            background-color: #1B1C24;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 10px;
+            padding: 10px 14px;
+            min-width: 170px;
+        }}
+
+        .ts-chip-key {{
+            font-weight: 600;
+            color: #64748B;
+            font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.8px;
         }}
 
-        .ts-chip {{
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 8px 12px;
-        }}
-
-        .ts-chip-key {{
-            font-weight: 700;
-            color: {colors["primary"]};
-            font-size: 12px;
-            text-transform: uppercase;
-        }}
-
         .ts-chip-val {{
-            color: {colors["on_surface"]};
-            font-size: 13px;
+            color: #F1F5F9;
+            font-size: 12.5px;
+            font-weight: 500;
+            font-family: "JetBrainsMono Nerd Font", monospace;
         }}
 
         .ts-feature-item {{
-            padding: 6px 0;
-            font-size: 13.5px;
-            color: {colors["on_surface"]};
+            padding: 5px 0;
+            font-size: 13px;
+            color: #CBD5E1;
         }}
 
         .ts-progress-box {{
-            background-color: {colors["surface_container_highest"]};
-            border: 1px solid {colors["primary"]};
-            border-radius: 14px;
+            background-color: #1B1C24;
+            border: 1px solid {primary_accent};
+            border-radius: 12px;
             padding: 12px 18px;
             margin-bottom: 16px;
         }}
@@ -439,13 +485,19 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
 
         card_content.append(row1)
 
-        # Row 2: ID and Version
+        # Row 2: Tag & Version
         row2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        id_label = Gtk.Label(label=theme.id)
-        id_label.set_css_classes(["dim-label"])
-        id_label.set_halign(Gtk.Align.START)
-        id_label.set_hexpand(True)
-        row2.append(id_label)
+        eco_tags = {
+            "lunita-default": "Nothing OS Minimal",
+            "macos-theme": "macOS Cupertino",
+            "modern-win11-theme": "Windows 11 Fluent",
+        }
+        tag_text = eco_tags.get(theme.id, theme.id)
+        tag_label = Gtk.Label(label=tag_text)
+        tag_label.set_css_classes(["ts-tag-eco"])
+        tag_label.set_halign(Gtk.Align.START)
+        tag_label.set_hexpand(True)
+        row2.append(tag_label)
 
         ver_badge = Gtk.Label(label=f"v{theme.version}")
         ver_badge.set_css_classes(["ts-badge-ver"])
@@ -588,11 +640,25 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
             flow_box.set_row_spacing(10)
             flow_box.set_column_spacing(10)
 
+            COMPONENT_ICONS = {
+                "bar": "󱂬",
+                "dock": "󱂫",
+                "launcher": "󰍉",
+                "powermenu": "⏻",
+                "notifications": "󰂚",
+                "color_engine": "󰏫",
+                "wallpaper_picker": "󰸉",
+                "osd": "󰕾",
+                "clipboard": "󰅌",
+                "lockscreen": "󰌾",
+            }
+
             for comp_k, comp_v in theme.components.items():
                 chip = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
                 chip.set_css_classes(["ts-chip"])
 
-                k_lbl = Gtk.Label(label=comp_k.replace("_", " "))
+                icon = COMPONENT_ICONS.get(comp_k, "⚙")
+                k_lbl = Gtk.Label(label=f"{icon}  {comp_k.replace('_', ' ')}")
                 k_lbl.set_halign(Gtk.Align.START)
                 k_lbl.set_css_classes(["ts-chip-key"])
                 chip.append(k_lbl)

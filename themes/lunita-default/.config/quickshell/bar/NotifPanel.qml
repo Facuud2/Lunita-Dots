@@ -1,16 +1,18 @@
-import QtQuick
 import "."
+import QtQuick
 
 Item {
     id: popup
 
-    signal closed
+    readonly property int count: Notifs.count
+
+    signal closed()
 
     implicitHeight: col.implicitHeight + 44
-    readonly property int count: Notifs.count
 
     Column {
         id: col
+
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
@@ -49,12 +51,15 @@ Item {
 
                 MouseArea {
                     id: closeMa
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: popup.closed()
                 }
+
             }
+
         }
 
         // ── botones silenciar y vaciar ──
@@ -67,10 +72,13 @@ Item {
                 height: 46
                 radius: Theme.shapeLg
                 color: Notifs.muted ? Theme.inverted : muteMa.containsMouse ? Theme.surfaceHigh : Theme.surfaceAlt
+                border.width: 1
+                border.color: Notifs.muted ? Theme.inverted : Theme.outline
 
                 Row {
                     anchors.centerIn: parent
                     spacing: 8
+
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: Notifs.muted ? "notifications_off" : "notifications"
@@ -78,6 +86,7 @@ Item {
                         font.family: Theme.fontIcon
                         font.pixelSize: 19
                     }
+
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: Notifs.muted ? Cfg.t("SILENCIADAS") : Cfg.t("SILENCIAR")
@@ -86,15 +95,18 @@ Item {
                         font.pixelSize: 12
                         font.weight: Font.Medium
                     }
+
                 }
 
                 MouseArea {
                     id: muteMa
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: Notifs.toggleMute()
                 }
+
             }
 
             Rectangle {
@@ -102,11 +114,14 @@ Item {
                 height: 46
                 radius: Theme.shapeLg
                 color: clearMa.containsMouse ? Theme.surfaceHigh : Theme.surfaceAlt
+                border.width: 1
+                border.color: Theme.outline
                 opacity: popup.count > 0 ? 1 : 0.4
 
                 Row {
                     anchors.centerIn: parent
                     spacing: 6
+
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: Icons.clearAll
@@ -114,6 +129,7 @@ Item {
                         font.family: Theme.fontIcon
                         font.pixelSize: 19
                     }
+
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: Cfg.t("VACIAR")
@@ -122,17 +138,21 @@ Item {
                         font.pixelSize: 12
                         font.weight: Font.Medium
                     }
+
                 }
 
                 MouseArea {
                     id: clearMa
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     enabled: popup.count > 0
                     onClicked: Notifs.clearAll()
                 }
+
             }
+
         }
 
         Text {
@@ -154,6 +174,7 @@ Item {
 
                 Rectangle {
                     id: nrow
+
                     required property int index
                     required property var modelData
 
@@ -161,9 +182,12 @@ Item {
                     height: 56
                     radius: Theme.shapeMd
                     color: nrowMa.containsMouse ? Theme.surfaceHigh : Theme.surfaceAlt
+                    border.width: 1
+                    border.color: nrowMa.containsMouse ? Theme.outline : Qt.alpha(Theme.outline, 0.4)
 
                     Text {
                         id: nicon
+
                         anchors.left: parent.left
                         anchors.leftMargin: 12
                         anchors.verticalCenter: parent.verticalCenter
@@ -199,10 +223,12 @@ Item {
                             font.pixelSize: 11
                             elide: Text.ElideRight
                         }
+
                     }
 
                     Rectangle {
                         id: delBtn
+
                         anchors.right: parent.right
                         anchors.rightMargin: 8
                         anchors.verticalCenter: parent.verticalCenter
@@ -224,14 +250,18 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: Notifs.dismissAt(nrow.index)
                         }
+
                     }
 
                     MouseArea {
                         id: nrowMa
+
                         anchors.fill: parent
                         hoverEnabled: true
                     }
+
                 }
+
             }
 
             Item {
@@ -247,7 +277,11 @@ Item {
                     font.pixelSize: 11
                     font.letterSpacing: 1
                 }
+
             }
+
         }
+
     }
+
 }

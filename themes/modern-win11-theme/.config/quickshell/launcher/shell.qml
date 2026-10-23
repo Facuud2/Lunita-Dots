@@ -1,16 +1,11 @@
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: root
-
-    // Global Shared Launcher State
-    LauncherState {
-        id: globalLauncherState
-    }
 
     // Target screen detection (defaults to focused Hyprland monitor or primary screen)
     property var targetScreen: resolveScreen("")
@@ -18,16 +13,16 @@ Scope {
     function resolveScreen(preferredName) {
         if (preferredName && preferredName !== "") {
             for (let i = 0; i < Quickshell.screens.length; i++) {
-                if (Quickshell.screens[i].name === preferredName) {
+                if (Quickshell.screens[i].name === preferredName)
                     return Quickshell.screens[i];
-                }
+
             }
         }
         if (Hyprland.focusedMonitor && Hyprland.focusedMonitor.name) {
             for (let i = 0; i < Quickshell.screens.length; i++) {
-                if (Quickshell.screens[i].name === Hyprland.focusedMonitor.name) {
+                if (Quickshell.screens[i].name === Hyprland.focusedMonitor.name)
                     return Quickshell.screens[i];
-                }
+
             }
         }
         return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null;
@@ -35,22 +30,28 @@ Scope {
 
     function updateTargetScreen(preferredName) {
         let s = resolveScreen(preferredName);
-        if (s) root.targetScreen = s;
+        if (s)
+            root.targetScreen = s;
+
+    }
+
+    // Global Shared Launcher State
+    LauncherState {
+        id: globalLauncherState
     }
 
     Connections {
-        target: Hyprland
         function onFocusedMonitorChanged() {
-            if (!globalLauncherState.isOpen) {
+            if (!globalLauncherState.isOpen)
                 root.updateTargetScreen("");
-            }
+
         }
+
+        target: Hyprland
     }
 
     // IPC Interface to control launcher from CLI, scripts, binds or Dock
     IpcHandler {
-        target: "launcher"
-
         function toggle() {
             root.updateTargetScreen("");
             globalLauncherState.toggleLauncher();
@@ -74,6 +75,16 @@ Scope {
         function close() {
             globalLauncherState.closeLauncher();
         }
+
+        function togglePower() {
+            if (!globalLauncherState.isOpen) {
+                root.updateTargetScreen("");
+                globalLauncherState.openLauncher();
+            }
+            globalLauncherState.powerMenuOpen = !globalLauncherState.powerMenuOpen;
+        }
+
+        target: "launcher"
     }
 
     // ── 1. Fullscreen transparent click-catcher on all active screens ──
@@ -83,13 +94,19 @@ Scope {
 
         delegate: Scope {
             id: screenScope
+
             required property var modelData
 
             PanelWindow {
                 id: clickCatcherWindow
+
                 screen: screenScope.modelData
                 color: "transparent"
                 visible: globalLauncherState.windowVisible
+                WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.namespace: "win11-launcher-catcher"
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
                 anchors {
                     top: true
@@ -98,36 +115,46 @@ Scope {
                     right: true
                 }
 
-                WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.namespace: "win11-launcher-catcher"
-                WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-
                 MouseArea {
                     anchors.fill: parent
                     enabled: globalLauncherState.isOpen
                     cursorShape: Qt.ArrowCursor
                     onClicked: globalLauncherState.closeLauncher()
                 }
+
             }
+
         }
+
     }
 
     // ── 2. Compact Floating Launcher Window (Layer-Blurred by Hyprland) ──
     PanelWindow {
         id: launcherWindow
+
         screen: root.targetScreen
         color: "transparent"
         visible: globalLauncherState.windowVisible
-
         implicitWidth: 640
         implicitHeight: 760
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.namespace: "win11-launcher"
+        WlrLayershell.exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.keyboardFocus: globalLauncherState.isOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
         anchors {
             bottom: true
         }
+
         margins {
             bottom: 8
+        }
+
+        LauncherView {
+            id: launcherView
+
+            launcherState: globalLauncherState
+            anchors.fill: parent
         }
 
         mask: Region {
@@ -138,17 +165,6 @@ Scope {
             radius: 14
         }
 
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "win11-launcher"
-        WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.keyboardFocus: globalLauncherState.isOpen
-            ? WlrKeyboardFocus.OnDemand
-            : WlrKeyboardFocus.None
-
-        LauncherView {
-            id: launcherView
-            launcherState: globalLauncherState
-            anchors.fill: parent
-        }
     }
+
 }

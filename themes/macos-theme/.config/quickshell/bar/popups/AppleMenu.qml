@@ -4,6 +4,7 @@ import Quickshell
 
 Item {
     id: root
+
     required property var barState
 
     visible: barState.activePopup === "apple"
@@ -13,23 +14,18 @@ Item {
     implicitHeight: mainCol.implicitHeight + 16
     height: implicitHeight
     z: 10
-
     // Animate Entrance
     opacity: visible ? 1 : 0
     scale: visible ? 1 : 0.96
-    Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-    Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
 
     Rectangle {
         id: bg
+
         anchors.fill: parent
         radius: 10
         color: barState.popupBgColor
         border.color: barState.popupBorderColor
         border.width: 1
-
-        Behavior on color { ColorAnimation { duration: 200 } }
-        Behavior on border.color { ColorAnimation { duration: 200 } }
 
         // Drop shadow illusion
         Rectangle {
@@ -41,10 +37,26 @@ Item {
             border.width: 1
             z: -1
         }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+
+        }
+
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 200
+            }
+
+        }
+
     }
 
     ColumnLayout {
         id: mainCol
+
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -59,7 +71,8 @@ Item {
             }
         }
 
-        MenuSeparator {}
+        MenuSeparator {
+        }
 
         // 2. System Settings
         MenuItem {
@@ -77,7 +90,8 @@ Item {
             }
         }
 
-        MenuSeparator {}
+        MenuSeparator {
+        }
 
         // 4. Force Quit
         MenuItem {
@@ -88,7 +102,8 @@ Item {
             }
         }
 
-        MenuSeparator {}
+        MenuSeparator {
+        }
 
         // 5. Sleep
         MenuItem {
@@ -114,7 +129,8 @@ Item {
             }
         }
 
-        MenuSeparator {}
+        MenuSeparator {
+        }
 
         // 8. Lock Screen
         MenuItem {
@@ -130,16 +146,35 @@ Item {
             text: "Log Out..."
             shortcut: "⇧⌘Q"
             onClicked: {
-                root.barState.launchCommand("hyprctl dispatch 'hl.dsp.exit()'");
+                root.barState.launchCommand("hyprctl dispatch exit");
             }
         }
+
+    }
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 140
+            easing.type: Easing.OutCubic
+        }
+
+    }
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: 140
+            easing.type: Easing.OutCubic
+        }
+
     }
 
     // ── Helper: Menu Item Component ──
     component MenuItem: Rectangle {
         id: itemRoot
+
         property string text: ""
         property string shortcut: ""
+
         signal clicked()
 
         Layout.fillWidth: true
@@ -161,7 +196,14 @@ Item {
                 font.pixelSize: 13
                 font.weight: Font.Normal
                 elide: Text.ElideRight
-                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+
+                }
+
             }
 
             Text {
@@ -170,17 +212,27 @@ Item {
                 color: mouseArea.containsMouse ? "#FFFFFF" : barState.popupTextDim
                 font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                 font.pixelSize: 12
-                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+
+                }
+
             }
+
         }
 
         MouseArea {
             id: mouseArea
+
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: itemRoot.clicked()
         }
+
     }
 
     // ── Helper: Menu Separator ──
@@ -191,4 +243,5 @@ Item {
         implicitHeight: 1
         color: barState.popupSeparatorColor
     }
+
 }

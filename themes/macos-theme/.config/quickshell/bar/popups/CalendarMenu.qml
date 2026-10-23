@@ -4,7 +4,9 @@ import Quickshell
 
 Item {
     id: root
+
     required property var barState
+    property var currentDate: new Date()
 
     visible: barState.activePopup === "calendar"
     x: Math.max(10, parent.width - width - 12)
@@ -13,13 +15,8 @@ Item {
     implicitHeight: mainCol.implicitHeight + 24
     height: implicitHeight
     z: 10
-
     opacity: visible ? 1 : 0
     scale: visible ? 1 : 0.96
-    Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-    Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-
-    property var currentDate: new Date()
 
     Rectangle {
         anchors.fill: parent
@@ -27,9 +24,6 @@ Item {
         color: barState.popupBgColor
         border.color: barState.popupBorderColor
         border.width: 1
-
-        Behavior on color { ColorAnimation { duration: 200 } }
-        Behavior on border.color { ColorAnimation { duration: 200 } }
 
         Rectangle {
             anchors.fill: parent
@@ -40,10 +34,26 @@ Item {
             border.width: 1
             z: -1
         }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+
+        }
+
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 200
+            }
+
+        }
+
     }
 
     ColumnLayout {
         id: mainCol
+
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -56,6 +66,7 @@ Item {
 
             ColumnLayout {
                 spacing: 2
+
                 Text {
                     text: barState.dateStr
                     color: "#FF3B30"
@@ -63,17 +74,28 @@ Item {
                     font.pixelSize: 13
                     font.weight: Font.DemiBold
                 }
+
                 Text {
                     text: barState.timeStr
                     color: barState.popupTextColor
                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                     font.pixelSize: 22
                     font.weight: Font.Bold
-                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                        }
+
+                    }
+
                 }
+
             }
 
-            Item { Layout.fillWidth: true }
+            Item {
+                Layout.fillWidth: true
+            }
 
             Rectangle {
                 width: 36
@@ -86,7 +108,9 @@ Item {
                     text: "📅"
                     font.pixelSize: 18
                 }
+
             }
+
         }
 
         Rectangle {
@@ -107,17 +131,27 @@ Item {
                 font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                 font.pixelSize: 13
                 font.weight: Font.DemiBold
-                Behavior on color { ColorAnimation { duration: 200 } }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 200
+                    }
+
+                }
+
             }
 
             // Days of week header (Su Mo Tu We Th Fr Sa)
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 0
+
                 Repeater {
                     model: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+
                     delegate: Text {
                         required property var modelData
+
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         text: modelData
@@ -126,7 +160,9 @@ Item {
                         font.pixelSize: 10
                         font.weight: Font.DemiBold
                     }
+
                 }
+
             }
 
             // Days grid (5 rows x 7 cols = 35 cells)
@@ -138,16 +174,17 @@ Item {
 
                 Repeater {
                     model: 35
+
                     delegate: Item {
                         required property int index
-                        Layout.fillWidth: true
-                        implicitHeight: 24
-
                         property int firstDayOffset: new Date(root.currentDate.getFullYear(), root.currentDate.getMonth(), 1).getDay()
                         property int daysInMonth: new Date(root.currentDate.getFullYear(), root.currentDate.getMonth() + 1, 0).getDate()
                         property int dayNum: index - firstDayOffset + 1
                         property bool isValidDay: dayNum >= 1 && dayNum <= daysInMonth
                         property bool isToday: isValidDay && (dayNum === root.currentDate.getDate())
+
+                        Layout.fillWidth: true
+                        implicitHeight: 24
 
                         Rectangle {
                             anchors.centerIn: parent
@@ -164,12 +201,35 @@ Item {
                                 font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                 font.pixelSize: 11
                                 font.weight: isToday ? Font.Bold : Font.Normal
-                                opacity: isToday ? 1.0 : 0.88
+                                opacity: isToday ? 1 : 0.88
                             }
+
                         }
+
                     }
+
                 }
+
             }
+
         }
+
     }
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 140
+            easing.type: Easing.OutCubic
+        }
+
+    }
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: 140
+            easing.type: Easing.OutCubic
+        }
+
+    }
+
 }

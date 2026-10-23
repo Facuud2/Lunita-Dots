@@ -1,16 +1,11 @@
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 
 Scope {
     id: root
-
-    // Global Shared Launcher State
-    LauncherState {
-        id: globalLauncherState
-    }
 
     // Target screen detection (defaults to focused Hyprland monitor or primary screen)
     property var targetScreen: resolveScreen("")
@@ -18,16 +13,16 @@ Scope {
     function resolveScreen(preferredName) {
         if (preferredName && preferredName !== "") {
             for (let i = 0; i < Quickshell.screens.length; i++) {
-                if (Quickshell.screens[i].name === preferredName) {
+                if (Quickshell.screens[i].name === preferredName)
                     return Quickshell.screens[i];
-                }
+
             }
         }
         if (Hyprland.focusedMonitor && Hyprland.focusedMonitor.name) {
             for (let i = 0; i < Quickshell.screens.length; i++) {
-                if (Quickshell.screens[i].name === Hyprland.focusedMonitor.name) {
+                if (Quickshell.screens[i].name === Hyprland.focusedMonitor.name)
                     return Quickshell.screens[i];
-                }
+
             }
         }
         return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null;
@@ -35,49 +30,58 @@ Scope {
 
     function updateTargetScreen(preferredName) {
         let s = resolveScreen(preferredName);
-        if (s) root.targetScreen = s;
+        if (s)
+            root.targetScreen = s;
+
+    }
+
+    // Global Shared Launcher State
+    LauncherState {
+        id: globalLauncherState
     }
 
     Connections {
-        target: Hyprland
         function onFocusedMonitorChanged() {
-            if (!globalLauncherState.isOpen) {
+            if (!globalLauncherState.isOpen)
                 root.updateTargetScreen("");
-            }
+
         }
 
         // Close launcher immediately if user focuses or clicks any other window in Hyprland
         function onActiveToplevelChanged() {
-            if (globalLauncherState.isOpen) {
+            if (globalLauncherState.isOpen)
                 globalLauncherState.closeLauncher();
-            }
+
         }
 
         function onRawEvent(event) {
-            if (!event || !globalLauncherState.isOpen) return;
+            if (!event || !globalLauncherState.isOpen)
+                return ;
+
             var ev = event.name;
-            if (ev === "activewindow" || ev === "activewindowv2" || ev === "focusedmon") {
+            if (ev === "activewindow" || ev === "activewindowv2" || ev === "focusedmon")
                 globalLauncherState.closeLauncher();
-            }
+
         }
+
+        target: Hyprland
     }
 
     // Capture focus grab under Hyprland: auto-clears / closes when clicking outside windows
     HyprlandFocusGrab {
         id: focusGrab
+
         active: globalLauncherState.isOpen
         windows: []
         onCleared: {
-            if (globalLauncherState.isOpen) {
+            if (globalLauncherState.isOpen)
                 globalLauncherState.closeLauncher();
-            }
+
         }
     }
 
     // IPC Interface to control launcher from CLI, scripts, binds or Dock
     IpcHandler {
-        target: "launcher"
-
         function toggle() {
             root.updateTargetScreen("");
             globalLauncherState.toggleLauncher();
@@ -101,6 +105,8 @@ Scope {
         function close() {
             globalLauncherState.closeLauncher();
         }
+
+        target: "launcher"
     }
 
     // ── Fullscreen Overlay Window per screen with Click-Catcher Backdrop and LauncherView ──
@@ -109,16 +115,20 @@ Scope {
 
         delegate: Scope {
             id: screenScope
-            required property var modelData
 
-            readonly property bool isTargetScreen: root.targetScreen !== null &&
-                (root.targetScreen === screenScope.modelData || root.targetScreen.name === screenScope.modelData.name)
+            required property var modelData
+            readonly property bool isTargetScreen: root.targetScreen !== null && (root.targetScreen === screenScope.modelData || root.targetScreen.name === screenScope.modelData.name)
 
             PanelWindow {
                 id: overlayWindow
+
                 screen: screenScope.modelData
                 color: "transparent"
                 visible: globalLauncherState.windowVisible
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.namespace: "macos-launcher"
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.keyboardFocus: (globalLauncherState.isOpen && screenScope.isTargetScreen) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
                 anchors {
                     top: true
@@ -127,28 +137,22 @@ Scope {
                     right: true
                 }
 
-                WlrLayershell.layer: WlrLayer.Overlay
-                WlrLayershell.namespace: "macos-launcher"
-                WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: (globalLauncherState.isOpen && screenScope.isTargetScreen)
-                    ? WlrKeyboardFocus.Exclusive
-                    : WlrKeyboardFocus.None
-
                 // 1. Outside Click Catcher Backdrop
                 MouseArea {
                     anchors.fill: parent
                     z: 0
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onPressed: {
-                        if (globalLauncherState.isOpen) {
+                        if (globalLauncherState.isOpen)
                             globalLauncherState.closeLauncher();
-                        }
+
                     }
                 }
 
                 // 2. LauncherView anchored at bottom center on the target screen
                 LauncherView {
                     id: launcherView
+
                     visible: screenScope.isTargetScreen
                     launcherState: globalLauncherState
                     z: 1
@@ -158,8 +162,13 @@ Scope {
                         bottom: parent.bottom
                         bottomMargin: 76
                     }
+
                 }
+
             }
+
         }
+
     }
+
 }

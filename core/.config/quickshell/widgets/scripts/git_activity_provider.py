@@ -12,12 +12,24 @@ CACHE_TTL = 600  # 10 minutes
 CONFIG_DIR = os.path.expanduser("~/.config/lunita")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "git_config.json")
 
+from pathlib import Path
+
+def get_default_local_repo() -> str:
+    script_path = Path(__file__).resolve()
+    for parent in [script_path] + list(script_path.parents):
+        if (parent / ".git").is_dir() and (parent / "core").is_dir():
+            return str(parent)
+    cand = Path.home() / "Lunita-Dots"
+    if cand.is_dir():
+        return str(cand)
+    return ""
+
 DEFAULT_GIT_CONFIG = {
     "username": "Facuud2",
     "token": "",
     "repos": ["Lunita-Dots", "Comitas-App", "FocuseAR"],
     "ci_repo": "Comitas-App",
-    "local_repo": "/mnt/Desarrollo/Lunita-Dots",
+    "local_repo": get_default_local_repo(),
     "show_ci": True
 }
 
@@ -29,6 +41,8 @@ def load_git_config():
                 data = json.load(f)
                 cfg = DEFAULT_GIT_CONFIG.copy()
                 cfg.update(data)
+                if not cfg.get("local_repo") or not os.path.exists(cfg.get("local_repo")):
+                    cfg["local_repo"] = get_default_local_repo()
                 return cfg
         except Exception:
             pass
@@ -37,7 +51,7 @@ def load_git_config():
 def get_local_recent_commits(repo_dir=None, count=4):
     if not repo_dir:
         cfg = load_git_config()
-        repo_dir = cfg.get("local_repo", "/mnt/Desarrollo/Lunita-Dots")
+        repo_dir = cfg.get("local_repo") or get_default_local_repo()
     commits = []
     try:
         if os.path.exists(os.path.join(repo_dir, ".git")):
@@ -68,7 +82,7 @@ def get_local_recent_commits(repo_dir=None, count=4):
 def get_local_git_info(repo_dir=None):
     if not repo_dir:
         cfg = load_git_config()
-        repo_dir = cfg.get("local_repo", "/mnt/Desarrollo/Lunita-Dots")
+        repo_dir = cfg.get("local_repo") or get_default_local_repo()
     try:
         if os.path.exists(os.path.join(repo_dir, ".git")):
             out = subprocess.check_output(
@@ -98,7 +112,7 @@ def fetch_github_data():
     token = cfg.get("token", "").strip()
     repos_to_check = cfg.get("repos", ["Lunita-Dots", "Comitas-App", "FocuseAR"])
     ci_pref_repo = cfg.get("ci_repo", "Comitas-App")
-    local_repo = cfg.get("local_repo", "/mnt/Desarrollo/Lunita-Dots")
+    local_repo = cfg.get("local_repo") or get_default_local_repo()
 
     headers = {
         "User-Agent": "Lunita-Dots-Widget",

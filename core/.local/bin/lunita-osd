@@ -27,15 +27,18 @@ get_dots_dir() {
 DOTS_DIR="$(get_dots_dir "$SCRIPT_DIR" 2>/dev/null || (cd "$SCRIPT_DIR/.." && pwd))"
 
 get_active_theme() {
-    if [ -f "$DOTS_DIR/.lunita-theme" ]; then
-        tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme"
-    elif [ -f "$HOME/.config/lunita/current_theme" ]; then
-        tr -d '[:space:]' < "$HOME/.config/lunita/current_theme"
+    local theme=""
+    if [ -f "$HOME/.config/lunita/current_theme" ]; then
+        theme="$(tr -d '[:space:]' < "$HOME/.config/lunita/current_theme")"
+    elif [ -f "$DOTS_DIR/.lunita-theme" ]; then
+        theme="$(tr -d '[:space:]' < "$DOTS_DIR/.lunita-theme")"
     elif [ -f "$HOME/.lunita-theme" ]; then
-        tr -d '[:space:]' < "$HOME/.lunita-theme"
+        theme="$(tr -d '[:space:]' < "$HOME/.lunita-theme")"
     else
-        echo "lunita-default"
+        theme="lunita-default"
     fi
+    theme="${theme,,}"
+    echo "${theme:-lunita-default}"
 }
 
 get_theme_component() {

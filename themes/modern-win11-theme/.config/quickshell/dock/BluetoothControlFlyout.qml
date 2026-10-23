@@ -6,48 +6,31 @@ Item {
     id: root
 
     required property var dockState
-
     readonly property string uiFont: "Adwaita Sans"
+    property string expandedMac: ""
 
     width: 360
     height: mainCard.implicitHeight
     implicitWidth: 360
     implicitHeight: mainCard.implicitHeight
-
-    property string expandedMac: ""
-
     // Smooth Appearance & Disappearance (Windows 11 Fluent Motion)
-    opacity: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "bluetooth") ? 1.0 : 0.0
-    scale: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "bluetooth") ? 1.0 : 0.96
+    opacity: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "bluetooth") ? 1 : 0
+    scale: (root.dockState.flyoutOpen && root.dockState.activeFlyout === "bluetooth") ? 1 : 0.96
     transformOrigin: Item.BottomRight
-
-    Behavior on opacity {
-        NumberAnimation {
-            duration: root.dockState.flyoutOpen ? 220 : 140
-            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
-        }
-    }
-
-    Behavior on scale {
-        NumberAnimation {
-            duration: root.dockState.flyoutOpen ? 240 : 160
-            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
-        }
-    }
 
     // Single Unified Windows 11 Mica / Acrylic Flyout Card
     Rectangle {
         id: mainCard
+
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         implicitHeight: cardCol.implicitHeight
         height: cardCol.implicitHeight
         radius: 12
-
         // Windows 11 Dark Acrylic Surface
         color: Qt.rgba(0.12, 0.13, 0.16, 0.84)
-        border.color: Qt.rgba(1.0, 1.0, 1.0, 0.14)
+        border.color: Qt.rgba(1, 1, 1, 0.14)
         border.width: 1
         clip: true
 
@@ -59,11 +42,16 @@ Item {
             anchors.leftMargin: 12
             anchors.rightMargin: 12
             height: 1
-            color: Qt.rgba(1.0, 1.0, 1.0, 0.16)
+            color: Qt.rgba(1, 1, 1, 0.16)
         }
 
         ColumnLayout {
+            // ==========================================
+            // 2. BLUETOOTH DEVICES LIST AREA
+            // ==========================================
+
             id: cardCol
+
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
@@ -87,7 +75,7 @@ Item {
                         Layout.preferredWidth: 32
                         Layout.preferredHeight: 32
                         radius: 6
-                        color: backMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.08) : "transparent"
+                        color: backMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
 
                         Image {
                             anchors.centerIn: parent
@@ -99,11 +87,13 @@ Item {
 
                         MouseArea {
                             id: backMouse
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.toggleAudioFlyout("")
                         }
+
                     }
 
                     // Header Title ("Bluetooth")
@@ -127,7 +117,7 @@ Item {
                         font.pixelSize: 11
                         font.weight: Font.Normal
                         font.italic: false
-                        color: Qt.rgba(1.0, 1.0, 1.0, 0.60)
+                        color: Qt.rgba(1, 1, 1, 0.6)
                         Layout.rightMargin: 6
                     }
 
@@ -136,10 +126,9 @@ Item {
                         Layout.preferredWidth: 40
                         Layout.preferredHeight: 20
                         radius: 10
-                        color: root.dockState.bluetoothEnabled ? "#60CDFF" : Qt.rgba(1.0, 1.0, 1.0, 0.04)
-                        border.color: root.dockState.bluetoothEnabled ? "#60CDFF" : Qt.rgba(1.0, 1.0, 1.0, 0.58)
+                        color: root.dockState.bluetoothEnabled ? "#60CDFF" : Qt.rgba(1, 1, 1, 0.04)
+                        border.color: root.dockState.bluetoothEnabled ? "#60CDFF" : Qt.rgba(1, 1, 1, 0.58)
                         border.width: 1
-                        Behavior on color { ColorAnimation { duration: 140 } }
 
                         Rectangle {
                             width: 12
@@ -147,8 +136,16 @@ Item {
                             radius: 6
                             anchors.verticalCenter: parent.verticalCenter
                             x: root.dockState.bluetoothEnabled ? (parent.width - width - 4) : 4
-                            color: root.dockState.bluetoothEnabled ? "#000000" : Qt.rgba(1.0, 1.0, 1.0, 0.85)
-                            Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                            color: root.dockState.bluetoothEnabled ? "#000000" : Qt.rgba(1, 1, 1, 0.85)
+
+                            Behavior on x {
+                                NumberAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutCubic
+                                }
+
+                            }
+
                         }
 
                         MouseArea {
@@ -156,8 +153,18 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.toggleBluetooth()
                         }
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 140
+                            }
+
+                        }
+
                     }
+
                 }
+
             }
 
             // Subtle Header Divider
@@ -166,13 +173,9 @@ Item {
                 Layout.leftMargin: 16
                 Layout.rightMargin: 16
                 height: 1
-                color: Qt.rgba(1.0, 1.0, 1.0, 0.08)
+                color: Qt.rgba(1, 1, 1, 0.08)
                 visible: root.dockState.bluetoothEnabled && root.dockState.bluetoothDevices.length > 0
             }
-
-            // ==========================================
-            // 2. BLUETOOTH DEVICES LIST AREA
-            // ==========================================
 
             // Disabled or Empty State (Windows 11 Centered Placeholder)
             Item {
@@ -190,16 +193,12 @@ Item {
                         source: "assets/bluetooth.svg"
                         sourceSize.width: 28
                         sourceSize.height: 28
-                        opacity: root.dockState.bluetoothEnabled ? 0.80 : 0.55
+                        opacity: root.dockState.bluetoothEnabled ? 0.8 : 0.55
                     }
 
                     Text {
                         Layout.fillWidth: true
-                        text: !root.dockState.bluetoothEnabled
-                            ? "El Bluetooth está desactivado"
-                            : (root.dockState.bluetoothScanning
-                                ? "Buscando dispositivos..."
-                                : "No se encontraron dispositivos Bluetooth")
+                        text: !root.dockState.bluetoothEnabled ? "El Bluetooth está desactivado" : (root.dockState.bluetoothScanning ? "Buscando dispositivos..." : "No se encontraron dispositivos Bluetooth")
                         font.family: root.uiFont
                         font.styleName: "SemiBold"
                         font.pixelSize: 13
@@ -211,24 +210,25 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
-                        text: !root.dockState.bluetoothEnabled
-                            ? "Activa el Bluetooth para conectarte a dispositivos inalámbricos emparejados o cercanos."
-                            : "Asegúrate de que tu dispositivo esté encendido y en modo de emparejamiento."
+                        text: !root.dockState.bluetoothEnabled ? "Activa el Bluetooth para conectarte a dispositivos inalámbricos emparejados o cercanos." : "Asegúrate de que tu dispositivo esté encendido y en modo de emparejamiento."
                         font.family: root.uiFont
                         font.styleName: "Regular"
                         font.pixelSize: 12
                         font.weight: Font.Normal
                         font.italic: false
-                        color: Qt.rgba(1.0, 1.0, 1.0, 0.65)
+                        color: Qt.rgba(1, 1, 1, 0.65)
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                     }
+
                 }
+
             }
 
             // Scrollable Bluetooth Devices List (Windows 11 Style)
             Flickable {
                 id: devicesFlick
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(290, devicesListCol.implicitHeight + 16)
                 contentWidth: width
@@ -239,6 +239,7 @@ Item {
 
                 ColumnLayout {
                     id: devicesListCol
+
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
@@ -255,7 +256,7 @@ Item {
                         font.pixelSize: 12
                         font.weight: Font.DemiBold
                         font.italic: false
-                        color: Qt.rgba(1.0, 1.0, 1.0, 0.72)
+                        color: Qt.rgba(1, 1, 1, 0.72)
                         Layout.leftMargin: 10
                         Layout.bottomMargin: 4
                     }
@@ -265,30 +266,27 @@ Item {
 
                         delegate: Rectangle {
                             id: devDelegate
-                            required property var modelData
 
+                            required property var modelData
                             readonly property bool isBusy: root.dockState.bluetoothPendingMac === modelData.mac
                             readonly property bool isExpanded: (root.expandedMac === modelData.mac) || (root.expandedMac === "" && modelData.connected)
 
                             Layout.fillWidth: true
                             Layout.preferredHeight: isExpanded ? 96 : 52
                             radius: 6
-                            color: isExpanded
-                                ? Qt.rgba(1.0, 1.0, 1.0, 0.08)
-                                : (devRowHover.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.05) : "transparent")
-                            Behavior on Layout.preferredHeight { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                            color: isExpanded ? Qt.rgba(1, 1, 1, 0.08) : (devRowHover.containsMouse ? Qt.rgba(1, 1, 1, 0.05) : "transparent")
 
                             MouseArea {
                                 id: devRowHover
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    if (root.expandedMac === devDelegate.modelData.mac) {
+                                    if (root.expandedMac === devDelegate.modelData.mac)
                                         root.expandedMac = "__none__";
-                                    } else {
+                                    else
                                         root.expandedMac = devDelegate.modelData.mac;
-                                    }
                                 }
                             }
 
@@ -305,12 +303,10 @@ Item {
                                     spacing: 14
 
                                     Image {
-                                        source: devDelegate.modelData.type === "audio"
-                                            ? "assets/headphones.svg"
-                                            : (devDelegate.modelData.type === "keyboard" ? "assets/keyboard.svg" : "assets/bluetooth.svg")
+                                        source: devDelegate.modelData.type === "audio" ? "assets/headphones.svg" : (devDelegate.modelData.type === "keyboard" ? "assets/keyboard.svg" : "assets/bluetooth.svg")
                                         sourceSize.width: 20
                                         sourceSize.height: 20
-                                        opacity: devDelegate.modelData.connected ? 1.0 : 0.80
+                                        opacity: devDelegate.modelData.connected ? 1 : 0.8
                                     }
 
                                     ColumnLayout {
@@ -330,21 +326,19 @@ Item {
                                         }
 
                                         Text {
-                                            text: devDelegate.isBusy
-                                                ? (devDelegate.modelData.connected ? "Desconectando..." : "Conectando...")
-                                                : (devDelegate.modelData.connected
-                                                    ? "Conectado"
-                                                    : (devDelegate.modelData.paired ? "Emparejado" : "Disponible"))
+                                            text: devDelegate.isBusy ? (devDelegate.modelData.connected ? "Desconectando..." : "Conectando...") : (devDelegate.modelData.connected ? "Conectado" : (devDelegate.modelData.paired ? "Emparejado" : "Disponible"))
                                             font.family: root.uiFont
                                             font.styleName: "Regular"
                                             font.pixelSize: 12
                                             font.weight: Font.Normal
                                             font.italic: false
-                                            color: devDelegate.modelData.connected ? "#60CDFF" : Qt.rgba(1.0, 1.0, 1.0, 0.65)
+                                            color: devDelegate.modelData.connected ? "#60CDFF" : Qt.rgba(1, 1, 1, 0.65)
                                             elide: Text.ElideRight
                                             Layout.fillWidth: true
                                         }
+
                                     }
+
                                 }
 
                                 // Expanded Windows 11 Action Button Row ("Conectar" / "Desconectar")
@@ -352,25 +346,21 @@ Item {
                                     Layout.fillWidth: true
                                     visible: devDelegate.isExpanded
 
-                                    Item { Layout.fillWidth: true }
+                                    Item {
+                                        Layout.fillWidth: true
+                                    }
 
                                     Rectangle {
                                         Layout.preferredWidth: 116
                                         Layout.preferredHeight: 32
                                         radius: 4
-                                        color: devDelegate.modelData.connected
-                                            ? (btActMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.12) : Qt.rgba(1.0, 1.0, 1.0, 0.08))
-                                            : (btActMouse.containsMouse ? "#78D6FF" : "#60CDFF")
-                                        border.color: devDelegate.modelData.connected
-                                            ? Qt.rgba(1.0, 1.0, 1.0, 0.14)
-                                            : "#60CDFF"
+                                        color: devDelegate.modelData.connected ? (btActMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.08)) : (btActMouse.containsMouse ? "#78D6FF" : "#60CDFF")
+                                        border.color: devDelegate.modelData.connected ? Qt.rgba(1, 1, 1, 0.14) : "#60CDFF"
                                         border.width: 1
 
                                         Text {
                                             anchors.centerIn: parent
-                                            text: devDelegate.isBusy
-                                                ? (devDelegate.modelData.connected ? "Desconectando..." : "Conectando...")
-                                                : (devDelegate.modelData.connected ? "Desconectar" : "Conectar")
+                                            text: devDelegate.isBusy ? (devDelegate.modelData.connected ? "Desconectando..." : "Conectando...") : (devDelegate.modelData.connected ? "Desconectar" : "Conectar")
                                             font.family: root.uiFont
                                             font.styleName: devDelegate.modelData.connected ? "Regular" : "SemiBold"
                                             font.pixelSize: 12
@@ -381,24 +371,39 @@ Item {
 
                                         MouseArea {
                                             id: btActMouse
+
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             enabled: !devDelegate.isBusy
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: {
-                                                if (devDelegate.modelData.connected) {
+                                                if (devDelegate.modelData.connected)
                                                     root.dockState.disconnectBluetoothDevice(devDelegate.modelData.mac);
-                                                } else {
+                                                else
                                                     root.dockState.connectBluetoothDevice(devDelegate.modelData.mac);
-                                                }
                                             }
                                         }
+
                                     }
+
                                 }
+
                             }
+
+                            Behavior on Layout.preferredHeight {
+                                NumberAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutCubic
+                                }
+
+                            }
+
                         }
+
                     }
+
                 }
+
             }
 
             // ==========================================
@@ -407,7 +412,7 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Qt.rgba(1.0, 1.0, 1.0, 0.10)
+                color: Qt.rgba(1, 1, 1, 0.1)
             }
 
             Rectangle {
@@ -434,6 +439,7 @@ Item {
 
                         MouseArea {
                             id: btSettingsMouse
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -441,6 +447,7 @@ Item {
                                 Quickshell.execDetached(["bash", "-c", "blueman-manager || overskride || kitty -e bluetoothctl &"]);
                             }
                         }
+
                     }
 
                     // Rescan / Refresh Bluetooth Devices Button
@@ -449,10 +456,11 @@ Item {
                         Layout.preferredWidth: 32
                         Layout.preferredHeight: 32
                         radius: 6
-                        color: btScanMouse.containsMouse ? Qt.rgba(1.0, 1.0, 1.0, 0.08) : "transparent"
+                        color: btScanMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
 
                         Image {
                             id: btScanIcon
+
                             anchors.centerIn: parent
                             source: "assets/reload.svg"
                             sourceSize.width: 15
@@ -466,18 +474,42 @@ Item {
                                 loops: Animation.Infinite
                                 running: root.dockState.bluetoothScanning
                             }
+
                         }
 
                         MouseArea {
                             id: btScanMouse
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.dockState.scanBluetoothDevices()
                         }
+
                     }
+
                 }
+
             }
+
         }
+
     }
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: root.dockState.flyoutOpen ? 220 : 140
+            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
+        }
+
+    }
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: root.dockState.flyoutOpen ? 240 : 160
+            easing.type: root.dockState.flyoutOpen ? Easing.OutCubic : Easing.InQuad
+        }
+
+    }
+
 }

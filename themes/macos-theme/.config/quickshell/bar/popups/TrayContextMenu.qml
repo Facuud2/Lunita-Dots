@@ -5,7 +5,15 @@ import Quickshell.Services.SystemTray
 
 Item {
     id: root
+
     required property var barState
+
+    function cleanLabel(raw) {
+        if (!raw)
+            return "";
+
+        return raw.replace(/_([a-zA-Z0-9])/g, "$1").replace(/&([a-zA-Z0-9])/g, "$1").trim();
+    }
 
     visible: barState.activePopup === "traymenu" && !!barState.activeTrayItem
     x: Math.max(10, Math.min(parent.width - width - 10, barState.popupX + 24 - width))
@@ -14,11 +22,8 @@ Item {
     width: 220
     implicitHeight: Math.min(520, menuFlickable.contentHeight + 16)
     height: implicitHeight
-
     opacity: visible ? 1 : 0
     scale: visible ? 1 : 0.96
-    Behavior on opacity { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
-    Behavior on scale { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
 
     Rectangle {
         anchors.fill: parent
@@ -26,9 +31,6 @@ Item {
         color: barState.popupBgColor
         border.color: barState.popupBorderColor
         border.width: 1
-
-        Behavior on color { ColorAnimation { duration: 200 } }
-        Behavior on border.color { ColorAnimation { duration: 200 } }
 
         Rectangle {
             anchors.fill: parent
@@ -39,20 +41,32 @@ Item {
             border.width: 1
             z: -1
         }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+
+        }
+
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 200
+            }
+
+        }
+
     }
 
     QsMenuOpener {
         id: menuOpener
-        menu: (barState.activeTrayItem && barState.activeTrayItem.menu) ? barState.activeTrayItem.menu : null
-    }
 
-    function cleanLabel(raw) {
-        if (!raw) return "";
-        return raw.replace(/_([a-zA-Z0-9])/g, "$1").replace(/&([a-zA-Z0-9])/g, "$1").trim();
+        menu: (barState.activeTrayItem && barState.activeTrayItem.menu) ? barState.activeTrayItem.menu : null
     }
 
     Flickable {
         id: menuFlickable
+
         anchors.fill: parent
         anchors.margins: 8
         contentHeight: mainLayout.implicitHeight
@@ -61,6 +75,7 @@ Item {
 
         ColumnLayout {
             id: mainLayout
+
             width: parent.width
             spacing: 2
 
@@ -97,7 +112,9 @@ Item {
                         font.bold: true
                         elide: Text.ElideRight
                     }
+
                 }
+
             }
 
             // Divider under Header
@@ -106,23 +123,26 @@ Item {
                 implicitHeight: 7
                 height: 7
                 color: "transparent"
+
                 Rectangle {
                     anchors.centerIn: parent
                     width: parent.width
                     height: 1
                     color: barState.popupSeparatorColor
                 }
+
             }
 
             // ── DBusMenu Items (Nativo de la aplicación) ──
             Repeater {
                 model: menuOpener.children
+
                 delegate: ColumnLayout {
                     id: entryDelegate
+
                     required property var modelData
                     required property int index
                     property bool isExpanded: false
-
                     readonly property bool isSep: modelData.isSeparator || !modelData.text || modelData.text.trim().length === 0
                     readonly property string displayLabel: root.cleanLabel(modelData.text)
 
@@ -142,6 +162,7 @@ Item {
                             height: 1
                             color: root.barState.popupSeparatorColor
                         }
+
                     }
 
                     // Interactive Menu Item
@@ -162,9 +183,7 @@ Item {
                             // Checkbox / Radio indicator
                             Text {
                                 visible: modelData.buttonType !== undefined && modelData.buttonType !== QsMenuButtonType.None
-                                text: modelData.buttonType === QsMenuButtonType.CheckBox
-                                    ? (modelData.checkState === Qt.Checked ? "✓" : "")
-                                    : (modelData.checkState === Qt.Checked ? "●" : "")
+                                text: modelData.buttonType === QsMenuButtonType.CheckBox ? (modelData.checkState === Qt.Checked ? "✓" : "") : (modelData.checkState === Qt.Checked ? "●" : "")
                                 color: (itemMouseArea.containsMouse && modelData.enabled) ? "#FFFFFF" : root.barState.popupTextColor
                                 font.pixelSize: 11
                                 font.bold: true
@@ -174,9 +193,7 @@ Item {
                             // Optional Icon
                             Image {
                                 visible: !!(modelData.icon && modelData.icon.length > 0)
-                                source: (modelData.icon && modelData.icon.startsWith("/"))
-                                    ? ("file://" + modelData.icon)
-                                    : (modelData.icon ? ("image://icon/" + modelData.icon) : "")
+                                source: (modelData.icon && modelData.icon.startsWith("/")) ? ("file://" + modelData.icon) : (modelData.icon ? ("image://icon/" + modelData.icon) : "")
                                 sourceSize.width: 14
                                 sourceSize.height: 14
                                 width: 14
@@ -188,13 +205,18 @@ Item {
                             Text {
                                 Layout.fillWidth: true
                                 text: entryDelegate.displayLabel
-                                color: !modelData.enabled
-                                    ? root.barState.popupTextDim
-                                    : ((itemMouseArea.containsMouse) ? "#FFFFFF" : root.barState.popupTextColor)
+                                color: !modelData.enabled ? root.barState.popupTextDim : ((itemMouseArea.containsMouse) ? "#FFFFFF" : root.barState.popupTextColor)
                                 font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                 font.pixelSize: 13
                                 elide: Text.ElideRight
-                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: 120
+                                    }
+
+                                }
+
                             }
 
                             // Submenu indicator
@@ -204,32 +226,37 @@ Item {
                                 color: (itemMouseArea.containsMouse && modelData.enabled) ? "#FFFFFF" : root.barState.popupTextDim
                                 font.pixelSize: 12
                             }
+
                         }
 
                         MouseArea {
                             id: itemMouseArea
+
                             anchors.fill: parent
                             hoverEnabled: modelData.enabled
                             cursorShape: modelData.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                             onClicked: {
-                                if (!modelData.enabled) return;
+                                if (!modelData.enabled)
+                                    return ;
+
                                 if (modelData.hasChildren) {
                                     entryDelegate.isExpanded = !entryDelegate.isExpanded;
-                                    return;
+                                    return ;
                                 }
-                                if (typeof modelData.sendTriggered === "function") {
+                                if (typeof modelData.sendTriggered === "function")
                                     modelData.sendTriggered();
-                                } else if (typeof modelData.triggered === "function") {
+                                else if (typeof modelData.triggered === "function")
                                     modelData.triggered();
-                                }
                                 root.barState.closePopups();
                             }
                         }
+
                     }
 
                     // Nested Submenu (if entry has children)
                     ColumnLayout {
                         id: subMenuCol
+
                         visible: entryDelegate.isExpanded && !!modelData.hasChildren
                         Layout.fillWidth: true
                         Layout.leftMargin: 12
@@ -237,13 +264,16 @@ Item {
 
                         QsMenuOpener {
                             id: subOpener
+
                             menu: modelData.hasChildren ? modelData : null
                         }
 
                         Repeater {
                             model: subOpener.children
+
                             delegate: Rectangle {
                                 id: subItemRect
+
                                 required property var modelData
                                 readonly property bool isSubSep: modelData.isSeparator || !modelData.text || modelData.text.trim().length === 0
                                 readonly property string subLabel: root.cleanLabel(modelData.text)
@@ -272,34 +302,40 @@ Item {
                                     Text {
                                         Layout.fillWidth: true
                                         text: subItemRect.subLabel
-                                        color: !modelData.enabled
-                                            ? root.barState.popupTextDim
-                                            : ((subMouseArea.containsMouse) ? "#FFFFFF" : root.barState.popupTextColor)
+                                        color: !modelData.enabled ? root.barState.popupTextDim : ((subMouseArea.containsMouse) ? "#FFFFFF" : root.barState.popupTextColor)
                                         font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                                         font.pixelSize: 12
                                         elide: Text.ElideRight
                                     }
+
                                 }
 
                                 MouseArea {
                                     id: subMouseArea
+
                                     anchors.fill: parent
                                     hoverEnabled: modelData.enabled && !subItemRect.isSubSep
                                     cursorShape: (modelData.enabled && !subItemRect.isSubSep) ? Qt.PointingHandCursor : Qt.ArrowCursor
                                     onClicked: {
-                                        if (subItemRect.isSubSep || !modelData.enabled) return;
-                                        if (typeof modelData.sendTriggered === "function") {
+                                        if (subItemRect.isSubSep || !modelData.enabled)
+                                            return ;
+
+                                        if (typeof modelData.sendTriggered === "function")
                                             modelData.sendTriggered();
-                                        } else if (typeof modelData.triggered === "function") {
+                                        else if (typeof modelData.triggered === "function")
                                             modelData.triggered();
-                                        }
                                         root.barState.closePopups();
                                     }
                                 }
+
                             }
+
                         }
+
                     }
+
                 }
+
             }
 
             // ── Fallback Items when DBusMenu is empty or unavailable ──
@@ -328,20 +364,23 @@ Item {
                             font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                             font.pixelSize: 13
                         }
+
                     }
 
                     MouseArea {
                         id: fbOpenMouse
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            if (root.barState.activeTrayItem) {
+                            if (root.barState.activeTrayItem)
                                 root.barState.activeTrayItem.activate();
-                            }
+
                             root.barState.closePopups();
                         }
                     }
+
                 }
 
                 // Secondary Action
@@ -364,20 +403,23 @@ Item {
                             font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                             font.pixelSize: 13
                         }
+
                     }
 
                     MouseArea {
                         id: fbSecMouse
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            if (root.barState.activeTrayItem) {
+                            if (root.barState.activeTrayItem)
                                 root.barState.activeTrayItem.secondaryActivate();
-                            }
+
                             root.barState.closePopups();
                         }
                     }
+
                 }
 
                 // Separator
@@ -386,12 +428,14 @@ Item {
                     implicitHeight: 7
                     height: 7
                     color: "transparent"
+
                     Rectangle {
                         anchors.centerIn: parent
                         width: parent.width
                         height: 1
                         color: root.barState.popupSeparatorColor
                     }
+
                 }
 
                 // Close Menu
@@ -414,10 +458,12 @@ Item {
                             font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                             font.pixelSize: 13
                         }
+
                     }
 
                     MouseArea {
                         id: fbCloseMouse
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
@@ -425,8 +471,29 @@ Item {
                             root.barState.closePopups();
                         }
                     }
+
                 }
+
             }
+
         }
+
     }
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 130
+            easing.type: Easing.OutCubic
+        }
+
+    }
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: 130
+            easing.type: Easing.OutCubic
+        }
+
+    }
+
 }

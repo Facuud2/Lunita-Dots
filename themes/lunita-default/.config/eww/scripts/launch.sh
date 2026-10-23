@@ -18,7 +18,10 @@ fi
 
 # 2. Ensure dynamic Matugen colors exist
 if [ ! -f "$HOME/.config/eww/colors.scss" ] || ! grep -q '\$primary' "$HOME/.config/eww/colors.scss" 2>/dev/null; then
-    "$HOME/.local/bin/wall-change" >/dev/null 2>&1 || true
+    curr_wall="$(awww query 2>/dev/null | awk -F 'image: ' '{print $2}' | head -n 1)"
+    if [ -n "$curr_wall" ] && [ -f "$curr_wall" ] && command -v matugen &>/dev/null; then
+        matugen image "$curr_wall" --source-color-index 0 >/dev/null 2>&1 || true
+    fi
 fi
 
 # 3. Reload configuration
@@ -44,7 +47,3 @@ if hyprctl monitors 2>/dev/null | grep -q "Monitor HDMI-A-1"; then
     fi
 fi
 
-# 7. Start wallpaper watcher in background if not already running
-if ! pgrep -f "watch_wallpaper.sh" > /dev/null; then
-    nohup "$HOME/.config/eww/scripts/watch_wallpaper.sh" >/dev/null 2>&1 &
-fi

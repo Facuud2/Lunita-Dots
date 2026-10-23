@@ -12,7 +12,7 @@ QtObject {
     property string city: ""
     property bool ready: false
 
-    readonly property string icon: Icons.weather[code] ?? ""
+    readonly property string icon: (Icons.weather && Icons.weather[code]) ? Icons.weather[code] : ""
 
     function fetch() {
         const xhr = new XMLHttpRequest();

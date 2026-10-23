@@ -54,7 +54,7 @@ else
     if [ "$TOOL" = "awww" ] || [ "$TOOL" = "swww" ]; then
         if command -v awww-daemon &>/dev/null && ! pgrep -x awww-daemon >/dev/null; then
             if command -v hyprctl &>/dev/null && pgrep -x Hyprland >/dev/null; then
-                hyprctl dispatch 'hl.dsp.exec_cmd("awww-daemon")' >/dev/null 2>&1 || true
+                hyprctl dispatch exec awww-daemon >/dev/null 2>&1 || true
             fi
             if ! pgrep -x awww-daemon >/dev/null; then
                 nohup awww-daemon >/dev/null 2>&1 &

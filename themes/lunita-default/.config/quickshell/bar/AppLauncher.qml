@@ -42,8 +42,8 @@ Item {
 
         for (var i = 0; i < root.apps.length; i++) {
             const app = root.apps[i];
-            const name = (app.name ?? "").toLowerCase();
-            const generic = (app.genericName ?? "").toLowerCase();
+            const name = (app && app.name ? app.name : "").toLowerCase();
+            const generic = (app && app.genericName ? app.genericName : "").toLowerCase();
 
             if (q === "") {
                 scored.push({ app: app, score: 0 });
@@ -64,7 +64,7 @@ Item {
 
         scored.sort((a, b) => {
             if (b.score !== a.score) return b.score - a.score;
-            return (a.app.name ?? "").localeCompare(b.app.name ?? "");
+            return ((a.app && a.app.name) ? a.app.name : "").localeCompare((b.app && b.app.name) ? b.app.name : "");
         });
 
         return scored.slice(0, root.maxResults).map(s => s.app);

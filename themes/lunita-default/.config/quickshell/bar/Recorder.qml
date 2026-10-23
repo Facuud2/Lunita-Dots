@@ -52,7 +52,7 @@ QtObject {
         }
     }
 
-    function start(): void {
+    function start() {
         if (recording) return;
         elapsed = 0;
         recording = true;
@@ -60,20 +60,20 @@ QtObject {
         Exec.run("~/.config/hypr/scripts/record.sh screen" + flags + " >/dev/null 2>&1 &");
     }
 
-    function stop(): void {
+    function stop() {
         recording = false;
         elapsed = 0;
         Exec.run("~/.config/hypr/scripts/record.sh stop >/dev/null 2>&1 &");
     }
 
-    function toggle(): void {
+    function toggle() {
         if (recording)
             stop();
         else
             start();
     }
 
-    function openFolder(): void {
+    function openFolder() {
         Exec.run("xdg-open '" + root.folder + "'");
     }
 }

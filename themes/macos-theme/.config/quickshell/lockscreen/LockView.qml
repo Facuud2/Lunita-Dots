@@ -131,11 +131,11 @@ FocusScope {
                     interval: 30000
                     running: true
                     repeat: true
-                    onTriggered: dateText.text = {
+                    onTriggered: {
                         let d = new Date();
                         let days = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
                         let months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-                        return days[d.getDay()] + " " + d.getDate() + " " + months[d.getMonth()];
+                        dateText.text = days[d.getDay()] + " " + d.getDate() + " " + months[d.getMonth()];
                     }
                 }
             }

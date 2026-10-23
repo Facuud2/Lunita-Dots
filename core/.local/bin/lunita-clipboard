@@ -114,17 +114,32 @@ ensure_active_theme_daemon() {
     return "$matched"
 }
 
+fallback_clipboard() {
+    if command -v cliphist >/dev/null 2>&1; then
+        if command -v rofi >/dev/null 2>&1; then
+            cliphist list | rofi -dmenu -p "Clipboard" | cliphist decode | wl-copy
+            return 0
+        elif command -v tofi >/dev/null 2>&1; then
+            cliphist list | tofi --prompt-text "Clipboard: " | cliphist decode | wl-copy
+            return 0
+        fi
+    fi
+    return 1
+}
+
 ACTION="${1:-toggle}"
 ACTIVE_THEME="$(get_active_theme)"
 CLIPBOARD_COMP="$(get_theme_component "clipboard")"
 
-# Si el tema actual no tiene portapapeles declarado, salir silenciosamente
-if [ -z "$CLIPBOARD_COMP" ] || [ "$CLIPBOARD_COMP" = "null" ]; then
+# Si el tema actual no tiene portapapeles declarado o usa rofi/cliphist
+if [ -z "$CLIPBOARD_COMP" ] || [ "$CLIPBOARD_COMP" = "null" ] || [[ "$CLIPBOARD_COMP" == *"rofi"* ]] || [[ "$CLIPBOARD_COMP" == *"cliphist"* ]]; then
+    fallback_clipboard || exit 0
     exit 0
 fi
 
 CLIPBOARD_PATH="$(resolve_clipboard_path "$ACTIVE_THEME")"
 if [ -z "$CLIPBOARD_PATH" ] || [ ! -d "$CLIPBOARD_PATH" ]; then
+    fallback_clipboard || exit 0
     exit 0
 fi
 

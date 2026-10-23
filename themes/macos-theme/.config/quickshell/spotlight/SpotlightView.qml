@@ -1,7 +1,7 @@
-import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     id: root
@@ -17,21 +17,14 @@ Item {
     // ── Main Frosted Glass Card ──
     Rectangle {
         id: mainCard
+
         anchors.fill: parent
         radius: 20
         color: root.spotlightState.panelBgColor
         border.color: root.spotlightState.panelBorderColor
         border.width: 1
-
         // Smooth Appearance Animation
-        opacity: root.spotlightState.isOpen ? 1.0 : 0.0
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: root.spotlightState.isOpen ? 150 : 120
-                easing.type: Easing.OutQuad
-            }
-        }
+        opacity: root.spotlightState.isOpen ? 1 : 0
 
         // Inner Specular Sheen Border
         Rectangle {
@@ -74,6 +67,7 @@ Item {
                     // Main Search Input Field
                     TextInput {
                         id: searchField
+
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
                         text: root.spotlightState.searchQuery
@@ -86,11 +80,45 @@ Item {
                         selectedTextColor: "#FFFFFF"
                         focus: true
                         clip: true
-
                         onTextChanged: {
-                            if (root.spotlightState.searchQuery !== text) {
+                            if (root.spotlightState.searchQuery !== text)
                                 root.spotlightState.searchQuery = text;
-                            }
+
+                        }
+                        // Keyboard Navigation Handling
+                        Keys.onDownPressed: (event) => {
+                            root.spotlightState.moveSelectionDown();
+                            event.accepted = true;
+                        }
+                        Keys.onUpPressed: (event) => {
+                            root.spotlightState.moveSelectionUp();
+                            event.accepted = true;
+                        }
+                        Keys.onReturnPressed: (event) => {
+                            if (event.modifiers & (Qt.ControlModifier | Qt.MetaModifier))
+                                root.spotlightState.revealCurrentItem();
+                            else
+                                root.spotlightState.activateCurrentItem();
+                            event.accepted = true;
+                        }
+                        Keys.onEnterPressed: (event) => {
+                            if (event.modifiers & (Qt.ControlModifier | Qt.MetaModifier))
+                                root.spotlightState.revealCurrentItem();
+                            else
+                                root.spotlightState.activateCurrentItem();
+                            event.accepted = true;
+                        }
+                        Keys.onEscapePressed: (event) => {
+                            root.spotlightState.closeSpotlight();
+                            event.accepted = true;
+                        }
+                        Keys.onTabPressed: (event) => {
+                            root.spotlightState.moveSelectionDown();
+                            event.accepted = true;
+                        }
+                        Keys.onBacktabPressed: (event) => {
+                            root.spotlightState.moveSelectionUp();
+                            event.accepted = true;
                         }
 
                         // Placeholder
@@ -103,49 +131,6 @@ Item {
                             font: searchField.font
                         }
 
-                        // Keyboard Navigation Handling
-                        Keys.onDownPressed: event => {
-                            root.spotlightState.moveSelectionDown();
-                            event.accepted = true;
-                        }
-
-                        Keys.onUpPressed: event => {
-                            root.spotlightState.moveSelectionUp();
-                            event.accepted = true;
-                        }
-
-                        Keys.onReturnPressed: event => {
-                            if (event.modifiers & (Qt.ControlModifier | Qt.MetaModifier)) {
-                                root.spotlightState.revealCurrentItem();
-                            } else {
-                                root.spotlightState.activateCurrentItem();
-                            }
-                            event.accepted = true;
-                        }
-
-                        Keys.onEnterPressed: event => {
-                            if (event.modifiers & (Qt.ControlModifier | Qt.MetaModifier)) {
-                                root.spotlightState.revealCurrentItem();
-                            } else {
-                                root.spotlightState.activateCurrentItem();
-                            }
-                            event.accepted = true;
-                        }
-
-                        Keys.onEscapePressed: event => {
-                            root.spotlightState.closeSpotlight();
-                            event.accepted = true;
-                        }
-
-                        Keys.onTabPressed: event => {
-                            root.spotlightState.moveSelectionDown();
-                            event.accepted = true;
-                        }
-
-                        Keys.onBacktabPressed: event => {
-                            root.spotlightState.moveSelectionUp();
-                            event.accepted = true;
-                        }
                     }
 
                     // Clear Text Button (×)
@@ -166,6 +151,7 @@ Item {
 
                         MouseArea {
                             id: clearMouse
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -174,8 +160,11 @@ Item {
                                 searchField.forceActiveFocus();
                             }
                         }
+
                     }
+
                 }
+
             }
 
             // Horizontal Divider
@@ -201,22 +190,22 @@ Item {
 
                     ListView {
                         id: resultsListView
+
                         anchors.fill: parent
                         anchors.topMargin: 6
                         anchors.bottomMargin: 6
                         clip: true
                         model: root.spotlightState.resultsList
                         boundsBehavior: Flickable.StopAtBounds
-
                         // Keep selection visible in scroll
                         currentIndex: root.spotlightState.selectedIndex
                         onCurrentIndexChanged: {
                             positionViewAtIndex(currentIndex, ListView.Contain);
                         }
-
                         // Section Header Support
                         section.property: "category"
                         section.criteria: ViewSection.FullString
+
                         section.delegate: Item {
                             width: resultsListView.width
                             implicitHeight: 22
@@ -232,6 +221,7 @@ Item {
                                 font.weight: Font.Bold
                                 font.letterSpacing: 0.5
                             }
+
                         }
 
                         delegate: SpotlightItem {
@@ -245,7 +235,9 @@ Item {
                             anchors.right: resultsListView.right
                             anchors.rightMargin: 2
                         }
+
                     }
+
                 }
 
                 // Vertical Divider
@@ -261,6 +253,7 @@ Item {
                     Layout.fillHeight: true
                     spotlightState: root.spotlightState
                 }
+
             }
 
             // Horizontal Divider
@@ -285,42 +278,106 @@ Item {
 
                     RowLayout {
                         spacing: 4
-                        Text { text: "↵"; color: root.spotlightState.textDimColor; font.pixelSize: 11; font.weight: Font.Bold }
-                        Text { text: "Open"; color: root.spotlightState.textDimColor; font.pixelSize: 10 }
+
+                        Text {
+                            text: "↵"
+                            color: root.spotlightState.textDimColor
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                        }
+
+                        Text {
+                            text: "Open"
+                            color: root.spotlightState.textDimColor
+                            font.pixelSize: 10
+                        }
+
                     }
 
                     RowLayout {
                         spacing: 4
-                        Text { text: "⌘↵"; color: root.spotlightState.textDimColor; font.pixelSize: 11; font.weight: Font.Bold }
-                        Text { text: "In Finder"; color: root.spotlightState.textDimColor; font.pixelSize: 10 }
+
+                        Text {
+                            text: "⌘↵"
+                            color: root.spotlightState.textDimColor
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                        }
+
+                        Text {
+                            text: "In Finder"
+                            color: root.spotlightState.textDimColor
+                            font.pixelSize: 10
+                        }
+
                     }
 
                     RowLayout {
                         spacing: 4
-                        Text { text: "↑↓"; color: root.spotlightState.textDimColor; font.pixelSize: 11; font.weight: Font.Bold }
-                        Text { text: "Navigate"; color: root.spotlightState.textDimColor; font.pixelSize: 10 }
+
+                        Text {
+                            text: "↑↓"
+                            color: root.spotlightState.textDimColor
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                        }
+
+                        Text {
+                            text: "Navigate"
+                            color: root.spotlightState.textDimColor
+                            font.pixelSize: 10
+                        }
+
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     RowLayout {
                         spacing: 4
-                        Text { text: "⎋"; color: root.spotlightState.textDimColor; font.pixelSize: 11; font.weight: Font.Bold }
-                        Text { text: "Close"; color: root.spotlightState.textDimColor; font.pixelSize: 10 }
+
+                        Text {
+                            text: "⎋"
+                            color: root.spotlightState.textDimColor
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                        }
+
+                        Text {
+                            text: "Close"
+                            color: root.spotlightState.textDimColor
+                            font.pixelSize: 10
+                        }
+
                     }
+
                 }
+
             }
+
         }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.spotlightState.isOpen ? 150 : 120
+                easing.type: Easing.OutQuad
+            }
+
+        }
+
     }
 
     // Auto focus search field when opened
     Connections {
-        target: root.spotlightState
         function onIsOpenChanged() {
             if (root.spotlightState.isOpen) {
                 searchField.forceActiveFocus();
                 searchField.selectAll();
             }
         }
+
+        target: root.spotlightState
     }
+
 }

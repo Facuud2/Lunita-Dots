@@ -334,3 +334,179 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Criterios de Aceptación:**
   1. Hacer clic en el botón "Widgets y Aplicaciones" activa la edición o el panel gestor de los widgets en pantalla de forma directa.
 - **Dependencias:** Ninguna
+
+### [ISSUE-028] Auditoría General de Código, Errores de Sintaxis, Rutas y Refinamiento Multitema
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `AUDITORY_FIXES`
+- **Módulo(s):** Core / Temas (`lunita-default`, `macos-theme`, `modern-win11-theme`) / Quickshell / Scripts
+- **Archivos Afectados:**
+  - `core/.config/hypr/hyprlock-colors.conf`
+  - `core/.config/hypr/modules/autostart.lua`
+  - `core/.config/hypr/modules/keybinds.lua`
+  - `core/.config/quickshell/hyprquickpaper/commands.sh`
+  - `core/.config/quickshell/widgets/scripts/git_activity_provider.py`
+  - `core/.local/bin/hyprquickpaper`
+  - `core/.local/bin/lunita-clipboard`
+  - `core/.local/bin/lunita-launcher`
+  - `core/.local/bin/lunita-osd`
+  - `core/.local/bin/lunita-theme`
+  - `core/.local/bin/lunita-theme-selector`
+  - `core/.local/bin/lunita-widgets-manager`
+  - `core/.oh-my-zsh/custom/themes/lunita.zsh-theme`
+  - `themes/lunita-default/.config/gtk-3.0/bookmarks.template`
+  - `themes/lunita-default/.config/qt6ct/qt6ct.conf`
+  - `themes/lunita-default/.config/quickshell/bar/AppLauncher.qml`
+  - `themes/lunita-default/.config/quickshell/bar/AudioPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/ConnPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/Exec.qml`
+  - `themes/lunita-default/.config/quickshell/bar/ExpandedPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/QuickActions.qml`
+  - `themes/lunita-default/.config/quickshell/bar/Recorder.qml`
+  - `themes/lunita-default/.config/quickshell/bar/Weather.qml`
+  - `themes/lunita-default/.config/quickshell/osd/OSDState.qml`
+  - `themes/lunita-default/.local/share/user-places.xbel.template`
+  - `themes/lunita-default/README.md`
+  - `themes/macos-theme/.config/gtk-3.0/bookmarks.template`
+  - `themes/macos-theme/.config/qt6ct/qt6ct.conf`
+  - `themes/macos-theme/.config/quickshell/bar/popups/AppMenuDropdown.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/AppleMenu.qml`
+  - `themes/macos-theme/.config/quickshell/dock/DockState.qml`
+  - `themes/macos-theme/.config/quickshell/lockscreen/LockView.qml`
+  - `themes/macos-theme/.config/quickshell/osd/OSDState.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/scripts/spotlight_search.py`
+  - `themes/macos-theme/.config/quickshell/widgets/scripts/*` (13 scripts purgados y centralizados en core)
+  - `themes/macos-theme/.oh-my-zsh/custom/macos.zsh`
+  - `themes/modern-win11-theme/.config/gtk-3.0/bookmarks.template`
+  - `themes/modern-win11-theme/.config/qt6ct/qt6ct.conf`
+  - `themes/modern-win11-theme/.config/quickshell/dock/DockState.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/LauncherState.qml`
+  - `themes/modern-win11-theme/.local/share/user-places.xbel.template`
+  - `themes/modern-win11-theme/theme.json`
+- **Descripción:** Corrección exhaustiva de errores de sintaxis en QML detectados por `qmlformat` (operadores opcionales `?.`, `??` y firmas TypeScript no soportadas), dinamización de todas las rutas hardcodeadas de desarrollo y usuario (`/mnt/Desarrollo`, `/mnt/Disco2`, `/home/facuud2`), purgado de 13 scripts duplicados y archivos huérfanos, soporte e integración de OSD de brillo y autostart del wallpaper, estandarización de despachadores de Hyprland (`hyprctl dispatch`) reemplazando llamadas a `hl.dsp.*` en CLI/QML, e incorporación de fallback automático para el historial de portapapeles (`lunita-clipboard`) en `modern-win11-theme`.
+- **Criterios de Aceptación:**
+  1. Los 159 archivos QML del proyecto compilan y formatean con 0 errores bajo `qmlformat`.
+  2. No existen rutas estáticas de desarrollo en plantillas ni ejecutables.
+  3. `lunita-osd` soporta brillo y volumen fluidamente.
+  4. Los tres temas (`lunita-default`, `macos-theme` y `modern-win11-theme`) operan con comandos válidos de Hyprland sin excepciones en stderr.
+  5. Ningún cambio fue pusheado al repositorio remoto.
+- **Dependencias:** Ninguna
+
+### [ISSUE-029] Erradicación de Bucle Infinito de Recarga de Plugins y Componentes en lunita-default
+- **Estado:** COMPLETADO
+- **Prioridad:** CRÍTICA
+- **Rama Sugerida:** `AUDITORY_FIXES`
+- **Módulo(s):** Core / Autostart / Hyprland / Matugen / Eww
+- **Archivos Afectados:**
+  - `core/.config/hypr/modules/autostart.lua`
+  - `core/.local/bin/lunita-dynamic-wallpaper`
+  - `core/.local/bin/lunita-quickshell`
+  - `core/.local/bin/lunita-theme`
+  - `themes/lunita-default/.config/eww/scripts/launch.sh`
+  - `themes/lunita-default/.config/eww/scripts/watch_wallpaper.sh`
+  - `themes/lunita-default/.config/matugen/hooks/update-theme.sh`
+- **Descripción:** Al cambiar a `lunita-default`, el sistema entraba en un bucle infinito donde se recargaban continuamente todos los componentes, plugins de Hyprland (`hyprpm reload -n`) y Quickshell. El origen radicaba en una cascada de retroalimentación circular: `autostart.lua` se re-ejecutaba en cada `hyprctl reload` (invocando `lunita-dynamic-wallpaper init` con `force=true`, `lunita-quickshell start` y `hyprpm reload`), lo que provocaba que `awww` emitiera eventos de cambio de fondo que `watch_wallpaper.sh` detectaba, disparando `matugen image`, cuyo hook `update-theme.sh` volvía a forzar `hyprctl reload`, `lunita-quickshell restart` y `lunita-palette-sync sync`, repitiendo el ciclo perpetuamente.
+- **Criterios de Aceptación:**
+  1. `autostart.lua` cuenta con Session Guard (`_G.__LUNITA_AUTOSTART_DONE` y lockfile de instancia) emulando `exec-once` estricto y no se ejecuta durante `hyprctl reload`.
+  2. `update-theme.sh` de Matugen no relanza destructivamente Quickshell ni llama circularmente a `lunita-palette-sync sync`.
+  3. `watch_wallpaper.sh` cuenta con PID singleton lock y compara rutas canónicas (`realpath`) evitando falsos positivos de cambio de wallpaper.
+  4. `lunita-dynamic-wallpaper init` no fuerza recarga si el wallpaper ya está activo en pantalla.
+  5. `lunita-quickshell` limpia procesos huérfanos de listeners (`osd_listener.py`).
+- **Dependencias:** [ISSUE-028]
+
+### [ISSUE-030] Orquestador de Wallpaper Bajo Demanda y Erradicación de Demoras de 90s en Shutdown
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `AUDITORY_FIXES`
+- **Módulo(s):** Core / Wallpaper / Systemd / Eww
+- **Archivos Afectados:**
+  - `core/.config/hypr/modules/autostart.lua`
+  - `core/.config/systemd/user.conf.d/timeout.conf`
+  - `core/.config/systemd/user/lunita-wallpaper.service`
+  - `core/.config/systemd/user/lunita-wallpaper.timer`
+  - `core/.local/bin/lunita-wallpaper`
+  - `core/.local/bin/lunita-dynamic-wallpaper`
+  - `themes/lunita-default/.config/eww/eww.yuck`
+  - `themes/lunita-default/.config/eww/scripts/launch.sh`
+  - `themes/lunita-default/.config/eww/scripts/watch_wallpaper.sh`
+- **Descripción:** Al reiniciar o apagar el equipo, systemd quedaba bloqueado durante 90 segundos esperando el watchdog de `user@1000.service` debido a demonios huérfanos ejecutados con `setsid ... sleep 60` (`lunita-dynamic-wallpaper daemon`) y scripts de observación continua (`watch_wallpaper.sh`) que no procesaban `SIGTERM` mientras dormían en `sleep`. Se desarrolló desde cero un orquestador 100% libre de demonios en bucle (`lunita-wallpaper`) con ejecución atómica bajo demanda (One-Shot: restaura o aplica en <0.2s y termina con `exit 0`), rotación horaria delegada a temporizadores nativos de systemd (`lunita-wallpaper.timer`), timeout de seguridad de 5s en `user.conf.d/timeout.conf`, y eliminación de bucles persistentes en Eww.
+- **Criterios de Aceptación:**
+  1. `lunita-wallpaper` restaura y aplica fondos en modo One-Shot sin dejar procesos en segundo plano.
+  2. `lunita-dynamic-wallpaper` actúa como wrapper compatible y seguro sin bucles infinitos.
+  3. `core/.config/systemd/user.conf.d/timeout.conf` limita a 5s el timeout máximo de cierre del User Manager.
+  4. Los temporizadores de systemd gestionan la rotación horaria nativa (06:00, 13:00, 20:00).
+  5. Cero procesos huérfanos al apagar o reiniciar el equipo, garantizando un shutdown instantáneo.
+- **Dependencias:** [ISSUE-029]
+
+---
+
+### [ISSUE-031] Rediseño Integral de Menús, Popups y Flyouts con Anti-Slop Taste Skill
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `AUDITORY_FIXES`
+- **Módulo(s):** Temas (`lunita-default`, `macos-theme`, `modern-win11-theme`) / Quickshell / UI-UX
+- **Archivos Afectados:**
+  - `themes/lunita-default/.config/quickshell/bar/ExpandedPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/AudioPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/ConnPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/CalendarPanel.qml`
+  - `themes/lunita-default/.config/quickshell/bar/NotifPanel.qml`
+  - `themes/lunita-default/.config/quickshell/launcher/SearchMenuView.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/AppleMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/AppMenuDropdown.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/BluetoothMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/CalendarMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/NetworkMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/SoundMenu.qml`
+  - `themes/macos-theme/.config/quickshell/bar/popups/TrayContextMenu.qml`
+  - `themes/macos-theme/.config/quickshell/dock/DockContextMenu.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/AppItem.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/CategoryDetailView.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/CategorySection.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/HeaderBar.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/LauncherState.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/LauncherView.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/shell.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/SpotlightItem.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/SpotlightPreview.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/SpotlightState.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/SpotlightView.qml`
+  - `themes/macos-theme/.config/quickshell/spotlight/shell.qml`
+  - `themes/modern-win11-theme/.config/quickshell/bar/panels/LeftSoundFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/bar/panels/RightBrightnessFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/BluetoothControlFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/CalendarNotificationFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/DockContextMenu.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/MediaControlFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/dock/NetworkControlFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/AppItem.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/CategoryDetailView.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/CategoryFolderCard.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/CategorySection.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/HeaderBar.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/LauncherState.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/LauncherView.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/PowerFlyout.qml`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/shell.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/assets/icons/search.svg`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/assets/icons/lock.svg`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/assets/icons/logout.svg`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/assets/icons/moon.svg`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/assets/icons/reload.svg`
+  - `core/.config/hypr/modules/rules.lua`
+  - `core/.local/bin/lunita-theme-selector`
+  - `core/.local/bin/lunita-widgets-manager`
+  - `themes/lunita-default/.config/wlogout/style.css`
+- **Descripción:** Rediseño estético y funcional exhaustivo de todos los 22 menús, popups y flyouts interactivos de los 3 ecosistemas de escritorio en Quickshell, así como las interfaces gráficas y menús independientes del sistema (`lunita-theme-selector`, `lunita-widgets-manager` y `wlogout`), aplicando los principios de la `design-taste-frontend` skill (jerarquía tipográfica estricta, superficies tonales intencionadas, erradicación de brillos y bordes plásticos `RectangularGlow` o `#47ffffff`, y sustitución de emojis crudos por iconografía vectorial auténtica):
+  1. **`lunita-default`:** Enfatizada la identidad Nothing OS brutalista/monocromática de alto contraste. Se perfeccionó la isla `ExpandedPanel`, se rediseñó el buscador `SearchMenuView` eliminando cajas genéricas cuadradas y dotándolo de cápsulas y píldoras Nothing con atajos visuales nítidos, y se añadieron bordes de 1px a tarjetas y controles de `AudioPanel`, `ConnPanel`, `CalendarPanel` y `NotifPanel`. Se armonizó el menú de apagado `wlogout` con el rojo oficial `#D71921` y superficie `#161618`.
+  2. **`macos-theme`:** Depuración de la estética Cupertino. Se erradicó el `RectangularGlow` artificial de 16px con `#99000000` en `DockContextMenu`, implementando elevación de capa ambiental limpia con borde de 1px y 12px de radio, selección en `#007AFF`, tipografía SF Pro Text/Display e interacción suave.
+  3. **`modern-win11-theme`:** Implementación pura de Fluent Design. Se refactorizó completamente `PowerFlyout` erradicando emojis desalineados (`🔒`, `🌙`, `🔄`, etc.) y fuentes sustitutas, reemplazándolos por iconos vectoriales SVG oficiales, Segoe UI Variable, acento suave al hover y bordes de radio 8px/6px. Se optimizó el dimensionamiento y sizing reactivo de `DockContextMenu` y flyouts de control.
+  4. **Interfaces Gráficas y Herramientas Independientes (Anti-Slop & Opacidad Sólida):** Refinamiento integral de `lunita-theme-selector` y `lunita-widgets-manager`. Se configuró la regla de ventana `lunita-gui-tools` en `core/.config/hypr/modules/rules.lua` (`opacity = "1.0 override 1.0 override"`, flotante y centrada) erradicando la semitransparencia del 82% que volvía ilegibles los textos sobre ventanas o videos de fondo. En `lunita-theme-selector`, se incorporaron superficies sólidas `#121316` / `#16171B`, encabezados sutiles `#94A3B8`, chips informativos con glifos Nerd Font (`󱂬`, `󱂫`, `󰍉`, etc.) y micro-bordes de acento dinámicos. En `lunita-widgets-manager`, se erradicaron los botones genéricos azules en el chrome ("Color goes on data, not chrome"), se estilizaron los paneles de control de widgets (`Adw.PreferencesGroup`, `boxed-list`, `switch:checked`) y se dotó de botones de acción secundarios con elevación sutil y proporciones limpias.
+  5. **Auditoría Visual y Corrección de Iconos en Vivo:** Mediante capturas en tiempo real bajo Wayland y simulación de uso real, se detectaron y subsanaron: glifos literales de texto (`search` y `arrow_back`) en `SearchMenuView` de `lunita-default` corregidos con `SymbolsNerdFont` y `Feather`; textura ausente (checkerboard) en `HeaderBar` de macOS corregida con un SVG nativo `search.svg`; sustitución de fuentes residuales `Adwaita Sans` por `Segoe UI Variable Text` en Windows 11; e independización de iconos vectoriales en `PowerFlyout` eliminando rutas relativas frágiles.
+- **Criterios de Aceptación:**
+  1. Todos los archivos QML pasan `qmlformat` con 0 errores de sintaxis y formateo limpio.
+  2. Ningún menú contiene emojis, texturas faltantes o brillos plásticos artificiales.
+  3. Cada tema mantiene una coherencia visual y táctil inmaculada con su respectivo lenguaje de diseño.
+  4. `lunita-theme-selector` adapta sus acentos dinámicamente según la paleta del tema seleccionado.
+  5. Ningún cambio fue pusheado al repositorio remoto.
+- **Dependencias:** [ISSUE-028], [ISSUE-030]

@@ -174,6 +174,18 @@ function M.setup()
         opacity          = "0.94 0.88",
     })
 
+    -- Lunita GUI Tools (Theme Selector & Widgets Manager: Opaque & Elevated)
+    hl.window_rule({
+        name             = "lunita-gui-tools",
+        match            = {
+            class = "^(io\\.lunita\\.ThemeSelector|org\\.lunita\\.ThemeSelector|org\\.lunita\\.WidgetsManager|Theme Selector|Gestor de Widgets)$",
+        },
+        float            = true,
+        center           = true,
+        opacity          = "1.0 override 1.0 override",
+        rounding         = 16,
+    })
+
 
 
     ------------------------------------
