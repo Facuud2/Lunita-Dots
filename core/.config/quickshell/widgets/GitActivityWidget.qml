@@ -3,18 +3,40 @@ import QtQuick.Layouts
 
 Item {
     id: root
-    property var widgetsState
 
+    property var widgetsState
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
-
     readonly property bool isCiFail: root.widgetsState ? (root.widgetsState.gitCiStatus === "failure") : false
+    readonly property var defaultHeatmap: [{
+        "day_letter": "L",
+        "level": 1
+    }, {
+        "day_letter": "M",
+        "level": 2
+    }, {
+        "day_letter": "M",
+        "level": 0
+    }, {
+        "day_letter": "J",
+        "level": 3
+    }, {
+        "day_letter": "V",
+        "level": 4
+    }, {
+        "day_letter": "S",
+        "level": 2
+    }, {
+        "day_letter": "D",
+        "level": 3
+    }]
 
     Rectangle {
         id: bg
+
         anchors.fill: parent
-        radius: 22
+        radius: root.widgetsState ? root.widgetsState.cardRadius : 22
         color: root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75)
         border.color: isCiFail ? "#FF453A" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
         border.width: isCiFail ? 1.5 : 1
@@ -50,19 +72,22 @@ Item {
                     font.letterSpacing: 0.5
                 }
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 // CI/CD Badge
                 Rectangle {
                     height: 16
                     radius: 8
                     implicitWidth: ciRow.implicitWidth + 8
-                    color: isCiFail ? Qt.rgba(1.0, 0.27, 0.23, 0.20) : Qt.rgba(0.19, 0.82, 0.35, 0.20)
+                    color: isCiFail ? Qt.rgba(1, 0.27, 0.23, 0.2) : Qt.rgba(0.19, 0.82, 0.35, 0.2)
                     border.color: isCiFail ? "#FF453A" : "#30D158"
                     border.width: 1
 
                     RowLayout {
                         id: ciRow
+
                         anchors.centerIn: parent
                         spacing: 2
 
@@ -80,8 +105,11 @@ Item {
                             font.weight: Font.Bold
                             color: isCiFail ? "#FF453A" : "#30D158"
                         }
+
                     }
+
                 }
+
             }
 
             // 7-Day Heatmap
@@ -103,10 +131,18 @@ Item {
                             radius: 2.5
                             color: {
                                 var lvl = modelData.level !== undefined ? modelData.level : 0;
-                                if (lvl === 4) return "#39D353";
-                                if (lvl === 3) return "#26A641";
-                                if (lvl === 2) return "#006D32";
-                                if (lvl === 1) return "#0E4429";
+                                if (lvl === 4)
+                                    return "#39D353";
+
+                                if (lvl === 3)
+                                    return "#26A641";
+
+                                if (lvl === 2)
+                                    return "#006D32";
+
+                                if (lvl === 1)
+                                    return "#0E4429";
+
                                 return root.widgetsState && root.widgetsState.isDarkTheme ? "#161B22" : "#E1E4E8";
                             }
                             border.color: root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"
@@ -121,8 +157,11 @@ Item {
                             font.weight: Font.Medium
                             color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
                         }
+
                     }
+
                 }
+
             }
 
             // Latest Commit Card
@@ -151,7 +190,9 @@ Item {
                             color: root.widgetsState ? root.widgetsState.accentBlue : "#007AFF"
                         }
 
-                        Item { Layout.fillWidth: true }
+                        Item {
+                            Layout.fillWidth: true
+                        }
 
                         Text {
                             text: root.widgetsState && root.widgetsState.gitLatestCommit && root.widgetsState.gitLatestCommit.hash ? root.widgetsState.gitLatestCommit.hash : "adf8df3"
@@ -160,6 +201,7 @@ Item {
                             font.weight: Font.DemiBold
                             color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
                         }
+
                     }
 
                     Text {
@@ -183,8 +225,11 @@ Item {
                         elide: Text.ElideRight
                         color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
                     }
+
                 }
+
             }
+
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -206,6 +251,7 @@ Item {
                     height: 28
                     radius: 14
                     color: Qt.rgba(1, 1, 1, 0.12)
+
                     Text {
                         anchors.centerIn: parent
                         text: ""
@@ -213,10 +259,12 @@ Item {
                         font.pixelSize: 16
                         color: "#FFFFFF"
                     }
+
                 }
 
                 ColumnLayout {
                     spacing: 0
+
                     Text {
                         text: "GitHub Activity"
                         font.family: "SF Pro Display"
@@ -224,27 +272,32 @@ Item {
                         font.weight: Font.Bold
                         color: "#FFFFFF"
                     }
+
                     Text {
                         text: "@" + (root.widgetsState ? root.widgetsState.gitUser : "Facuud2")
                         font.family: "SF Pro Display"
                         font.pixelSize: 9
                         color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.55)
                     }
+
                 }
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 // Badge CI/CD
                 Rectangle {
                     height: 20
                     radius: 10
                     implicitWidth: ciLargeRow.implicitWidth + 12
-                    color: isCiFail ? Qt.rgba(1.0, 0.27, 0.23, 0.22) : Qt.rgba(0.19, 0.82, 0.35, 0.22)
+                    color: isCiFail ? Qt.rgba(1, 0.27, 0.23, 0.22) : Qt.rgba(0.19, 0.82, 0.35, 0.22)
                     border.color: isCiFail ? "#FF453A" : "#30D158"
                     border.width: 1
 
                     RowLayout {
                         id: ciLargeRow
+
                         anchors.centerIn: parent
                         spacing: 4
 
@@ -262,8 +315,11 @@ Item {
                             font.weight: Font.Bold
                             color: isCiFail ? "#FF453A" : "#30D158"
                         }
+
                     }
+
                 }
+
             }
 
             // 2. Tarjeta de Mapa de Calor 7 Días
@@ -283,6 +339,7 @@ Item {
 
                     ColumnLayout {
                         spacing: 1
+
                         Text {
                             text: "Últimos 7 días"
                             font.family: "SF Pro Display"
@@ -290,15 +347,19 @@ Item {
                             font.weight: Font.Bold
                             color: "#FFFFFF"
                         }
+
                         Text {
                             text: "Registro de actividad"
                             font.family: "SF Pro Display"
                             font.pixelSize: 9
                             color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
                         }
+
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     RowLayout {
                         spacing: 6
@@ -316,10 +377,18 @@ Item {
                                     radius: 3.5
                                     color: {
                                         var lvl = modelData.level !== undefined ? modelData.level : 0;
-                                        if (lvl === 4) return "#39D353";
-                                        if (lvl === 3) return "#26A641";
-                                        if (lvl === 2) return "#006D32";
-                                        if (lvl === 1) return "#0E4429";
+                                        if (lvl === 4)
+                                            return "#39D353";
+
+                                        if (lvl === 3)
+                                            return "#26A641";
+
+                                        if (lvl === 2)
+                                            return "#006D32";
+
+                                        if (lvl === 1)
+                                            return "#0E4429";
+
                                         return root.widgetsState && root.widgetsState.isDarkTheme ? "#161B22" : "#E1E4E8";
                                     }
                                     border.color: root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)"
@@ -334,22 +403,29 @@ Item {
                                     font.weight: Font.Bold
                                     color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
                                 }
+
                             }
+
                         }
+
                     }
+
                 }
+
             }
 
             // 3. Título de sección: Commits Recientes
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 4
+
                 Text {
                     text: "󰜘"
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 11
                     color: root.widgetsState ? root.widgetsState.accentBlue : "#007AFF"
                 }
+
                 Text {
                     text: "COMMITS RECIENTES"
                     font.family: "SF Pro Display"
@@ -358,6 +434,7 @@ Item {
                     font.letterSpacing: 0.5
                     color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
                 }
+
             }
 
             // 4. Lista de commits recientes (ocupa el resto de la tarjeta con estilo elegante)
@@ -366,9 +443,7 @@ Item {
                 Layout.fillHeight: true
                 clip: true
                 spacing: 6
-                model: root.widgetsState && root.widgetsState.gitRecentCommits.length > 0
-                       ? root.widgetsState.gitRecentCommits
-                       : (root.widgetsState && root.widgetsState.gitLatestCommit ? [root.widgetsState.gitLatestCommit] : [])
+                model: root.widgetsState && root.widgetsState.gitRecentCommits.length > 0 ? root.widgetsState.gitRecentCommits : (root.widgetsState && root.widgetsState.gitLatestCommit ? [root.widgetsState.gitLatestCommit] : [])
 
                 delegate: Rectangle {
                     width: parent ? parent.width : 326
@@ -395,10 +470,11 @@ Item {
                                 height: 16
                                 radius: 8
                                 implicitWidth: repoTxt.implicitWidth + 8
-                                color: Qt.rgba(0, 122/255, 255/255, 0.18)
+                                color: Qt.rgba(0, 122 / 255, 255 / 255, 0.18)
 
                                 Text {
                                     id: repoTxt
+
                                     anchors.centerIn: parent
                                     text: modelData.repo || "Lunita-Dots"
                                     font.family: "SF Pro Display"
@@ -406,6 +482,7 @@ Item {
                                     font.weight: Font.Bold
                                     color: "#0A84FF"
                                 }
+
                             }
 
                             Text {
@@ -416,7 +493,9 @@ Item {
                                 color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
                             }
 
-                            Item { Layout.fillWidth: true }
+                            Item {
+                                Layout.fillWidth: true
+                            }
 
                             Text {
                                 text: modelData.relative_time || "reciente"
@@ -424,6 +503,7 @@ Item {
                                 font.pixelSize: 9
                                 color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
                             }
+
                         }
 
                         Text {
@@ -436,9 +516,13 @@ Item {
                             maximumLineCount: 1
                             color: "#FFFFFF"
                         }
+
                     }
+
                 }
+
             }
+
         }
 
         MouseArea {
@@ -446,18 +530,12 @@ Item {
             enabled: root.widgetsState ? !root.widgetsState.isEditing : true
             cursorShape: Qt.PointingHandCursor
             onDoubleClicked: {
-                if (root.widgetsState) root.widgetsState.refreshGit();
+                if (root.widgetsState)
+                    root.widgetsState.refreshGit();
+
             }
         }
+
     }
 
-    readonly property var defaultHeatmap: [
-        { day_letter: "L", level: 1 },
-        { day_letter: "M", level: 2 },
-        { day_letter: "M", level: 0 },
-        { day_letter: "J", level: 3 },
-        { day_letter: "V", level: 4 },
-        { day_letter: "S", level: 2 },
-        { day_letter: "D", level: 3 }
-    ]
 }

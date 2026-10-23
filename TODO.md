@@ -524,11 +524,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-035] Adaptación estética dinámica de widgets por tema con persistencia de layout
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_035_FEAT`
 - **Módulo(s):** Core / Temas / Widgets
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/`, `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-palette-sync`
+- **Archivos Afectados:** `core/.config/quickshell/widgets/`, `themes/macos-theme/.config/quickshell/widgets/`, `core/.local/bin/lunita-palette-sync`, `core/.local/bin/lunita-quickshell`, `themes/lunita-default/theme.json`, `themes/modern-win11-theme/theme.json`
 - **Descripción:** Los widgets de escritorio deben adaptar su diseño visual (bordes, desenfoque, tipografía y paleta de colores) dinámicamente según el tema activo (`lunita-default`, `macOS-Theme`, `Modern-Win11-Theme`), pero manteniendo una única configuración persistente de estado: qué widgets están activos, sus dimensiones y sus coordenadas en pantalla deben conservarse intactos al cambiar de un tema a otro.
 - **Criterios de Aceptación:**
   1. Cambiar de tema transforma la estética de los widgets en pantalla para coincidir con el lenguaje visual del nuevo tema.

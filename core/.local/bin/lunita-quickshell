@@ -93,7 +93,7 @@ is_component_enabled_in_theme() {
     fi
 
     # Verificar existencia real de la configuración
-    if [ -d "$HOME/.config/quickshell/$comp" ] || [ -d "$DOTS_DIR/themes/$theme/.config/quickshell/$comp" ]; then
+    if [ -d "$HOME/.config/quickshell/$comp" ] || [ -d "$DOTS_DIR/themes/$theme/.config/quickshell/$comp" ] || [ -d "$DOTS_DIR/core/.config/quickshell/$comp" ]; then
         return 0
     fi
 
@@ -210,6 +210,8 @@ start_component() {
         current_theme="$(get_active_theme)"
         if [ -d "$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp" ]; then
             config_dir="$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp"
+        elif [ -d "$DOTS_DIR/core/.config/quickshell/$comp" ]; then
+            config_dir="$DOTS_DIR/core/.config/quickshell/$comp"
         else
             return 0
         fi

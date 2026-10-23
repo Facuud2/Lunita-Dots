@@ -16,12 +16,17 @@ Scope {
 
         delegate: Scope {
             id: screenScope
+
             required property var modelData
 
             PanelWindow {
                 id: widgetsWindow
+
                 screen: screenScope.modelData
                 color: "transparent"
+                WlrLayershell.layer: WlrLayer.Bottom
+                WlrLayershell.namespace: "macos-desktop-widgets"
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
                 anchors {
                     top: true
@@ -30,16 +35,16 @@ Scope {
                     right: true
                 }
 
-                WlrLayershell.layer: WlrLayer.Bottom
-                WlrLayershell.namespace: "macos-desktop-widgets"
-                WlrLayershell.exclusionMode: ExclusionMode.Ignore
-
                 DesktopGridCanvas {
                     anchors.fill: parent
                     screenName: screenScope.modelData ? (screenScope.modelData.name || "default") : "default"
                     widgetsState: globalWidgetsState
                 }
+
             }
+
         }
+
     }
+
 }
