@@ -574,11 +574,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** [ISSUE-021]
 
 ### [ISSUE-034] Eliminación definitiva de Eww y sus widgets en lunita-default
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
 - **Rama Sugerida:** `ISSUE_034_CHORE`
 - **Módulo(s):** Lunita-Default / Core
-- **Archivos Afectados:** `themes/lunita-default/.config/eww/`, `themes/lunita-default/theme.json`, `themes/lunita-default/.config/matugen/config.toml`, `core/.local/bin/lunita-theme`
+- **Archivos Afectados:** `themes/lunita-default/.config/eww/`, `themes/lunita-default/theme.json`, `themes/lunita-default/.config/matugen/config.toml`, `themes/lunita-default/.config/matugen/templates/eww-colors.scss`, `themes/lunita-default/.config/matugen/hooks/update-theme.sh`, `core/.local/bin/lunita-theme`, `themes/lunita-default/README.md`, `.gitignore`
 - **Descripción:** Purgar por completo la carpeta `.config/eww` dentro de `lunita-default`, así como cualquier plantilla de Matugen, referencia en `theme.json` o llamada al demonio `eww` en los scripts de inicio y cambio de tema, dado que serán reemplazados por el ecosistema de widgets nativos en Quickshell.
 - **Criterios de Aceptación:**
   1. El directorio `.config/eww` ya no existe en `themes/lunita-default/`.

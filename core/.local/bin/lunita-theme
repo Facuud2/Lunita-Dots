@@ -524,21 +524,10 @@ cmd_apply() {
     # 6. Sincronización y recarga/detención de componentes en ejecución
     info "Sincronizando componentes visuales..."
 
-    # Gestión de Eww
-    if [ -d "$target_dir/.config/eww" ] || [ -d "$target_dir/eww" ]; then
-        if pgrep -x eww > /dev/null; then
-            eww reload 2>/dev/null || true
-            success "Eww recargado."
-        elif [ -x "$HOME/.config/eww/scripts/launch.sh" ]; then
-            "$HOME/.config/eww/scripts/launch.sh" &
-            success "Eww iniciado."
-        fi
-    else
-        if pgrep -x eww > /dev/null; then
-            eww kill 2>/dev/null || true
-            pkill -x eww 2>/dev/null || true
-            info "Eww cerrado (no configurado en '$target')."
-        fi
+    # Limpieza residual de Eww si existiera proceso activo
+    if pgrep -x eww > /dev/null; then
+        eww kill 2>/dev/null || true
+        pkill -x eww 2>/dev/null || true
     fi
 
     # Obtener configuración de cursor, tema e iconos del tema actual
@@ -652,7 +641,7 @@ cmd_create() {
     fi
 
     info "Creando estructura base para nuevo tema '${BOLD}$new_theme${RESET}' compatible con GNU Stow..."
-    mkdir -p "$dest/.config"/{ags,eww,kitty,matugen/templates,matugen/hooks,wlogout,quickshell}
+    mkdir -p "$dest/.config"/{kitty,matugen/templates,matugen/hooks,wlogout,quickshell}
     mkdir -p "$dest/.local/share"
     mkdir -p "$dest/.icons"
     mkdir -p "$dest/wallpaper"

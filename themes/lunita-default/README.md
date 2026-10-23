@@ -24,7 +24,6 @@
 Al cambiar el fondo con HyprQuickPaper (`SUPER + W`) o con `awww img`, Matugen genera automáticamente los tokens de color para:
 - Bordes y sombras de Hyprland (`hypr/modules/colors.lua`)
 - Estilos de la Dynamic Island y Launcher (`quickshell/colors.json`)
-- Widget y carátula SVG de Eww (`eww/colors.scss`)
 - Terminal Kitty (`kitty/colors-matugen.conf`)
 - Highlights de Neovim (`nvim/lua/colors.lua`)
 - Bloqueo Hyprlock (`hypr/hyprlock-colors.conf`)

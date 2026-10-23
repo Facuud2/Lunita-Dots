@@ -12,28 +12,6 @@ if [ "$CURRENT_THEME" != "lunita-default" ]; then
     exit 0
 fi
 
-# Regenerate default cover art with new theme colors
-COLORS_FILE="$HOME/.config/eww/colors.scss"
-if [ -f "$COLORS_FILE" ]; then
-    BG=$(grep '\$surface:' "$COLORS_FILE" | awk '{print $2}' | tr -d ';')
-    PRIMARY=$(grep '\$primary:' "$COLORS_FILE" | awk '{print $2}' | tr -d ';')
-    OUTLINE=$(grep '\$outline:' "$COLORS_FILE" | awk '{print $2}' | tr -d ';')
-    CONTAINER=$(grep '\$surface_container:' "$COLORS_FILE" | awk '{print $2}' | tr -d ';')
-
-    TMP_SVG="$(mktemp --tmpdir="${XDG_RUNTIME_DIR:-/tmp}" lunita_note_XXXXXX.svg)"
-    cat << SVG > "$TMP_SVG"
-<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
-  <rect width="80" height="80" rx="16" fill="${BG:-#1e1e2e}"/>
-  <circle cx="40" cy="40" r="28" fill="${CONTAINER:-#181825}" stroke="${OUTLINE:-#313244}" stroke-width="2"/>
-  <circle cx="40" cy="40" r="20" fill="none" stroke="${OUTLINE:-#45475a}" stroke-width="1" stroke-dasharray="3,3"/>
-  <circle cx="40" cy="40" r="10" fill="${PRIMARY:-#cdd6f4}"/>
-  <circle cx="40" cy="40" r="3" fill="${BG:-#181825}"/>
-</svg>
-SVG
-    ffmpeg -y -i "$TMP_SVG" -frames:v 1 -update 1 "$HOME/.config/eww/assets/default_cover.png" >/dev/null 2>&1
-    rm -f "$TMP_SVG"
-fi
-
 # Lockfile para evitar ejecuciones simultáneas o en bucle
 LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/lunita_matugen_hook.lock"
 if [ -f "$LOCK_FILE" ]; then
@@ -43,11 +21,6 @@ if [ -f "$LOCK_FILE" ]; then
     fi
 fi
 touch "$LOCK_FILE"
-
-# Reload eww
-if pgrep -x eww > /dev/null; then
-    eww reload
-fi
 
 # Reload Hyprland para aplicar nueva paleta de bordes (colors.lua)
 if pgrep -x Hyprland > /dev/null; then
