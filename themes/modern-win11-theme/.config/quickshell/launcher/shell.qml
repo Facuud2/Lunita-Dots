@@ -76,6 +76,14 @@ Scope {
             globalLauncherState.closeLauncher();
         }
 
+        function togglePower() {
+            if (!globalLauncherState.isOpen) {
+                root.updateTargetScreen("");
+                globalLauncherState.openLauncher();
+            }
+            globalLauncherState.powerMenuOpen = !globalLauncherState.powerMenuOpen;
+        }
+
         target: "launcher"
     }
 

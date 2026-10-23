@@ -53,9 +53,9 @@ Item {
                     spacing: 6
 
                     Text {
-                        text: "arrow_back"
-                        font.family: "Material Symbols Outlined, Material Icons, monospace"
-                        font.pixelSize: 16
+                        text: "\uf060"
+                        font.family: launcherState.fontSymbols
+                        font.pixelSize: 14
                         color: backMouseArea.containsMouse ? launcherState.accentColor : launcherState.accentFg
                     }
 
@@ -102,9 +102,9 @@ Item {
                     spacing: 10
 
                     Text {
-                        text: "search"
-                        font.family: "Material Symbols Outlined, Material Icons, monospace"
-                        font.pixelSize: 18
+                        text: "\ue9cc"
+                        font.family: launcherState.fontFeather
+                        font.pixelSize: 16
                         color: searchInput.activeFocus ? launcherState.accentColor : launcherState.fgDimColor
                     }
 

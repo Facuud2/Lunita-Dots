@@ -488,6 +488,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   - `themes/modern-win11-theme/.config/quickshell/launcher/LauncherView.qml`
   - `themes/modern-win11-theme/.config/quickshell/launcher/PowerFlyout.qml`
   - `themes/modern-win11-theme/.config/quickshell/launcher/shell.qml`
+  - `themes/macos-theme/.config/quickshell/launcher/assets/icons/search.svg`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/assets/icons/lock.svg`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/assets/icons/logout.svg`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/assets/icons/moon.svg`
+  - `themes/modern-win11-theme/.config/quickshell/launcher/assets/icons/reload.svg`
   - `core/.local/bin/lunita-theme-selector`
   - `themes/lunita-default/.config/wlogout/style.css`
 - **Descripción:** Rediseño estético y funcional exhaustivo de todos los 22 menús, popups y flyouts interactivos de los 3 ecosistemas de escritorio en Quickshell, así como las interfaces gráficas y menús independientes del sistema (`lunita-theme-selector` y `wlogout`), aplicando los principios de la `design-taste-frontend` skill (jerarquía tipográfica estricta, superficies tonales intencionadas, erradicación de brillos y bordes plásticos `RectangularGlow` o `#47ffffff`, y sustitución de emojis crudos por iconografía vectorial auténtica):
@@ -495,9 +500,10 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   2. **`macos-theme`:** Depuración de la estética Cupertino. Se erradicó el `RectangularGlow` artificial de 16px con `#99000000` en `DockContextMenu`, implementando elevación de capa ambiental limpia con borde de 1px y 12px de radio, selección en `#007AFF`, tipografía SF Pro Text/Display e interacción suave.
   3. **`modern-win11-theme`:** Implementación pura de Fluent Design. Se refactorizó completamente `PowerFlyout` erradicando emojis desalineados (`🔒`, `🌙`, `🔄`, etc.) y fuentes sustitutas, reemplazándolos por iconos vectoriales SVG oficiales, Segoe UI Variable, acento suave al hover y bordes de radio 8px/6px. Se optimizó el dimensionamiento y sizing reactivo de `DockContextMenu` y flyouts de control.
   4. **Scripts y GUIs Independientes:** Refinamiento estético en `lunita-theme-selector` (erradicando colores lavanda estáticos y quemados, introduciendo la función `hex_to_rgba()` para derivar bordes y sombras reactivas de `colors["primary"]` de cada tema, puliendo botones, tarjetas e interacción de selección sin degradados genéricos).
+  5. **Auditoría Visual y Corrección de Iconos en Vivo:** Mediante capturas en tiempo real bajo Wayland y simulación de uso real, se detectaron y subsanaron: glifos literales de texto (`search` y `arrow_back`) en `SearchMenuView` de `lunita-default` corregidos con `SymbolsNerdFont` y `Feather`; textura ausente (checkerboard) en `HeaderBar` de macOS corregida con un SVG nativo `search.svg`; sustitución de fuentes residuales `Adwaita Sans` por `Segoe UI Variable Text` en Windows 11; e independización de iconos vectoriales en `PowerFlyout` eliminando rutas relativas frágiles.
 - **Criterios de Aceptación:**
   1. Todos los archivos QML pasan `qmlformat` con 0 errores de sintaxis y formateo limpio.
-  2. Ningún menú contiene emojis o brillos plásticos artificiales.
+  2. Ningún menú contiene emojis, texturas faltantes o brillos plásticos artificiales.
   3. Cada tema mantiene una coherencia visual y táctil inmaculada con su respectivo lenguaje de diseño.
   4. `lunita-theme-selector` adapta sus acentos dinámicamente según la paleta del tema seleccionado.
   5. Ningún cambio fue pusheado al repositorio remoto.

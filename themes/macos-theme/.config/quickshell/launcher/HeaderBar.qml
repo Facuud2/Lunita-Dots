@@ -202,7 +202,7 @@ Item {
 
                 // Search Icon
                 Image {
-                    source: "image://icon/system-search"
+                    source: Qt.resolvedUrl("assets/icons/search.svg")
                     width: 15
                     height: 15
                     anchors.verticalCenter: parent.verticalCenter

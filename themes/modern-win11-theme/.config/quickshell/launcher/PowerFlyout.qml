@@ -43,28 +43,28 @@ Item {
             // Lock Action
             PowerItemBtn {
                 label: "Bloquear"
-                iconSrc: Qt.resolvedUrl("../dock/assets/lock.svg")
+                iconSrc: Qt.resolvedUrl("assets/icons/lock.svg")
                 onTriggered: root.launcherState.powerAction("lock")
             }
 
             // Sleep / Suspend Action
             PowerItemBtn {
                 label: "Suspender"
-                iconSrc: Qt.resolvedUrl("../dock/assets/moon.svg")
+                iconSrc: Qt.resolvedUrl("assets/icons/moon.svg")
                 onTriggered: root.launcherState.powerAction("suspend")
             }
 
             // Reboot Action
             PowerItemBtn {
                 label: "Reiniciar"
-                iconSrc: Qt.resolvedUrl("../dock/assets/reload.svg")
+                iconSrc: Qt.resolvedUrl("assets/icons/reload.svg")
                 onTriggered: root.launcherState.powerAction("reboot")
             }
 
             // Shutdown Action
             PowerItemBtn {
                 label: "Apagar"
-                iconSrc: Qt.resolvedUrl("../dock/assets/power.svg")
+                iconSrc: Qt.resolvedUrl("assets/icons/win11-power.svg")
                 isDanger: true
                 onTriggered: root.launcherState.powerAction("shutdown")
             }
@@ -80,7 +80,7 @@ Item {
             // Sign out / Logout Action
             PowerItemBtn {
                 label: "Cerrar sesión"
-                iconSrc: Qt.resolvedUrl("../dock/assets/minimize.svg")
+                iconSrc: Qt.resolvedUrl("assets/icons/logout.svg")
                 onTriggered: root.launcherState.powerAction("logout")
             }
 

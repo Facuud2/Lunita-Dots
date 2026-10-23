@@ -99,7 +99,7 @@ Item {
             font.pixelSize: 11
             font.weight: Font.Normal
             font.italic: false
-            font.family: "Adwaita Sans, sans-serif"
+            font.family: "Segoe UI Variable Text, Segoe UI, Inter, sans-serif"
             // Subtle text shadow for high contrast over transparent blur
             style: Text.Outline
             styleColor: Qt.rgba(0, 0, 0, 0.65)

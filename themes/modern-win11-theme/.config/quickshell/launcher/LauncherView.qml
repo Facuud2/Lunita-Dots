@@ -231,7 +231,7 @@ Item {
                                         font.pixelSize: 14
                                         font.weight: Font.DemiBold
                                         font.italic: false
-                                        font.family: "Adwaita Sans, sans-serif"
+                                        font.family: "Segoe UI Variable Text, Segoe UI, Inter, sans-serif"
                                     }
 
                                     // Right Action: "Mostrar menos ⌃" / "Mostrar más ⌄"
@@ -255,7 +255,7 @@ Item {
                                                 font.pixelSize: 12
                                                 font.weight: Font.Medium
                                                 font.italic: false
-                                                font.family: "Adwaita Sans, sans-serif"
+                                                font.family: "Segoe UI Variable Text, Segoe UI, Inter, sans-serif"
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
 
@@ -327,7 +327,7 @@ Item {
                                         font.pixelSize: 14
                                         font.weight: Font.DemiBold
                                         font.italic: false
-                                        font.family: "Adwaita Sans, sans-serif"
+                                        font.family: "Segoe UI Variable Text, Segoe UI, Inter, sans-serif"
                                     }
 
                                     // Right Action: "Visualización: Categoría ⌄"
@@ -351,7 +351,7 @@ Item {
                                                 font.pixelSize: 12
                                                 font.weight: Font.Medium
                                                 font.italic: false
-                                                font.family: "Adwaita Sans, sans-serif"
+                                                font.family: "Segoe UI Variable Text, Segoe UI, Inter, sans-serif"
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
 
