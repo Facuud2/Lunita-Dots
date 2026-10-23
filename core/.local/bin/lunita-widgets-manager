@@ -28,6 +28,45 @@ HABITS_FILE = CONFIG_DIR / "habits.json"
 LAYOUT_FILE = CONFIG_DIR / "widgets_layout_qml.json"
 TIMETABLE_FILE = CONFIG_DIR / "unab_timetable.json"
 WEATHER_LOCATION_FILE = CONFIG_DIR / "weather_location"
+ACTIVE_TOKENS_FILE = CONFIG_DIR / "active_tokens.json"
+
+def load_theme_colors():
+    colors = {
+        "primary": "#007aff",
+        "surface": "#121316",
+        "surface_container": "#181920",
+        "surface_container_high": "#22242E",
+        "on_surface": "#F1F5F9",
+        "on_surface_dim": "#94A3B8",
+    }
+    if ACTIVE_TOKENS_FILE.exists():
+        try:
+            tokens = json.loads(ACTIVE_TOKENS_FILE.read_text(encoding="utf-8"))
+            if "accent" in tokens:
+                colors["primary"] = tokens["accent"]
+            if "surface" in tokens:
+                colors["surface"] = tokens["surface"]
+            if "surface_container" in tokens:
+                colors["surface_container"] = tokens["surface_container"]
+            if "on_surface" in tokens:
+                colors["on_surface"] = tokens["on_surface"]
+            if "on_surface_dim" in tokens:
+                colors["on_surface_dim"] = tokens["on_surface_dim"]
+        except Exception:
+            pass
+    return colors
+
+def hex_to_rgba(hex_color: str, alpha: float) -> str:
+    hex_color = hex_color.lstrip("#")
+    if len(hex_color) >= 6:
+        try:
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+            return f"rgba({r}, {g}, {b}, {alpha})"
+        except ValueError:
+            pass
+    return f"rgba(255, 255, 255, {alpha})"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DOTS_DIR = SCRIPT_DIR.parent.parent
@@ -105,154 +144,268 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             self.view_stack.set_visible_child_name(self.initial_tab)
 
     def setup_css(self):
-        css = """
+        colors = load_theme_colors()
+        primary_accent = colors.get("primary", "#007aff")
+        css = f"""
+        window,
         window.widgets-manager,
         window.widgets-manager > contents,
         .widgets-manager,
         .widgets-manager .view-stack,
-        .widgets-manager paned,
-        .widgets-manager scrolledwindow,
-        .widgets-manager view {
-            background-color: #161618;
-            color: #f5f5f7;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Space Grotesk", sans-serif;
-        }
+        paned,
+        scrolledwindow,
+        scrolledwindow > viewport,
+        view,
+        preferencespage,
+        adw-preferences-page {{
+            background-color: #121316;
+            color: #F1F5F9;
+            font-family: "Inter", "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }}
 
-        window.widgets-manager headerbar {
-            background-color: #1c1c1e;
-            color: #f5f5f7;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
+        headerbar {{
+            background-color: #16171B;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            color: #F1F5F9;
+        }}
 
-        window.widgets-manager headerbar button {
-            background-color: rgba(255, 255, 255, 0.08);
-            color: #f5f5f7;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        headerbar button {{
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #E2E8F0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9px;
+            transition: all 150ms ease;
+        }}
 
-        window.widgets-manager headerbar button:hover {
-            background-color: rgba(255, 255, 255, 0.16);
-        }
+        headerbar button:hover {{
+            background-color: rgba(255, 255, 255, 0.10);
+            border-color: rgba(255, 255, 255, 0.16);
+            color: #FFFFFF;
+        }}
 
-        window.widgets-manager headerbar viewswitcher button:checked {
-            background-color: rgba(255, 255, 255, 0.22);
-            color: #ffffff;
-        }
+        viewswitcher button {{
+            background-color: transparent;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            color: #94A3B8;
+            margin: 0 2px;
+            padding: 4px 12px;
+            transition: all 150ms ease;
+        }}
 
-        calendar {
-            background-color: #202022;
-            color: #f5f5f7;
+        viewswitcher button:hover {{
+            background-color: rgba(255, 255, 255, 0.06);
+            color: #F1F5F9;
+        }}
+
+        viewswitcher button:checked {{
+            background-color: #242631;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }}
+
+        preferencesgroup {{
+            margin-bottom: 24px;
+        }}
+
+        preferencesgroup > label,
+        .boxed-list-header {{
+            font-size: 11px;
+            font-weight: 700;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 8px;
+        }}
+
+        list.boxed-list {{
+            background-color: #17181F;
+            border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.10);
-        }
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+        }}
 
-        entry, textview {
-            background-color: #242426;
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        list.boxed-list > row {{
+            background-color: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 14px;
+            transition: background-color 150ms ease;
+        }}
+
+        list.boxed-list > row:last-child {{
+            border-bottom: none;
+        }}
+
+        list.boxed-list > row:hover {{
+            background-color: rgba(255, 255, 255, 0.03);
+        }}
+
+        switch:checked {{
+            background-color: {primary_accent};
+            border-color: {primary_accent};
+        }}
+
+        calendar {{
+            background-color: #17181F;
+            color: #F1F5F9;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            padding: 10px;
+        }}
+
+        calendar:selected {{
+            background-color: {primary_accent};
+            color: #FFFFFF;
+            border-radius: 8px;
+        }}
+
+        calendar header {{
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 6px;
+            color: #94A3B8;
+        }}
+
+        entry, textview {{
+            background-color: #1B1C23;
+            color: #F1F5F9;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 10px;
             padding: 8px 12px;
-        }
+        }}
 
-        entry:focus-within, textview:focus-within {
-            border-color: #0A84FF;
-            background-color: #2a2a2e;
-        }
+        entry:focus-within, textview:focus-within {{
+            border-color: {primary_accent};
+            background-color: #20222B;
+        }}
 
-        entry > text > placeholder {
-            color: rgba(255, 255, 255, 0.45);
-        }
+        entry > text > placeholder {{
+            color: #64748B;
+        }}
 
-        .wm-card {
-            background-color: #202022;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 16px;
-        }
-
-        .wm-card-title {
-            font-weight: 700;
-            font-size: 15px;
-            color: #ffffff;
-            margin-bottom: 6px;
-        }
-
-        .wm-event-row {
-            background-color: rgba(255, 255, 255, 0.04);
+        .wm-card {{
+            background-color: #17181F;
             border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 12px;
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+        }}
+
+        .wm-card-title {{
+            font-weight: 700;
+            font-size: 14px;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+            letter-spacing: -0.2px;
+        }}
+
+        .wm-section-header {{
+            font-size: 11px;
+            font-weight: 700;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 12px;
+        }}
+
+        .wm-event-row {{
+            background-color: #1B1C24;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
             padding: 10px 14px;
             margin-bottom: 6px;
-            transition: all 180ms ease;
-        }
+            transition: all 150ms ease;
+        }}
 
-        .wm-event-row:hover {
-            background-color: rgba(255, 255, 255, 0.07);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
+        .wm-event-row:hover {{
+            background-color: #22242E;
+            border-color: rgba(255, 255, 255, 0.12);
+        }}
 
-        .wm-pill {
+        .wm-pill {{
             border-radius: 6px;
             padding: 2px 8px;
             font-size: 11px;
             font-weight: 600;
-        }
+        }}
 
-        .wm-btn-primary {
-            background-color: #0A84FF;
-            color: #ffffff;
-            border-radius: 10px;
-            padding: 8px 16px;
+        .wm-btn-primary {{
+            background-color: {primary_accent};
+            color: #FFFFFF;
+            border-radius: 9px;
+            padding: 7px 16px;
             font-weight: 600;
-            font-size: 13px;
-            border: none;
-        }
+            font-size: 12.5px;
+            border: 1px solid {hex_to_rgba(primary_accent, 0.6)};
+            box-shadow: 0 2px 6px {hex_to_rgba(primary_accent, 0.25)};
+            transition: all 150ms ease;
+        }}
 
-        .wm-btn-primary:hover {
-            background-color: #0071E3;
-        }
+        .wm-btn-primary:hover {{
+            opacity: 0.92;
+            box-shadow: 0 4px 12px {hex_to_rgba(primary_accent, 0.40)};
+        }}
 
-        .wm-btn-danger {
-            background-color: rgba(255, 69, 58, 0.15);
-            color: #FF453A;
-            border: 1px solid rgba(255, 69, 58, 0.3);
+        .wm-btn-secondary {{
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #E2E8F0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9px;
+            padding: 7px 14px;
+            font-size: 12.5px;
+            font-weight: 500;
+            transition: all 150ms ease;
+        }}
+
+        .wm-btn-secondary:hover {{
+            background-color: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.16);
+            color: #FFFFFF;
+        }}
+
+        .wm-btn-danger {{
+            background-color: rgba(244, 63, 94, 0.12);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.28);
             border-radius: 8px;
             padding: 4px 10px;
-        }
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 150ms ease;
+        }}
 
-        .wm-btn-danger:hover {
-            background-color: #FF453A;
-            color: #ffffff;
-        }
+        .wm-btn-danger:hover {{
+            background-color: #f43f5e;
+            color: #FFFFFF;
+        }}
 
-        button.wm-color-btn {
+        button.wm-color-btn {{
             border-radius: 9999px;
-            min-width: 28px;
-            min-height: 28px;
+            min-width: 26px;
+            min-height: 26px;
             padding: 0;
             margin: 2px;
             border: 2px solid transparent;
             box-shadow: none;
-        }
+        }}
 
-        button.wm-color-btn.selected {
-            border-color: #ffffff;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-        }
+        button.wm-color-btn.selected {{
+            border-color: #FFFFFF;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+        }}
 
-        button.wm-col-0 { background: #0A84FF; }
-        button.wm-col-1 { background: #30D158; }
-        button.wm-col-2 { background: #FF9F0A; }
-        button.wm-col-3 { background: #BF5AF2; }
-        button.wm-col-4 { background: #FF453A; }
-        button.wm-col-5 { background: #64D2FF; }
+        button.wm-col-0 {{ background: #0A84FF; }}
+        button.wm-col-1 {{ background: #30D158; }}
+        button.wm-col-2 {{ background: #FF9F0A; }}
+        button.wm-col-3 {{ background: #BF5AF2; }}
+        button.wm-col-4 {{ background: #FF453A; }}
+        button.wm-col-5 {{ background: #64D2FF; }}
 
-        .wm-stats-pill {
-            background: linear-gradient(135deg, rgba(255, 159, 10, 0.15) 0%, rgba(255, 69, 58, 0.15) 100%);
-            border: 1px solid rgba(255, 159, 10, 0.3);
-            border-radius: 14px;
+        .wm-stats-pill {{
+            background: #1B1C24;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
             padding: 12px 18px;
-        }
+        }}
         """
         provider = Gtk.CssProvider()
         provider.load_from_string(css)
@@ -1234,14 +1387,15 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         row_daemon.set_title("Servicio de Widgets Quickshell")
         row_daemon.set_subtitle("Gestiona los widgets dinámicos sobre el escritorio")
 
-        btn_edit_mode = Gtk.Button(label="Modo Edición")
+        btn_edit_mode = Gtk.Button(label="✏️ Modo Edición")
         btn_edit_mode.set_valign(Gtk.Align.CENTER)
         btn_edit_mode.add_css_class("wm-btn-primary")
         btn_edit_mode.connect("clicked", self.on_toggle_edit_mode)
         row_daemon.add_suffix(btn_edit_mode)
 
-        btn_restart = Gtk.Button(label="Reiniciar Servicio")
+        btn_restart = Gtk.Button(label="🔄 Reiniciar")
         btn_restart.set_valign(Gtk.Align.CENTER)
+        btn_restart.add_css_class("wm-btn-secondary")
         btn_restart.connect("clicked", self.on_restart_widgets)
         row_daemon.add_suffix(btn_restart)
         group_status.add(row_daemon)
@@ -1262,7 +1416,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
                 pass
         self.weather_city_row.set_text(current_loc)
 
-        btn_save_weather = Gtk.Button(label="Guardar Ciudad")
+        btn_save_weather = Gtk.Button(label="💾 Guardar")
         btn_save_weather.set_valign(Gtk.Align.CENTER)
         btn_save_weather.add_css_class("wm-btn-primary")
         btn_save_weather.connect("clicked", self.on_save_weather_location)
@@ -1280,8 +1434,9 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         row_layout.set_title("Restaurar Disposición Óptima por Defecto")
         row_layout.set_subtitle("Alinea todos los widgets a sus coordenadas limpias sin superposiciones")
 
-        btn_reset_grid = Gtk.Button(label="Restaurar Cuadrícula")
+        btn_reset_grid = Gtk.Button(label="↺ Restaurar Cuadrícula")
         btn_reset_grid.set_valign(Gtk.Align.CENTER)
+        btn_reset_grid.add_css_class("wm-btn-secondary")
         btn_reset_grid.connect("clicked", self.on_reset_layout_grid)
         row_layout.add_suffix(btn_reset_grid)
         group_layout.add(row_layout)
