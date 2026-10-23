@@ -1,4 +1,3 @@
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Controls
 import Quickshell
@@ -110,16 +109,6 @@ Item {
         opacity: root.launcherState.isOpen ? 1 : 0
         scale: root.launcherState.isOpen ? 1 : 0.93
         transformOrigin: Item.Bottom
-
-        // Outer Ambient Drop Shadow
-        RectangularGlow {
-            anchors.fill: panelCard
-            glowRadius: 28
-            spread: 0.02
-            color: root.launcherState.panelShadowColor
-            cornerRadius: panelCard.radius + glowRadius
-            opacity: cardContainer.opacity
-        }
 
         // ── Main Pure Transparent Acrylic Card ──
         Rectangle {
