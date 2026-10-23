@@ -47,7 +47,36 @@ Scope {
 
         }
 
+        function onActiveToplevelChanged() {
+            if (globalSpotlightState.isOpen)
+                globalSpotlightState.closeSpotlight();
+
+        }
+
+        function onRawEvent(event) {
+            if (!event || !globalSpotlightState.isOpen)
+                return ;
+
+            var ev = event.name;
+            if (ev === "activewindow" || ev === "activewindowv2" || ev === "focusedmon")
+                globalSpotlightState.closeSpotlight();
+
+        }
+
         target: Hyprland
+    }
+
+    // Capture focus grab under Hyprland: auto-clears / closes when clicking outside windows
+    HyprlandFocusGrab {
+        id: focusGrab
+
+        active: globalSpotlightState.isOpen
+        windows: [spotlightWindow]
+        onCleared: {
+            if (globalSpotlightState.isOpen)
+                globalSpotlightState.closeSpotlight();
+
+        }
     }
 
     // IPC Interface to control Spotlight from CLI, scripts, binds, top bar or Dock
@@ -94,7 +123,7 @@ Scope {
                 screen: screenScope.modelData
                 color: "transparent"
                 visible: globalSpotlightState.windowVisible
-                WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.namespace: "macos-spotlight-catcher"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
@@ -109,7 +138,12 @@ Scope {
                 MouseArea {
                     anchors.fill: parent
                     enabled: globalSpotlightState.isOpen
-                    onClicked: globalSpotlightState.closeSpotlight()
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onPressed: {
+                        if (globalSpotlightState.isOpen)
+                            globalSpotlightState.closeSpotlight();
+
+                    }
                 }
 
             }
