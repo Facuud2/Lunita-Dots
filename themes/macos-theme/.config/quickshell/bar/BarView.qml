@@ -1,12 +1,13 @@
-import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.SystemTray
 
 Item {
     id: root
+
     required property var barState
     required property var panelWindow
 
@@ -15,10 +16,9 @@ Item {
     // ── Frosted Glass Background (Liquid Glass macOS 27) ──
     Rectangle {
         id: barBackground
+
         anchors.fill: parent
         color: barState.barBgColor
-
-        Behavior on color { ColorAnimation { duration: 200 } }
 
         // Subtle Bottom Divider Line
         Rectangle {
@@ -27,41 +27,23 @@ Item {
             anchors.bottom: parent.bottom
             height: 1
             color: barState.barDividerColor
-            Behavior on color { ColorAnimation { duration: 200 } }
-        }
-    }
 
-    // ── Reusable Tinted SVG Icon Component ──
-    component BarIcon: Item {
-        id: bIconRoot
-        property string source: ""
-        property color iconColor: barState.barTextColor
-        property real iconWidth: 14
-        property real iconHeight: 14
-        property real iconOpacity: 1.0
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
 
-        implicitWidth: iconWidth
-        implicitHeight: iconHeight
+            }
 
-        Image {
-            id: rawImg
-            anchors.fill: parent
-            source: bIconRoot.source
-            sourceSize.width: Math.round(bIconRoot.iconWidth * 2)
-            sourceSize.height: Math.round(bIconRoot.iconHeight * 2)
-            visible: false
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-            mipmap: true
         }
 
-        ColorOverlay {
-            anchors.fill: rawImg
-            source: rawImg
-            color: bIconRoot.iconColor
-            opacity: bIconRoot.iconOpacity
-            Behavior on color { ColorAnimation { duration: 200 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+            }
+
         }
+
     }
 
     // ── Main Horizontal Bar Row ──
@@ -86,10 +68,15 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: 4
-                    color: (appleMouseArea.containsMouse || barState.activePopup === "apple") 
-                        ? barState.barActiveHoverColor 
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    color: (appleMouseArea.containsMouse || barState.activePopup === "apple") ? barState.barActiveHoverColor : "transparent"
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 BarIcon {
@@ -102,6 +89,7 @@ Item {
 
                 MouseArea {
                     id: appleMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -109,6 +97,7 @@ Item {
                         barState.togglePopup("apple", 10, 28, panelWindow.screen);
                     }
                 }
+
             }
 
             // 2. Active Application Name (Dynamic focus tracking)
@@ -120,22 +109,38 @@ Item {
                     anchors.fill: parent
                     radius: 4
                     color: appMouseArea.containsMouse ? barState.barHoverColor : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 Text {
                     id: appTitleText
+
                     anchors.centerIn: parent
                     text: barState.activeAppName
                     color: barState.barTextColor
                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                     font.pixelSize: 13
                     font.weight: Font.DemiBold
-                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                        }
+
+                    }
+
                 }
 
                 MouseArea {
                     id: appMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -144,30 +149,40 @@ Item {
                         barState.openAppMenu(barState.activeAppName, pos.x, 28, panelWindow.screen);
                     }
                 }
+
             }
 
             // 3. Application Menus (File, Edit, View, Window, Help)
             Repeater {
                 model: ["File", "Edit", "View", "Window", "Help"]
+
                 delegate: Item {
                     id: menuBtn
+
                     required property string modelData
                     property var stateRef: root.barState
                     property var winRef: root.panelWindow
+
                     implicitWidth: menuText.implicitWidth + 14
                     implicitHeight: 22
 
                     Rectangle {
                         anchors.fill: parent
                         radius: 4
-                        color: (menuMouseArea.containsMouse || (menuBtn.stateRef.activePopup === "appmenu" && menuBtn.stateRef.activeMenuTitle === modelData))
-                            ? menuBtn.stateRef.barActiveHoverColor
-                            : "transparent"
-                        Behavior on color { ColorAnimation { duration: 120 } }
+                        color: (menuMouseArea.containsMouse || (menuBtn.stateRef.activePopup === "appmenu" && menuBtn.stateRef.activeMenuTitle === modelData)) ? menuBtn.stateRef.barActiveHoverColor : "transparent"
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 120
+                            }
+
+                        }
+
                     }
 
                     Text {
                         id: menuText
+
                         anchors.centerIn: parent
                         text: modelData
                         color: menuBtn.stateRef.barTextColor
@@ -175,11 +190,19 @@ Item {
                         font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                         font.pixelSize: 13
                         font.weight: Font.Normal
-                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 200
+                            }
+
+                        }
+
                     }
 
                     MouseArea {
                         id: menuMouseArea
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
@@ -188,8 +211,11 @@ Item {
                             menuBtn.stateRef.openAppMenu(modelData, pos.x, 28, menuBtn.winRef.screen);
                         }
                     }
+
                 }
+
             }
+
         }
 
         // ════════════════════════════════════════════════════════════════
@@ -224,6 +250,7 @@ Item {
                         source: "assets/camera.svg"
                         iconColor: "#FFFFFF"
                     }
+
                 }
 
                 MouseArea {
@@ -231,11 +258,13 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: barState.toggleRecording()
                 }
+
             }
 
             // ── 2. System Tray Icons (Immediately left of Widgets Modifier Icon, growing right-to-left) ──
             Timer {
                 id: traySyncTimer
+
                 interval: 1500
                 running: true
                 repeat: true
@@ -245,33 +274,41 @@ Item {
                     var items = SystemTray.items.values;
                     for (var i = 0; i < items.length; i++) {
                         var it = items[i];
-                        if (it && it.icon && it.icon.indexOf("image://qsimage/") !== 0) {
+                        if (it && it.icon && it.icon.indexOf("image://qsimage/") !== 0)
                             icons.push(it.icon);
-                        }
+
                     }
-                    if (icons.length > 0) barState.resolveTrayIcons(icons);
+                    if (icons.length > 0)
+                        barState.resolveTrayIcons(icons);
+
                 }
             }
 
             Row {
                 id: systemTrayRow
+
                 spacing: 3
                 layoutDirection: Qt.RightToLeft
                 Layout.alignment: Qt.AlignVCenter
 
                 Repeater {
                     model: SystemTray.items.values
+
                     delegate: Item {
                         id: trayItemRoot
-                        required property var modelData
 
+                        required property var modelData
                         readonly property string resolvedIconSource: {
-                            if (!modelData || !modelData.icon) return "";
+                            if (!modelData || !modelData.icon)
+                                return "";
+
                             var raw = modelData.icon;
-                            if (raw.indexOf("image://qsimage/") === 0) return raw;
-                            if (root.barState.trayIconsMap && root.barState.trayIconsMap[raw]) {
+                            if (raw.indexOf("image://qsimage/") === 0)
+                                return raw;
+
+                            if (root.barState.trayIconsMap && root.barState.trayIconsMap[raw])
                                 return root.barState.trayIconsMap[raw];
-                            }
+
                             return raw;
                         }
 
@@ -280,31 +317,39 @@ Item {
                         height: 22
                         implicitWidth: width
                         implicitHeight: height
-
                         Component.onCompleted: {
-                            if (modelData && modelData.icon && modelData.icon.indexOf("image://qsimage/") !== 0) {
+                            if (modelData && modelData.icon && modelData.icon.indexOf("image://qsimage/") !== 0)
                                 root.barState.resolveTrayIcons([modelData.icon]);
-                            }
+
                         }
 
                         Connections {
-                            target: modelData
                             function onIconChanged() {
-                                if (modelData && modelData.icon && modelData.icon.indexOf("image://qsimage/") !== 0) {
+                                if (modelData && modelData.icon && modelData.icon.indexOf("image://qsimage/") !== 0)
                                     root.barState.resolveTrayIcons([modelData.icon]);
-                                }
+
                             }
+
+                            target: modelData
                         }
 
                         Rectangle {
                             anchors.fill: parent
                             radius: 4
                             color: trayMouseArea.containsMouse ? root.barState.barHoverColor : "transparent"
-                            Behavior on color { ColorAnimation { duration: 120 } }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 120
+                                }
+
+                            }
+
                         }
 
                         Image {
                             id: trayImg
+
                             anchors.centerIn: parent
                             width: 15
                             height: 15
@@ -318,11 +363,12 @@ Item {
 
                         MouseArea {
                             id: trayMouseArea
+
                             anchors.fill: parent
                             hoverEnabled: true
                             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: mouse => {
+                            onClicked: (mouse) => {
                                 var pos = trayItemRoot.mapToItem(null, 0, trayItemRoot.height);
                                 if (mouse.button === Qt.RightButton) {
                                     root.barState.openTrayMenu(modelData, trayItemRoot.resolvedIconSource, Math.round(pos.x), panelWindow.screen);
@@ -338,27 +384,36 @@ Item {
                                     }
                                 }
                             }
-                            onWheel: wheel => {
+                            onWheel: (wheel) => {
                                 modelData.scroll(wheel.angleDelta.y, false);
                             }
                         }
+
                     }
+
                 }
+
             }
 
             // ── 2.5 Widgets Modifier Icon (A la izquierda de Bluetooth) ──
             Item {
                 id: widgetsBtnItem
+
                 implicitWidth: 24
                 implicitHeight: 22
 
                 Rectangle {
                     anchors.fill: parent
                     radius: 4
-                    color: (widgetsMouseArea.containsMouse || barState.widgetsEditing)
-                        ? (barState.widgetsEditing ? Qt.rgba(0, 122/255, 255/255, 0.35) : barState.barActiveHoverColor)
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    color: (widgetsMouseArea.containsMouse || barState.widgetsEditing) ? (barState.widgetsEditing ? Qt.rgba(0, 122 / 255, 255 / 255, 0.35) : barState.barActiveHoverColor) : "transparent"
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 BarIcon {
@@ -371,18 +426,19 @@ Item {
 
                 MouseArea {
                     id: widgetsMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: mouse => {
-                        if (mouse.button === Qt.RightButton) {
-                            Quickshell.execDetached(["lunita-widgets-manager"]);
-                        } else {
+                    onClicked: (mouse) => {
+                        if (mouse.button === Qt.RightButton)
+                            Quickshell.execDetached(["lunita-widgets-manager", "--tab", "desktop"]);
+                        else
                             Quickshell.execDetached(["lunita-widgets-toggle"]);
-                        }
                     }
                 }
+
             }
 
             // ── 3. Bluetooth Indicator & Popover Trigger ──
@@ -393,10 +449,15 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: 4
-                    color: (btMouseArea.containsMouse || barState.activePopup === "bluetooth") 
-                        ? barState.barActiveHoverColor 
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    color: (btMouseArea.containsMouse || barState.activePopup === "bluetooth") ? barState.barActiveHoverColor : "transparent"
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 RowLayout {
@@ -408,7 +469,7 @@ Item {
                         iconHeight: 14
                         source: "assets/bluetooth.svg"
                         iconColor: barState.barTextColor
-                        iconOpacity: barState.bluetoothEnabled ? 1.0 : 0.45
+                        iconOpacity: barState.bluetoothEnabled ? 1 : 0.45
                     }
 
                     // Green dot if connected to device
@@ -419,10 +480,12 @@ Item {
                         radius: 2.5
                         color: "#34C759"
                     }
+
                 }
 
                 MouseArea {
                     id: btMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -430,6 +493,7 @@ Item {
                         barState.togglePopup("bluetooth", panelWindow.width - 302, 28, panelWindow.screen);
                     }
                 }
+
             }
 
             // ── 4. Network Status (Ethernet or Wi-Fi) ──
@@ -440,25 +504,29 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: 4
-                    color: (netMouseArea.containsMouse || barState.activePopup === "network") 
-                        ? barState.barActiveHoverColor 
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    color: (netMouseArea.containsMouse || barState.activePopup === "network") ? barState.barActiveHoverColor : "transparent"
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 BarIcon {
                     anchors.centerIn: parent
                     iconWidth: 15
                     iconHeight: 15
-                    source: barState.isEthernet 
-                        ? "assets/ethernet.svg" 
-                        : (barState.networkConnected ? "assets/wifi.svg" : "assets/wifi-off.svg")
+                    source: barState.isEthernet ? "assets/ethernet.svg" : (barState.networkConnected ? "assets/wifi.svg" : "assets/wifi-off.svg")
                     iconColor: barState.barTextColor
-                    iconOpacity: barState.networkConnected ? 1.0 : 0.45
+                    iconOpacity: barState.networkConnected ? 1 : 0.45
                 }
 
                 MouseArea {
                     id: netMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -466,6 +534,7 @@ Item {
                         barState.togglePopup("network", panelWindow.width - 302, 28, panelWindow.screen);
                     }
                 }
+
             }
 
             // ── 5. Audio Volume Icon ──
@@ -476,10 +545,15 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: 4
-                    color: (volMouseArea.containsMouse || barState.activePopup === "sound")
-                        ? barState.barActiveHoverColor
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    color: (volMouseArea.containsMouse || barState.activePopup === "sound") ? barState.barActiveHoverColor : "transparent"
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 BarIcon {
@@ -492,6 +566,7 @@ Item {
 
                 MouseArea {
                     id: volMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -499,6 +574,7 @@ Item {
                         barState.togglePopup("sound", panelWindow.width - 302, 28, panelWindow.screen);
                     }
                 }
+
             }
 
             // ── 6. Battery Indicator (if present) ──
@@ -511,11 +587,19 @@ Item {
                     anchors.fill: parent
                     radius: 4
                     color: battMouseArea.containsMouse ? barState.barHoverColor : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 RowLayout {
                     id: battRow
+
                     anchors.centerIn: parent
                     spacing: 4
 
@@ -533,10 +617,12 @@ Item {
                         source: barState.isCharging ? "assets/battery-charging.svg" : "assets/battery.svg"
                         iconColor: barState.barTextColor
                     }
+
                 }
 
                 MouseArea {
                     id: battMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -544,6 +630,7 @@ Item {
                         barState.togglePopup("controlcenter", panelWindow.width - 332, 28, panelWindow.screen);
                     }
                 }
+
             }
 
             // ── 6.5. Virtual Keyboard (On-Screen Keyboard) ──
@@ -554,10 +641,15 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: 4
-                    color: (vkbMouseArea.containsMouse || barState.virtualKeyboardVisible)
-                        ? (barState.virtualKeyboardVisible ? Qt.rgba(0, 122/255, 255/255, 0.35) : barState.barActiveHoverColor)
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    color: (vkbMouseArea.containsMouse || barState.virtualKeyboardVisible) ? (barState.virtualKeyboardVisible ? Qt.rgba(0, 122 / 255, 255 / 255, 0.35) : barState.barActiveHoverColor) : "transparent"
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 BarIcon {
@@ -570,6 +662,7 @@ Item {
 
                 MouseArea {
                     id: vkbMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -577,6 +670,7 @@ Item {
                         barState.toggleVirtualKeyboard();
                     }
                 }
+
             }
 
             // ── 7. Spotlight Search ──
@@ -588,7 +682,14 @@ Item {
                     anchors.fill: parent
                     radius: 4
                     color: spotMouseArea.containsMouse ? barState.barHoverColor : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 BarIcon {
@@ -601,6 +702,7 @@ Item {
 
                 MouseArea {
                     id: spotMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -608,6 +710,7 @@ Item {
                         barState.openSpotlight();
                     }
                 }
+
             }
 
             // ── 8. Control Center (Two Sliders Icon) ──
@@ -618,10 +721,15 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: 4
-                    color: (ccMouseArea.containsMouse || barState.activePopup === "controlcenter")
-                        ? barState.barActiveHoverColor
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    color: (ccMouseArea.containsMouse || barState.activePopup === "controlcenter") ? barState.barActiveHoverColor : "transparent"
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 BarIcon {
@@ -634,6 +742,7 @@ Item {
 
                 MouseArea {
                     id: ccMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -641,6 +750,7 @@ Item {
                         barState.togglePopup("controlcenter", panelWindow.width - 332, 28, panelWindow.screen);
                     }
                 }
+
             }
 
             // ── 9. Siri / Apple Intelligence Swirl ──
@@ -652,7 +762,14 @@ Item {
                     anchors.fill: parent
                     radius: 4
                     color: siriMouseArea.containsMouse ? barState.barHoverColor : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 BarIcon {
@@ -665,6 +782,7 @@ Item {
 
                 MouseArea {
                     id: siriMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -672,6 +790,7 @@ Item {
                         barState.openAppLauncher();
                     }
                 }
+
             }
 
             // ── 10. Date & Clock (e.g. "Thu Sep 24  1:39 PM") ──
@@ -682,25 +801,39 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: 4
-                    color: (clockMouseArea.containsMouse || barState.activePopup === "calendar")
-                        ? barState.barActiveHoverColor
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    color: (clockMouseArea.containsMouse || barState.activePopup === "calendar") ? barState.barActiveHoverColor : "transparent"
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 Text {
                     id: clockText
+
                     anchors.centerIn: parent
                     text: barState.fullDateStr
                     color: barState.barTextColor
                     font.family: "SF Pro Display, Inter, -apple-system, system-ui, sans-serif"
                     font.pixelSize: 13
                     font.weight: Font.Normal
-                    Behavior on color { ColorAnimation { duration: 200 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                        }
+
+                    }
+
                 }
 
                 MouseArea {
                     id: clockMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -708,7 +841,54 @@ Item {
                         barState.togglePopup("calendar", panelWindow.width - 312, 28, panelWindow.screen);
                     }
                 }
+
             }
+
         }
+
     }
+
+    // ── Reusable Tinted SVG Icon Component ──
+    component BarIcon: Item {
+        id: bIconRoot
+
+        property string source: ""
+        property color iconColor: barState.barTextColor
+        property real iconWidth: 14
+        property real iconHeight: 14
+        property real iconOpacity: 1
+
+        implicitWidth: iconWidth
+        implicitHeight: iconHeight
+
+        Image {
+            id: rawImg
+
+            anchors.fill: parent
+            source: bIconRoot.source
+            sourceSize.width: Math.round(bIconRoot.iconWidth * 2)
+            sourceSize.height: Math.round(bIconRoot.iconHeight * 2)
+            visible: false
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            mipmap: true
+        }
+
+        ColorOverlay {
+            anchors.fill: rawImg
+            source: rawImg
+            color: bIconRoot.iconColor
+            opacity: bIconRoot.iconOpacity
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                }
+
+            }
+
+        }
+
+    }
+
 }

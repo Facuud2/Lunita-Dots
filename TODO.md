@@ -536,11 +536,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** [ISSUE-019]
 
 ### [ISSUE-036] Estandarización de clic izquierdo (edición) y clic derecho (menú) en botón de widgets
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
 - **Rama Sugerida:** `ISSUE_036_FEAT`
 - **Módulo(s):** Temas / Bar-Dock / Widgets
-- **Archivos Afectados:** Archivos QML de barra/dock en `themes/lunita-default/`, `themes/macOS-Theme/` y `themes/Modern-Win11-Theme/`, `core/.local/bin/lunita-widgets-toggle`, `core/.local/bin/lunita-widgets-manager`
+- **Archivos Afectados:** `themes/macos-theme/.config/quickshell/bar/BarView.qml`, `themes/modern-win11-theme/.config/quickshell/dock/TrayPlatter.qml`, `themes/modern-win11-theme/.config/quickshell/dock/DockState.qml`, `themes/lunita-default/.config/quickshell/bar/CompactPill.qml`, `core/.local/bin/lunita-widgets-toggle`
 - **Descripción:** Unificar el comportamiento del botón de control de widgets en los 3 temas mediante el manejo de botones en `MouseArea` (`acceptedButtons: Qt.LeftButton | Qt.RightButton`):
   - **Clic izquierdo:** Activa/desactiva directamente el modo de edición en pantalla (`lunita-widgets-toggle`) para arrastrar, reposicionar y redimensionar los widgets.
   - **Clic derecho:** Abre exclusivamente la interfaz gráfica de configuración (`lunita-widgets-manager`).
