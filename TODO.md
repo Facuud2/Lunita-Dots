@@ -586,11 +586,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-037] Incorporación de widgets de escritorio y botón de control en Dynamic Island de lunita-default
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_037_FEAT`
 - **Módulo(s):** Lunita-Default / Bar (Dynamic Island) / Widgets
-- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/bar/`, `themes/lunita-default/.config/quickshell/widgets/`, `themes/lunita-default/theme.json`
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/bar/CompactPill.qml`, `themes/lunita-default/.config/quickshell/bar/QuickActions.qml`, `themes/lunita-default/theme.json`
 - **Descripción:** Habilitar el lienzo de widgets de escritorio (`widgets`) dentro del ciclo de vida de `lunita-default` y añadir un botón dedicado en la Dynamic Island para gestionar dichos widgets, respetando la convención de clic izquierdo (modo arrastre/redimensionado) y clic derecho (abrir menú gestor).
 - **Criterios de Aceptación:**
   1. Los widgets de escritorio se inician y se muestran de forma nativa al aplicar `lunita-default`.
