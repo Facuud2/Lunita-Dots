@@ -26,7 +26,7 @@ GIT_CONFIG_FILE = CONFIG_DIR / "git_config.json"
 HEALTH_FILE = CONFIG_DIR / "health_tracker.json"
 HABITS_FILE = CONFIG_DIR / "habits.json"
 LAYOUT_FILE = CONFIG_DIR / "widgets_layout_qml.json"
-TIMETABLE_FILE = CONFIG_DIR / "unab_timetable.json"
+TIMETABLE_FILE = CONFIG_DIR / "timetable.json"
 WEATHER_LOCATION_FILE = CONFIG_DIR / "weather_location"
 ACTIVE_TOKENS_FILE = CONFIG_DIR / "active_tokens.json"
 
@@ -113,7 +113,7 @@ WEEKDAY_NAMES_ES = [
 ]
 
 CATEGORIES = ["Trabajo", "Desarrollo", "Estudio", "Personal", "Salud", "General"]
-TASK_TAGS = [("UNaB", "#007AFF"), ("Trabajo", "#AF52DE"), ("Examen", "#FF9F0A"), ("Proyecto", "#30D158")]
+TASK_TAGS = [("General", "#007AFF"), ("Trabajo", "#AF52DE"), ("Examen", "#FF9F0A"), ("Proyecto", "#30D158")]
 DAYS_OF_WEEK = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 
 WIDGET_DEFAULTS = {
@@ -1328,8 +1328,8 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
     def load_timetable_data(self) -> dict:
         default_data = {
-            "university": "UNaB",
-            "career": "Tecnicatura Universitaria en Programación",
+            "university": "Notas",
+            "career": "Agenda Diaria",
             "schedule": [],
             "tasks": [],
             "notes": ""
@@ -1362,7 +1362,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             row.append(title_entry)
 
             # Tag pill
-            tag_lbl = Gtk.Label(label=task.get("tag", "UNaB"))
+            tag_lbl = Gtk.Label(label=task.get("tag", "General"))
             tag_lbl.add_css_class("wm-pill")
             col = task.get("tag_color", "#007AFF")
             tag_lbl.set_name(f"pill_{task.get('id')}")
@@ -1412,7 +1412,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         if not title:
             return
         tag_idx = self.new_task_tag_combo.get_selected()
-        tag_name, tag_col = TASK_TAGS[tag_idx] if tag_idx < len(TASK_TAGS) else ("UNaB", "#007AFF")
+        tag_name, tag_col = TASK_TAGS[tag_idx] if tag_idx < len(TASK_TAGS) else ("General", "#007AFF")
         due = self.new_task_due.get_text().strip() or "Pendiente"
 
         self.current_tasks.insert(0, {
@@ -1481,8 +1481,8 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         notes_text = buf.get_text(start, end, True)
 
         data = {
-            "university": self.tt_uni_row.get_text().strip() or "UNaB",
-            "career": self.tt_career_row.get_text().strip() or "Tecnicatura Universitaria en Programación",
+            "university": self.tt_uni_row.get_text().strip() or "Notas",
+            "career": self.tt_career_row.get_text().strip() or "Agenda Diaria",
             "schedule": self.current_schedule,
             "tasks": self.current_tasks,
             "notes": notes_text
@@ -1769,7 +1769,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             ("clock", "Reloj y Clima", "Hora analógica, digital y pronóstico de días posteriores", "weather-clouds-symbolic"),
             ("calendar", "Calendario Interactivo", "Eventos diarios, consulta de fechas y citas", "x-office-calendar"),
             ("habits", "Salud y Actividad", "Anillos de actividad (Calorías, Ejercicio, Pasos y Agua)", "emblem-favorite-symbolic"),
-            ("timetable", "Universidad y Notas", "Horario UNaB, checklist de tareas de estudio/trabajo y notas", "alarm-symbolic"),
+            ("timetable", "Notas y Agenda", "Tarjetas de notas rápidas, checklist de tareas y agenda de actividades", "accessories-text-editor-symbolic"),
             ("media", "Reproductor Multimedia", "Portada de álbum, controles y espectro visualizador Cava", "multimedia-audio-player-symbolic"),
             ("battery", "Dispositivos y Batería", "Auriculares Bluetooth y ecosistema conectado con batería", "battery-symbolic"),
             ("git", "Actividad de GitHub", "Heatmap semanal, últimos commits y pipelines CI/CD", "preferences-system-network-symbolic"),

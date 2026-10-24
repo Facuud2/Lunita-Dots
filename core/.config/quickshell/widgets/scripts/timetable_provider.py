@@ -42,6 +42,29 @@ DEFAULT_NOTES_DATA = {
             "due": "Mañana"
         }
     ],
+    "notes_list": [
+        {
+            "id": "n1",
+            "title": "Ideas de Diseño",
+            "body": "Revisar paletas dinámicas de Matugen y consistencia visual en Quickshell y paneles.",
+            "date": "HOY",
+            "color": "#FF9F0A"
+        },
+        {
+            "id": "n2",
+            "title": "Configuración de Sistema",
+            "body": "Optimizar arranque y servicios systemd para inicio y apagado instantáneo.",
+            "date": "AYER",
+            "color": "#0A84FF"
+        },
+        {
+            "id": "n3",
+            "title": "Recordatorios Lunita",
+            "body": "Sincronizar marcadores y widgets de escritorio en los tres temas activos.",
+            "date": "20 OCT",
+            "color": "#30D158"
+        }
+    ],
     "notes": "• Recordar sincronizar calendario y widgets\n• Revisar métricas de salud\n• Deploy de actualización"
 }
 
@@ -74,6 +97,8 @@ def load_notes_data():
                 d["tasks"] = DEFAULT_NOTES_DATA["tasks"]
             if "notes" not in d:
                 d["notes"] = DEFAULT_NOTES_DATA["notes"]
+            if "notes_list" not in d:
+                d["notes_list"] = DEFAULT_NOTES_DATA["notes_list"]
             return d
     except Exception:
         return DEFAULT_NOTES_DATA.copy()
@@ -172,7 +197,8 @@ def get_current_state():
         "upcoming_events": upcoming_events,
         "schedule": today_events if today_events else upcoming_events[:5],
         "tasks": notes_data.get("tasks", []),
-        "notes": notes_data.get("notes", "")
+        "notes": notes_data.get("notes", ""),
+        "notes_list": notes_data.get("notes_list", DEFAULT_NOTES_DATA["notes_list"])
     }
 
 def main():
@@ -226,10 +252,10 @@ def main():
         tag = sys.argv[3] if len(sys.argv) > 3 else "General"
         due = sys.argv[4] if len(sys.argv) > 4 else "Pendiente"
         color_map = {
-            "UNaB": "#007AFF",
+            "General": "#30D158",
             "Trabajo": "#AF52DE",
             "Examen": "#FF9F0A",
-            "General": "#30D158",
+            "Estudio": "#007AFF",
             "Prioridad": "#FA114F"
         }
         new_task = {

@@ -27,7 +27,7 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
     // -----------------------------------------------------
-    // HEXAGON GRID TUNABLES
+    // HEXAGON GRID PARAMETERS
     // -----------------------------------------------------
     // Flat-top regular hexagon: height = width * sqrt(3)/2
     // These "base*" values are the MINIMUM tile size — the grid never

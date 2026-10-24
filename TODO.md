@@ -611,11 +611,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** [ISSUE-038]
 
 ### [ISSUE-040] Rediseño del widget de Notas/Agenda estilo iOS/iPadOS y purga de referencias a UNaB
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
 - **Rama Sugerida:** `ISSUE_040_FEAT`
 - **Módulo(s):** GUI / Widgets Manager / Widgets QML
-- **Archivos Afectados:** `core/.local/bin/lunita-widgets-manager`, `themes/*/.config/quickshell/widgets/` (Archivos QML y datos JSON)
+- **Archivos Afectados:** `core/.local/bin/lunita-widgets-manager`, `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/timetable_provider.py`, `core/.config/quickshell/hyprquickpaper/shell-coverflow-clear.qml`, `core/.config/quickshell/hyprquickpaper/shell-coverflow-minimal.qml`, `core/.config/quickshell/hyprquickpaper/shell-coverflow.qml`, `core/.config/quickshell/hyprquickpaper/shell-hexcomb.qml`, `themes/lunita-default/wallpaper/wallpaper2.jpg`
 - **Descripción:** 
   1. Rediseñar el widget de escritorio de Notas y Agenda adoptando el paradigma visual de iOS/iPadOS: una tarjeta limpia que exhibe el título y el contenido de la nota activa, permitiendo alternar suavemente entre distintas tarjetas/notas al hacer scroll vertical (hacia arriba o hacia abajo con `WheelHandler`).
   2. Eliminar absolutamente todo rastro, pestaña, plantilla de horario o referencia a "UNaB" tanto en el código de `lunita-widgets-manager` como en los widgets QML y archivos de configuración por defecto.

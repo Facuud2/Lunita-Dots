@@ -9,511 +9,172 @@ Item {
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
-    readonly property bool isActive: root.widgetsState ? !!root.widgetsState.ttIsActive : false
-    readonly property bool isFinishingSoon: root.widgetsState ? !!root.widgetsState.ttIsFinishingSoon : false
-    // Tab state for Small mode: 0 = Clases, 1 = Tareas, 2 = Notas
-    property int smallTab: 0
-    // Modal state for adding a new task or editing notes
+    property int activeCardIndex: 0
+    property real lastWheelTime: 0
     property bool addTaskModalOpen: false
     property bool notesModalOpen: false
+    readonly property var fallbackCards: [{
+        "id": "n1",
+        "title": "Ideas de Diseño",
+        "body": "Revisar paletas dinámicas de Matugen y consistencia visual en Quickshell y paneles.",
+        "date": "HOY",
+        "color": "#FF9F0A"
+    }, {
+        "id": "n2",
+        "title": "Configuración de Sistema",
+        "body": "Optimizar arranque y servicios systemd para inicio y apagado instantáneo.",
+        "date": "AYER",
+        "color": "#0A84FF"
+    }, {
+        "id": "n3",
+        "title": "Recordatorios Lunita",
+        "body": "Sincronizar marcadores y widgets de escritorio en los tres temas activos.",
+        "date": "20 OCT",
+        "color": "#30D158"
+    }]
+    readonly property var noteCards: {
+        if (root.widgetsState && root.widgetsState.ttNotesList && root.widgetsState.ttNotesList.length > 0)
+            return root.widgetsState.ttNotesList;
+
+        return fallbackCards;
+    }
+    readonly property var currentCard: {
+        var list = root.noteCards;
+        if (!list || list.length === 0)
+            return null;
+
+        var idx = Math.max(0, Math.min(root.activeCardIndex, list.length - 1));
+        return list[idx];
+    }
+
+    function nextCard() {
+        if (!root.noteCards || root.noteCards.length <= 1)
+            return ;
+
+        if (root.activeCardIndex < root.noteCards.length - 1)
+            root.activeCardIndex++;
+        else
+            root.activeCardIndex = 0;
+    }
+
+    function prevCard() {
+        if (!root.noteCards || root.noteCards.length <= 1)
+            return ;
+
+        if (root.activeCardIndex > 0)
+            root.activeCardIndex--;
+        else
+            root.activeCardIndex = root.noteCards.length - 1;
+    }
+
+    onActiveCardIndexChanged: {
+        cardTransitionAnim.restart();
+    }
+
+    SequentialAnimation {
+        id: cardTransitionAnim
+
+        NumberAnimation {
+            target: bg
+            property: "opacity"
+            from: 0.75
+            to: 1
+            duration: 160
+            easing.type: Easing.OutQuad
+        }
+
+    }
+
+    WheelHandler {
+        id: cardWheel
+
+        target: root
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        onWheel: (event) => {
+            var now = Date.now();
+            if (now - root.lastWheelTime > 150) {
+                root.lastWheelTime = now;
+                if (event.angleDelta.y < 0)
+                    root.nextCard();
+                else if (event.angleDelta.y > 0)
+                    root.prevCard();
+            }
+        }
+    }
 
     Rectangle {
         id: bg
 
         anchors.fill: parent
         radius: root.widgetsState ? root.widgetsState.cardRadius : 22
-        color: isFinishingSoon ? (root.widgetsState && root.widgetsState.isDarkTheme ? Qt.rgba(0.2, 0.14, 0.1, 0.85) : Qt.rgba(1, 0.96, 0.9, 0.9)) : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
-        border.color: isFinishingSoon ? "#FF9F0A" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
-        border.width: isFinishingSoon ? 1.5 : 1
+        color: root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.85)
+        border.color: root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12)
+        border.width: 1
         clip: true
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 1. MODO COMPACTO (170 x 170): TABS CLASES / TAREAS ──
+        // ── 1. MODO COMPACTO (170 x 170): TARJETA NOTAS iOS/iPadOS ──
         // ═══════════════════════════════════════════════════════════════════
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 11
-            spacing: 5
-            visible: root.isSmall && !root.addTaskModalOpen && !root.notesModalOpen
-
-            // Header with segmented tabs
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 4
-
-                // Segmented control
-                Rectangle {
-                    height: 20
-                    radius: 10
-                    implicitWidth: 84
-                    color: Qt.rgba(1, 1, 1, 0.08)
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 2
-                        spacing: 2
-
-                        // Tab 0: Agenda
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            radius: 8
-                            color: root.smallTab === 0 ? (root.isActive ? "#30D158" : "#007AFF") : "transparent"
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Agenda"
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 8
-                                font.weight: Font.Bold
-                                color: root.smallTab === 0 ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.55)
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.smallTab = 0
-                            }
-
-                        }
-
-                        // Tab 1: Tareas
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            radius: 8
-                            color: root.smallTab === 1 ? "#AF52DE" : "transparent"
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Tareas"
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 8
-                                font.weight: Font.Bold
-                                color: root.smallTab === 1 ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.55)
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.smallTab = 1
-                            }
-
-                        }
-
-                    }
-
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                // Quick add task button (+)
-                Rectangle {
-                    width: 20
-                    height: 20
-                    radius: 10
-                    color: plusMaS.containsMouse ? "#007AFF" : Qt.rgba(1, 1, 1, 0.1)
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "＋"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 11
-                        font.weight: Font.Bold
-                        color: "#FFFFFF"
-                    }
-
-                    MouseArea {
-                        id: plusMaS
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                        onClicked: root.addTaskModalOpen = true
-                    }
-
-                }
-
-            }
-
-            // --- Vista Tab 0: Clases UNaB ---
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 3
-                visible: root.smallTab === 0
-
-                // Subject Title
-                Text {
-                    Layout.fillWidth: true
-                    text: root.widgetsState && root.widgetsState.ttSubject ? root.widgetsState.ttSubject : "Laboratorio"
-                    font.family: "SF Pro Display"
-                    font.pixelSize: 11
-                    font.weight: Font.Bold
-                    color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
-                    elide: Text.ElideRight
-                    maximumLineCount: 2
-                    wrapMode: Text.WordWrap
-                }
-
-                // Aula & Horario
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
-
-                    Text {
-                        text: "󰔛 " + (root.widgetsState && root.widgetsState.ttStart ? root.widgetsState.ttStart + " - " + root.widgetsState.ttEnd : "18:00 - 22:00")
-                        font.family: "CaskaydiaCove Nerd Font, SF Pro Display"
-                        font.pixelSize: 9
-                        color: isFinishingSoon ? "#FF9F0A" : (isActive ? "#30D158" : Qt.rgba(1, 1, 1, 0.6))
-                    }
-
-                }
-
-                Text {
-                    text: "󰮤 " + (root.widgetsState && root.widgetsState.ttRoom ? root.widgetsState.ttRoom : "Aula 104")
-                    font.family: "CaskaydiaCove Nerd Font, SF Pro Display"
-                    font.pixelSize: 9
-                    color: Qt.rgba(1, 1, 1, 0.55)
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                }
-
-                Item {
-                    Layout.fillHeight: true
-                }
-
-                // Status chip / countdown
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 22
-                    radius: 7
-                    color: isFinishingSoon ? Qt.rgba(1, 0.62, 0.04, 0.2) : (isActive ? Qt.rgba(0.19, 0.82, 0.35, 0.2) : Qt.rgba(0, 0.48, 1, 0.16))
-                    border.color: isFinishingSoon ? "#FF9F0A" : (isActive ? "#30D158" : "#007AFF")
-                    border.width: 1
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 6
-                        anchors.rightMargin: 6
-                        spacing: 4
-
-                        Text {
-                            text: isActive ? "󱎫" : "󱑂"
-                            font.family: "CaskaydiaCove Nerd Font"
-                            font.pixelSize: 10
-                            color: isFinishingSoon ? "#FF9F0A" : (isActive ? "#30D158" : "#007AFF")
-                        }
-
-                        Text {
-                            text: root.widgetsState && root.widgetsState.ttTimeLeftStr ? root.widgetsState.ttTimeLeftStr : "Próxima semana"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.DemiBold
-                            color: "#FFFFFF"
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
-                        }
-
-                    }
-
-                }
-
-            }
-
-            // --- Vista Tab 1: Tareas de Estudio & Trabajo ---
-            ListView {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
-                spacing: 4
-                visible: root.smallTab === 1
-                model: root.widgetsState && root.widgetsState.ttTasks ? root.widgetsState.ttTasks : []
-
-                delegate: Rectangle {
-                    width: parent ? parent.width : 148
-                    height: 28
-                    radius: 6
-                    color: Qt.rgba(1, 1, 1, 0.06)
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 6
-                        anchors.rightMargin: 6
-                        spacing: 6
-
-                        // Checkbox
-                        Rectangle {
-                            width: 14
-                            height: 14
-                            radius: 7
-                            color: modelData.done ? (modelData.tag_color || "#30D158") : "transparent"
-                            border.color: modelData.done ? (modelData.tag_color || "#30D158") : Qt.rgba(1, 1, 1, 0.4)
-                            border.width: 1.5
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "✓"
-                                font.pixelSize: 8
-                                font.weight: Font.Black
-                                color: "#FFFFFF"
-                                visible: modelData.done
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (root.widgetsState)
-                                        root.widgetsState.toggleTimetableTask(modelData.id);
-
-                                }
-                            }
-
-                        }
-
-                        // Title
-                        Text {
-                            text: modelData.title
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Medium
-                            font.strikeout: !!modelData.done
-                            color: modelData.done ? Qt.rgba(1, 1, 1, 0.4) : "#FFFFFF"
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
-                        }
-
-                    }
-
-                }
-
-            }
-
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // ── 2. MODO MEDIO (354 x 170): DUAL VIEW (CLASE IZQ + TAREAS DER) ──
-        // ═══════════════════════════════════════════════════════════════════
-        RowLayout {
+        Item {
             anchors.fill: parent
             anchors.margins: 12
-            spacing: 12
-            visible: root.isMedium && !root.addTaskModalOpen && !root.notesModalOpen
+            visible: root.isSmall && !root.addTaskModalOpen && !root.notesModalOpen
 
-            // Left Side: Current/Upcoming Class Card
-            Rectangle {
-                Layout.preferredWidth: 154
-                Layout.fillHeight: true
-                radius: 14
-                color: Qt.rgba(1, 1, 1, 0.05)
-                border.color: Qt.rgba(1, 1, 1, 0.1)
-                border.width: 1
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 9
-                    spacing: 4
-
-                    // Header Tag
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
-
-                        Text {
-                            text: "󰸗"
-                            font.family: "CaskaydiaCove Nerd Font"
-                            font.pixelSize: 11
-                            color: isActive ? "#30D158" : "#007AFF"
-                        }
-
-                        Text {
-                            text: "AGENDA"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
-                            font.letterSpacing: 0.6
-                        }
-
-                        Item {
-                            Layout.fillWidth: true
-                        }
-
-                        Rectangle {
-                            height: 14
-                            radius: 7
-                            implicitWidth: Math.max(44, statusText.implicitWidth + 8)
-                            color: isActive ? Qt.rgba(0.19, 0.82, 0.35, 0.2) : Qt.rgba(0, 0.48, 1, 0.16)
-
-                            Text {
-                                id: statusText
-
-                                anchors.centerIn: parent
-                                text: root.widgetsState && root.widgetsState.ttStatusLabel ? root.widgetsState.ttStatusLabel.toUpperCase() : (isActive ? "EN CURSO" : "AGENDA")
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 7
-                                font.weight: Font.Bold
-                                color: isActive ? "#30D158" : "#007AFF"
-                            }
-
-                        }
-
-                    }
-
-                    // Subject
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.widgetsState && root.widgetsState.ttSubject ? root.widgetsState.ttSubject : "Laboratorio I"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 11
-                        font.weight: Font.Bold
-                        color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
-                        elide: Text.ElideRight
-                        maximumLineCount: 2
-                        wrapMode: Text.WordWrap
-                    }
-
-                    // Room & Prof
-                    Text {
-                        text: "󰮤 " + (root.widgetsState && root.widgetsState.ttRoom ? root.widgetsState.ttRoom : "Lab 2")
-                        font.family: "CaskaydiaCove Nerd Font, SF Pro Display"
-                        font.pixelSize: 9
-                        color: Qt.rgba(1, 1, 1, 0.6)
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                    }
-
-                    Text {
-                        text: "󰔛 " + (root.widgetsState && root.widgetsState.ttStart ? root.widgetsState.ttStart + " - " + root.widgetsState.ttEnd : "18:30 - 21:30")
-                        font.family: "CaskaydiaCove Nerd Font, SF Pro Display"
-                        font.pixelSize: 9
-                        color: isFinishingSoon ? "#FF9F0A" : (isActive ? "#30D158" : Qt.rgba(1, 1, 1, 0.7))
-                    }
-
-                    Item {
-                        Layout.fillHeight: true
-                    }
-
-                    // Countdown / Status badge
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.widgetsState && root.widgetsState.ttTimeLeftStr ? root.widgetsState.ttTimeLeftStr : "Mañana a las 18:30"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 9
-                        font.weight: Font.DemiBold
-                        color: isFinishingSoon ? "#FF9F0A" : (isActive ? "#30D158" : "#007AFF")
-                        elide: Text.ElideRight
-                    }
-
-                }
-
-            }
-
-            // Right Side: Work & Study Tasks / Notes
             ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 4
+                anchors.fill: parent
+                spacing: 6
 
-                // Header
+                // Cabecera estilo iOS Notes
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 4
 
                     Text {
-                        text: "TAREAS & NOTAS"
+                        text: "󰠮"
+                        font.family: "CaskaydiaCove Nerd Font"
+                        font.pixelSize: 12
+                        color: root.currentCard && root.currentCard.color ? root.currentCard.color : "#E5A93C"
+                    }
+
+                    Text {
+                        text: "NOTAS"
                         font.family: "SF Pro Display"
                         font.pixelSize: 9
                         font.weight: Font.Bold
-                        color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
-                        font.letterSpacing: 0.6
+                        color: root.currentCard && root.currentCard.color ? root.currentCard.color : "#E5A93C"
+                        font.letterSpacing: 0.8
                     }
 
                     Item {
                         Layout.fillWidth: true
                     }
 
-                    // Botón Notas
-                    Rectangle {
-                        height: 16
-                        radius: 8
-                        implicitWidth: noteRow.implicitWidth + 8
-                        color: noteMa.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.08)
-
-                        RowLayout {
-                            id: noteRow
-
-                            anchors.centerIn: parent
-                            spacing: 3
-
-                            Text {
-                                text: "󰠮"
-                                font.family: "CaskaydiaCove Nerd Font"
-                                font.pixelSize: 9
-                                color: "#FF9F0A"
-                            }
-
-                            Text {
-                                text: "Apuntes"
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 8
-                                font.weight: Font.Bold
-                                color: "#FFFFFF"
-                            }
-
-                        }
-
-                        MouseArea {
-                            id: noteMa
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                            onClicked: root.notesModalOpen = true
-                        }
-
+                    Text {
+                        text: root.currentCard && root.currentCard.date ? root.currentCard.date : "HOY"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 8
+                        font.weight: Font.Bold
+                        color: Qt.rgba(1, 1, 1, 0.5)
+                        font.letterSpacing: 0.5
                     }
 
-                    // Botón + Agregar Tarea
                     Rectangle {
-                        height: 16
-                        radius: 8
-                        implicitWidth: addRow.implicitWidth + 8
-                        color: addMa.containsMouse ? "#007AFF" : Qt.rgba(0, 0.48, 1, 0.25)
-                        border.color: "#007AFF"
-                        border.width: 1
+                        width: 18
+                        height: 18
+                        radius: 9
+                        color: plusMaS.containsMouse ? Qt.rgba(1, 1, 1, 0.2) : Qt.rgba(1, 1, 1, 0.08)
 
-                        RowLayout {
-                            id: addRow
-
+                        Text {
                             anchors.centerIn: parent
-                            spacing: 3
-
-                            Text {
-                                text: "＋"
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 9
-                                font.weight: Font.Bold
-                                color: "#FFFFFF"
-                            }
-
-                            Text {
-                                text: "Nueva"
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 8
-                                font.weight: Font.Bold
-                                color: "#FFFFFF"
-                            }
-
+                            text: "+"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                            color: "#FFFFFF"
                         }
 
                         MouseArea {
-                            id: addMa
+                            id: plusMaS
 
                             anchors.fill: parent
                             hoverEnabled: true
@@ -526,7 +187,299 @@ Item {
 
                 }
 
-                // Task List (scrollable)
+                // Separador sutil
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: Qt.rgba(1, 1, 1, 0.08)
+                }
+
+                // Contenido de la Tarjeta (Título + Cuerpo)
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 3
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.currentCard ? root.currentCard.title : "Sin notas"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 12
+                        font.weight: Font.Bold
+                        color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        text: root.currentCard ? root.currentCard.body : ""
+                        font.family: "SF Pro Text, SF Pro Display"
+                        font.pixelSize: 10
+                        lineHeight: 1.2
+                        color: Qt.rgba(1, 1, 1, 0.72)
+                        wrapMode: Text.WordWrap
+                        elide: Text.ElideRight
+                        maximumLineCount: 4
+                    }
+
+                }
+
+                // Paginador de Tarjetas iOS (Pill dots + Contador)
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 4
+
+                    Text {
+                        text: "↕ Scroll"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 7
+                        font.weight: Font.Bold
+                        color: Qt.rgba(1, 1, 1, 0.35)
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    // Dots indicator
+                    RowLayout {
+                        spacing: 3
+
+                        Repeater {
+                            model: root.noteCards.length
+
+                            Rectangle {
+                                width: index === root.activeCardIndex ? 12 : 4
+                                height: 4
+                                radius: 2
+                                color: index === root.activeCardIndex ? (root.currentCard && root.currentCard.color ? root.currentCard.color : "#E5A93C") : Qt.rgba(1, 1, 1, 0.25)
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.activeCardIndex = index
+                                }
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 150
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: (root.activeCardIndex + 1) + "/" + root.noteCards.length
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 8
+                        color: Qt.rgba(1, 1, 1, 0.5)
+                    }
+
+                }
+
+            }
+
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // ── 2. MODO MEDIO (354 x 170): TARJETA iOS IZQ + TAREAS DER ──
+        // ═══════════════════════════════════════════════════════════════════
+        RowLayout {
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 12
+            visible: root.isMedium && !root.addTaskModalOpen && !root.notesModalOpen
+
+            // Lado Izquierdo: Tarjeta de Nota Activa
+            Rectangle {
+                Layout.preferredWidth: 162
+                Layout.fillHeight: true
+                radius: 14
+                color: Qt.rgba(1, 1, 1, 0.05)
+                border.color: Qt.rgba(1, 1, 1, 0.09)
+                border.width: 1
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 4
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        Text {
+                            text: "󰠮"
+                            font.family: "CaskaydiaCove Nerd Font"
+                            font.pixelSize: 11
+                            color: root.currentCard && root.currentCard.color ? root.currentCard.color : "#E5A93C"
+                        }
+
+                        Text {
+                            text: "NOTAS"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 9
+                            font.weight: Font.Bold
+                            color: root.currentCard && root.currentCard.color ? root.currentCard.color : "#E5A93C"
+                            font.letterSpacing: 0.8
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            text: root.currentCard && root.currentCard.date ? root.currentCard.date : "HOY"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 8
+                            font.weight: Font.Bold
+                            color: Qt.rgba(1, 1, 1, 0.5)
+                        }
+
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.currentCard ? root.currentCard.title : "Sin notas"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                        color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        text: root.currentCard ? root.currentCard.body : ""
+                        font.family: "SF Pro Text, SF Pro Display"
+                        font.pixelSize: 9
+                        lineHeight: 1.2
+                        color: Qt.rgba(1, 1, 1, 0.7)
+                        wrapMode: Text.WordWrap
+                        elide: Text.ElideRight
+                        maximumLineCount: 4
+                    }
+
+                    // Paginador
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 3
+
+                        Text {
+                            text: "↕ Scroll"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 7
+                            color: Qt.rgba(1, 1, 1, 0.35)
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Repeater {
+                            model: root.noteCards.length
+
+                            Rectangle {
+                                width: index === root.activeCardIndex ? 10 : 3
+                                height: 3
+                                radius: 1.5
+                                color: index === root.activeCardIndex ? (root.currentCard && root.currentCard.color ? root.currentCard.color : "#E5A93C") : Qt.rgba(1, 1, 1, 0.25)
+                            }
+
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            text: (root.activeCardIndex + 1) + "/" + root.noteCards.length
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 8
+                            color: Qt.rgba(1, 1, 1, 0.45)
+                        }
+
+                    }
+
+                }
+
+            }
+
+            // Lado Derecho: Lista de Tareas y Agenda
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                spacing: 4
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 4
+
+                    Text {
+                        text: "TAREAS & RECORDATORIOS"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 9
+                        font.weight: Font.Bold
+                        color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
+                        font.letterSpacing: 0.6
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    Rectangle {
+                        height: 18
+                        radius: 9
+                        implicitWidth: plusMedRow.implicitWidth + 8
+                        color: Qt.rgba(1, 1, 1, 0.08)
+
+                        RowLayout {
+                            id: plusMedRow
+
+                            anchors.centerIn: parent
+                            spacing: 3
+
+                            Text {
+                                text: "+"
+                                font.pixelSize: 9
+                                font.weight: Font.Bold
+                                color: "#FFFFFF"
+                            }
+
+                            Text {
+                                text: "Añadir"
+                                font.family: "SF Pro Display"
+                                font.pixelSize: 8
+                                font.weight: Font.Bold
+                                color: "#FFFFFF"
+                            }
+
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            enabled: root.widgetsState ? !root.widgetsState.isEditing : true
+                            onClicked: root.addTaskModalOpen = true
+                        }
+
+                    }
+
+                }
+
                 ListView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -538,7 +491,7 @@ Item {
                         width: parent ? parent.width : 160
                         height: 27
                         radius: 6
-                        color: delMa.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(1, 1, 1, 0.05)
+                        color: Qt.rgba(1, 1, 1, 0.05)
 
                         RowLayout {
                             anchors.fill: parent
@@ -546,7 +499,6 @@ Item {
                             anchors.rightMargin: 6
                             spacing: 5
 
-                            // Checkbox
                             Rectangle {
                                 width: 13
                                 height: 13
@@ -576,7 +528,6 @@ Item {
 
                             }
 
-                            // Title
                             Text {
                                 text: modelData.title
                                 font.family: "SF Pro Display"
@@ -588,18 +539,17 @@ Item {
                                 Layout.fillWidth: true
                             }
 
-                            // Tag badge
                             Rectangle {
                                 height: 13
                                 radius: 4
-                                implicitWidth: tagTxt.implicitWidth + 6
+                                implicitWidth: tagTxtM.implicitWidth + 6
                                 color: Qt.rgba(1, 1, 1, 0.08)
 
                                 Text {
-                                    id: tagTxt
+                                    id: tagTxtM
 
                                     anchors.centerIn: parent
-                                    text: modelData.tag || "UNaB"
+                                    text: modelData.tag || "General"
                                     font.family: "SF Pro Display"
                                     font.pixelSize: 7
                                     font.weight: Font.Bold
@@ -608,33 +558,6 @@ Item {
 
                             }
 
-                            // Delete button (on hover)
-                            Text {
-                                text: "✕"
-                                font.pixelSize: 8
-                                color: Qt.rgba(1, 1, 1, 0.4)
-                                visible: delMa.containsMouse
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        if (root.widgetsState)
-                                            root.widgetsState.deleteTimetableTask(modelData.id);
-
-                                    }
-                                }
-
-                            }
-
-                        }
-
-                        MouseArea {
-                            id: delMa
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.NoButton
                         }
 
                     }
@@ -646,32 +569,173 @@ Item {
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 3. MODO EXPANDIDO (354 x 354): WORKSTATION COMPLETO ──
+        // ── 3. MODO EXPANDIDO (354 x 354): NOTAS iOS + TAREAS COMPLETO ──
         // ═══════════════════════════════════════════════════════════════════
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 14
-            spacing: 8
+            spacing: 10
             visible: root.isLarge && !root.addTaskModalOpen && !root.notesModalOpen
 
-            // Header
+            // Tarjeta Superior: Tarjeta de Nota Activa estilo iPadOS
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 140
+                radius: 14
+                color: Qt.rgba(1, 1, 1, 0.05)
+                border.color: Qt.rgba(1, 1, 1, 0.09)
+                border.width: 1
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 5
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        Text {
+                            text: "󰠮"
+                            font.family: "CaskaydiaCove Nerd Font"
+                            font.pixelSize: 13
+                            color: root.currentCard && root.currentCard.color ? root.currentCard.color : "#E5A93C"
+                        }
+
+                        Text {
+                            text: "NOTAS & APUNTES"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 10
+                            font.weight: Font.Bold
+                            color: root.currentCard && root.currentCard.color ? root.currentCard.color : "#E5A93C"
+                            font.letterSpacing: 0.8
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            text: root.currentCard && root.currentCard.date ? root.currentCard.date : "HOY"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 9
+                            font.weight: Font.Bold
+                            color: Qt.rgba(1, 1, 1, 0.5)
+                        }
+
+                        Rectangle {
+                            height: 18
+                            radius: 9
+                            implicitWidth: 54
+                            color: Qt.rgba(1, 1, 1, 0.08)
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "+ Nota"
+                                font.family: "SF Pro Display"
+                                font.pixelSize: 8
+                                font.weight: Font.Bold
+                                color: "#FFFFFF"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.notesModalOpen = true
+                            }
+
+                        }
+
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.currentCard ? root.currentCard.title : "Sin notas"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 13
+                        font.weight: Font.Bold
+                        color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        text: root.currentCard ? root.currentCard.body : ""
+                        font.family: "SF Pro Text, SF Pro Display"
+                        font.pixelSize: 11
+                        lineHeight: 1.25
+                        color: Qt.rgba(1, 1, 1, 0.75)
+                        wrapMode: Text.WordWrap
+                        elide: Text.ElideRight
+                        maximumLineCount: 3
+                    }
+
+                    // Paginador
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        Text {
+                            text: "↕ Usa la rueda del mouse para cambiar de nota"
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 8
+                            color: Qt.rgba(1, 1, 1, 0.4)
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Repeater {
+                            model: root.noteCards.length
+
+                            Rectangle {
+                                width: index === root.activeCardIndex ? 14 : 4
+                                height: 4
+                                radius: 2
+                                color: index === root.activeCardIndex ? (root.currentCard && root.currentCard.color ? root.currentCard.color : "#E5A93C") : Qt.rgba(1, 1, 1, 0.25)
+                            }
+
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            text: (root.activeCardIndex + 1) + " / " + root.noteCards.length
+                            font.family: "SF Pro Display"
+                            font.pixelSize: 8
+                            font.weight: Font.Bold
+                            color: Qt.rgba(1, 1, 1, 0.5)
+                        }
+
+                    }
+
+                }
+
+            }
+
+            // Separador
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: Qt.rgba(1, 1, 1, 0.08)
+            }
+
+            // Sección Inferior: Lista de Tareas y Pendientes
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 6
 
                 Text {
-                    text: "󰠮"
-                    font.family: "CaskaydiaCove Nerd Font"
-                    font.pixelSize: 14
-                    color: "#007AFF"
-                }
-
-                Text {
-                    text: "NOTAS & AGENDA"
+                    text: "TAREAS & PENDIENTES"
                     font.family: "SF Pro Display"
-                    font.pixelSize: 11
+                    font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                    color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
+                    font.letterSpacing: 0.6
                 }
 
                 Item {
@@ -681,36 +745,21 @@ Item {
                 Rectangle {
                     height: 18
                     radius: 9
-                    implicitWidth: addLargeRow.implicitWidth + 8
+                    implicitWidth: 60
                     color: "#007AFF"
 
-                    RowLayout {
-                        id: addLargeRow
-
+                    Text {
                         anchors.centerIn: parent
-                        spacing: 3
-
-                        Text {
-                            text: "＋"
-                            font.pixelSize: 10
-                            font.weight: Font.Bold
-                            color: "#FFFFFF"
-                        }
-
-                        Text {
-                            text: "Agregar"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: "#FFFFFF"
-                        }
-
+                        text: "+ Tarea"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 9
+                        font.weight: Font.Bold
+                        color: "#FFFFFF"
                     }
 
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                         onClicked: root.addTaskModalOpen = true
                     }
 
@@ -718,75 +767,16 @@ Item {
 
             }
 
-            // Current Class / Agenda Banner
-            Rectangle {
-                Layout.fillWidth: true
-                height: 52
-                radius: 10
-                color: Qt.rgba(1, 1, 1, 0.06)
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 8
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        Text {
-                            text: root.widgetsState && root.widgetsState.ttSubject ? root.widgetsState.ttSubject : "Sin eventos programados"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: "#FFFFFF"
-                            elide: Text.ElideRight
-                        }
-
-                        Text {
-                            text: (root.widgetsState && root.widgetsState.ttRoom ? root.widgetsState.ttRoom : "General") + " • " + (root.widgetsState && root.widgetsState.ttStart ? root.widgetsState.ttStart : "Todo el día")
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            color: Qt.rgba(1, 1, 1, 0.6)
-                            elide: Text.ElideRight
-                        }
-
-                    }
-
-                    Rectangle {
-                        height: 20
-                        radius: 10
-                        implicitWidth: Math.max(50, largeTimeText.implicitWidth + 12)
-                        color: isActive ? Qt.rgba(0.19, 0.82, 0.35, 0.2) : Qt.rgba(0, 0.48, 1, 0.2)
-
-                        Text {
-                            id: largeTimeText
-
-                            anchors.centerIn: parent
-                            text: root.widgetsState && root.widgetsState.ttTimeLeftStr ? root.widgetsState.ttTimeLeftStr : (root.widgetsState && root.widgetsState.ttStart ? root.widgetsState.ttStart : "Hoy")
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: isActive ? "#30D158" : "#007AFF"
-                        }
-
-                    }
-
-                }
-
-            }
-
-            // Task List
             ListView {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 120
+                Layout.fillHeight: true
                 clip: true
-                spacing: 5
+                spacing: 4
                 model: root.widgetsState && root.widgetsState.ttTasks ? root.widgetsState.ttTasks : []
 
                 delegate: Rectangle {
                     width: parent ? parent.width : 320
-                    height: 28
+                    height: 30
                     radius: 6
                     color: Qt.rgba(1, 1, 1, 0.05)
 
@@ -844,7 +834,7 @@ Item {
                                 id: tagTxtL
 
                                 anchors.centerIn: parent
-                                text: modelData.tag || "UNaB"
+                                text: modelData.tag || "General"
                                 font.family: "SF Pro Display"
                                 font.pixelSize: 8
                                 font.weight: Font.Bold
@@ -859,57 +849,13 @@ Item {
 
             }
 
-            // Separator
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: Qt.rgba(1, 1, 1, 0.1)
-            }
-
-            // Notes / Scratchpad section
-            Text {
-                text: "APUNTES & NOTAS RÁPIDAS"
-                font.family: "SF Pro Display"
-                font.pixelSize: 9
-                font.weight: Font.Bold
-                color: Qt.rgba(1, 1, 1, 0.55)
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                radius: 8
-                color: Qt.rgba(1, 1, 1, 0.05)
-                border.color: Qt.rgba(1, 1, 1, 0.1)
-                border.width: 1
-
-                TextEdit {
-                    id: largeNotesEdit
-
-                    anchors.fill: parent
-                    anchors.margins: 8
-                    text: root.widgetsState && root.widgetsState.ttNotes ? root.widgetsState.ttNotes : ""
-                    font.family: "SF Pro Display"
-                    font.pixelSize: 10
-                    color: "#FFFFFF"
-                    wrapMode: TextEdit.Wrap
-                    onTextChanged: {
-                        if (root.widgetsState)
-                            root.widgetsState.setTimetableNotes(text);
-
-                    }
-                }
-
-            }
-
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 4. MODAL: AGREGAR NUEVO EVENTO DE AGENDA / TAREA ──
+        // ── 4. MODAL: AGREGAR TAREA ──
         // ═══════════════════════════════════════════════════════════════════
         Rectangle {
-            property int modalTab: 0
-            property string selectedTag: "UNaB"
+            property string selectedTag: "General"
             property string selectedColor: "#007AFF"
 
             anchors.fill: parent
@@ -924,71 +870,15 @@ Item {
                 anchors.margins: 12
                 spacing: 6
 
-                // Modal Header
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6
 
-                    // Segmented Selector: Agenda vs Tarea
-                    Rectangle {
-                        height: 20
-                        radius: 10
-                        implicitWidth: 130
-                        color: Qt.rgba(1, 1, 1, 0.08)
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 2
-                            spacing: 2
-
-                            Rectangle {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                radius: 8
-                                color: parent.parent.parent.parent.modalTab === 0 ? "#007AFF" : "transparent"
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "Agenda / Horario"
-                                    font.family: "SF Pro Display"
-                                    font.pixelSize: 8
-                                    font.weight: Font.Bold
-                                    color: parent.parent.parent.parent.parent.modalTab === 0 ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.55)
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: parent.parent.parent.parent.modalTab = 0
-                                }
-
-                            }
-
-                            Rectangle {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                radius: 8
-                                color: parent.parent.parent.parent.modalTab === 1 ? "#AF52DE" : "transparent"
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "Tarea"
-                                    font.family: "SF Pro Display"
-                                    font.pixelSize: 8
-                                    font.weight: Font.Bold
-                                    color: parent.parent.parent.parent.parent.modalTab === 1 ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.55)
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: parent.parent.parent.parent.modalTab = 1
-                                }
-
-                            }
-
-                        }
-
+                    Text {
+                        text: "Añadir Nueva Tarea"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                        color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
                     }
 
                     Item {
@@ -1011,96 +901,55 @@ Item {
 
                 }
 
-                // Campo Título
-                ColumnLayout {
+                Rectangle {
                     Layout.fillWidth: true
-                    spacing: 2
+                    height: 26
+                    radius: 6
+                    color: Qt.rgba(1, 1, 1, 0.08)
+                    border.color: titleInput.activeFocus ? "#007AFF" : Qt.rgba(1, 1, 1, 0.15)
+                    border.width: 1
 
-                    Text {
-                        text: parent.parent.parent.modalTab === 0 ? "Título del Evento / Clase" : "Descripción de la Tarea"
+                    TextInput {
+                        id: titleInput
+
+                        anchors.fill: parent
+                        anchors.margins: 4
                         font.family: "SF Pro Display"
-                        font.pixelSize: 9
-                        color: Qt.rgba(1, 1, 1, 0.6)
-                    }
+                        font.pixelSize: 10
+                        color: "#FFFFFF"
+                        verticalAlignment: TextInput.AlignVCenter
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 26
-                        radius: 6
-                        color: Qt.rgba(1, 1, 1, 0.08)
-                        border.color: titleInput.activeFocus ? "#007AFF" : Qt.rgba(1, 1, 1, 0.15)
-                        border.width: 1
-
-                        TextInput {
-                            id: titleInput
-
-                            anchors.fill: parent
-                            anchors.margins: 4
+                        Text {
+                            text: "Descripción de la tarea..."
                             font.family: "SF Pro Display"
                             font.pixelSize: 10
-                            color: "#FFFFFF"
-                            verticalAlignment: TextInput.AlignVCenter
+                            color: Qt.rgba(1, 1, 1, 0.4)
+                            visible: !titleInput.text && !titleInput.activeFocus
+                            anchors.verticalCenter: parent.verticalCenter
                         }
 
                     }
 
                 }
 
-                // Campo Horario (Solo visible en Agenda)
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-                    visible: parent.parent.modalTab === 0
-
-                    Text {
-                        text: "Horario (ej: 18:00 - 20:00)"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 9
-                        color: Qt.rgba(1, 1, 1, 0.6)
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 24
-                        radius: 6
-                        color: Qt.rgba(1, 1, 1, 0.08)
-                        border.color: timeInput.activeFocus ? "#007AFF" : Qt.rgba(1, 1, 1, 0.15)
-                        border.width: 1
-
-                        TextInput {
-                            id: timeInput
-
-                            anchors.fill: parent
-                            anchors.margins: 4
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 10
-                            text: "18:00 - 20:00"
-                            color: "#FFFFFF"
-                            verticalAlignment: TextInput.AlignVCenter
-                        }
-
-                    }
-
-                }
-
-                // Selector de Categoría (Tag)
+                // Selector de Categoría
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 4
 
                     Repeater {
                         model: [{
-                            "tag": "UNaB",
-                            "col": "#007AFF"
+                            "tag": "General",
+                            "col": "#30D158"
                         }, {
                             "tag": "Trabajo",
                             "col": "#AF52DE"
                         }, {
-                            "tag": "Examen",
-                            "col": "#FF9F0A"
+                            "tag": "Estudio",
+                            "col": "#007AFF"
                         }, {
-                            "tag": "General",
-                            "col": "#30D158"
+                            "tag": "Prioridad",
+                            "col": "#FA114F"
                         }]
 
                         Rectangle {
@@ -1137,16 +986,15 @@ Item {
                     Layout.fillHeight: true
                 }
 
-                // Botón Guardar
                 Rectangle {
                     Layout.fillWidth: true
                     height: 26
                     radius: 7
-                    color: parent.parent.modalTab === 0 ? "#007AFF" : "#AF52DE"
+                    color: "#007AFF"
 
                     Text {
                         anchors.centerIn: parent
-                        text: parent.parent.parent.modalTab === 0 ? "Guardar en Calendario y Agenda" : "Guardar Tarea"
+                        text: "Guardar Tarea"
                         font.family: "SF Pro Display"
                         font.pixelSize: 9
                         font.weight: Font.Bold
@@ -1158,18 +1006,9 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             if (titleInput.text.trim() !== "") {
-                                if (parent.parent.parent.modalTab === 0) {
-                                    var todayDate = new Date();
-                                    var dStr = (root.widgetsState && root.widgetsState.calSelectedDateStr) ? root.widgetsState.calSelectedDateStr : (todayDate.getFullYear() + "-" + ("0" + (todayDate.getMonth() + 1)).slice(-2) + "-" + ("0" + todayDate.getDate()).slice(-2));
-                                    if (root.widgetsState) {
-                                        root.widgetsState.addCalendarEvent(dStr, timeInput.text.trim() || "Todo el día", titleInput.text.trim(), parent.parent.parent.selectedTag, parent.parent.parent.selectedColor);
-                                        root.widgetsState.refreshTimetable();
-                                    }
-                                } else {
-                                    if (root.widgetsState)
-                                        root.widgetsState.addTimetableTask(titleInput.text.trim(), parent.parent.parent.selectedTag, "Pendiente");
+                                if (root.widgetsState)
+                                    root.widgetsState.addTimetableTask(titleInput.text.trim(), parent.parent.parent.selectedTag, "Pendiente");
 
-                                }
                                 titleInput.text = "";
                             }
                             root.addTaskModalOpen = false;
@@ -1190,7 +1029,7 @@ Item {
             radius: root.widgetsState ? root.widgetsState.cardRadius : 22
             color: root.widgetsState && root.widgetsState.isDarkTheme ? "#161B26" : "#FFFFFF"
             visible: root.notesModalOpen
-            border.color: "#FF9F0A"
+            border.color: "#E5A93C"
             border.width: 1.5
 
             ColumnLayout {
@@ -1205,11 +1044,11 @@ Item {
                         text: "󰠮"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: "#FF9F0A"
+                        color: "#E5A93C"
                     }
 
                     Text {
-                        text: "APUNTES DE TRABAJO & ESTUDIO"
+                        text: "APUNTES & NOTAS RÁPIDAS"
                         font.family: "SF Pro Display"
                         font.pixelSize: 10
                         font.weight: Font.Bold
@@ -1262,7 +1101,7 @@ Item {
                     Layout.fillWidth: true
                     height: 28
                     radius: 8
-                    color: "#FF9F0A"
+                    color: "#E5A93C"
 
                     Text {
                         anchors.centerIn: parent
@@ -1286,20 +1125,6 @@ Item {
 
                 }
 
-            }
-
-        }
-
-        Behavior on color {
-            ColorAnimation {
-                duration: 350
-            }
-
-        }
-
-        Behavior on border.color {
-            ColorAnimation {
-                duration: 350
             }
 
         }

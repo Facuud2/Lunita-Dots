@@ -212,9 +212,11 @@ Item {
     property int habitPercent: 0
     property string habitDate: ""
     property var habitTasks: []
-    // ── 11. Timetable UNaB Data ──
-    property string ttUniversity: "UNaB"
-    property string ttCareer: "Tecnicatura en Programación"
+    // ── 11. Timetable & Notes Data ──
+    property string ttUniversity: "Notas"
+    property string ttCareer: "Agenda Diaria"
+    property var ttNotesList: []
+    property int ttActiveNoteIndex: 0
     property string ttSubject: "Cargando..."
     property string ttCode: ""
     property string ttRoom: ""
@@ -919,7 +921,7 @@ Item {
         habitProc.running = true;
     }
 
-    // ── 11. Timetable UNaB & Workspace Notes ──
+    // ── 11. Timetable & Workspace Notes ──
     function refreshTimetable() {
         ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "get"];
         ttProc.running = true;
@@ -931,7 +933,7 @@ Item {
     }
 
     function addTimetableTask(title, tag, due) {
-        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "add_task", title, tag || "UNaB", due || "Pendiente"];
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "add_task", title, tag || "General", due || "Pendiente"];
         ttProc.running = true;
     }
 
@@ -1445,9 +1447,9 @@ Item {
             onRead: (data) => {
                 try {
                     var p = JSON.parse(data.trim());
-                    root.ttUniversity = p.university || "UNaB";
-                    root.ttCareer = p.career || "Tecnicatura en Programación";
-                    root.ttSubject = p.subject || "Sin clases";
+                    root.ttUniversity = p.university || "Notas";
+                    root.ttCareer = p.career || "Agenda Diaria";
+                    root.ttSubject = p.subject || "Sin eventos";
                     root.ttCode = p.code || "";
                     root.ttRoom = p.room || "";
                     root.ttProfessor = p.professor || "";
@@ -1461,6 +1463,7 @@ Item {
                     root.ttSchedule = p.schedule || [];
                     root.ttTasks = p.tasks || [];
                     root.ttNotes = p.notes || "";
+                    root.ttNotesList = p.notes_list || [];
                 } catch (e) {
                 }
             }

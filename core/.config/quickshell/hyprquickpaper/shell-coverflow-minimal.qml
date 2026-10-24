@@ -16,7 +16,7 @@ PanelWindow {
     property bool bgToggle: false
 
     // -----------------------------------------------------
-    // COVERFLOW TUNABLES
+    // COVERFLOW PARAMETERS
     // -----------------------------------------------------
     property real cardW: 190
     property real cardH: 340
