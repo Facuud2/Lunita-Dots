@@ -133,12 +133,12 @@ def ensure_config_dir():
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
 class WidgetsManagerApp(Adw.Application):
-    def __init__(self, initial_tab="calendar"):
+    def __init__(self):
         super().__init__(
             application_id="org.lunita.WidgetsManager",
-            flags=Gio.ApplicationFlags.NON_UNIQUE
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
         )
-        self.initial_tab = initial_tab
+        self.win = None
 
     def do_startup(self):
         Adw.Application.do_startup(self)
@@ -146,12 +146,44 @@ class WidgetsManagerApp(Adw.Application):
         style_mgr.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
 
     def do_activate(self):
-        Adw.Application.do_activate(self)
-        style_mgr = self.get_style_manager()
-        style_mgr.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
-        if not hasattr(self, "win") or not self.win:
-            self.win = WidgetsManagerWindow(application=self, initial_tab=self.initial_tab)
+        self._activate_with_tab("calendar")
+
+    def do_command_line(self, command_line):
+        args = command_line.get_arguments()
+        target_tab = "calendar"
+        i = 1
+        while i < len(args):
+            arg = args[i]
+            if arg in ["--tab", "-t"] and i + 1 < len(args):
+                target_tab = args[i + 1]
+                i += 2
+            elif arg.startswith("--tab="):
+                target_tab = arg.split("=", 1)[1]
+                i += 1
+            else:
+                i += 1
+
+        self._activate_with_tab(target_tab)
+        return 0
+
+    def _activate_with_tab(self, target_tab="calendar"):
+        windows = self.get_windows()
+        if not windows:
+            self.win = WidgetsManagerWindow(application=self, initial_tab=target_tab)
+        else:
+            self.win = windows[0]
+            if target_tab in ["calendar", "health", "timetable", "github", "desktop"]:
+                self.win.view_stack.set_visible_child_name(target_tab)
+
         self.win.present()
+        try:
+            subprocess.run(
+                ["hyprctl", "dispatch", "focuswindow", "class:org.lunita.WidgetsManager"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except Exception:
+            pass
 
 class WidgetsManagerWindow(Adw.ApplicationWindow):
     def __init__(self, initial_tab="calendar", **kwargs):
@@ -1914,23 +1946,8 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.show_toast("Cuadrícula restablecida y widgets alineados")
 
 def main():
-    initial_tab = "calendar"
-    filtered_args = [sys.argv[0]]
-    i = 1
-    while i < len(sys.argv):
-        arg = sys.argv[i]
-        if arg in ["--tab", "-t"] and i + 1 < len(sys.argv):
-            initial_tab = sys.argv[i + 1]
-            i += 2
-        elif arg.startswith("--tab="):
-            initial_tab = arg.split("=", 1)[1]
-            i += 1
-        else:
-            filtered_args.append(arg)
-            i += 1
-
-    app = WidgetsManagerApp(initial_tab=initial_tab)
-    return app.run(filtered_args)
+    app = WidgetsManagerApp()
+    return app.run(sys.argv)
 
 if __name__ == "__main__":
     sys.exit(main())

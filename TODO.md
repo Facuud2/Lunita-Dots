@@ -625,7 +625,7 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** [ISSUE-038]
 
 ### [ISSUE-041] Restricción de instancia única (Singleton) en el menú gestor de widgets
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_041_FIX`
 - **Módulo(s):** GUI / Widgets Manager
