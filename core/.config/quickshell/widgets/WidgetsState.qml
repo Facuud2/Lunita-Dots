@@ -640,7 +640,7 @@ Item {
 
         root.calSelectedDay = dayNumber.toString();
         var y = root.calYear || "2026";
-        var m = (root.calMonthNum && root.calMonthNum < 10) ? "0" + root.calMonthNum : (root.calMonthNum ? root.calMonthNum.toString() : "09");
+        var m = (root.calMonthNum && root.calMonthNum < 10) ? "0" + root.calMonthNum : (root.calMonthNum ? root.calMonthNum.toString() : String(new Date().getMonth() + 1).padStart(2, "0"));
         var d = dayInt < 10 ? "0" + dayInt : dayInt.toString();
         var dateStr = y + "-" + m + "-" + d;
         root.calSelectedDateStr = dateStr;
@@ -1018,6 +1018,18 @@ Item {
         onLoaded: root.loadMatugenColors()
         onFileChanged: matugenWatcher.reload()
         onTextChanged: root.loadMatugenColors()
+    }
+
+    FileView {
+        id: calendarEventsWatcher
+
+        path: Quickshell.env("HOME") + "/.config/lunita/calendar_events.json"
+        watchChanges: true
+        onFileChanged: calendarEventsWatcher.reload()
+        onTextChanged: {
+            calProc.command = ["python3", root.scriptsDir + "/calendar_provider.py", "get"];
+            calProc.running = true;
+        }
     }
 
     // ── Widget Edit Mode IPC Listener ──
