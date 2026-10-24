@@ -9,6 +9,9 @@ Item {
     property string screenName: "default"
     property var framesMap: ({
     })
+    readonly property bool isEditing: root.widgetsState ? root.widgetsState.isEditing : false
+    readonly property bool isDarkTheme: root.widgetsState ? root.widgetsState.isDarkTheme : true
+    readonly property color textColor: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
 
     // Helper forwarding methods for WidgetFrame and top bar
     function addWidget(type) {
@@ -138,15 +141,15 @@ Item {
     Rectangle {
         id: editTopBar
 
-        visible: root.widgetsState.isEditing
+        visible: root.isEditing
         anchors.top: parent.top
         anchors.topMargin: 40
         anchors.horizontalCenter: parent.horizontalCenter
         height: 44
         implicitWidth: editBarRow.implicitWidth + 32
         radius: root.widgetsState ? root.widgetsState.cardRadius : 22
-        color: root.widgetsState.isDarkTheme ? Qt.rgba(0.14, 0.16, 0.2, 0.92) : Qt.rgba(0.96, 0.96, 0.98, 0.94)
-        border.color: root.widgetsState.isDarkTheme ? Qt.rgba(1, 1, 1, 0.2) : Qt.rgba(0, 0, 0, 0.14)
+        color: root.isDarkTheme ? Qt.rgba(0.14, 0.16, 0.2, 0.92) : Qt.rgba(0.96, 0.96, 0.98, 0.94)
+        border.color: root.isDarkTheme ? Qt.rgba(1, 1, 1, 0.2) : Qt.rgba(0, 0, 0, 0.14)
         border.width: 1
 
         RowLayout {
@@ -160,8 +163,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: resetText.implicitWidth + 16
-                color: resetMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: resetMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -172,14 +175,14 @@ Item {
 
                     Text {
                         text: "↺"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 11
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Reset"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -203,8 +206,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addPhoText.implicitWidth + 16
-                color: addPhoMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addPhoMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -215,14 +218,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Fotos"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -246,8 +249,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addCalText.implicitWidth + 16
-                color: addCalMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addCalMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -258,14 +261,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Calendario"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -289,8 +292,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addSysText.implicitWidth + 16
-                color: addSysMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addSysMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -301,14 +304,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Actividad"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -332,8 +335,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addClkText.implicitWidth + 16
-                color: addClkMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addClkMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -344,14 +347,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Reloj"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -375,8 +378,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addNetText.implicitWidth + 16
-                color: addNetMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addNetMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -387,14 +390,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Red"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -418,8 +421,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addBatText.implicitWidth + 16
-                color: addBatMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addBatMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -430,14 +433,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Batería"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -461,8 +464,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addGitText.implicitWidth + 16
-                color: addGitMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addGitMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -473,14 +476,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Git"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -504,8 +507,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addHabText.implicitWidth + 16
-                color: addHabMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addHabMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -516,14 +519,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Salud"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -547,8 +550,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addTtText.implicitWidth + 16
-                color: addTtMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addTtMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -559,14 +562,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Notas"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -590,8 +593,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: addMedText.implicitWidth + 16
-                color: addMedMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: addMedMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -602,14 +605,14 @@ Item {
 
                     Text {
                         text: "+"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
                     Text {
                         text: "Música"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
@@ -633,8 +636,8 @@ Item {
                 radius: 14
                 height: 28
                 implicitWidth: cfgText.implicitWidth + 20
-                color: cfgMa.containsMouse ? (root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
-                border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                color: cfgMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
                 border.width: 1
 
                 RowLayout {
@@ -652,7 +655,7 @@ Item {
 
                     Text {
                         text: "Ajustes"
-                        color: root.widgetsState.textColor
+                        color: root.textColor
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold

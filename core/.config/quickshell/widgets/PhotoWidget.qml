@@ -64,12 +64,12 @@ Item {
 
             Connections {
                 function onPhotoPathChanged() {
-                    var newPath = root.widgetsState.photoPath;
+                    var newPath = root.widgetsState ? root.widgetsState.photoPath : "";
                     if (!newPath)
                         return ;
 
                     var fileUrl = "file://" + newPath;
-                    var dir = root.widgetsState.photoDirection || 1;
+                    var dir = (root.widgetsState && root.widgetsState.photoDirection) ? root.widgetsState.photoDirection : 1;
                     var slideDistance = 35;
                     if (maskedLayer.usingA) {
                         // Transition from A to B
@@ -255,7 +255,7 @@ Item {
                         }
 
                         Text {
-                            text: root.widgetsState.photoCategory
+                            text: root.widgetsState ? (root.widgetsState.photoCategory || "Fotos") : "Fotos"
                             font.family: "SF Pro Display"
                             font.pixelSize: 11
                             font.weight: Font.Bold
@@ -296,7 +296,11 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.widgetsState.prevPhoto()
+                            onClicked: {
+                                if (root.widgetsState)
+                                    root.widgetsState.prevPhoto();
+
+                            }
                         }
 
                     }
@@ -323,7 +327,11 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.widgetsState.nextPhoto()
+                            onClicked: {
+                                if (root.widgetsState)
+                                    root.widgetsState.nextPhoto();
+
+                            }
                         }
 
                     }
@@ -342,7 +350,7 @@ Item {
                 spacing: 2
 
                 Text {
-                    text: root.widgetsState.photoTitle
+                    text: root.widgetsState ? (root.widgetsState.photoTitle || "") : ""
                     font.family: "SF Pro Display"
                     font.pixelSize: 13
                     font.weight: Font.ExtraBold
@@ -352,7 +360,7 @@ Item {
                 }
 
                 Text {
-                    text: root.widgetsState.photoIndex + " de " + root.widgetsState.photoTotal
+                    text: root.widgetsState ? (root.widgetsState.photoIndex + " de " + root.widgetsState.photoTotal) : ""
                     font.family: "SF Pro Display"
                     font.pixelSize: 10
                     font.weight: Font.Medium

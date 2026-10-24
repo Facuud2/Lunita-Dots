@@ -550,11 +550,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-038] Reparación crítica de carga de datos y renderizado en widgets de escritorio
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_038_FIX`
 - **Módulo(s):** Core / Widgets (Backend & QML)
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (QML y scripts proveedores de datos), archivos de estado JSON de widgets.
+- **Archivos Afectados:** `core/.config/quickshell/widgets/scripts/sys_provider.py`, `core/.config/quickshell/widgets/scripts/net_provider.py`, `core/.config/quickshell/widgets/NetworkWidget.qml`, `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`
 - **Descripción:** Todos los widgets de escritorio (a excepción del reloj/hora) se encuentran rotos y se renderizan vacíos sin cargar información. El agente debe auditar el flujo de datos (procesos `Process` en QML, lectura de JSON locales, permisos de ejecución en scripts de Python/Bash y rutas tras últimas refactorizaciones) y restaurar la ingesta y visualización de datos en cada widget.
 - **Criterios de Aceptación:**
   1. Todos los widgets activos cargan, parsean y muestran su información correspondiente en tiempo real sin quedar en blanco.
