@@ -245,12 +245,10 @@ Item {
 
     Component.onCompleted: {
         root.loadColors();
+        searchDebounce.restart();
     }
     onSearchQueryChanged: {
         selectedIndex = 0;
-        searchDebounce.restart();
-    }
-    Component.onCompleted: {
         searchDebounce.restart();
     }
 
