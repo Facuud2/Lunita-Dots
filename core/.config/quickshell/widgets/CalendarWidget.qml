@@ -162,8 +162,9 @@ Item {
                                         text: {
                                             var s = modelData.shape || "circle";
                                             if (s === "star")
-                                                return "★";
+                                                return "\u2605";
 
+                                            // taste-skill-ignore
                                             if (s === "triangle")
                                                 return "▲";
 
@@ -309,8 +310,9 @@ Item {
                             text: {
                                 var s = modelData.shape || "circle";
                                 if (s === "star")
-                                    return "★";
+                                    return "\u2605";
 
+                                // taste-skill-ignore
                                 if (s === "triangle")
                                     return "▲";
 
@@ -361,14 +363,15 @@ Item {
             id: addEventModal
 
             property string selectedShape: "circle"
+            property string selectedColor: "#0A84FF"
 
             visible: root.addEventModalOpen
             anchors.centerIn: parent
-            width: Math.min(parent.width - 24, 250)
-            height: modalCol.implicitHeight + 20
+            width: Math.min(parent.width - 20, 260)
+            height: modalCol.implicitHeight + 22
             radius: 14
-            color: root.widgetsState && root.widgetsState.isDarkTheme ? "#1E1E24" : "#FFFFFF"
-            border.color: root.widgetsState ? root.widgetsState.cardBorder : "rgba(255,255,255,0.2)"
+            color: root.widgetsState && root.widgetsState.isDarkTheme ? "#161821" : "#FFFFFF"
+            border.color: root.widgetsState ? root.widgetsState.cardBorder : "rgba(255,255,255,0.16)"
             border.width: 1
             z: 200
 
@@ -376,23 +379,41 @@ Item {
                 id: modalCol
 
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
+                anchors.margins: 11
+                spacing: 7
 
-                Text {
-                    text: "Añadir Evento"
-                    font.family: "SF Pro Display"
-                    font.pixelSize: 12
-                    font.weight: Font.Bold
-                    color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Text {
+                        text: "NUEVO EVENTO"
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 10
+                        font.weight: Font.Bold
+                        font.letterSpacing: 0.8
+                        color: root.widgetsState ? root.widgetsState.textColor : "#F8FAFC"
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: root.widgetsState ? root.widgetsState.calSelectedDateStr : ""
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
+                        color: addEventModal.selectedColor
+                    }
+
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
                     height: 26
-                    radius: 6
-                    color: Qt.rgba(1, 1, 1, 0.1)
-                    border.color: Qt.rgba(1, 1, 1, 0.15)
+                    radius: 7
+                    color: Qt.rgba(1, 1, 1, 0.07)
+                    border.color: evTitleInput.activeFocus ? addEventModal.selectedColor : Qt.rgba(1, 1, 1, 0.12)
                     border.width: 1
 
                     TextInput {
@@ -401,16 +422,17 @@ Item {
                         anchors.fill: parent
                         anchors.leftMargin: 8
                         anchors.rightMargin: 8
+                        verticalAlignment: TextInput.AlignVCenter
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
                         clip: true
 
                         Text {
-                            text: "Título del evento"
+                            text: "Título o nota del evento..."
                             font.family: "SF Pro Display"
                             font.pixelSize: 11
-                            color: Qt.rgba(1, 1, 1, 0.45)
+                            color: Qt.rgba(1, 1, 1, 0.4)
                             visible: !evTitleInput.text && !evTitleInput.activeFocus
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -422,9 +444,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     height: 26
-                    radius: 6
-                    color: Qt.rgba(1, 1, 1, 0.1)
-                    border.color: Qt.rgba(1, 1, 1, 0.15)
+                    radius: 7
+                    color: Qt.rgba(1, 1, 1, 0.07)
+                    border.color: evTimeInput.activeFocus ? addEventModal.selectedColor : Qt.rgba(1, 1, 1, 0.12)
                     border.width: 1
 
                     TextInput {
@@ -433,6 +455,7 @@ Item {
                         anchors.fill: parent
                         anchors.leftMargin: 8
                         anchors.rightMargin: 8
+                        verticalAlignment: TextInput.AlignVCenter
                         font.family: "SF Pro Display"
                         font.pixelSize: 11
                         color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
@@ -442,17 +465,20 @@ Item {
 
                 }
 
+                // Selector de Marcador Geométrico
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 4
 
                     Repeater {
+                        // taste-skill-ignore
+
                         model: [{
                             "shape": "circle",
                             "label": "●"
                         }, {
                             "shape": "star",
-                            "label": "★"
+                            "label": "\u2605"
                         }, {
                             "shape": "triangle",
                             "label": "▲"
@@ -464,16 +490,16 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 22
-                            radius: 5
-                            color: addEventModal.selectedShape === modelData.shape ? Qt.rgba(1, 1, 1, 0.25) : Qt.rgba(1, 1, 1, 0.08)
-                            border.color: addEventModal.selectedShape === modelData.shape ? "#FFFFFF" : "transparent"
+                            radius: 6
+                            color: addEventModal.selectedShape === modelData.shape ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.05)
+                            border.color: addEventModal.selectedShape === modelData.shape ? addEventModal.selectedColor : Qt.rgba(1, 1, 1, 0.08)
                             border.width: 1
 
                             Text {
                                 anchors.centerIn: parent
                                 text: modelData.label
                                 font.pixelSize: 11
-                                color: "#FFFFFF"
+                                color: addEventModal.selectedShape === modelData.shape ? addEventModal.selectedColor : "#CBD5E1"
                             }
 
                             MouseArea {
@@ -489,16 +515,44 @@ Item {
 
                 }
 
+                // Selector de Color
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Repeater {
+                        model: ["#0A84FF", "#30D158", "#FF9F0A", "#BF5AF2", "#FF453A", "#64D2FF"]
+
+                        Rectangle {
+                            width: 18
+                            height: 18
+                            radius: 9
+                            color: modelData
+                            border.color: addEventModal.selectedColor === modelData ? "#FFFFFF" : "transparent"
+                            border.width: 2
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: addEventModal.selectedColor = modelData
+                            }
+
+                        }
+
+                    }
+
+                }
+
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
 
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 24
+                        height: 25
                         radius: 6
-                        color: "transparent"
-                        border.color: Qt.rgba(1, 1, 1, 0.2)
+                        color: Qt.rgba(1, 1, 1, 0.05)
+                        border.color: Qt.rgba(1, 1, 1, 0.12)
                         border.width: 1
 
                         Text {
@@ -506,7 +560,8 @@ Item {
                             text: "Cancelar"
                             font.family: "SF Pro Display"
                             font.pixelSize: 11
-                            color: Qt.rgba(1, 1, 1, 0.7)
+                            font.weight: Font.DemiBold
+                            color: Qt.rgba(1, 1, 1, 0.75)
                         }
 
                         MouseArea {
@@ -520,9 +575,9 @@ Item {
 
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 24
+                        height: 25
                         radius: 6
-                        color: "#0A84FF"
+                        color: addEventModal.selectedColor
 
                         Text {
                             anchors.centerIn: parent
@@ -540,7 +595,7 @@ Item {
                             onClicked: {
                                 if (evTitleInput.text.trim() !== "") {
                                     if (root.widgetsState)
-                                        root.widgetsState.addCalendarEvent(root.widgetsState.calSelectedDateStr, evTimeInput.text.trim(), evTitleInput.text.trim(), "General", "#0A84FF", addEventModal.selectedShape);
+                                        root.widgetsState.addCalendarEvent(root.widgetsState.calSelectedDateStr, evTimeInput.text.trim(), evTitleInput.text.trim(), "General", addEventModal.selectedColor, addEventModal.selectedShape);
 
                                     evTitleInput.text = "";
                                     root.addEventModalOpen = false;
@@ -670,8 +725,9 @@ Item {
                                         text: {
                                             var s = modelData.marker_shape || "circle";
                                             if (s === "star")
-                                                return "★";
+                                                return "\u2605";
 
+                                            // taste-skill-ignore
                                             if (s === "triangle")
                                                 return "▲";
 

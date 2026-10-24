@@ -68,6 +68,19 @@ def hex_to_rgba(hex_color: str, alpha: float) -> str:
             pass
     return f"rgba(255, 255, 255, {alpha})"
 
+def get_contrast_fg(hex_color: str) -> str:
+    hex_color = hex_color.lstrip("#")
+    if len(hex_color) >= 6:
+        try:
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+            lum = 0.299 * r + 0.587 * g + 0.114 * b
+            return "#0B0C10" if lum > 150 else "#FFFFFF"
+        except ValueError:
+            pass
+    return "#FFFFFF"
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 DOTS_DIR = SCRIPT_DIR.parent.parent
 WIDGETS_DIR = Path.home() / ".config/quickshell/widgets"
@@ -201,6 +214,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
     def setup_css(self):
         colors = load_theme_colors()
         primary_accent = colors.get("primary", "#007aff")
+        on_primary_accent = get_contrast_fg(primary_accent)
         css = f"""
         window,
         window.widgets-manager,
@@ -383,52 +397,56 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             font-weight: 600;
         }}
 
-        .wm-btn-primary {{
+        .wm-btn-primary, button.wm-btn-primary {{
             background-color: {primary_accent};
-            color: #FFFFFF;
+            background-image: none;
+            color: {on_primary_accent};
             border-radius: 9px;
-            padding: 7px 16px;
-            font-weight: 600;
+            padding: 8px 16px;
+            font-weight: 700;
             font-size: 12.5px;
-            border: 1px solid {hex_to_rgba(primary_accent, 0.6)};
-            box-shadow: 0 2px 6px {hex_to_rgba(primary_accent, 0.25)};
+            border: 1px solid {hex_to_rgba(primary_accent, 0.85)};
+            box-shadow: none;
             transition: all 150ms ease;
         }}
 
-        .wm-btn-primary:hover {{
-            opacity: 0.92;
-            box-shadow: 0 4px 12px {hex_to_rgba(primary_accent, 0.40)};
+        .wm-btn-primary:hover, button.wm-btn-primary:hover {{
+            opacity: 0.90;
         }}
 
-        .wm-btn-secondary {{
+        .wm-btn-secondary, button.wm-btn-secondary {{
             background-color: rgba(255, 255, 255, 0.05);
+            background-image: none;
             color: #E2E8F0;
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 9px;
             padding: 7px 14px;
             font-size: 12.5px;
-            font-weight: 500;
+            font-weight: 600;
+            box-shadow: none;
             transition: all 150ms ease;
         }}
 
-        .wm-btn-secondary:hover {{
-            background-color: rgba(255, 255, 255, 0.09);
+        .wm-btn-secondary:hover, button.wm-btn-secondary:hover {{
+            background-color: rgba(255, 255, 255, 0.10);
             border-color: rgba(255, 255, 255, 0.16);
             color: #FFFFFF;
         }}
 
-        .wm-btn-danger {{
+        .wm-btn-danger, button.wm-btn-danger {{
             background-color: rgba(244, 63, 94, 0.12);
+            background-image: none;
             color: #fb7185;
             border: 1px solid rgba(244, 63, 94, 0.28);
             border-radius: 8px;
             padding: 4px 10px;
             font-size: 12px;
             font-weight: 600;
+            box-shadow: none;
             transition: all 150ms ease;
         }}
 
-        .wm-btn-danger:hover {{
+        .wm-btn-danger:hover, button.wm-btn-danger:hover {{
             background-color: #f43f5e;
             color: #FFFFFF;
         }}
@@ -438,23 +456,32 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             min-width: 26px;
             min-height: 26px;
             padding: 0;
-            margin: 2px;
-            border: 2px solid transparent;
+            margin: 1px;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            background-image: none;
             box-shadow: none;
+            color: #FFFFFF;
+            font-size: 11px;
+            font-weight: 800;
+            transition: all 120ms ease;
+        }}
+
+        button.wm-color-btn:hover {{
+            border-color: rgba(255, 255, 255, 0.55);
         }}
 
         button.wm-color-btn.selected {{
             border-color: #FFFFFF;
-            outline: 2px solid rgba(255, 255, 255, 0.45);
+            outline: 2px solid {primary_accent};
             outline-offset: 1px;
         }}
 
-        button.wm-col-0 {{ background: #0A84FF; }}
-        button.wm-col-1 {{ background: #30D158; }}
-        button.wm-col-2 {{ background: #FF9F0A; }}
-        button.wm-col-3 {{ background: #BF5AF2; }}
-        button.wm-col-4 {{ background: #FF453A; }}
-        button.wm-col-5 {{ background: #64D2FF; }}
+        button.wm-col-0 {{ background-color: #0A84FF; }}
+        button.wm-col-1 {{ background-color: #30D158; }}
+        button.wm-col-2 {{ background-color: #FF9F0A; }}
+        button.wm-col-3 {{ background-color: #BF5AF2; }}
+        button.wm-col-4 {{ background-color: #FF453A; }}
+        button.wm-col-5 {{ background-color: #64D2FF; }}
 
         .wm-stats-pill {{
             background: #1B1C24;
@@ -463,163 +490,331 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             padding: 12px 18px;
         }}
 
-        /* Calendario Cuadrícula Mensual Completa y Panel Lateral Split */
+        /* ── Calendario Mensual & Panel Lateral Pro Max ── */
         .wm-cal-header {{
-            padding: 4px 6px 12px 6px;
+            background-color: #161820;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 8px 14px;
         }}
 
-        .wm-cal-header-btn {{
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 9px;
-            padding: 6px 14px;
-            color: #E2E8F0;
-            font-weight: 600;
-            transition: all 150ms ease;
+        .wm-cal-month-title {{
+            font-size: 18px;
+            font-weight: 800;
+            color: #F8FAFC;
+            letter-spacing: -0.3px;
         }}
 
-        .wm-cal-header-btn:hover {{
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.16);
-            color: #FFFFFF;
-        }}
-
-        .wm-cal-weekday-label {{
+        .wm-cal-month-badge {{
+            background-color: {hex_to_rgba(primary_accent, 0.14)};
+            border: 1px solid {hex_to_rgba(primary_accent, 0.30)};
+            color: {primary_accent};
+            border-radius: 999px;
+            padding: 2px 10px;
             font-size: 11px;
             font-weight: 700;
-            color: #94A3B8;
-            letter-spacing: 0.8px;
-            padding: 4px 0 8px 0;
         }}
 
-        .wm-cal-day-cell, button.wm-cal-day-cell {{
-            background-color: #17181F;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            padding: 8px;
-            min-height: 85px;
+        .wm-cal-nav-group {{
+            background-color: #121319;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 9px;
+            padding: 2px;
+        }}
+
+        .wm-cal-header-btn, button.wm-cal-header-btn {{
+            background-color: transparent;
+            background-image: none;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            padding: 4px 11px;
+            min-height: 26px;
+            color: #CBD5E1;
+            font-size: 12.5px;
+            font-weight: 600;
             box-shadow: none;
             transition: all 120ms ease;
         }}
 
+        .wm-cal-header-btn:hover, button.wm-cal-header-btn:hover {{
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #FFFFFF;
+        }}
+
+        .wm-cal-weekday-label {{
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #64748B;
+            letter-spacing: 1px;
+            padding: 2px 0 4px 0;
+        }}
+
+        .wm-cal-weekday-label.weekend {{
+            color: #94A3B8;
+        }}
+
+        .wm-cal-day-cell, button.wm-cal-day-cell {{
+            background-color: #161820;
+            background-image: none;
+            border: 1px solid rgba(255, 255, 255, 0.055);
+            border-radius: 10px;
+            padding: 6px 7px;
+            min-height: 72px;
+            box-shadow: none;
+            transition: all 120ms ease;
+        }}
+
+        .wm-cal-day-cell.weekend, button.wm-cal-day-cell.weekend {{
+            background-color: #14151C;
+        }}
+
         .wm-cal-day-cell:hover, button.wm-cal-day-cell:hover {{
-            background-color: #21232C;
+            background-color: #1E202B;
             border-color: rgba(255, 255, 255, 0.16);
         }}
 
         .wm-cal-day-cell.other-month, button.wm-cal-day-cell.other-month {{
-            opacity: 0.35;
-            background-color: rgba(23, 24, 31, 0.4);
-            border-color: rgba(255, 255, 255, 0.03);
+            opacity: 0.38;
+            background-color: rgba(18, 19, 25, 0.45);
+            border-color: rgba(255, 255, 255, 0.025);
+        }}
+
+        .wm-cal-day-cell.other-month:hover, button.wm-cal-day-cell.other-month:hover {{
+            opacity: 0.65;
+            background-color: #1A1C25;
+            border-color: rgba(255, 255, 255, 0.08);
         }}
 
         .wm-cal-day-cell.today, button.wm-cal-day-cell.today {{
-            border-color: {primary_accent};
-            box-shadow: inset 0 0 0 1px {primary_accent};
-            background-color: rgba(255, 255, 255, 0.03);
+            background-color: {hex_to_rgba(primary_accent, 0.06)};
+            border-color: {hex_to_rgba(primary_accent, 0.28)};
         }}
 
         .wm-cal-day-cell.selected-day, button.wm-cal-day-cell.selected-day {{
-            background-color: #222634;
+            background-color: #212434;
             border-color: {primary_accent};
             outline: 2px solid {primary_accent};
             outline-offset: -2px;
         }}
 
         .wm-cal-day-num {{
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 700;
             color: #E2E8F0;
+            padding: 1px 4px;
+        }}
+
+        .wm-cal-day-num.other-month {{
+            color: #64748B;
+            font-weight: 600;
         }}
 
         .wm-cal-day-num.today {{
-            color: {primary_accent};
+            background-color: {primary_accent};
+            color: {on_primary_accent};
+            border-radius: 6px;
+            padding: 1px 6px;
             font-weight: 800;
         }}
 
+        .wm-cal-today-tag {{
+            font-size: 9px;
+            font-weight: 800;
+            color: {primary_accent};
+            letter-spacing: 0.5px;
+        }}
+
+        .wm-cal-ev-count {{
+            background-color: rgba(255, 255, 255, 0.07);
+            color: #94A3B8;
+            border-radius: 5px;
+            padding: 0px 5px;
+            font-size: 10px;
+            font-weight: 700;
+        }}
+
         .wm-cal-chip {{
-            background-color: rgba(255, 255, 255, 0.06);
+            background-color: rgba(255, 255, 255, 0.055);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 5px;
-            padding: 2px 6px;
-            margin-top: 2px;
+            padding: 1px 5px;
+            margin-top: 1px;
         }}
 
-        .wm-shape-btn {{
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 12px;
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #CBD5E1;
-            transition: all 120ms ease;
+        .wm-cal-chip-title {{
+            font-size: 11px;
+            font-weight: 600;
+            color: #E2E8F0;
         }}
 
-        .wm-shape-btn:hover {{
-            background-color: rgba(255, 255, 255, 0.10);
-            color: #FFFFFF;
+        .wm-cal-more-lbl {{
+            font-size: 10px;
+            font-weight: 600;
+            color: #64748B;
+            padding-left: 2px;
         }}
 
-        .wm-shape-btn.selected {{
-            background-color: rgba(255, 255, 255, 0.18);
-            border-color: #FFFFFF;
-            font-weight: 700;
-            color: #FFFFFF;
-        }}
-
+        /* ── Panel Lateral Split ── */
         .wm-cal-side-panel {{
-            background-color: #161720;
+            background-color: #161821;
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 14px;
-            padding: 16px;
-            min-width: 370px;
+            padding: 14px 16px;
+            min-width: 345px;
+        }}
+
+        .wm-cal-side-panel scrolledwindow,
+        .wm-cal-side-panel scrolledwindow > viewport {{
+            background-color: transparent;
         }}
 
         .wm-cal-side-header {{
             padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
         }}
 
-        .wm-cal-close-btn {{
+        .wm-cal-side-day-pill {{
+            color: {primary_accent};
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }}
+
+        .wm-cal-side-date-title {{
+            font-size: 16px;
+            font-weight: 800;
+            color: #F8FAFC;
+            letter-spacing: -0.3px;
+        }}
+
+        .wm-cal-close-btn, button.wm-cal-close-btn {{
             border-radius: 8px;
-            padding: 6px;
-            background: transparent;
+            min-width: 28px;
+            min-height: 28px;
+            padding: 0;
+            background-color: rgba(255, 255, 255, 0.04);
+            background-image: none;
+            border: 1px solid rgba(255, 255, 255, 0.07);
             color: #94A3B8;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: none;
             transition: all 120ms ease;
         }}
 
-        .wm-cal-close-btn:hover {{
+        .wm-cal-close-btn:hover, button.wm-cal-close-btn:hover {{
+            background-color: rgba(244, 63, 94, 0.16);
+            border-color: rgba(244, 63, 94, 0.35);
+            color: #FDA4AF;
+        }}
+
+        .wm-cal-section-title {{
+            font-size: 10.5px;
+            font-weight: 800;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }}
+
+        .wm-cal-count-pill {{
             background-color: rgba(255, 255, 255, 0.08);
-            color: #FFFFFF;
+            color: #E2E8F0;
+            border-radius: 999px;
+            padding: 1px 7px;
+            font-size: 10.5px;
+            font-weight: 700;
         }}
 
         .wm-cal-event-card {{
-            background-color: #1C1E28;
+            background-color: #1D202C;
             border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 10px;
-            padding: 10px 12px;
+            padding: 8px 10px;
             transition: all 120ms ease;
         }}
 
         .wm-cal-event-card:hover {{
-            background-color: #222532;
-            border-color: rgba(255, 255, 255, 0.15);
+            background-color: #232736;
+            border-color: rgba(255, 255, 255, 0.14);
+        }}
+
+        .wm-cal-event-icon-box {{
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            min-width: 30px;
+            min-height: 30px;
+        }}
+
+        .wm-cal-meta-pill {{
+            background-color: rgba(255, 255, 255, 0.06);
+            color: #94A3B8;
+            border-radius: 5px;
+            padding: 1px 6px;
+            font-size: 10.5px;
+            font-weight: 600;
         }}
 
         .wm-cal-empty-state {{
-            padding: 24px 12px;
+            padding: 12px 14px;
             background-color: rgba(255, 255, 255, 0.02);
             border: 1px dashed rgba(255, 255, 255, 0.08);
             border-radius: 10px;
         }}
 
-        .wm-cal-input {{
-            background-color: #1C1E28;
-            border: 1px solid rgba(255, 255, 255, 0.10);
+        .wm-cal-form-box {{
+            background-color: #1B1D28;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 12px;
+        }}
+
+        .wm-cal-field-label {{
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #94A3B8;
+            letter-spacing: 0.3px;
+        }}
+
+        .wm-cal-input, entry.wm-cal-input {{
+            background-color: #13151D;
+            border: 1px solid rgba(255, 255, 255, 0.09);
             border-radius: 8px;
-            padding: 8px 12px;
+            padding: 6px 10px;
+            min-height: 20px;
             color: #F8FAFC;
-            font-size: 13px;
+            font-size: 12.5px;
+        }}
+
+        .wm-cal-input:focus-within, entry.wm-cal-input:focus-within {{
+            border-color: {primary_accent};
+            background-color: #171923;
+        }}
+
+        .wm-shape-btn, button.wm-shape-btn {{
+            border-radius: 7px;
+            padding: 5px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            background-color: #13151D;
+            background-image: none;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            color: #94A3B8;
+            box-shadow: none;
+            transition: all 120ms ease;
+        }}
+
+        .wm-shape-btn:hover, button.wm-shape-btn:hover {{
+            background-color: rgba(255, 255, 255, 0.07);
+            color: #F1F5F9;
+        }}
+
+        .wm-shape-btn.selected, button.wm-shape-btn.selected {{
+            background-color: {hex_to_rgba(primary_accent, 0.16)};
+            border-color: {primary_accent};
+            font-weight: 700;
+            color: #FFFFFF;
         }}
         """
         provider = Gtk.CssProvider()
@@ -708,20 +903,51 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.cal_selected_date = None
         self.cal_day_buttons = {}
 
-        page_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         page_box.set_vexpand(True)
         page_box.set_hexpand(True)
-        page_box.set_margin_top(16)
-        page_box.set_margin_bottom(16)
-        page_box.set_margin_start(20)
-        page_box.set_margin_end(20)
+        page_box.set_margin_top(12)
+        page_box.set_margin_bottom(14)
+        page_box.set_margin_start(18)
+        page_box.set_margin_end(18)
 
-        # ── Cabecera de Navegación del Calendario ──
-        header_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        # ── Cabecera Superior Pro Max ──
+        header_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         header_bar.add_css_class("wm-cal-header")
 
-        nav_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        btn_prev = Gtk.Button(icon_name="go-previous-symbolic")
+        # Izquierda: Título del Mes + Contador Mensual de Eventos
+        title_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        title_group.set_valign(Gtk.Align.CENTER)
+
+        self.cal_month_title_label = Gtk.Label()
+        self.cal_month_title_label.add_css_class("wm-cal-month-title")
+        self.cal_month_title_label.set_halign(Gtk.Align.START)
+        title_group.append(self.cal_month_title_label)
+
+        self.cal_month_count_badge = Gtk.Label(label="0 eventos")
+        self.cal_month_count_badge.add_css_class("wm-cal-month-badge")
+        self.cal_month_count_badge.set_valign(Gtk.Align.CENTER)
+        title_group.append(self.cal_month_count_badge)
+
+        header_bar.append(title_group)
+
+        spacer = Gtk.Box()
+        spacer.set_hexpand(True)
+        header_bar.append(spacer)
+
+        # Derecha: Botón Rápido + Controles Segmentados de Navegación
+        btn_quick_add = Gtk.Button(label="+ Nuevo Evento")
+        btn_quick_add.add_css_class("wm-btn-secondary")
+        btn_quick_add.set_valign(Gtk.Align.CENTER)
+        btn_quick_add.set_tooltip_text("Abrir panel para registrar evento")
+        btn_quick_add.connect("clicked", self.on_quick_add_event_clicked)
+        header_bar.append(btn_quick_add)
+
+        nav_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
+        nav_box.add_css_class("wm-cal-nav-group")
+        nav_box.set_valign(Gtk.Align.CENTER)
+
+        btn_prev = Gtk.Button(label="‹")
         btn_prev.add_css_class("wm-cal-header-btn")
         btn_prev.set_tooltip_text("Mes anterior")
         btn_prev.connect("clicked", lambda _: self.change_calendar_month(-1))
@@ -731,7 +957,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         btn_today.set_tooltip_text("Ir al mes actual")
         btn_today.connect("clicked", lambda _: self.reset_calendar_to_today())
 
-        btn_next = Gtk.Button(icon_name="go-next-symbolic")
+        btn_next = Gtk.Button(label="›")
         btn_next.add_css_class("wm-cal-header-btn")
         btn_next.set_tooltip_text("Mes siguiente")
         btn_next.connect("clicked", lambda _: self.change_calendar_month(1))
@@ -741,46 +967,29 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         nav_box.append(btn_next)
         header_bar.append(nav_box)
 
-        self.cal_month_title_label = Gtk.Label()
-        self.cal_month_title_label.add_css_class("title-2")
-        self.cal_month_title_label.add_css_class("bold")
-        self.cal_month_title_label.set_margin_start(8)
-        header_bar.append(self.cal_month_title_label)
-
-        # Espaciador expansible
-        spacer = Gtk.Box()
-        spacer.set_hexpand(True)
-        header_bar.append(spacer)
-
-        # Indicador de ayuda
-        hint_lbl = Gtk.Label(label="Haz clic en cualquier día para abrir el panel lateral de eventos")
-        hint_lbl.add_css_class("dim-label")
-        hint_lbl.set_halign(Gtk.Align.END)
-        header_bar.append(hint_lbl)
-
         page_box.append(header_bar)
 
-        # Split Container: Izquierda (Calendario) + Derecha (Panel Lateral con Revealer)
-        self.cal_split_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
+        # ── Contenedor Split: Izquierda (Cuadrícula) + Derecha (Drawer Lateral) ──
+        self.cal_split_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
         self.cal_split_box.set_vexpand(True)
         self.cal_split_box.set_hexpand(True)
 
-        # Columna Izquierda: Días de la semana + Grid mensual
-        cal_left_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        cal_left_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         cal_left_col.set_vexpand(True)
         cal_left_col.set_hexpand(True)
 
         weekday_grid = Gtk.Grid()
         weekday_grid.set_column_homogeneous(True)
-        weekday_grid.set_column_spacing(8)
+        weekday_grid.set_column_spacing(6)
         for i, wname in enumerate(WEEKDAY_NAMES_ES):
             w_lbl = Gtk.Label(label=wname)
             w_lbl.add_css_class("wm-cal-weekday-label")
+            if i >= 5:
+                w_lbl.add_css_class("weekend")
             w_lbl.set_halign(Gtk.Align.CENTER)
             weekday_grid.attach(w_lbl, i, 0, 1, 1)
         cal_left_col.append(weekday_grid)
 
-        # Grid ScrolledWindow
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll.set_vexpand(True)
@@ -789,8 +998,8 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.cal_grid = Gtk.Grid()
         self.cal_grid.set_column_homogeneous(True)
         self.cal_grid.set_row_homogeneous(True)
-        self.cal_grid.set_column_spacing(8)
-        self.cal_grid.set_row_spacing(8)
+        self.cal_grid.set_column_spacing(6)
+        self.cal_grid.set_row_spacing(6)
         self.cal_grid.set_vexpand(True)
         self.cal_grid.set_hexpand(True)
 
@@ -799,10 +1008,10 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
         self.cal_split_box.append(cal_left_col)
 
-        # Panel Lateral (Revealer con transición hacia la izquierda)
+        # Panel Lateral con Revealer (SLIDE_LEFT)
         self.cal_side_revealer = Gtk.Revealer()
         self.cal_side_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_LEFT)
-        self.cal_side_revealer.set_transition_duration(250)
+        self.cal_side_revealer.set_transition_duration(220)
         self.cal_side_revealer.set_reveal_child(False)
 
         side_panel_widget = self.build_calendar_side_panel()
@@ -815,6 +1024,25 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
         return page_box
 
+    def on_quick_add_event_clicked(self, _):
+        target_date = getattr(self, "cal_selected_date", None)
+        if not target_date:
+            today = date.today()
+            if self.cal_current_year == today.year and self.cal_current_month == today.month:
+                target_date = today.strftime("%Y-%m-%d")
+            else:
+                target_date = f"{self.cal_current_year:04d}-{self.cal_current_month:02d}-01"
+        self.cal_selected_date = target_date
+        for ds, btn in getattr(self, "cal_day_buttons", {}).items():
+            if ds == target_date:
+                btn.add_css_class("selected-day")
+            else:
+                btn.remove_css_class("selected-day")
+        self.refresh_side_panel(target_date)
+        self.cal_side_revealer.set_reveal_child(True)
+        if hasattr(self, "cal_entry_title"):
+            self.cal_entry_title.grab_focus()
+
     def change_calendar_month(self, delta: int):
         self.cal_current_month += delta
         if self.cal_current_month > 12:
@@ -823,17 +1051,17 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         elif self.cal_current_month < 1:
             self.cal_current_month = 12
             self.cal_current_year -= 1
-        if hasattr(self, "cal_side_revealer") and self.cal_side_revealer.get_reveal_child():
-            self.close_calendar_side_panel()
         self.render_calendar_grid()
 
     def reset_calendar_to_today(self):
         now = date.today()
         self.cal_current_year = now.year
         self.cal_current_month = now.month
-        if hasattr(self, "cal_side_revealer") and self.cal_side_revealer.get_reveal_child():
-            self.close_calendar_side_panel()
+        today_str = now.strftime("%Y-%m-%d")
+        self.cal_selected_date = today_str
         self.render_calendar_grid()
+        self.refresh_side_panel(today_str)
+        self.cal_side_revealer.set_reveal_child(True)
 
     def render_calendar_grid(self):
         while child := self.cal_grid.get_first_child():
@@ -841,34 +1069,43 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
         self.cal_day_buttons = {}
 
-        m_name = MONTH_NAMES_ES[self.cal_current_month - 1]
+        meses_titulo = [
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        ]
+        m_name = meses_titulo[self.cal_current_month - 1]
         self.cal_month_title_label.set_text(f"{m_name} {self.cal_current_year}")
 
-        cal = calendar.Calendar(firstweekday=0) # Lunes = 0
-        month_weeks = cal.monthdayscalendar(self.cal_current_year, self.cal_current_month)
+        cal = calendar.Calendar(firstweekday=0)
+        month_weeks = cal.monthdatescalendar(self.cal_current_year, self.cal_current_month)
         today = date.today()
         all_events = self.read_calendar_file()
 
-        for row_idx, week in enumerate(month_weeks):
-            for col_idx, d in enumerate(week):
-                if d == 0:
-                    empty_box = Gtk.Box()
-                    empty_box.add_css_class("wm-cal-day-cell")
-                    empty_box.add_css_class("other-month")
-                    empty_box.set_vexpand(True)
-                    empty_box.set_hexpand(True)
-                    self.cal_grid.attach(empty_box, col_idx, row_idx, 1, 1)
-                    continue
+        # Contar eventos totales en el mes activo
+        month_prefix = f"{self.cal_current_year:04d}-{self.cal_current_month:02d}-"
+        month_ev_total = sum(len(evs) for k, evs in all_events.items() if k.startswith(month_prefix))
+        if hasattr(self, "cal_month_count_badge"):
+            if month_ev_total == 0:
+                self.cal_month_count_badge.set_text("Sin eventos este mes")
+            elif month_ev_total == 1:
+                self.cal_month_count_badge.set_text("1 evento este mes")
+            else:
+                self.cal_month_count_badge.set_text(f"{month_ev_total} eventos este mes")
 
-                date_str = f"{self.cal_current_year:04d}-{self.cal_current_month:02d}-{d:02d}"
-                is_today = (self.cal_current_year == today.year and
-                            self.cal_current_month == today.month and
-                            d == today.day)
+        for row_idx, week in enumerate(month_weeks):
+            for col_idx, d_obj in enumerate(week):
+                date_str = d_obj.strftime("%Y-%m-%d")
+                in_current_month = (d_obj.month == self.cal_current_month)
+                is_today = (d_obj == today)
                 is_selected = (getattr(self, "cal_selected_date", None) == date_str)
                 day_events = all_events.get(date_str, [])
 
                 btn = Gtk.Button()
                 btn.add_css_class("wm-cal-day-cell")
+                if col_idx >= 5:
+                    btn.add_css_class("weekend")
+                if not in_current_month:
+                    btn.add_css_class("other-month")
                 if is_today:
                     btn.add_css_class("today")
                 if is_selected:
@@ -878,59 +1115,92 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
                 self.cal_day_buttons[date_str] = btn
 
-                cell_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+                cell_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+                cell_box.set_hexpand(True)
 
-                top_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-                num_lbl = Gtk.Label(label=str(d))
+                # Fila superior: Número de día (+ etiqueta HOY) a la izquierda, indicadores a la derecha
+                top_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+                top_row.set_hexpand(True)
+
+                num_lbl = Gtk.Label(label=str(d_obj.day))
                 num_lbl.add_css_class("wm-cal-day-num")
+                if not in_current_month:
+                    num_lbl.add_css_class("other-month")
                 if is_today:
                     num_lbl.add_css_class("today")
                 top_row.append(num_lbl)
 
+                if is_today and in_current_month:
+                    today_tag = Gtk.Label(label="HOY")
+                    today_tag.add_css_class("wm-cal-today-tag")
+                    today_tag.set_valign(Gtk.Align.CENTER)
+                    top_row.append(today_tag)
+
+                top_spacer = Gtk.Box()
+                top_spacer.set_hexpand(True)
+                top_row.append(top_spacer)
+
                 if day_events:
-                    badge_lbl = Gtk.Label(label=f"{len(day_events)} ev")
-                    badge_lbl.add_css_class("dim-label")
-                    badge_lbl.set_halign(Gtk.Align.END)
-                    badge_lbl.set_hexpand(True)
-                    top_row.append(badge_lbl)
+                    ev_count_lbl = Gtk.Label(label=str(len(day_events)))
+                    ev_count_lbl.add_css_class("wm-cal-ev-count")
+                    ev_count_lbl.set_valign(Gtk.Align.CENTER)
+                    top_row.append(ev_count_lbl)
 
                 cell_box.append(top_row)
 
+                # Lista compacta de chips de eventos (máx 2 visibles para evitar desborde vertical)
                 events_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-                for ev in day_events[:3]:
+                events_box.set_hexpand(True)
+                for ev in day_events[:2]:
                     chip = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
                     chip.add_css_class("wm-cal-chip")
+                    chip.set_hexpand(True)
 
                     shape_type = ev.get("shape", "circle")
                     shape_glyph = SHAPE_GLYPHS.get(shape_type, "●")
                     col = ev.get("color", "#0A84FF")
 
                     marker_lbl = Gtk.Label()
-                    marker_lbl.set_markup(f"<span foreground='{col}'>{shape_glyph}</span>")
+                    marker_lbl.set_markup(f"<span foreground='{col}' size='small'>{shape_glyph}</span>")
+                    marker_lbl.set_valign(Gtk.Align.CENTER)
                     chip.append(marker_lbl)
 
                     title_lbl = Gtk.Label(label=ev.get("title", "Evento"))
+                    title_lbl.add_css_class("wm-cal-chip-title")
                     title_lbl.set_ellipsize(Pango.EllipsizeMode.END)
-                    title_lbl.set_halign(Gtk.Align.START)
+                    title_lbl.set_max_width_chars(1)
+                    title_lbl.set_halign(Gtk.Align.FILL)
+                    title_lbl.set_xalign(0.0)
                     title_lbl.set_hexpand(True)
                     chip.append(title_lbl)
 
                     events_box.append(chip)
 
-                if len(day_events) > 3:
-                    more_lbl = Gtk.Label(label=f"+{len(day_events) - 3} más")
-                    more_lbl.add_css_class("dim-label")
+                if len(day_events) > 2:
+                    more_lbl = Gtk.Label(label=f"+{len(day_events) - 2} más")
+                    more_lbl.add_css_class("wm-cal-more-lbl")
                     more_lbl.set_halign(Gtk.Align.START)
                     events_box.append(more_lbl)
 
                 cell_box.append(events_box)
                 btn.set_child(cell_box)
 
-                btn.connect("clicked", lambda _, ds=date_str: self.on_day_cell_clicked(ds))
+                btn.connect("clicked", lambda _, ds=date_str, yr=d_obj.year, mo=d_obj.month: self.on_day_cell_clicked(ds, yr, mo))
 
                 self.cal_grid.attach(btn, col_idx, row_idx, 1, 1)
 
-    def on_day_cell_clicked(self, date_str: str):
+    def on_day_cell_clicked(self, date_str: str, target_year: int = None, target_month: int = None):
+        # Si el usuario pulsa un día del mes anterior/siguiente, cambiar a ese mes automáticamente
+        if target_year is not None and target_month is not None:
+            if target_year != self.cal_current_year or target_month != self.cal_current_month:
+                self.cal_current_year = target_year
+                self.cal_current_month = target_month
+                self.cal_selected_date = date_str
+                self.render_calendar_grid()
+                self.refresh_side_panel(date_str)
+                self.cal_side_revealer.set_reveal_child(True)
+                return
+
         if getattr(self, "cal_selected_date", None) == date_str and self.cal_side_revealer.get_reveal_child():
             self.close_calendar_side_panel()
             return
@@ -954,87 +1224,89 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             btn.remove_css_class("selected-day")
 
     def build_calendar_side_panel(self) -> Gtk.Widget:
-        side_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        side_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         side_card.add_css_class("wm-cal-side-panel")
-        side_card.set_size_request(370, -1)
+        side_card.set_size_request(345, -1)
         side_card.set_vexpand(True)
 
-        # ── Cabecera del Panel Lateral ──
+        # ── ZONA 1: Cabecera Fija del Panel Lateral ──
         hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         hdr.add_css_class("wm-cal-side-header")
 
-        titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
         titles.set_hexpand(True)
-        self.cal_side_date_label = Gtk.Label(label="Fecha seleccionada")
-        self.cal_side_date_label.add_css_class("title-3")
-        self.cal_side_date_label.add_css_class("bold")
-        self.cal_side_date_label.set_halign(Gtk.Align.START)
 
-        self.cal_side_dayname_label = Gtk.Label(label="")
-        self.cal_side_dayname_label.add_css_class("dim-label")
+        self.cal_side_dayname_label = Gtk.Label(label="DÍA SELECCIONADO")
+        self.cal_side_dayname_label.add_css_class("wm-cal-side-day-pill")
         self.cal_side_dayname_label.set_halign(Gtk.Align.START)
 
-        titles.append(self.cal_side_date_label)
+        self.cal_side_date_label = Gtk.Label(label="Selecciona una fecha")
+        self.cal_side_date_label.add_css_class("wm-cal-side-date-title")
+        self.cal_side_date_label.set_halign(Gtk.Align.START)
+
         titles.append(self.cal_side_dayname_label)
+        titles.append(self.cal_side_date_label)
         hdr.append(titles)
 
-        btn_close = Gtk.Button(icon_name="window-close-symbolic")
+        # Botón de cierre tipográfico nítido (evita que el tema de iconos pinte un círculo gris)
+        btn_close = Gtk.Button(label="✕")
         btn_close.add_css_class("wm-cal-close-btn")
-        btn_close.set_tooltip_text("Cerrar panel")
+        btn_close.set_valign(Gtk.Align.START)
+        btn_close.set_tooltip_text("Cerrar panel lateral")
         btn_close.connect("clicked", lambda _: self.close_calendar_side_panel())
         hdr.append(btn_close)
 
         side_card.append(hdr)
 
-        # ── Área con Scroll ──
+        # ── ZONA 2: Lista de Eventos del Día (Con Scroll Independiente) ──
+        sec_events_hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        sec_events_hdr.set_valign(Gtk.Align.CENTER)
+
+        lbl_events_title = Gtk.Label(label="EVENTOS DEL DÍA")
+        lbl_events_title.add_css_class("wm-cal-section-title")
+        lbl_events_title.set_halign(Gtk.Align.START)
+        lbl_events_title.set_valign(Gtk.Align.CENTER)
+        sec_events_hdr.append(lbl_events_title)
+
+        self.cal_side_badge = Gtk.Label(label="0")
+        self.cal_side_badge.add_css_class("wm-cal-count-pill")
+        self.cal_side_badge.set_valign(Gtk.Align.CENTER)
+        sec_events_hdr.append(self.cal_side_badge)
+
+        side_card.append(sec_events_hdr)
+
         side_scroll = Gtk.ScrolledWindow()
         side_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         side_scroll.set_vexpand(True)
         side_scroll.set_hexpand(True)
+        side_scroll.set_min_content_height(68)
 
-        side_content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-        side_scroll.set_child(side_content)
+        self.cal_side_events_list = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        side_scroll.set_child(self.cal_side_events_list)
         side_card.append(side_scroll)
 
-        # ── Sección 1: Eventos Programados ──
-        sec_events_hdr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        lbl_events_title = Gtk.Label(label="Eventos Programados")
-        lbl_events_title.add_css_class("wm-section-header")
-        lbl_events_title.set_halign(Gtk.Align.START)
-        sec_events_hdr.append(lbl_events_title)
+        # ── ZONA 3: Formulario Anclado Inferior (Siempre 100% Visible) ──
+        form_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        form_box.add_css_class("wm-cal-form-box")
+        form_box.set_vexpand(False)
 
-        self.cal_side_badge = Gtk.Label(label="(0)")
-        self.cal_side_badge.add_css_class("dim-label")
-        sec_events_hdr.append(self.cal_side_badge)
-        side_content.append(sec_events_hdr)
-
-        self.cal_side_events_list = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        side_content.append(self.cal_side_events_list)
-
-        # Separador visual
-        sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-        sep.set_margin_top(4)
-        sep.set_margin_bottom(4)
-        side_content.append(sep)
-
-        # ── Sección 2: Añadir Nuevo Evento ──
-        lbl_new_title = Gtk.Label(label="Nuevo Evento")
-        lbl_new_title.add_css_class("wm-section-header")
+        lbl_new_title = Gtk.Label(label="NUEVO EVENTO O NOTA")
+        lbl_new_title.add_css_class("wm-cal-section-title")
         lbl_new_title.set_halign(Gtk.Align.START)
-        side_content.append(lbl_new_title)
+        form_box.append(lbl_new_title)
 
-        form_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-
-        # Título
+        # Campo Título (soporta Enter para guardar rápido)
         self.cal_entry_title = Gtk.Entry(placeholder_text="Título o nota del evento...")
         self.cal_entry_title.add_css_class("wm-cal-input")
+        self.cal_entry_title.connect("activate", self.on_save_calendar_event_clicked)
         form_box.append(self.cal_entry_title)
 
         # Fila Horario y Categoría
-        meta_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        self.cal_entry_time = Gtk.Entry(placeholder_text="Horario (ej: 15:00 o Todo el día)")
+        meta_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.cal_entry_time = Gtk.Entry(placeholder_text="Horario (ej: 15:00)")
         self.cal_entry_time.add_css_class("wm-cal-input")
         self.cal_entry_time.set_hexpand(True)
+        self.cal_entry_time.connect("activate", self.on_save_calendar_event_clicked)
         meta_row.append(self.cal_entry_time)
 
         self.cal_combo_cat = Gtk.DropDown.new_from_strings(CATEGORIES)
@@ -1042,13 +1314,13 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         form_box.append(meta_row)
 
         # Selector de Marcador Geométrico
-        marker_sec = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        lbl_marker = Gtk.Label(label="Marcador Geométrico:")
+        marker_sec = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_marker = Gtk.Label(label="Marcador Geométrico")
         lbl_marker.set_halign(Gtk.Align.START)
-        lbl_marker.add_css_class("dim-label")
+        lbl_marker.add_css_class("wm-cal-field-label")
         marker_sec.append(lbl_marker)
 
-        shape_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        shape_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         shape_row.set_homogeneous(True)
         self.cal_selected_shape = "circle"
         self.cal_shape_buttons = []
@@ -1073,11 +1345,11 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         marker_sec.append(shape_row)
         form_box.append(marker_sec)
 
-        # Selector de Color
-        color_sec = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        lbl_color = Gtk.Label(label="Color de Etiqueta:")
+        # Selector de Color con indicador de selección "✓"
+        color_sec = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        lbl_color = Gtk.Label(label="Color de Categoría")
         lbl_color.set_halign(Gtk.Align.START)
-        lbl_color.add_css_class("dim-label")
+        lbl_color.add_css_class("wm-cal-field-label")
         color_sec.append(lbl_color)
 
         color_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -1090,8 +1362,10 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             for b, col in self.cal_color_buttons:
                 if col == hex_col:
                     b.add_css_class("selected")
+                    b.set_label("✓")
                 else:
                     b.remove_css_class("selected")
+                    b.set_label("")
 
         for i, (hex_col, name) in enumerate(CALENDAR_COLORS):
             btn = Gtk.Button()
@@ -1099,6 +1373,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             btn.add_css_class(f"wm-col-{i}")
             if hex_col == self.cal_selected_color:
                 btn.add_css_class("selected")
+                btn.set_label("✓")
             btn.set_tooltip_text(name)
             btn.connect("clicked", lambda _, col=hex_col: set_side_color(col))
             color_row.append(btn)
@@ -1107,26 +1382,30 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         color_sec.append(color_row)
         form_box.append(color_sec)
 
-        # Botón Guardar
-        self.cal_btn_save = Gtk.Button(label="Guardar Evento")
+        # Botón Guardar Evento (Siempre visible al pie del panel)
+        self.cal_btn_save = Gtk.Button(label="+ Guardar Evento")
         self.cal_btn_save.add_css_class("wm-btn-primary")
+        self.cal_btn_save.set_hexpand(True)
+        self.cal_btn_save.set_margin_top(2)
         self.cal_btn_save.connect("clicked", self.on_save_calendar_event_clicked)
         form_box.append(self.cal_btn_save)
 
-        side_content.append(form_box)
+        side_card.append(form_box)
 
         return side_card
 
     def refresh_side_panel(self, date_str: str):
         try:
             d_obj = datetime.strptime(date_str, "%Y-%m-%d")
-            dias_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+            dias_es = ["LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "DOMINGO"]
             meses_es = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
             fecha_bonita = f"{d_obj.day} de {meses_es[d_obj.month - 1]} {d_obj.year}"
             dia_nombre = dias_es[d_obj.weekday()]
+            if d_obj.date() == date.today():
+                dia_nombre = f"{dia_nombre}  •  HOY"
         except Exception:
             fecha_bonita = date_str
-            dia_nombre = ""
+            dia_nombre = "FECHA SELECCIONADA"
 
         self.cal_side_date_label.set_text(fecha_bonita)
         self.cal_side_dayname_label.set_text(dia_nombre)
@@ -1136,19 +1415,20 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
         all_events = self.read_calendar_file()
         day_events = all_events.get(date_str, [])
-        self.cal_side_badge.set_text(f"({len(day_events)})")
+        self.cal_side_badge.set_text(str(len(day_events)))
 
         if not day_events:
-            empty_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            empty_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
             empty_box.add_css_class("wm-cal-empty-state")
             empty_box.set_halign(Gtk.Align.FILL)
+            empty_box.set_valign(Gtk.Align.CENTER)
 
-            empty_lbl = Gtk.Label(label="Sin eventos para esta fecha")
+            empty_lbl = Gtk.Label(label="Sin eventos programados")
             empty_lbl.add_css_class("bold")
             empty_lbl.add_css_class("dim-label")
             empty_box.append(empty_lbl)
 
-            hint_sub = Gtk.Label(label="Usa el formulario inferior para registrar uno.")
+            hint_sub = Gtk.Label(label="Completa los campos inferiores para agendar.")
             hint_sub.add_css_class("dim-label")
             empty_box.append(hint_sub)
 
@@ -1163,40 +1443,47 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             shape_glyph = SHAPE_GLYPHS.get(shape_type, "●")
             col = ev.get("color", "#0A84FF")
 
-            glyph_lbl = Gtk.Label()
-            glyph_lbl.set_markup(f"<span foreground='{col}' font_desc='15'>{shape_glyph}</span>")
-            glyph_lbl.set_valign(Gtk.Align.CENTER)
-            card.append(glyph_lbl)
+            icon_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+            icon_box.add_css_class("wm-cal-event-icon-box")
+            icon_box.set_valign(Gtk.Align.CENTER)
+            icon_box.set_halign(Gtk.Align.CENTER)
 
-            info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+            glyph_lbl = Gtk.Label()
+            glyph_lbl.set_markup(f"<span foreground='{col}' font_desc='14'>{shape_glyph}</span>")
+            glyph_lbl.set_valign(Gtk.Align.CENTER)
+            glyph_lbl.set_halign(Gtk.Align.CENTER)
+            glyph_lbl.set_hexpand(True)
+            icon_box.append(glyph_lbl)
+            card.append(icon_box)
+
+            info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
             info_box.set_hexpand(True)
+            info_box.set_valign(Gtk.Align.CENTER)
 
             t_lbl = Gtk.Label(label=ev.get("title", "Sin título"))
             t_lbl.set_halign(Gtk.Align.START)
+            t_lbl.set_xalign(0.0)
             t_lbl.add_css_class("bold")
             t_lbl.set_wrap(True)
             info_box.append(t_lbl)
 
             meta_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
             time_lbl = Gtk.Label(label=ev.get("time", "Todo el día"))
-            time_lbl.add_css_class("dim-label")
+            time_lbl.add_css_class("wm-cal-meta-pill")
             time_lbl.set_halign(Gtk.Align.START)
             meta_box.append(time_lbl)
 
-            bullet_lbl = Gtk.Label(label="•")
-            bullet_lbl.add_css_class("dim-label")
-            meta_box.append(bullet_lbl)
-
             cat_lbl = Gtk.Label(label=ev.get("category", "General"))
-            cat_lbl.add_css_class("dim-label")
+            cat_lbl.add_css_class("wm-cal-meta-pill")
             cat_lbl.set_halign(Gtk.Align.START)
             meta_box.append(cat_lbl)
 
             info_box.append(meta_box)
             card.append(info_box)
 
-            del_btn = Gtk.Button(icon_name="user-trash-symbolic")
+            del_btn = Gtk.Button(label="✕")
             del_btn.add_css_class("wm-cal-close-btn")
+            del_btn.set_valign(Gtk.Align.CENTER)
             del_btn.set_tooltip_text("Eliminar evento")
             del_btn.connect("clicked", lambda _, eid=ev.get("id"), ds=date_str: self.delete_calendar_event(ds, eid))
             card.append(del_btn)
