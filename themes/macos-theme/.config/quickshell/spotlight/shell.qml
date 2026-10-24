@@ -71,7 +71,7 @@ Scope {
         id: focusGrab
 
         active: globalSpotlightState.isOpen
-        windows: [spotlightWindow]
+        windows: []
         onCleared: {
             if (globalSpotlightState.isOpen)
                 globalSpotlightState.closeSpotlight();
@@ -108,7 +108,7 @@ Scope {
         target: "spotlight"
     }
 
-    // ── 1. Fullscreen transparent click-catcher on all active screens (dismiss on outside click) ──
+    // ── Fullscreen Overlay Window per screen with Click-Catcher Backdrop and SpotlightView ──
     Variants {
         model: Quickshell.screens
 
@@ -116,17 +116,18 @@ Scope {
             id: screenScope
 
             required property var modelData
+            readonly property bool isTargetScreen: root.targetScreen !== null && (root.targetScreen === screenScope.modelData || root.targetScreen.name === screenScope.modelData.name)
 
             PanelWindow {
-                id: clickCatcherWindow
+                id: overlayWindow
 
                 screen: screenScope.modelData
                 color: "transparent"
                 visible: globalSpotlightState.windowVisible
                 WlrLayershell.layer: WlrLayer.Overlay
-                WlrLayershell.namespace: "macos-spotlight-catcher"
+                WlrLayershell.namespace: "macos-spotlight"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: (globalSpotlightState.isOpen && screenScope.isTargetScreen) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
                 anchors {
                     top: true
@@ -135,9 +136,10 @@ Scope {
                     right: true
                 }
 
+                // 1. Outside Click Catcher Backdrop
                 MouseArea {
                     anchors.fill: parent
-                    enabled: globalSpotlightState.isOpen
+                    z: 0
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onPressed: {
                         if (globalSpotlightState.isOpen)
@@ -146,46 +148,24 @@ Scope {
                     }
                 }
 
+                // 2. SpotlightView anchored at horizontalCenter and top margin on target screen
+                SpotlightView {
+                    id: spotlightView
+
+                    visible: screenScope.isTargetScreen
+                    spotlightState: globalSpotlightState
+                    z: 1
+
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        top: parent.top
+                        topMargin: Math.max(80, Math.round(overlayWindow.height * 0.18))
+                    }
+
+                }
+
             }
 
-        }
-
-    }
-
-    // ── 2. Compact Floating Spotlight Card Window (ONLY on focused monitor, BLURRED BY HYPRLAND) ──
-    // Sized ONLY to the card bounds (680x460) so Hyprland blurs ONLY this card!
-    PanelWindow {
-        id: spotlightWindow
-
-        screen: root.targetScreen
-        color: "transparent"
-        visible: globalSpotlightState.windowVisible
-        implicitWidth: 680
-        implicitHeight: 460
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "macos-spotlight"
-        WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.keyboardFocus: globalSpotlightState.isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-        anchors {
-            top: true
-        }
-
-        margins {
-            top: Math.max(80, Math.round((root.targetScreen ? root.targetScreen.height : 1080) * 0.18))
-        }
-
-        SpotlightView {
-            id: spotlightView
-
-            spotlightState: globalSpotlightState
-            anchors.fill: parent
-        }
-
-        mask: Region {
-            width: 680
-            height: 460
-            radius: 20
         }
 
     }

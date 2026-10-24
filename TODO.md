@@ -516,7 +516,7 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Prioridad:** ALTA
 - **Rama Sugerida:** `ISSUE_032_FIX`
 - **Módulo(s):** Core / Temas / Spotlight
-- **Archivos Afectados:** `themes/macos-theme/.config/quickshell/spotlight/shell.qml`
+- **Archivos Afectados:** `themes/macos-theme/.config/quickshell/spotlight/shell.qml`, `themes/macos-theme/.config/quickshell/spotlight/SpotlightView.qml`
 - **Descripción:** Actualmente el modal de Spotlight/Finder (`SUPER+SPACE`) permanece abierto aunque el usuario haga clic fuera de su superficie. Se debe capturar la pérdida de foco o implementar un contenedor subyacente (`MouseArea` de pantalla completa transparente detrás del cuadro de búsqueda o manejo de foco en `PanelWindow`) para que cualquier clic fuera de la interfaz dibujada por Quickshell cierre el componente inmediatamente.
 - **Criterios de Aceptación:**
   1. Hacer clic en cualquier punto externo a la ventana de Spotlight cierra el modal de forma instantánea.
