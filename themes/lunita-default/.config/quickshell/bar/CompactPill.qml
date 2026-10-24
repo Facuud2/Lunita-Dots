@@ -38,9 +38,9 @@ Item {
         border.color: Theme.outline
         clip: false
 
-        // ── Línea roja vibrante Nothing OS en el borde inferior ──
+        // ── Línea de acento dinámico Matugen / Nothing OS en el borde inferior ──
         Rectangle {
-            id: bottomRedLine
+            id: bottomAccentLine
 
             anchors.bottom: parent.bottom
             anchors.left: parent.left
@@ -49,7 +49,7 @@ Item {
             anchors.rightMargin: 8
             height: 2.5
             radius: 1
-            color: "#D71921"
+            color: Theme.accent
             z: 10
         }
 

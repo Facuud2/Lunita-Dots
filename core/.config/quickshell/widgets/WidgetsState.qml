@@ -1006,7 +1006,8 @@ Item {
         path: Quickshell.env("HOME") + "/.config/lunita/active_tokens.json"
         watchChanges: true
         onLoaded: root.loadActiveTokens()
-        onFileChanged: root.loadActiveTokens()
+        onFileChanged: tokensWatcher.reload()
+        onTextChanged: root.loadActiveTokens()
     }
 
     FileView {
@@ -1015,7 +1016,8 @@ Item {
         path: Quickshell.env("HOME") + "/.config/quickshell/colors.json"
         watchChanges: true
         onLoaded: root.loadMatugenColors()
-        onFileChanged: root.loadMatugenColors()
+        onFileChanged: matugenWatcher.reload()
+        onTextChanged: root.loadMatugenColors()
     }
 
     // ── Widget Edit Mode IPC Listener ──

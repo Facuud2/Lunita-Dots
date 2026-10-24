@@ -10,8 +10,14 @@ source "$DIR/common.sh"
 
 WALLPAPER="$1"
 WALLPAPER="${WALLPAPER#file://}"
+if [[ "$WALLPAPER" == *%* ]]; then
+    WALLPAPER="$(python3 -c "import urllib.parse, sys; print(urllib.parse.unquote(sys.argv[1]))" "$WALLPAPER" 2>/dev/null || echo "$WALLPAPER")"
+fi
 if [ -z "$WALLPAPER" ]; then
     exit 0
+fi
+if [ -f "$WALLPAPER" ]; then
+    WALLPAPER="$(realpath "$WALLPAPER")"
 fi
 
 TOOL=$(jq -r '.wallpaper_tool // "awww"' "$CONFIG")
@@ -131,11 +137,11 @@ fi
 CURRENT_THEME="${CURRENT_THEME,,}"
 
 if [ "$CURRENT_THEME" = "lunita-default" ] && command -v matugen &>/dev/null; then
+    TARGET_MATUGEN="$WALLPAPER"
     if is_video "$WALLPAPER" "$VIDEO_EXT_PATTERN"; then
-        if [ -f "$THUMB" ]; then
-            matugen image "$THUMB" --source-color-index 0 >/dev/null 2>&1 &
-        fi
-    else
-        matugen image "$WALLPAPER" --source-color-index 0 >/dev/null 2>&1 &
+        TARGET_MATUGEN="$THUMB"
+    fi
+    if [ -n "$TARGET_MATUGEN" ] && [ -f "$TARGET_MATUGEN" ]; then
+        matugen image "$TARGET_MATUGEN" --source-color-index 0 2>&1 || true
     fi
 fi

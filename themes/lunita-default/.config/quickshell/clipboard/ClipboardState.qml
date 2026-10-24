@@ -219,6 +219,8 @@ Item {
     }
 
     function openClipboard() {
+        colorsWatcher.reload();
+        root.loadColors();
         closeSurfaceTimer.stop();
         root.isOpen = false;
         root.searchQuery = "";
@@ -258,7 +260,8 @@ Item {
         path: Quickshell.env("HOME") + "/.config/quickshell/colors.json"
         watchChanges: true
         onLoaded: root.loadColors()
-        onFileChanged: root.loadColors()
+        onFileChanged: colorsWatcher.reload()
+        onTextChanged: root.loadColors()
     }
 
     // ── Capture Cursor Position & Focused Window BEFORE showing window ──
