@@ -598,11 +598,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** [ISSUE-035], [ISSUE-036]
 
 ### [ISSUE-039] Rediseño de Calendario en el menú de widgets con eventos por día e indicadores geométricos
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** MEDIA
 - **Rama Sugerida:** `ISSUE_039_FEAT`
 - **Módulo(s):** GUI / Widgets Manager / Calendario
-- **Archivos Afectados:** `core/.local/bin/lunita-widgets-manager`, `themes/*/.config/quickshell/widgets/` (Widget de Calendario)
+- **Archivos Afectados:** `core/.local/bin/lunita-widgets-manager`, `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/calendar_provider.py`
 - **Descripción:** Rediseñar la sección de Calendario dentro de `lunita-widgets-manager` para que la cuadrícula mensual ocupe toda el área de la ventana. Al hacer clic sobre la celda de un día específico, debe desplegarse un diálogo/panel para agregar o editar eventos y notas asociados a esa fecha. Se deben conservar los colores de categorización actuales e incorporar la elección de un marcador geométrico sutil por evento: estrella, círculo, triángulo o cuadrado.
 - **Criterios de Aceptación:**
   1. El calendario se expande ocupando la totalidad de la vista en el gestor de widgets.

@@ -648,8 +648,8 @@ Item {
             root.calSelectedEvents = [];
     }
 
-    function addCalendarEvent(dateStr, timeStr, titleStr, category, color) {
-        calProc.command = ["python3", root.scriptsDir + "/calendar_provider.py", "add", dateStr, timeStr, titleStr, category || "General", color || "#0A84FF"];
+    function addCalendarEvent(dateStr, timeStr, titleStr, category, color, shape) {
+        calProc.command = ["python3", root.scriptsDir + "/calendar_provider.py", "add", dateStr, timeStr, titleStr, category || "General", color || "#0A84FF", shape || "circle"];
         calProc.running = true;
     }
 

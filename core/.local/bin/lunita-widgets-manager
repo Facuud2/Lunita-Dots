@@ -17,7 +17,7 @@ from pathlib import Path
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw, GLib, Gio, Gdk
+from gi.repository import Gtk, Adw, GLib, Gio, Gdk, Pango
 
 # ── Rutas de Configuración ───────────────────────────────────────────────────
 CONFIG_DIR = Path.home() / ".config/lunita"
@@ -87,6 +87,29 @@ CALENDAR_COLORS = [
     ("#BF5AF2", "Púrpura"),
     ("#FF453A", "Rojo"),
     ("#64D2FF", "Cian")
+]
+
+CALENDAR_SHAPES = [
+    ("circle", "● Círculo", "●"),
+    ("star", "★ Estrella", "★"),
+    ("triangle", "▲ Triángulo", "▲"),
+    ("square", "■ Cuadrado", "■"),
+]
+
+SHAPE_GLYPHS = {
+    "circle": "●",
+    "star": "★",
+    "triangle": "▲",
+    "square": "■",
+}
+
+MONTH_NAMES_ES = [
+    "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
+    "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
+]
+
+WEEKDAY_NAMES_ES = [
+    "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO", "DOMINGO"
 ]
 
 CATEGORIES = ["Trabajo", "Desarrollo", "Estudio", "Personal", "Salud", "General"]
@@ -406,6 +429,103 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             border-radius: 12px;
             padding: 12px 18px;
         }}
+
+        /* Calendario Cuadrícula Mensual Completa */
+        .wm-cal-header {{
+            padding: 4px 6px 12px 6px;
+        }}
+
+        .wm-cal-header-btn {{
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9px;
+            padding: 6px 14px;
+            color: #E2E8F0;
+            font-weight: 600;
+            transition: all 150ms ease;
+        }}
+
+        .wm-cal-header-btn:hover {{
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.16);
+            color: #FFFFFF;
+        }}
+
+        .wm-cal-weekday-label {{
+            font-size: 11px;
+            font-weight: 700;
+            color: #94A3B8;
+            letter-spacing: 0.8px;
+            padding: 4px 0 8px 0;
+        }}
+
+        .wm-cal-day-cell {{
+            background-color: #17181F;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 8px;
+            min-height: 85px;
+            transition: all 120ms ease;
+        }}
+
+        .wm-cal-day-cell:hover {{
+            background-color: #21232C;
+            border-color: rgba(255, 255, 255, 0.16);
+        }}
+
+        .wm-cal-day-cell.other-month {{
+            opacity: 0.35;
+            background-color: rgba(23, 24, 31, 0.4);
+            border-color: rgba(255, 255, 255, 0.03);
+        }}
+
+        .wm-cal-day-cell.today {{
+            border-color: {primary_accent};
+            box-shadow: inset 0 0 0 1px {primary_accent};
+            background-color: rgba(255, 255, 255, 0.03);
+        }}
+
+        .wm-cal-day-num {{
+            font-size: 13px;
+            font-weight: 700;
+            color: #E2E8F0;
+        }}
+
+        .wm-cal-day-num.today {{
+            color: {primary_accent};
+            font-weight: 800;
+        }}
+
+        .wm-cal-chip {{
+            background-color: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            padding: 2px 6px;
+            margin-top: 2px;
+        }}
+
+        .wm-shape-btn {{
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #CBD5E1;
+            transition: all 120ms ease;
+        }}
+
+        .wm-shape-btn:hover {{
+            background-color: rgba(255, 255, 255, 0.10);
+            color: #FFFFFF;
+        }}
+
+        .wm-shape-btn.selected {{
+            background-color: rgba(255, 255, 255, 0.18);
+            border-color: #FFFFFF;
+            font-weight: 700;
+            color: #FFFFFF;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+        }}
         """
         provider = Gtk.CssProvider()
         provider.load_from_string(css)
@@ -484,247 +604,444 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         page5.set_icon_name("user-desktop-symbolic")
 
     # =========================================================================
-    # 📅 PÁGINA 1: CALENDARIO
+    # 📅 PÁGINA 1: CALENDARIO (Cuadrícula Mensual Completa con Marcadores)
     # =========================================================================
     def build_calendar_page(self) -> Gtk.Widget:
-        paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-        paned.set_position(360)
-        paned.set_shrink_start_child(False)
-        paned.set_shrink_end_child(False)
-        paned.set_vexpand(True)
-        paned.set_hexpand(True)
+        now = date.today()
+        self.cal_current_year = now.year
+        self.cal_current_month = now.month
 
-        # Columna Izquierda: Calendario y Navegación
-        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-        left_box.set_vexpand(True)
-        left_box.set_margin_top(16)
-        left_box.set_margin_bottom(16)
-        left_box.set_margin_start(16)
-        left_box.set_margin_end(12)
+        page_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        page_box.set_vexpand(True)
+        page_box.set_hexpand(True)
+        page_box.set_margin_top(16)
+        page_box.set_margin_bottom(16)
+        page_box.set_margin_start(20)
+        page_box.set_margin_end(20)
 
-        self.gtk_calendar = Gtk.Calendar()
-        self.gtk_calendar.connect("day-selected", self.on_calendar_day_selected)
-        left_box.append(self.gtk_calendar)
+        # ── Cabecera de Navegación del Calendario ──
+        header_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        header_bar.add_css_class("wm-cal-header")
 
-        quick_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        quick_box.set_halign(Gtk.Align.CENTER)
+        nav_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        btn_prev = Gtk.Button(icon_name="go-previous-symbolic")
+        btn_prev.add_css_class("wm-cal-header-btn")
+        btn_prev.set_tooltip_text("Mes anterior")
+        btn_prev.connect("clicked", lambda _: self.change_calendar_month(-1))
 
         btn_today = Gtk.Button(label="Hoy")
-        btn_today.connect("clicked", lambda _: self.select_relative_day(0))
-        btn_tomorrow = Gtk.Button(label="Mañana")
-        btn_tomorrow.connect("clicked", lambda _: self.select_relative_day(1))
-        btn_in3 = Gtk.Button(label="+3 Días")
-        btn_in3.connect("clicked", lambda _: self.select_relative_day(3))
+        btn_today.add_css_class("wm-cal-header-btn")
+        btn_today.set_tooltip_text("Ir al mes actual")
+        btn_today.connect("clicked", lambda _: self.reset_calendar_to_today())
 
-        quick_box.append(btn_today)
-        quick_box.append(btn_tomorrow)
-        quick_box.append(btn_in3)
-        left_box.append(quick_box)
+        btn_next = Gtk.Button(icon_name="go-next-symbolic")
+        btn_next.add_css_class("wm-cal-header-btn")
+        btn_next.set_tooltip_text("Mes siguiente")
+        btn_next.connect("clicked", lambda _: self.change_calendar_month(1))
 
-        paned.set_start_child(left_box)
+        nav_box.append(btn_prev)
+        nav_box.append(btn_today)
+        nav_box.append(btn_next)
+        header_bar.append(nav_box)
 
-        # Columna Derecha: Lista de Eventos y Añadir Nuevo
-        right_scroll = Gtk.ScrolledWindow()
-        right_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        right_scroll.set_vexpand(True)
-        right_scroll.set_hexpand(True)
-        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
-        right_box.set_vexpand(True)
-        right_box.set_margin_top(16)
-        right_box.set_margin_bottom(16)
-        right_box.set_margin_start(12)
-        right_box.set_margin_end(16)
-        right_scroll.set_child(right_box)
+        self.cal_month_title_label = Gtk.Label()
+        self.cal_month_title_label.add_css_class("title-2")
+        self.cal_month_title_label.add_css_class("bold")
+        self.cal_month_title_label.set_margin_start(8)
+        header_bar.append(self.cal_month_title_label)
 
-        self.cal_date_label = Gtk.Label()
-        self.cal_date_label.set_css_classes(["title-2", "bold"])
-        self.cal_date_label.set_halign(Gtk.Align.START)
-        right_box.append(self.cal_date_label)
+        # Espaciador expansible
+        spacer = Gtk.Box()
+        spacer.set_hexpand(True)
+        header_bar.append(spacer)
 
-        self.events_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        right_box.append(self.events_list_box)
+        # Indicador de ayuda
+        hint_lbl = Gtk.Label(label="Haz clic en cualquier día para ver o gestionar eventos")
+        hint_lbl.add_css_class("dim-label")
+        hint_lbl.set_halign(Gtk.Align.END)
+        header_bar.append(hint_lbl)
 
-        # Formulario
-        add_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        page_box.append(header_bar)
+
+        # ── Días de la Semana (Cabecera de Cuadrícula) ──
+        weekday_grid = Gtk.Grid()
+        weekday_grid.set_column_homogeneous(True)
+        weekday_grid.set_column_spacing(8)
+        for i, wname in enumerate(WEEKDAY_NAMES_ES):
+            w_lbl = Gtk.Label(label=wname)
+            w_lbl.add_css_class("wm-cal-weekday-label")
+            w_lbl.set_halign(Gtk.Align.CENTER)
+            weekday_grid.attach(w_lbl, i, 0, 1, 1)
+        page_box.append(weekday_grid)
+
+        # ── Cuadrícula Mensual (7 Columnas x Semanas) ──
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_vexpand(True)
+        scroll.set_hexpand(True)
+
+        self.cal_grid = Gtk.Grid()
+        self.cal_grid.set_column_homogeneous(True)
+        self.cal_grid.set_row_homogeneous(True)
+        self.cal_grid.set_column_spacing(8)
+        self.cal_grid.set_row_spacing(8)
+        self.cal_grid.set_vexpand(True)
+        self.cal_grid.set_hexpand(True)
+
+        scroll.set_child(self.cal_grid)
+        page_box.append(scroll)
+
+        self.render_calendar_grid()
+
+        return page_box
+
+    def change_calendar_month(self, delta: int):
+        self.cal_current_month += delta
+        if self.cal_current_month > 12:
+            self.cal_current_month = 1
+            self.cal_current_year += 1
+        elif self.cal_current_month < 1:
+            self.cal_current_month = 12
+            self.cal_current_year -= 1
+        self.render_calendar_grid()
+
+    def reset_calendar_to_today(self):
+        now = date.today()
+        self.cal_current_year = now.year
+        self.cal_current_month = now.month
+        self.render_calendar_grid()
+
+    def render_calendar_grid(self):
+        while child := self.cal_grid.get_first_child():
+            self.cal_grid.remove(child)
+
+        m_name = MONTH_NAMES_ES[self.cal_current_month - 1]
+        self.cal_month_title_label.set_text(f"{m_name} {self.cal_current_year}")
+
+        cal = calendar.Calendar(firstweekday=0) # Lunes = 0
+        month_weeks = cal.monthdayscalendar(self.cal_current_year, self.cal_current_month)
+        today = date.today()
+        all_events = self.read_calendar_file()
+
+        for row_idx, week in enumerate(month_weeks):
+            for col_idx, d in enumerate(week):
+                if d == 0:
+                    empty_box = Gtk.Box()
+                    empty_box.add_css_class("wm-cal-day-cell")
+                    empty_box.add_css_class("other-month")
+                    empty_box.set_vexpand(True)
+                    empty_box.set_hexpand(True)
+                    self.cal_grid.attach(empty_box, col_idx, row_idx, 1, 1)
+                    continue
+
+                date_str = f"{self.cal_current_year:04d}-{self.cal_current_month:02d}-{d:02d}"
+                is_today = (self.cal_current_year == today.year and
+                            self.cal_current_month == today.month and
+                            d == today.day)
+                day_events = all_events.get(date_str, [])
+
+                btn = Gtk.Button()
+                btn.add_css_class("wm-cal-day-cell")
+                if is_today:
+                    btn.add_css_class("today")
+                btn.set_vexpand(True)
+                btn.set_hexpand(True)
+
+                cell_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+
+                top_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+                num_lbl = Gtk.Label(label=str(d))
+                num_lbl.add_css_class("wm-cal-day-num")
+                if is_today:
+                    num_lbl.add_css_class("today")
+                top_row.append(num_lbl)
+
+                if day_events:
+                    badge_lbl = Gtk.Label(label=f"{len(day_events)} ev")
+                    badge_lbl.add_css_class("dim-label")
+                    badge_lbl.set_halign(Gtk.Align.END)
+                    badge_lbl.set_hexpand(True)
+                    top_row.append(badge_lbl)
+
+                cell_box.append(top_row)
+
+                events_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                for ev in day_events[:3]:
+                    chip = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+                    chip.add_css_class("wm-cal-chip")
+
+                    shape_type = ev.get("shape", "circle")
+                    shape_glyph = SHAPE_GLYPHS.get(shape_type, "●")
+                    col = ev.get("color", "#0A84FF")
+
+                    marker_lbl = Gtk.Label()
+                    marker_lbl.set_markup(f"<span foreground='{col}'>{shape_glyph}</span>")
+                    chip.append(marker_lbl)
+
+                    title_lbl = Gtk.Label(label=ev.get("title", "Evento"))
+                    title_lbl.set_ellipsize(Pango.EllipsizeMode.END)
+                    title_lbl.set_halign(Gtk.Align.START)
+                    title_lbl.set_hexpand(True)
+                    chip.append(title_lbl)
+
+                    events_box.append(chip)
+
+                if len(day_events) > 3:
+                    more_lbl = Gtk.Label(label=f"+{len(day_events) - 3} más")
+                    more_lbl.add_css_class("dim-label")
+                    more_lbl.set_halign(Gtk.Align.START)
+                    events_box.append(more_lbl)
+
+                cell_box.append(events_box)
+                btn.set_child(cell_box)
+
+                btn.connect("clicked", lambda _, ds=date_str, dn=d: self.open_day_dialog(ds, dn))
+
+                self.cal_grid.attach(btn, col_idx, row_idx, 1, 1)
+
+    def open_day_dialog(self, date_str: str, day_num: int):
+        try:
+            d_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            dias_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+            meses_es = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+            fecha_bonita = f"{dias_es[d_obj.weekday()]}, {d_obj.day} de {meses_es[d_obj.month - 1]} de {d_obj.year}"
+        except Exception:
+            fecha_bonita = date_str
+
+        dialog = Adw.Window(transient_for=self.window, modal=True)
+        dialog.set_title(f"Eventos - {date_str}")
+        dialog.set_default_size(540, 620)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        dialog.set_content(main_box)
+
+        header_bar = Adw.HeaderBar()
+        main_box.append(header_bar)
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_vexpand(True)
+        main_box.append(scroll)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        content.set_margin_top(18)
+        content.set_margin_bottom(24)
+        content.set_margin_start(20)
+        content.set_margin_end(20)
+        scroll.set_child(content)
+
+        date_title = Gtk.Label(label=fecha_bonita)
+        date_title.add_css_class("title-2")
+        date_title.add_css_class("bold")
+        date_title.set_halign(Gtk.Align.START)
+        content.append(date_title)
+
+        # ── Sección 1: Eventos Existentes ──
+        section_events = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        events_hdr = Gtk.Label(label="Eventos Programados")
+        events_hdr.add_css_class("wm-section-header")
+        events_hdr.set_halign(Gtk.Align.START)
+        section_events.append(events_hdr)
+
+        events_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        section_events.append(events_list_box)
+        content.append(section_events)
+
+        def refresh_events_list():
+            while child := events_list_box.get_first_child():
+                events_list_box.remove(child)
+
+            all_events = self.read_calendar_file()
+            day_events = all_events.get(date_str, [])
+
+            if not day_events:
+                empty_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+                empty_box.set_margin_top(8)
+                empty_box.set_margin_bottom(8)
+                empty_lbl = Gtk.Label(label="No hay eventos ni notas para esta fecha.")
+                empty_lbl.add_css_class("dim-label")
+                empty_box.append(empty_lbl)
+                events_list_box.append(empty_box)
+                return
+
+            for ev in day_events:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+                row.add_css_class("wm-event-row")
+
+                shape_type = ev.get("shape", "circle")
+                shape_glyph = SHAPE_GLYPHS.get(shape_type, "●")
+                col = ev.get("color", "#0A84FF")
+
+                glyph_lbl = Gtk.Label()
+                glyph_lbl.set_markup(f"<span foreground='{col}' font_desc='16'>{shape_glyph}</span>")
+                row.append(glyph_lbl)
+
+                text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+                text_box.set_hexpand(True)
+
+                t_lbl = Gtk.Label(label=ev.get("title", "Sin título"))
+                t_lbl.set_halign(Gtk.Align.START)
+                t_lbl.add_css_class("bold")
+                text_box.append(t_lbl)
+
+                shape_name = {"circle": "Círculo", "star": "Estrella", "triangle": "Triángulo", "square": "Cuadrado"}.get(shape_type, "Círculo")
+                sub_lbl = Gtk.Label(label=f"⏰ {ev.get('time', 'Todo el día')}   •   🏷️ {ev.get('category', 'General')}   •   Marcador: {shape_name}")
+                sub_lbl.set_halign(Gtk.Align.START)
+                sub_lbl.add_css_class("dim-label")
+                text_box.append(sub_lbl)
+
+                row.append(text_box)
+
+                del_btn = Gtk.Button(icon_name="user-trash-symbolic")
+                del_btn.add_css_class("wm-btn-danger")
+                del_btn.set_tooltip_text("Eliminar evento")
+                del_btn.connect("clicked", lambda _, eid=ev.get("id"): delete_event(eid))
+                row.append(del_btn)
+
+                events_list_box.append(row)
+
+        def delete_event(event_id):
+            all_events = self.read_calendar_file()
+            if date_str in all_events:
+                all_events[date_str] = [e for e in all_events[date_str] if e.get("id") != event_id]
+                if not all_events[date_str]:
+                    del all_events[date_str]
+                self.write_calendar_file(all_events)
+                refresh_events_list()
+                self.render_calendar_grid()
+                self.show_toast("Evento eliminado")
+
+        refresh_events_list()
+
+        sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        content.append(sep)
+
+        # ── Sección 2: Añadir o Editar Evento ──
+        add_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         add_card.add_css_class("wm-card")
 
-        add_title = Gtk.Label(label="Añadir Evento para esta fecha")
+        add_title = Gtk.Label(label="Añadir Nuevo Evento o Nota")
         add_title.add_css_class("wm-card-title")
         add_title.set_halign(Gtk.Align.START)
         add_card.append(add_title)
 
-        self.ev_title_entry = Gtk.Entry(placeholder_text="Título del evento (ej: Parcial de Base de Datos)")
-        add_card.append(self.ev_title_entry)
+        ev_title_entry = Gtk.Entry(placeholder_text="Título del evento o nota...")
+        add_card.append(ev_title_entry)
 
         row2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        self.ev_time_entry = Gtk.Entry(placeholder_text="Horario (ej: 18:30 - 20:30)")
-        self.ev_time_entry.set_hexpand(True)
-        row2.append(self.ev_time_entry)
+        ev_time_entry = Gtk.Entry(placeholder_text="Horario (ej: 15:00 - 16:00)")
+        ev_time_entry.set_hexpand(True)
+        row2.append(ev_time_entry)
 
-        self.ev_cat_combo = Gtk.DropDown.new_from_strings(CATEGORIES)
-        row2.append(self.ev_cat_combo)
+        ev_cat_combo = Gtk.DropDown.new_from_strings(CATEGORIES)
+        row2.append(ev_cat_combo)
         add_card.append(row2)
 
-        # Color Selector
-        color_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        color_label = Gtk.Label(label="Color:")
-        color_label.set_halign(Gtk.Align.START)
-        color_row.append(color_label)
+        # Selector de Marcador Geométrico
+        shape_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        shape_label = Gtk.Label(label="Marcador Geométrico:")
+        shape_label.set_halign(Gtk.Align.START)
+        shape_label.add_css_class("dim-label")
+        shape_box.append(shape_label)
 
-        self.selected_color = CALENDAR_COLORS[0][0]
-        self.color_buttons = []
+        shape_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        dialog_selected_shape = ["circle"]
+        shape_buttons = []
+
+        def set_dialog_shape(s_val):
+            dialog_selected_shape[0] = s_val
+            for b, sv in shape_buttons:
+                if sv == s_val:
+                    b.add_css_class("selected")
+                else:
+                    b.remove_css_class("selected")
+
+        for s_code, s_label, _ in CALENDAR_SHAPES:
+            s_btn = Gtk.Button(label=s_label)
+            s_btn.add_css_class("wm-shape-btn")
+            if s_code == dialog_selected_shape[0]:
+                s_btn.add_css_class("selected")
+            s_btn.connect("clicked", lambda _, sc=s_code: set_dialog_shape(sc))
+            shape_row.append(s_btn)
+            shape_buttons.append((s_btn, s_code))
+
+        shape_box.append(shape_row)
+        add_card.append(shape_box)
+
+        # Selector de Color
+        color_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        color_label = Gtk.Label(label="Color de Categoría:")
+        color_label.set_halign(Gtk.Align.START)
+        color_label.add_css_class("dim-label")
+        color_box.append(color_label)
+
+        color_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        dialog_selected_color = [CALENDAR_COLORS[0][0]]
+        dialog_color_buttons = []
+
+        def set_dialog_color(hex_col):
+            dialog_selected_color[0] = hex_col
+            for b, col in dialog_color_buttons:
+                if col == hex_col:
+                    b.add_css_class("selected")
+                else:
+                    b.remove_css_class("selected")
 
         for i, (hex_col, name) in enumerate(CALENDAR_COLORS):
             btn = Gtk.Button()
             btn.add_css_class("wm-color-btn")
             btn.add_css_class(f"wm-col-{i}")
-            if hex_col == self.selected_color:
+            if hex_col == dialog_selected_color[0]:
                 btn.add_css_class("selected")
             btn.set_tooltip_text(name)
-            btn.connect("clicked", lambda _, col=hex_col: self.set_calendar_color(col))
+            btn.connect("clicked", lambda _, col=hex_col: set_dialog_color(col))
             color_row.append(btn)
-            self.color_buttons.append((btn, hex_col))
+            dialog_color_buttons.append((btn, hex_col))
 
-        add_card.append(color_row)
+        color_box.append(color_row)
+        add_card.append(color_box)
 
-        btn_add_ev = Gtk.Button(label="+ Guardar Evento")
-        btn_add_ev.add_css_class("wm-btn-primary")
-        btn_add_ev.connect("clicked", self.on_save_calendar_event)
-        add_card.append(btn_add_ev)
+        def save_new_event(_):
+            t_text = ev_title_entry.get_text().strip()
+            if not t_text:
+                self.show_toast("Por favor escribe un título para el evento")
+                return
 
-        right_box.append(add_card)
-        paned.set_end_child(right_scroll)
+            time_text = ev_time_entry.get_text().strip() or "Todo el día"
+            cat_idx = ev_cat_combo.get_selected()
+            cat_text = CATEGORIES[cat_idx] if cat_idx < len(CATEGORIES) else "General"
+            col_text = dialog_selected_color[0]
+            shp_text = dialog_selected_shape[0]
 
-        self.selected_date_str = date.today().strftime("%Y-%m-%d")
-        self.load_calendar_events_for_date(self.selected_date_str)
+            all_events = self.read_calendar_file()
+            if date_str not in all_events:
+                all_events[date_str] = []
 
-        return paned
+            new_ev_id = f"ev_{int(datetime.now().timestamp())}_{len(all_events[date_str])}"
+            all_events[date_str].append({
+                "id": new_ev_id,
+                "title": t_text,
+                "time": time_text,
+                "category": cat_text,
+                "color": col_text,
+                "shape": shp_text
+            })
 
-    def set_calendar_color(self, hex_col: str):
-        self.selected_color = hex_col
-        for btn, col in self.color_buttons:
-            if col == hex_col:
-                btn.add_css_class("selected")
-            else:
-                btn.remove_css_class("selected")
-
-    def select_relative_day(self, offset: int):
-        target = date.today() + timedelta(days=offset)
-        dt = GLib.DateTime.new_local(target.year, target.month, target.day, 0, 0, 0)
-        self.gtk_calendar.set_date(dt)
-        self.on_calendar_day_selected(self.gtk_calendar)
-
-    def on_calendar_day_selected(self, cal: Gtk.Calendar):
-        gdate = cal.get_date()
-        self.selected_date_str = gdate.format("%Y-%m-%d")
-        self.load_calendar_events_for_date(self.selected_date_str)
-
-    def load_calendar_events_for_date(self, date_str: str):
-        try:
-            d = datetime.strptime(date_str, "%Y-%m-%d")
-            dias_es = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-            meses_es = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-            fecha_bonita = f"{dias_es[d.weekday()]}, {d.day} de {meses_es[d.month - 1]} de {d.year}"
-        except Exception:
-            fecha_bonita = date_str
-
-        self.cal_date_label.set_text(fecha_bonita)
-
-        while child := self.events_list_box.get_first_child():
-            self.events_list_box.remove(child)
-
-        all_events = self.read_calendar_file()
-        day_events = all_events.get(date_str, [])
-
-        if not day_events:
-            empty_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-            empty_box.set_margin_top(16)
-            empty_box.set_margin_bottom(16)
-
-            lbl = Gtk.Label(label="No hay eventos programados para este día")
-            lbl.set_css_classes(["dim-label"])
-            empty_box.append(lbl)
-            self.events_list_box.append(empty_box)
-            return
-
-        for ev in day_events:
-            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-            row.add_css_class("wm-event-row")
-
-            color_strip = Gtk.Box()
-            color_strip.set_size_request(4, 28)
-            col = ev.get("color", "#0A84FF")
-            color_strip.set_css_classes(["wm-pill"])
-            color_strip.set_name(f"strip_{ev.get('id')}")
-
-            css = f"#strip_{ev.get('id')} {{ background-color: {col}; }}"
-            p = Gtk.CssProvider()
-            p.load_from_string(css)
-            Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), p, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-            row.append(color_strip)
-
-            text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-            text_box.set_hexpand(True)
-
-            title_lbl = Gtk.Label(label=ev.get("title", "Sin título"))
-            title_lbl.set_halign(Gtk.Align.START)
-            title_lbl.set_css_classes(["bold"])
-            text_box.append(title_lbl)
-
-            sub_lbl = Gtk.Label(label=f"⏰ {ev.get('time', 'Todo el día')}   •   🏷️ {ev.get('category', 'General')}")
-            sub_lbl.set_halign(Gtk.Align.START)
-            sub_lbl.set_css_classes(["dim-label"])
-            text_box.append(sub_lbl)
-
-            row.append(text_box)
-
-            del_btn = Gtk.Button(icon_name="user-trash-symbolic")
-            del_btn.add_css_class("wm-btn-danger")
-            del_btn.set_tooltip_text("Eliminar evento")
-            del_btn.connect("clicked", lambda _, eid=ev.get("id"), ds=date_str: self.on_delete_calendar_event(ds, eid))
-            row.append(del_btn)
-
-            self.events_list_box.append(row)
-
-    def on_save_calendar_event(self, _):
-        title = self.ev_title_entry.get_text().strip()
-        if not title:
-            self.show_toast("Por favor escribe un título para el evento")
-            return
-
-        time_str = self.ev_time_entry.get_text().strip() or "18:00"
-        cat_idx = self.ev_cat_combo.get_selected()
-        cat = CATEGORIES[cat_idx] if cat_idx < len(CATEGORIES) else "General"
-        color = self.selected_color
-
-        all_events = self.read_calendar_file()
-        if self.selected_date_str not in all_events:
-            all_events[self.selected_date_str] = []
-
-        new_id = f"ev_{int(datetime.now().timestamp())}_{len(all_events[self.selected_date_str])}"
-        all_events[self.selected_date_str].append({
-            "id": new_id,
-            "title": title,
-            "time": time_str,
-            "category": cat,
-            "color": color
-        })
-
-        self.write_calendar_file(all_events)
-        self.ev_title_entry.set_text("")
-        self.ev_time_entry.set_text("")
-        self.load_calendar_events_for_date(self.selected_date_str)
-        self.show_toast(f"Evento añadido para {self.selected_date_str}")
-
-    def on_delete_calendar_event(self, date_str: str, event_id: str):
-        all_events = self.read_calendar_file()
-        if date_str in all_events:
-            all_events[date_str] = [e for e in all_events[date_str] if e.get("id") != event_id]
-            if not all_events[date_str]:
-                del all_events[date_str]
             self.write_calendar_file(all_events)
-            self.load_calendar_events_for_date(date_str)
-            self.show_toast("Evento eliminado")
+            ev_title_entry.set_text("")
+            ev_time_entry.set_text("")
+            refresh_events_list()
+            self.render_calendar_grid()
+            self.show_toast(f"Evento guardado para {date_str}")
+
+        btn_save = Gtk.Button(label="+ Guardar Evento")
+        btn_save.add_css_class("wm-btn-primary")
+        btn_save.connect("clicked", save_new_event)
+        add_card.append(btn_save)
+
+        content.append(add_card)
+
+        dialog.present()
 
     def read_calendar_file(self) -> dict:
         if not CALENDAR_FILE.exists():

@@ -158,10 +158,21 @@ Item {
                                     anchors.rightMargin: 8
                                     spacing: 6
 
-                                    Rectangle {
-                                        width: 3
-                                        height: 18
-                                        radius: 1.5
+                                    Text {
+                                        text: {
+                                            var s = modelData.shape || "circle";
+                                            if (s === "star")
+                                                return "★";
+
+                                            if (s === "triangle")
+                                                return "▲";
+
+                                            if (s === "square")
+                                                return "■";
+
+                                            return "●";
+                                        }
+                                        font.pixelSize: 11
                                         color: modelData.color || "#0A84FF"
                                     }
 
@@ -294,10 +305,21 @@ Item {
                         anchors.rightMargin: 10
                         spacing: 8
 
-                        Rectangle {
-                            width: 3
-                            height: 20
-                            radius: 1.5
+                        Text {
+                            text: {
+                                var s = modelData.shape || "circle";
+                                if (s === "star")
+                                    return "★";
+
+                                if (s === "triangle")
+                                    return "▲";
+
+                                if (s === "square")
+                                    return "■";
+
+                                return "●";
+                            }
+                            font.pixelSize: 12
                             color: modelData.color || "#0A84FF"
                         }
 
@@ -337,6 +359,8 @@ Item {
         // ═══════════════════════════════════════════════════════════════════
         Rectangle {
             id: addEventModal
+
+            property string selectedShape: "circle"
 
             visible: root.addEventModalOpen
             anchors.centerIn: parent
@@ -420,6 +444,53 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
+                    spacing: 4
+
+                    Repeater {
+                        model: [{
+                            "shape": "circle",
+                            "label": "●"
+                        }, {
+                            "shape": "star",
+                            "label": "★"
+                        }, {
+                            "shape": "triangle",
+                            "label": "▲"
+                        }, {
+                            "shape": "square",
+                            "label": "■"
+                        }]
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 22
+                            radius: 5
+                            color: addEventModal.selectedShape === modelData.shape ? Qt.rgba(1, 1, 1, 0.25) : Qt.rgba(1, 1, 1, 0.08)
+                            border.color: addEventModal.selectedShape === modelData.shape ? "#FFFFFF" : "transparent"
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData.label
+                                font.pixelSize: 11
+                                color: "#FFFFFF"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: addEventModal.selectedShape = modelData.shape
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
                     spacing: 8
 
                     Rectangle {
@@ -469,7 +540,7 @@ Item {
                             onClicked: {
                                 if (evTitleInput.text.trim() !== "") {
                                     if (root.widgetsState)
-                                        root.widgetsState.addCalendarEvent(root.widgetsState.calSelectedDateStr, evTimeInput.text.trim(), evTitleInput.text.trim(), "General", "#0A84FF");
+                                        root.widgetsState.addCalendarEvent(root.widgetsState.calSelectedDateStr, evTimeInput.text.trim(), evTitleInput.text.trim(), "General", "#0A84FF", addEventModal.selectedShape);
 
                                     evTitleInput.text = "";
                                     root.addEventModalOpen = false;
@@ -588,6 +659,29 @@ Item {
                                         font.weight: isToday ? Font.Bold : Font.Normal
                                         font.italic: false
                                         color: isToday ? "#FFFFFF" : (inMonth ? Qt.rgba(1, 1, 1, 0.9) : "transparent")
+                                    }
+
+                                    // Marcador geométrico del evento
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        anchors.bottom: parent.bottom
+                                        anchors.bottomMargin: 0
+                                        visible: inMonth && (modelData.has_events || false)
+                                        text: {
+                                            var s = modelData.marker_shape || "circle";
+                                            if (s === "star")
+                                                return "★";
+
+                                            if (s === "triangle")
+                                                return "▲";
+
+                                            if (s === "square")
+                                                return "■";
+
+                                            return "●";
+                                        }
+                                        font.pixelSize: 6
+                                        color: isToday ? "#FFFFFF" : (modelData.dot_color || "#0A84FF")
                                     }
 
                                     MouseArea {
