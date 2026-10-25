@@ -26,56 +26,10 @@ Item {
     readonly property color perforationColor: isDark ? Qt.rgba(1, 1, 1, 0.20) : "#D1D1D6"
     readonly property color inputBgColor: isDark ? Qt.rgba(255, 255, 255, 0.06) : Qt.rgba(0, 0, 0, 0.04)
 
-    // ── Fallback Notes matching reference images ────────────────────────────
-    readonly property var fallbackNotes: [
-        {
-            "id": "n1",
-            "title": "Nueva nota",
-            "body": "Nota a mano",
-            "date": "miércoles",
-            "has_thumbnail": true
-        },
-        {
-            "id": "n2",
-            "title": "Gabriela Gama",
-            "body": "No hay texto adicional",
-            "date": "martes",
-            "has_thumbnail": false
-        },
-        {
-            "id": "n3",
-            "title": "Manifestations",
-            "body": "No hay texto adicional",
-            "date": "martes",
-            "has_thumbnail": false
-        },
-        {
-            "id": "n4",
-            "title": "Luli Dayli",
-            "body": "No soy ni influencer, ni tiktoker, ni instagramer...",
-            "date": "9/11/26",
-            "has_thumbnail": false
-        },
-        {
-            "id": "n5",
-            "title": "Success Story",
-            "body": "No hay texto adicional",
-            "date": "9/8/26",
-            "has_thumbnail": false
-        },
-        {
-            "id": "n6",
-            "title": "D - Personal",
-            "body": "Rompe los estándares normales. A ella le gusta...",
-            "date": "8/30/26",
-            "has_thumbnail": false
-        }
-    ]
-
     readonly property var notesList: {
-        if (root.widgetsState && root.widgetsState.ttNotesList && root.widgetsState.ttNotesList.length > 0)
+        if (root.widgetsState && root.widgetsState.ttNotesList !== undefined && root.widgetsState.ttNotesList !== null)
             return root.widgetsState.ttNotesList;
-        return fallbackNotes;
+        return [];
     }
 
     // ── Estados de Interacción y Navegación ─────────────────────────────────
@@ -741,13 +695,70 @@ Item {
             visible: root.viewMode === "list"
 
             // ───────────────────────────────────────────────────────────────
+            // 0. ESTADO VACÍO (SIN NOTAS): "Haz clic en + para añadir..."
+            // ───────────────────────────────────────────────────────────────
+            Item {
+                id: emptyNotesView
+                anchors.fill: parent
+                visible: !root.notesList || root.notesList.length === 0
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    anchors.leftMargin: 16
+                    anchors.rightMargin: 16
+                    spacing: 8
+
+                    Text {
+                        text: "󰎚"
+                        font.family: "CaskaydiaCove Nerd Font"
+                        font.pixelSize: root.isSmall ? 28 : 36
+                        color: root.yellowHeaderColor
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Text {
+                        text: "No hay notas"
+                        font.family: root.fontFamily
+                        font.pixelSize: root.isSmall ? 14 : 16
+                        font.weight: Font.DemiBold
+                        color: root.textPrimaryColor
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Text {
+                        text: "Haz clic en + para añadir una nueva nota"
+                        font.family: root.fontFamily
+                        font.pixelSize: root.isSmall ? 11 : 12
+                        font.weight: Font.Normal
+                        color: root.textSecondaryColor
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.Wrap
+                        Layout.maximumWidth: parent.width > 0 ? (parent.width - 24) : 130
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        createTitleInput.text = "";
+                        createBodyInput.text = "";
+                        root.viewMode = "create";
+                        createTitleInput.forceActiveFocus();
+                    }
+                }
+            }
+
+            // ───────────────────────────────────────────────────────────────
             // 1. MODO COMPACTO / PEQUEÑO (170 x 170): SMART STACK VERTICAL
             // ───────────────────────────────────────────────────────────────
             Item {
                 id: smallView
 
                 anchors.fill: parent
-                visible: root.isSmall
+                visible: root.isSmall && root.notesList && root.notesList.length > 0
                 clip: true
 
                 // Gesto de Arrastre Vertical (DragHandler)
@@ -857,7 +868,7 @@ Item {
                 id: mediumView
 
                 anchors.fill: parent
-                visible: root.isMedium
+                visible: root.isMedium && root.notesList && root.notesList.length > 0
 
                 ListView {
                     id: mediumListView
@@ -941,7 +952,7 @@ Item {
                 id: largeView
 
                 anchors.fill: parent
-                visible: root.isLarge || (!root.isSmall && !root.isMedium)
+                visible: (root.isLarge || (!root.isSmall && !root.isMedium)) && root.notesList && root.notesList.length > 0
 
                 ListView {
                     id: largeListView

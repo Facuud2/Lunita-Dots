@@ -42,56 +42,7 @@ DEFAULT_NOTES_DATA = {
             "due": "Mañana"
         }
     ],
-    "notes_list": [
-        {
-            "id": "n1",
-            "title": "Nueva nota",
-            "body": "Nota a mano",
-            "date": "miércoles",
-            "color": "#FCC603",
-            "has_thumbnail": True
-        },
-        {
-            "id": "n2",
-            "title": "Gabriela Gama",
-            "body": "No hay texto adicional",
-            "date": "martes",
-            "color": "#0A84FF",
-            "has_thumbnail": False
-        },
-        {
-            "id": "n3",
-            "title": "Manifestations",
-            "body": "No hay texto adicional",
-            "date": "martes",
-            "color": "#30D158",
-            "has_thumbnail": False
-        },
-        {
-            "id": "n4",
-            "title": "Luli Dayli",
-            "body": "No soy ni influencer, ni tiktoker, ni instagramer...",
-            "date": "9/11/26",
-            "color": "#BF5AF2",
-            "has_thumbnail": False
-        },
-        {
-            "id": "n5",
-            "title": "Success Story",
-            "body": "No hay texto adicional",
-            "date": "9/8/26",
-            "color": "#FF3B30",
-            "has_thumbnail": False
-        },
-        {
-            "id": "n6",
-            "title": "D 🎀🎀🎀",
-            "body": "Rompe los estándares normales. A ella le gusta...",
-            "date": "8/30/26",
-            "color": "#FF2D55",
-            "has_thumbnail": False
-        }
-    ],
+    "notes_list": [],
     "notes": "• Recordar sincronizar calendario y widgets\n• Revisar métricas de salud\n• Deploy de actualización"
 }
 
@@ -124,8 +75,8 @@ def load_notes_data():
                 d["tasks"] = DEFAULT_NOTES_DATA["tasks"]
             if "notes" not in d:
                 d["notes"] = DEFAULT_NOTES_DATA["notes"]
-            if "notes_list" not in d or not d["notes_list"]:
-                d["notes_list"] = DEFAULT_NOTES_DATA["notes_list"]
+            if "notes_list" not in d:
+                d["notes_list"] = []
             return d
     except Exception:
         return DEFAULT_NOTES_DATA.copy()
@@ -225,7 +176,7 @@ def get_current_state():
         "schedule": today_events if today_events else upcoming_events[:5],
         "tasks": notes_data.get("tasks", []),
         "notes": notes_data.get("notes", ""),
-        "notes_list": notes_data.get("notes_list", DEFAULT_NOTES_DATA["notes_list"])
+        "notes_list": notes_data.get("notes_list", [])
     }
 
 def main():
