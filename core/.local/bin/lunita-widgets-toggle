@@ -54,15 +54,17 @@ def resolve_widgets_config_dir() -> Path | None:
 def send_ipc_command(pipe_path: Path, cmd: str) -> bool:
     if not pipe_path.exists():
         return False
-    try:
-        fd = os.open(str(pipe_path), os.O_WRONLY | os.O_NONBLOCK)
+    for _ in range(5):
         try:
-            os.write(fd, f"{cmd}\n".encode("utf-8"))
-        finally:
-            os.close(fd)
-        return True
-    except OSError:
-        return False
+            fd = os.open(str(pipe_path), os.O_WRONLY | os.O_NONBLOCK)
+            try:
+                os.write(fd, f"{cmd}\n".encode("utf-8"))
+            finally:
+                os.close(fd)
+            return True
+        except OSError:
+            time.sleep(0.05)
+    return False
 
 
 def ensure_widgets_daemon_running() -> bool:

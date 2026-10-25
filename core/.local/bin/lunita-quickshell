@@ -237,6 +237,9 @@ stop_component() {
     if [ "$comp" = "osd" ]; then
         pkill -u "$UID" -f "osd_listener.py" 2>/dev/null || true
     fi
+    if [ "$comp" = "widgets" ]; then
+        pkill -u "$UID" -f "widget_ipc_listener.py" 2>/dev/null || true
+    fi
 }
 
 cmd_start() {
@@ -281,6 +284,7 @@ cmd_stop() {
     pkill -u "$UID" -x quickshell 2>/dev/null || true
     pkill -u "$UID" -x qs 2>/dev/null || true
     pkill -u "$UID" -f "osd_listener.py" 2>/dev/null || true
+    pkill -u "$UID" -f "widget_ipc_listener.py" 2>/dev/null || true
     success "Instancias de Quickshell finalizadas."
 }
 

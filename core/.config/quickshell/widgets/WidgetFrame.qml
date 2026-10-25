@@ -31,11 +31,13 @@ Item {
             root.width = 170;
             root.height = 170;
         } else if (!root.isResizing) {
-            if (root.width !== newData.width)
-                root.width = newData.width;
+            var targetW = (newData.width && newData.width > 0) ? newData.width : 170;
+            var targetH = (newData.height && newData.height > 0) ? newData.height : 170;
+            if (root.width !== targetW)
+                root.width = targetW;
 
-            if (root.height !== newData.height)
-                root.height = newData.height;
+            if (root.height !== targetH)
+                root.height = targetH;
 
         }
     }
@@ -60,7 +62,7 @@ Item {
     SequentialAnimation {
         id: jiggleAnim
 
-        running: root.widgetsState.isEditing && !root.isDragging
+        running: (root.widgetsState ? root.widgetsState.isEditing : false) && !root.isDragging
         loops: Animation.Infinite
 
         NumberAnimation {
@@ -86,7 +88,7 @@ Item {
     // Reset rotation when exiting edit mode
     Connections {
         function onIsEditingChanged() {
-            if (!root.widgetsState.isEditing) {
+            if (!root.widgetsState || !root.widgetsState.isEditing) {
                 jiggleAnim.stop();
                 jiggleRotation.angle = 0;
             }
@@ -262,10 +264,10 @@ Item {
 
         anchors.fill: parent
         z: 80
-        enabled: root.widgetsState.isEditing
+        enabled: root.widgetsState ? root.widgetsState.isEditing : false
         drag.target: root
         drag.axis: Drag.XAndYAxis
-        cursorShape: root.widgetsState.isEditing ? (drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor) : Qt.ArrowCursor
+        cursorShape: (root.widgetsState && root.widgetsState.isEditing) ? (drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor) : Qt.ArrowCursor
         onReleased: {
             // Magnetic snap to a 20px desktop grid
             var snappedX = Math.round(root.x / 20) * 20;
@@ -287,7 +289,8 @@ Item {
     // ── Edit Controls Layer (Delete X & Resize Handle) ──
     Item {
         anchors.fill: parent
-        visible: root.widgetsState.isEditing
+        z: 90
+        visible: root.widgetsState ? root.widgetsState.isEditing : false
 
         // 1. Delete '✕' Button (Top-Left Corner)
         Rectangle {
@@ -348,8 +351,8 @@ Item {
             width: 28
             height: 28
             radius: 14
-            color: resizeMa.containsMouse || resizeMa.drag.active ? "#007AFF" : (root.widgetsState.isDarkTheme ? "#2C2C34" : "#FFFFFF")
-            border.color: root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.25)"
+            color: resizeMa.containsMouse || resizeMa.drag.active ? "#007AFF" : ((root.widgetsState && root.widgetsState.isDarkTheme) ? "#2C2C34" : "#FFFFFF")
+            border.color: (root.widgetsState && root.widgetsState.isDarkTheme) ? "rgba(255,255,255,0.40)" : "rgba(0,0,0,0.25)"
             border.width: 1.5
             scale: resizeMa.containsMouse || resizeMa.drag.active ? 1.15 : 1
 
@@ -358,7 +361,7 @@ Item {
                 text: "󰁌"
                 font.family: "CaskaydiaCove Nerd Font"
                 font.pixelSize: 12
-                color: resizeMa.containsMouse || resizeMa.drag.active ? "#FFFFFF" : root.widgetsState.textColor
+                color: resizeMa.containsMouse || resizeMa.drag.active ? "#FFFFFF" : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
             }
 
             // Drag MouseArea for Continuous Dynamic Resizing

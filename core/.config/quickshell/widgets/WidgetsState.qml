@@ -892,37 +892,72 @@ Item {
     }
 
     function toggleTimetableTask(id) {
+        ttProc.running = false;
         ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "toggle_task", id.toString()];
         ttProc.running = true;
     }
 
     function addTimetableTask(title, tag, due) {
+        ttProc.running = false;
         ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "add_task", title, tag || "General", due || "Pendiente"];
         ttProc.running = true;
     }
 
     function deleteTimetableTask(id) {
+        ttProc.running = false;
         ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "delete_task", id.toString()];
         ttProc.running = true;
     }
 
     function setTimetableNotes(notes) {
+        ttProc.running = false;
         ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "set_notes", notes];
         ttProc.running = true;
     }
 
     function addTimetableNote(title, body, date, color) {
-        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "add_note", title, body, date || "Hoy", color || "#FCC603"];
+        var newNote = {
+            "id": "n_" + Date.now(),
+            "title": title,
+            "body": body || "",
+            "date": date || "Hoy",
+            "color": color || "#FCC603",
+            "has_thumbnail": false
+        };
+        var currentList = (root.ttNotesList || []).slice();
+        currentList.unshift(newNote);
+        root.ttNotesList = currentList;
+
+        ttProc.running = false;
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "add_note", title, body || "", date || "Hoy", color || "#FCC603"];
         ttProc.running = true;
     }
 
     function deleteTimetableNote(id) {
-        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "delete_note", id.toString()];
+        var targetId = id.toString();
+        root.ttNotesList = (root.ttNotesList || []).filter(function(n) { return String(n.id) !== targetId; });
+
+        ttProc.running = false;
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "delete_note", targetId];
         ttProc.running = true;
     }
 
     function updateTimetableNote(id, title, body) {
-        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "update_note", id.toString(), title, body || ""];
+        var targetId = id.toString();
+        var currentList = (root.ttNotesList || []).slice();
+        for (var i = 0; i < currentList.length; i++) {
+            if (String(currentList[i].id) === targetId) {
+                var copy = Object.assign({}, currentList[i]);
+                copy.title = title;
+                copy.body = body;
+                currentList[i] = copy;
+                break;
+            }
+        }
+        root.ttNotesList = currentList;
+
+        ttProc.running = false;
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "update_note", targetId, title, body || ""];
         ttProc.running = true;
     }
 
@@ -1006,17 +1041,43 @@ Item {
         watchChanges: true
         onFileChanged: calendarEventsWatcher.reload()
         onTextChanged: {
+            calProc.running = false;
             calProc.command = ["python3", root.scriptsDir + "/calendar_provider.py", "get"];
             calProc.running = true;
         }
     }
 
+    FileView {
+        id: notesWatcher
+
+        path: Quickshell.env("HOME") + "/.config/lunita/notes.json"
+        watchChanges: true
+        onFileChanged: notesWatcher.reload()
+        onTextChanged: {
+            ttProc.running = false;
+            ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "get"];
+            ttProc.running = true;
+        }
+    }
+
     // ── Widget Edit Mode IPC Listener ──
+    Timer {
+        id: ipcRestartTimer
+        interval: 1000
+        repeat: false
+        onTriggered: {
+            widgetIpcProc.running = true;
+        }
+    }
+
     Process {
         id: widgetIpcProc
 
         command: ["python3", "-u", root.scriptsDir + "/widget_ipc_listener.py"]
         running: true
+        onExited: {
+            ipcRestartTimer.restart();
+        }
 
         stdout: SplitParser {
             splitMarker: "\n"

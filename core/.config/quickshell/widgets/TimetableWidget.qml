@@ -225,7 +225,10 @@ Item {
             return;
         var newT = detailTitleInput.text.trim();
         var newB = detailBodyInput.text.trim();
-        if (!newT) {
+        if (!newT && !newB) {
+            newT = "Nueva nota";
+            newB = "";
+        } else if (!newT) {
             var lines = newB.split("\n");
             newT = lines[0].substring(0, 32).trim() || "Nueva nota";
         }
@@ -477,7 +480,8 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            if (root.detailIsModified) {
+                            var isChanged = (root.selectedNote && (detailTitleInput.text.trim() !== (root.selectedNote.title || "").trim() || detailBodyInput.text.trim() !== (root.selectedNote.body || "").trim()));
+                            if (root.detailIsModified || isChanged) {
                                 root.saveNoteChanges();
                             }
                             root.viewMode = "list";
@@ -492,7 +496,7 @@ Item {
                 // Botón 'Listo' para guardar cambios editados
                 Rectangle {
                     id: saveEditBtn
-                    visible: root.detailIsModified
+                    visible: root.detailIsModified || (root.selectedNote && (detailTitleInput.text.trim() !== (root.selectedNote.title || "").trim() || detailBodyInput.text.trim() !== (root.selectedNote.body || "").trim()))
                     Layout.preferredHeight: 26
                     Layout.preferredWidth: saveEditTxt.width + 16
                     radius: 13
@@ -516,6 +520,7 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             root.saveNoteChanges();
+                            root.viewMode = "list";
                         }
                     }
                 }
@@ -670,7 +675,7 @@ Item {
             z: 9
 
             Repeater {
-                model: Math.floor(perforationRow.width / 7)
+                model: Math.max(0, Math.floor(perforationRow.width / 7))
 
                 Rectangle {
                     width: 2
@@ -1088,6 +1093,11 @@ Item {
                             onTextEdited: {
                                 root.detailIsModified = true;
                             }
+                            onTextChanged: {
+                                if (root.selectedNote && text.trim() !== (root.selectedNote.title || "").trim()) {
+                                    root.detailIsModified = true;
+                                }
+                            }
                             Keys.onReturnPressed: {
                                 detailBodyInput.forceActiveFocus();
                             }
@@ -1139,6 +1149,11 @@ Item {
                             activeFocusOnTab: true
                             onTextEdited: {
                                 root.detailIsModified = true;
+                            }
+                            onTextChanged: {
+                                if (root.selectedNote && text.trim() !== (root.selectedNote.body || "").trim()) {
+                                    root.detailIsModified = true;
+                                }
                             }
                             Keys.onEscapePressed: {
                                 if (root.detailIsModified) {

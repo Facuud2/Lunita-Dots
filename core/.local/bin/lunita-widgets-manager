@@ -2508,6 +2508,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
     def on_restart_widgets(self, _):
         def _restart():
+            subprocess.run(["pkill", "-f", "widget_ipc_listener.py"], check=False)
             subprocess.run(["pkill", "-f", "quickshell.*widgets"], check=False)
             cfg_path = self._resolve_widgets_qml_dir()
             subprocess.Popen(["quickshell", "-d", "-n", "-p", str(cfg_path)])

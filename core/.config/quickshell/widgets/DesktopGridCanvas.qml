@@ -152,6 +152,7 @@ Item {
     Rectangle {
         id: editTopBar
 
+        z: 999
         visible: root.isEditing
         anchors.top: parent.top
         anchors.topMargin: 40

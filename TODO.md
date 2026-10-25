@@ -763,7 +763,7 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Prioridad:** ALTA
 - **Rama Requerida:** `ISSUE_049_FEAT`
 - **Módulo(s):** Temas / Widgets / Notas
-- **Archivos Afectados:** `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/shell.qml`, `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/scripts/timetable_provider.py`, `core/.local/bin/lunita-widgets-manager`
+- **Archivos Afectados:** `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/shell.qml`, `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/scripts/timetable_provider.py`, `core/.config/quickshell/widgets/scripts/widget_ipc_listener.py`, `core/.local/bin/lunita-widgets-manager`, `core/.local/bin/lunita-widgets-toggle`, `core/.local/bin/lunita-quickshell`
 - **Descripción:** Dotar de interactividad completa al widget de Notas en el escritorio:
   1. **Vista de detalle y navegación:** Al hacer clic sobre el título de una nota en el listado, el widget transiciona hacia una vista completa mostrando el contenido íntegro de la nota seleccionada, con botón de retroceso ("Atrás") para volver al listado general.
   2. **Creación directa:** Botón de acción rápida (`+`) en el encabezado del widget para redactar y guardar notas directamente sin abrir el gestor externo.
