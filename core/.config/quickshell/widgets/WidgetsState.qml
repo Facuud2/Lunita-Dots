@@ -251,6 +251,10 @@ Item {
     property color mediaDominantColor: "#0A84FF"
     property bool mediaExpanded: false
     property var savedMediaBeforeExpansion: null
+    // ── 13. Files Widget Data (iOS Files-Style Recent Documents) ──
+    property var filesList: []
+    property int filesTotal: 0
+    property int filesPage: 0
     // ── Configuration Paths ──
     readonly property string configDir: Quickshell.env("HOME") + "/.config/lunita"
     readonly property string layoutFile: configDir + "/widgets_layout_qml.json"
@@ -882,6 +886,24 @@ Item {
         weatherProc.running = true;
     }
 
+    // ── Files Widget Functions ──
+    function refreshFiles() {
+        filesProc.command = ["python3", root.scriptsDir + "/files_provider.py"];
+        filesProc.running = true;
+    }
+
+    function openFile(filePath) {
+        if (filePath && filePath.trim() !== "") {
+            Quickshell.execDetached(["python3", root.scriptsDir + "/files_provider.py", "open", filePath.trim()]);
+        }
+    }
+
+    function openFileFolder(filePath) {
+        if (filePath && filePath.trim() !== "") {
+            Quickshell.execDetached(["python3", root.scriptsDir + "/files_provider.py", "open_dir", filePath.trim()]);
+        }
+    }
+
     // ── 8. Battery & Ecosystem Devices ──
     function syncBattery() {
         batProc.command = ["python3", root.scriptsDir + "/device_battery_provider.py", "sync"];
@@ -1348,6 +1370,36 @@ Item {
             }
         }
 
+    }
+
+    Timer {
+        interval: 60000 // 1 minuto
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            filesProc.command = ["python3", root.scriptsDir + "/files_provider.py"];
+            filesProc.running = true;
+        }
+    }
+
+    Process {
+        id: filesProc
+
+        command: ["python3", root.scriptsDir + "/files_provider.py"]
+
+        stdout: SplitParser {
+            onRead: (data) => {
+                try {
+                    var p = JSON.parse(data.trim());
+                    if (p && p.files) {
+                        root.filesList = p.files;
+                        root.filesTotal = p.total || p.files.length;
+                    }
+                } catch (e) {
+                }
+            }
+        }
     }
 
     Timer {

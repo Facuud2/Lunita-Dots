@@ -140,7 +140,8 @@ WIDGET_DEFAULTS = {
     "git":       {"type": "git",       "size": "small",  "width": 170, "height": 170, "x": 744,  "y": 140},
     "resources": {"type": "resources", "size": "small",  "width": 170, "height": 170, "x": 1520, "y": 234},
     "network":   {"type": "network",   "size": "small",  "width": 170, "height": 170, "x": 1704, "y": 50},
-    "photos":    {"type": "photos",    "size": "medium", "width": 354, "height": 176, "x": 1520, "y": 418}
+    "photos":    {"type": "photos",    "size": "medium", "width": 354, "height": 176, "x": 1520, "y": 418},
+    "files":     {"type": "files",     "size": "small",  "width": 170, "height": 170, "x": 1520, "y": 418}
 }
 
 def ensure_config_dir():
@@ -2296,7 +2297,8 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             ("resources", "Monitor de Recursos", "Anillos de uso para CPU, Memoria RAM y Almacenamiento", "utilities-system-monitor-symbolic"),
             ("network", "Monitoreo de Red", "Sparkline de tráfico, velocidades de subida y bajada", "network-wireless-symbolic"),
             ("photos", "Galería de Fotos", "Recuerdos fotográficos rotativos de tu carpeta personal", "camera-photo-symbolic"),
-            ("weather", "Clima Dinámico", "Pronóstico por horas y condiciones climáticas estilo iOS Weather", "weather-clouds-symbolic")
+            ("weather", "Clima Dinámico", "Pronóstico por horas y condiciones climáticas estilo iOS Weather", "weather-clouds-symbolic"),
+            ("files", "Archivos Recientes", "Documentos y archivos con previsualización estilo iOS Files", "folder-documents-symbolic")
         ]
 
         active_types = self.get_active_widget_types()

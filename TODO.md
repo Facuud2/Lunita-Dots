@@ -699,11 +699,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna (Ejecución independiente)
 
 ### [ISSUE-046] Creación del nuevo Widget de Archivos (Basado en Imagen)
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO [x]
 - **Prioridad:** ALTA
 - **Rama Requerida:** `ISSUE_046_FEAT`
 - **Módulo(s):** Temas / Widgets / Archivos (Nuevo Componente)
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Nuevo componente QML de Archivos), `core/.local/bin/lunita-widgets-manager`
+- **Archivos Afectados:** `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/files_provider.py`, `core/.local/bin/lunita-widgets-manager`
 - **Descripción:** Desarrollar desde cero un nuevo widget de Archivos recientes/anclados para el escritorio, tomando como especificación visual absoluta la imagen adjunta en el prompt al iniciar la tarea.
 - **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
   1. Construir la grilla o lista de archivos, previsualizaciones de iconos, truncado de nombres y espaciados exactamente como dicta la imagen de referencia.

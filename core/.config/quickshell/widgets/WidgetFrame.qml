@@ -132,6 +132,9 @@ Item {
             if (t === "weather")
                 return wthComp;
 
+            if (t === "files")
+                return filesComp;
+
             if (t === "media")
                 return medComp;
 
@@ -180,6 +183,15 @@ Item {
         id: wthComp
 
         WeatherWidget {
+            widgetsState: root.widgetsState
+        }
+
+    }
+
+    Component {
+        id: filesComp
+
+        FilesWidget {
             widgetsState: root.widgetsState
         }
 
