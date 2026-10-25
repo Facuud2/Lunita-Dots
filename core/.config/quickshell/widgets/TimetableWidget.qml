@@ -83,11 +83,12 @@ Item {
     property string viewMode: "list"
     property var selectedNote: null
 
-    // Navegación en modo compacto / pequeño
+    // ── Smart Stack Navigation Properties ──────────────────────────────────
     property int activeNoteIndex: 0
     property real lastWheelTime: 0
-    property real dragOffsetY: 0
-    property bool isDragging: false
+    property real stackOffsetY: 0
+    property bool isStackAnimating: false
+    property int pendingIndex: -1
 
     readonly property var currentNote: {
         var list = root.notesList;
@@ -97,22 +98,141 @@ Item {
         return list[idx];
     }
 
-    function nextNote() {
-        if (!root.notesList || root.notesList.length <= 1)
+    readonly property var nextNoteItem: {
+        var list = root.notesList;
+        if (!list || list.length === 0)
+            return null;
+        return list[(root.activeNoteIndex + 1) % list.length];
+    }
+
+    readonly property var prevNoteItem: {
+        var list = root.notesList;
+        if (!list || list.length === 0)
+            return null;
+        return list[(root.activeNoteIndex - 1 + list.length) % list.length];
+    }
+
+    NumberAnimation {
+        id: stackSlideAnim
+        target: root
+        property: "stackOffsetY"
+        duration: 260
+        easing.type: Easing.OutCubic
+        onFinished: {
+            if (root.pendingIndex !== -1) {
+                root.activeNoteIndex = root.pendingIndex;
+                root.pendingIndex = -1;
+            }
+            root.stackOffsetY = 0;
+            root.isStackAnimating = false;
+        }
+    }
+
+    function slideToNext() {
+        if (stackSlideAnim.running || !root.notesList || root.notesList.length <= 1)
             return;
-        if (root.activeNoteIndex < root.notesList.length - 1)
-            root.activeNoteIndex++;
-        else
-            root.activeNoteIndex = 0;
+        root.isStackAnimating = true;
+        root.pendingIndex = (root.activeNoteIndex + 1) % root.notesList.length;
+        stackSlideAnim.from = root.stackOffsetY;
+        stackSlideAnim.to = -smallView.height;
+        stackSlideAnim.restart();
+    }
+
+    function slideToPrev() {
+        if (stackSlideAnim.running || !root.notesList || root.notesList.length <= 1)
+            return;
+        root.isStackAnimating = true;
+        root.pendingIndex = (root.activeNoteIndex - 1 + root.notesList.length) % root.notesList.length;
+        stackSlideAnim.from = root.stackOffsetY;
+        stackSlideAnim.to = smallView.height;
+        stackSlideAnim.restart();
+    }
+
+    function snapStackBack() {
+        if (stackSlideAnim.running)
+            return;
+        root.pendingIndex = -1;
+        stackSlideAnim.from = root.stackOffsetY;
+        stackSlideAnim.to = 0;
+        stackSlideAnim.restart();
+    }
+
+    function nextNote() {
+        slideToNext();
     }
 
     function prevNote() {
-        if (!root.notesList || root.notesList.length <= 1)
-            return;
-        if (root.activeNoteIndex > 0)
-            root.activeNoteIndex--;
-        else
-            root.activeNoteIndex = root.notesList.length - 1;
+        slideToPrev();
+    }
+
+    component SmallNoteCard : Item {
+        id: cardComp
+        property var noteData: null
+        property real cardY: 0
+        property real cardScale: 1.0
+        property real cardOpacity: 1.0
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: parent.height
+        y: cardY
+        scale: cardScale
+        opacity: cardOpacity
+
+        ColumnLayout {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            anchors.topMargin: 14
+            spacing: 4
+
+            Text {
+                text: cardComp.noteData ? (cardComp.noteData.title || "Nueva nota") : "Nueva nota"
+                font.family: root.fontFamily
+                font.pixelSize: 15
+                font.weight: Font.DemiBold
+                color: root.textPrimaryColor
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+            }
+
+            Text {
+                text: cardComp.noteData ? (cardComp.noteData.body || "Nota a mano") : "Nota a mano"
+                font.family: root.fontFamily
+                font.pixelSize: 13
+                font.weight: Font.Normal
+                color: root.textSecondaryColor
+                elide: Text.ElideRight
+                maximumLineCount: 2
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
+            }
+        }
+
+        Text {
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.leftMargin: 16
+            anchors.bottomMargin: 14
+            text: cardComp.noteData ? (cardComp.noteData.date || "miércoles") : "miércoles"
+            font.family: root.fontFamily
+            font.pixelSize: 13
+            font.weight: Font.Normal
+            color: root.textSecondaryColor
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                if (!root.isStackAnimating && Math.abs(root.stackOffsetY) < 5 && cardComp.noteData) {
+                    root.openNoteDetail(cardComp.noteData);
+                }
+            }
+        }
     }
 
     property bool detailIsModified: false
@@ -599,13 +719,14 @@ Item {
             visible: root.viewMode === "list"
 
             // ───────────────────────────────────────────────────────────────
-            // 1. MODO COMPACTO / PEQUEÑO (170 x 170): GESTO VERTICAL SWIPE
+            // 1. MODO COMPACTO / PEQUEÑO (170 x 170): SMART STACK VERTICAL
             // ───────────────────────────────────────────────────────────────
             Item {
                 id: smallView
 
                 anchors.fill: parent
                 visible: root.isSmall
+                clip: true
 
                 // Gesto de Arrastre Vertical (DragHandler)
                 DragHandler {
@@ -613,22 +734,21 @@ Item {
                     target: null
                     xAxis.enabled: false
                     yAxis.enabled: true
+                    enabled: !root.isStackAnimating
                     onActiveChanged: {
                         if (!active) {
-                            if (root.dragOffsetY < -25) {
-                                root.nextNote();
-                            } else if (root.dragOffsetY > 25) {
-                                root.prevNote();
+                            if (root.stackOffsetY < -30) {
+                                root.slideToNext();
+                            } else if (root.stackOffsetY > 30) {
+                                root.slideToPrev();
+                            } else {
+                                root.snapStackBack();
                             }
-                            root.dragOffsetY = 0;
-                            root.isDragging = false;
-                        } else {
-                            root.isDragging = true;
                         }
                     }
                     onTranslationChanged: {
-                        if (active) {
-                            root.dragOffsetY = Math.max(-45, Math.min(45, translation.y));
+                        if (active && !root.isStackAnimating) {
+                            root.stackOffsetY = Math.max(-smallView.height, Math.min(smallView.height, translation.y));
                         }
                     }
                 }
@@ -638,87 +758,50 @@ Item {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                     onWheel: (event) => {
                         var now = Date.now();
-                        if (now - root.lastWheelTime > 150) {
+                        if (now - root.lastWheelTime > 260 && !root.isStackAnimating) {
                             root.lastWheelTime = now;
                             if (event.angleDelta.y < 0)
-                                root.nextNote();
+                                root.slideToNext();
                             else if (event.angleDelta.y > 0)
-                                root.prevNote();
+                                root.slideToPrev();
                         }
                     }
                 }
 
-                // Contenedor visual reactivo al desplazamiento táctil
-                Item {
-                    id: noteSmallContent
-                    anchors.fill: parent
-                    y: root.dragOffsetY
+                // Smart Stack Cards (exclusivas de las notas existentes)
+                // 1. Nota anterior (arriba: entra hacia abajo)
+                SmallNoteCard {
+                    id: prevCard
+                    noteData: root.prevNoteItem
+                    cardY: -smallView.height + root.stackOffsetY
+                    cardScale: 0.94 + 0.06 * Math.min(1.0, Math.max(0.0, root.stackOffsetY / Math.max(1, smallView.height)))
+                    cardOpacity: 0.4 + 0.6 * Math.min(1.0, Math.max(0.0, root.stackOffsetY / Math.max(1, smallView.height)))
+                    visible: (root.stackOffsetY > 0 || (root.isStackAnimating && root.pendingIndex === (root.activeNoteIndex - 1 + (root.notesList ? root.notesList.length : 1)) % Math.max(1, (root.notesList ? root.notesList.length : 1)))) && (root.notesList && root.notesList.length > 1)
+                }
 
-                    Behavior on y {
-                        enabled: !root.isDragging
-                        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
-                    }
+                // 2. Nota siguiente (abajo: entra hacia arriba)
+                SmallNoteCard {
+                    id: nextCard
+                    noteData: root.nextNoteItem
+                    cardY: smallView.height + root.stackOffsetY
+                    cardScale: 0.94 + 0.06 * Math.min(1.0, Math.max(0.0, -root.stackOffsetY / Math.max(1, smallView.height)))
+                    cardOpacity: 0.4 + 0.6 * Math.min(1.0, Math.max(0.0, -root.stackOffsetY / Math.max(1, smallView.height)))
+                    visible: (root.stackOffsetY < 0 || (root.isStackAnimating && root.pendingIndex === (root.activeNoteIndex + 1) % Math.max(1, (root.notesList ? root.notesList.length : 1)))) && (root.notesList && root.notesList.length > 1)
+                }
 
-                    ColumnLayout {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.leftMargin: 16
-                        anchors.rightMargin: 16
-                        anchors.topMargin: 14
-                        spacing: 4
-
-                        Text {
-                            text: root.currentNote ? (root.currentNote.title || "Nueva nota") : "Nueva nota"
-                            font.family: root.fontFamily
-                            font.pixelSize: 15
-                            font.weight: Font.DemiBold
-                            color: root.textPrimaryColor
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
-                        }
-
-                        Text {
-                            text: root.currentNote ? (root.currentNote.body || "Nota a mano") : "Nota a mano"
-                            font.family: root.fontFamily
-                            font.pixelSize: 13
-                            font.weight: Font.Normal
-                            color: root.textSecondaryColor
-                            elide: Text.ElideRight
-                            maximumLineCount: 2
-                            wrapMode: Text.Wrap
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    // Fecha fijada en la parte inferior izquierda
-                    Text {
-                        anchors.left: parent.left
-                        anchors.bottom: parent.bottom
-                        anchors.leftMargin: 16
-                        anchors.bottomMargin: 14
-                        text: root.currentNote ? (root.currentNote.date || "miércoles") : "miércoles"
-                        font.family: root.fontFamily
-                        font.pixelSize: 13
-                        font.weight: Font.Normal
-                        color: root.textSecondaryColor
-                    }
-
-                    // Clic para abrir vista de detalle
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (root.currentNote) {
-                                root.openNoteDetail(root.currentNote);
-                            }
-                        }
-                    }
+                // 3. Nota actual
+                SmallNoteCard {
+                    id: currentCard
+                    noteData: root.currentNote
+                    cardY: root.stackOffsetY
+                    cardScale: 1.0 - 0.06 * Math.min(1.0, Math.abs(root.stackOffsetY) / Math.max(1, smallView.height))
+                    cardOpacity: 1.0 - 0.4 * Math.min(1.0, Math.abs(root.stackOffsetY) / Math.max(1, smallView.height))
+                    visible: true
                 }
 
                 // Micro-indicador vertical de página estilo Apple Smart Stack
                 Column {
+                    z: 10
                     anchors.right: parent.right
                     anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter

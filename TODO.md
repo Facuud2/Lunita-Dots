@@ -758,20 +758,21 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   4. Los archivos modificados pasan las validaciones obligatorias `bash -n` y `luac -p`.
 - **Dependencias:** Ninguna (Ejecución independiente)
 
-### [ISSUE-050] Interactividad completa, vistas de detalle y gestos en el Widget de Notas
+### [ISSUE-050] Interactividad completa, vistas de detalle, edición y gestos en el Widget de Notas
 - **Estado:** COMPLETADO [x]
 - **Prioridad:** ALTA
 - **Rama Requerida:** `ISSUE_049_FEAT`
 - **Módulo(s):** Temas / Widgets / Notas
 - **Archivos Afectados:** `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/timetable_provider.py`, `core/.local/bin/lunita-widgets-manager`
 - **Descripción:** Dotar de interactividad completa al widget de Notas en el escritorio:
-  1. **Vista de detalle y navegación:** Al hacer clic sobre el título de una nota en el listado, el widget debe transicionar hacia una vista completa mostrando el contenido íntegro de la nota seleccionada, incluyendo un botón de retroceso ("Atrás") para volver al listado general.
-  2. **Creación directa:** Incorporar un botón de acción rápida (`+`) dentro del widget que permita crear y guardar nuevas notas sin necesidad de abrir el gestor externo.
-  3. **Navegación en modo compacto:** Cuando el widget se encuentre en su variante de tamaño pequeño, habilitar el gesto de arrastrar/deslizar verticalmente (hacia arriba y hacia abajo mediante `DragHandler` / `WheelHandler`) para alternar de forma fluida entre las notas existentes.
+  1. **Vista de detalle y navegación:** Al hacer clic sobre el título de una nota en el listado, el widget transiciona hacia una vista completa mostrando el contenido íntegro de la nota seleccionada, con botón de retroceso ("Atrás") para volver al listado general.
+  2. **Creación directa:** Botón de acción rápida (`+`) en el encabezado del widget para redactar y guardar notas directamente sin abrir el gestor externo.
+  3. **Edición interactiva en vivo:** Al abrir cualquier nota en la vista de detalle, sus campos de título y contenido son editables (`TextInput` / `TextEdit`) con guardado automático persistente al presionar "Listo" o retroceder.
+  4. **Efecto Smart Stack vertical en modo compacto:** En tamaño pequeño, la transición entre notas existentes se produce con una animación vertical fluida (hacia arriba o abajo) estilo pila inteligente de iOS mediante `DragHandler` y `WheelHandler`.
 - **Criterios de Aceptación:**
-  1. Hacer clic en una nota despliega su contenido completo en el widget y permite regresar al listado mediante el botón de retroceso.
-  2. El botón de agregar permite redactar y persistir una nueva nota directamente desde el widget.
-  3. En el tamaño pequeño, arrastrar hacia arriba o hacia abajo cambia de nota con una transición suave.
+  1. Hacer clic en una nota despliega su detalle completo editable y permite persistir modificaciones o regresar al listado.
+  2. El botón `+` permite crear nuevas notas con título y cuerpo persistidos en el almacenamiento JSON.
+  3. En tamaño compacto, la navegación vertical cicla exclusivamente entre las notas existentes con efecto de pila inteligente tridimensional y microindicador de página.
 - **Dependencias:** [ISSUE-044]
 
 ### [ISSUE-051] Simplificación del Widget de Reloj y bloqueo en tamaño pequeño
