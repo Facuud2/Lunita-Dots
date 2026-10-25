@@ -757,3 +757,60 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   3. Soporte para `start-component` y `stop-component` en `lunita-quickshell`.
   4. Los archivos modificados pasan las validaciones obligatorias `bash -n` y `luac -p`.
 - **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-050] Interactividad completa, vistas de detalle y gestos en el Widget de Notas
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_049_FEAT`
+- **Módulo(s):** Temas / Widgets / Notas
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Notas), `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Dotar de interactividad completa al widget de Notas en el escritorio:
+  1. **Vista de detalle y navegación:** Al hacer clic sobre el título de una nota en el listado, el widget debe transicionar hacia una vista completa mostrando el contenido íntegro de la nota seleccionada, incluyendo un botón de retroceso ("Atrás") para volver al listado general.
+  2. **Creación directa:** Incorporar un botón de acción rápida (`+`) dentro del widget que permita crear y guardar nuevas notas sin necesidad de abrir el gestor externo.
+  3. **Navegación en modo compacto:** Cuando el widget se encuentre en su variante de tamaño pequeño, habilitar el gesto de arrastrar/deslizar verticalmente (hacia arriba y hacia abajo mediante `DragHandler` / `WheelHandler`) para alternar de forma fluida entre las notas existentes.
+- **Criterios de Aceptación:**
+  1. Hacer clic en una nota despliega su contenido completo en el widget y permite regresar al listado mediante el botón de retroceso.
+  2. El botón de agregar permite redactar y persistir una nueva nota directamente desde el widget.
+  3. En el tamaño pequeño, arrastrar hacia arriba o hacia abajo cambia de nota con una transición suave.
+- **Dependencias:** [ISSUE-044]
+
+### [ISSUE-051] Simplificación del Widget de Reloj y bloqueo en tamaño pequeño
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Requerida:** `ISSUE_050_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Reloj y Lienzo (`DesktopGridCanvas`)
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Reloj y gestor de redimensionamiento del lienzo)
+- **Descripción:** 
+  1. Eliminar toda lógica, consulta e interfaz relacionada con el clima dentro del widget de Reloj, dejando exclusivamente la visualización horaria.
+  2. Restringir las dimensiones del widget de Reloj para que sea el único widget del ecosistema bloqueado permanentemente en su variante de tamaño pequeño, deshabilitando los controles o tiradores de expansión/redimensionamiento para este componente específico.
+- **Criterios de Aceptación:**
+  1. El widget de Reloj no muestra datos ni iconos meteorológicos ni realiza llamadas a servicios de clima.
+  2. En el modo de edición de widgets (`lunita-widgets-toggle`), el reloj permite ser reposicionado pero bloquea cualquier intento de expandirlo a tamaños medianos o grandes.
+- **Dependencias:** Ninguna
+
+### [ISSUE-052] Animación vertical estilo Smart Stack (iOS) en el Widget de Imágenes
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Requerida:** `ISSUE_051_FEAT`
+- **Módulo(s):** Temas / Widgets / Imágenes
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Imágenes)
+- **Descripción:** Reemplazar el cambio estático de fotografías por una animación vertical de subida y bajada idéntica al comportamiento de la "Pila Inteligente" (*Smart Stack*) de iOS. Al deslizar/arrastrar verticalmente o rotar automáticamente el carrusel, las imágenes deben desplazarse en el eje Y con físicas de resorte (`SpringAnimation` / curvas Bezier iOS-Like), escala sutil de profundidad e indicadores laterales temporales de posición.
+- **Criterios de Aceptación:**
+  1. Las imágenes transicionan desplazándose verticalmente hacia arriba o hacia abajo con efecto de pila tridimensional estilo iOS.
+  2. El usuario puede cambiar de foto manualmente deslizando hacia arriba/abajo con el cursor o rueda del ratón, además de la rotación automática.
+- **Dependencias:** [ISSUE-047]
+
+### [ISSUE-053] Registro manual en vivo e integración con Strava en el Widget de Salud/Fitness
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_052_FEAT`
+- **Módulo(s):** Temas / Widgets / Fitness & Backend de Sincronización
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Fitness y scripts de sincronización), `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Reemplazar los botones genéricos de incremento de pasos y movimiento en el widget de Salud por un sistema dual de ingesta de datos accesible desde el propio widget:
+  1. **Modo Manual Interactivo:** Permitir ingresar o ajustar directamente desde la interfaz del widget las métricas del día (pasos, calorías/movimiento, minutos de ejercicio) actualizando los anillos de actividad en tiempo real.
+  2. **Modo Dinámico (Strava API):** Implementar un flujo de conexión y sincronización con la API de Strava para extraer automáticamente las actividades físicas del usuario, traduciendo distancia, tiempo y gasto calórico al progreso de los anillos sin intervención manual.
+- **Criterios de Aceptación:**
+  1. Se eliminan los botones genéricos de prueba y se incorpora una vista/control limpio en el widget para alternar entre entrada manual y sincronización con Strava.
+  2. En modo manual, el usuario puede introducir valores concretos desde el widget y persistirlos en el almacenamiento local.
+  3. Al vincular una cuenta de Strava, el widget obtiene periódicamente las métricas recientes y actualiza los anillos de actividad de forma automática.
+- **Dependencias:** [ISSUE-048]
