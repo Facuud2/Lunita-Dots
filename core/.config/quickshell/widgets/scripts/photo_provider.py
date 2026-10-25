@@ -15,8 +15,9 @@ VALID_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".jfif"}
 SEARCH_DIRS = [
     os.path.expanduser("~/Imagenes"),
     os.path.expanduser("~/Imágenes"),
-    "/Imagenes",
-    os.path.expanduser("~/Pictures")
+    os.path.expanduser("~/Pictures"),
+    os.path.expanduser("~/Wallpapers"),
+    os.path.expanduser("~/Downloads")
 ]
 
 def get_all_images():
