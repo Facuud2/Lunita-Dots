@@ -273,7 +273,7 @@ Item {
                     text: root.conditionDesc
                     color: "#FFFFFF"
                     font.family: root.fontFamily
-                    font.pixelSize: 13.5
+                    font.pixelSize: 13
                     font.weight: Font.Medium
                     elide: Text.ElideRight
                 }
@@ -283,7 +283,7 @@ Item {
                     text: "Máx. " + root.maxTemp + " Mín. " + root.minTemp
                     color: Qt.rgba(1, 1, 1, 0.90)
                     font.family: root.fontFamily
-                    font.pixelSize: 12.5
+                    font.pixelSize: 12
                     font.weight: Font.Normal
                     elide: Text.ElideRight
                 }
@@ -330,7 +330,6 @@ Item {
                 anchors.topMargin: 14
                 anchors.right: parent.right
                 anchors.rightMargin: 18
-                horizontalAlignment: Text.AlignRight
                 spacing: 2
 
                 WeatherIcon {
@@ -349,7 +348,7 @@ Item {
                     text: root.conditionDesc
                     color: "#FFFFFF"
                     font.family: root.fontFamily
-                    font.pixelSize: 13.5
+                    font.pixelSize: 13
                     font.weight: Font.Medium
                     horizontalAlignment: Text.AlignRight
                 }
@@ -359,7 +358,7 @@ Item {
                     text: "Máx. " + root.maxTemp + " Mín. " + root.minTemp
                     color: Qt.rgba(1, 1, 1, 0.90)
                     font.family: root.fontFamily
-                    font.pixelSize: 12.5
+                    font.pixelSize: 12
                     font.weight: Font.Normal
                     horizontalAlignment: Text.AlignRight
                 }
@@ -386,7 +385,6 @@ Item {
 
                         Column {
                             anchors.centerIn: parent
-                            horizontalAlignment: Text.AlignHCenter
                             spacing: 5
 
                             Text {
@@ -458,7 +456,6 @@ Item {
                 anchors.topMargin: 18
                 anchors.right: parent.right
                 anchors.rightMargin: 20
-                horizontalAlignment: Text.AlignRight
                 spacing: 3
 
                 WeatherIcon {
@@ -523,7 +520,6 @@ Item {
 
                             Column {
                                 anchors.centerIn: parent
-                                horizontalAlignment: Text.AlignHCenter
                                 spacing: 5
 
                                 Text {
@@ -531,7 +527,7 @@ Item {
                                     text: index === 0 ? "Ahora" : (hItem.time || "")
                                     color: Qt.rgba(1, 1, 1, 0.85)
                                     font.family: root.fontFamily
-                                    font.pixelSize: 11.5
+                                    font.pixelSize: 11
                                     font.weight: Font.Medium
                                 }
 
@@ -546,7 +542,7 @@ Item {
                                     text: hItem.temp || "--°"
                                     color: "#FFFFFF"
                                     font.family: root.fontFamily
-                                    font.pixelSize: 13.5
+                                    font.pixelSize: 13
                                     font.weight: Font.DemiBold
                                 }
                             }
@@ -593,7 +589,7 @@ Item {
                                     text: dItem.day || ""
                                     color: "#FFFFFF"
                                     font.family: root.fontFamily
-                                    font.pixelSize: 13.5
+                                    font.pixelSize: 13
                                     font.weight: Font.DemiBold
                                 }
 

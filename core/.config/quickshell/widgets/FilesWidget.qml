@@ -325,7 +325,6 @@ Item {
                             Column {
                                 anchors.centerIn: parent
                                 spacing: 4
-                                horizontalAlignment: Text.AlignHCenter
 
                                 FileThumbnail {
                                     anchors.horizontalCenter: parent.horizontalCenter
@@ -422,7 +421,7 @@ Item {
                                         text: fItem.med_name || fItem.name || ""
                                         color: root.textPrimary
                                         font.family: root.fontFamily
-                                        font.pixelSize: 12.5
+                                        font.pixelSize: 12
                                         font.weight: Font.DemiBold
                                         maximumLineCount: 2
                                         wrapMode: Text.Wrap
@@ -506,7 +505,6 @@ Item {
                             Column {
                                 anchors.centerIn: parent
                                 spacing: 5
-                                horizontalAlignment: Text.AlignHCenter
 
                                 FileThumbnail {
                                     anchors.horizontalCenter: parent.horizontalCenter

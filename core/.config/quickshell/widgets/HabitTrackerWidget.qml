@@ -345,7 +345,7 @@ Item {
                             text: "MOVIMIENTO"
                             color: root.colMove
                             font.family: root.fontFamily
-                            font.pixelSize: 10.5
+                            font.pixelSize: 10
                             font.weight: Font.Bold
                             font.letterSpacing: 0.6
                         }
@@ -411,7 +411,7 @@ Item {
                             text: "EJERCICIO"
                             color: root.colExercise
                             font.family: root.fontFamily
-                            font.pixelSize: 10.5
+                            font.pixelSize: 10
                             font.weight: Font.Bold
                             font.letterSpacing: 0.6
                         }
@@ -477,7 +477,7 @@ Item {
                             text: "DE PIE / PASOS"
                             color: root.colStand
                             font.family: root.fontFamily
-                            font.pixelSize: 10.5
+                            font.pixelSize: 10
                             font.weight: Font.Bold
                             font.letterSpacing: 0.6
                         }
@@ -574,7 +574,7 @@ Item {
                                 text: "MOVIMIENTO"
                                 color: root.colMove
                                 font.family: root.fontFamily
-                                font.pixelSize: 10.5
+                                font.pixelSize: 10
                                 font.weight: Font.Bold
                                 font.letterSpacing: 0.6
                             }
@@ -604,7 +604,7 @@ Item {
                                 text: "EJERCICIO"
                                 color: root.colExercise
                                 font.family: root.fontFamily
-                                font.pixelSize: 10.5
+                                font.pixelSize: 10
                                 font.weight: Font.Bold
                                 font.letterSpacing: 0.6
                             }
@@ -634,7 +634,7 @@ Item {
                                 text: "DE PIE / PASOS"
                                 color: root.colStand
                                 font.family: root.fontFamily
-                                font.pixelSize: 10.5
+                                font.pixelSize: 10
                                 font.weight: Font.Bold
                                 font.letterSpacing: 0.6
                             }
@@ -685,7 +685,6 @@ Item {
                                 Column {
                                     anchors.centerIn: parent
                                     spacing: 6
-                                    horizontalAlignment: Text.AlignHCenter
 
                                     // Barras triples concéntricas verticales
                                     Row {

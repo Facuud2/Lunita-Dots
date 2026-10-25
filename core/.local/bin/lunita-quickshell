@@ -327,8 +327,24 @@ case "$1" in
     status|list)
         cmd_status
         ;;
+    start-component)
+        if [ -z "${2:-}" ]; then
+            error "Debe especificar el componente a iniciar (ej. widgets, bar, notifications)."
+            exit 1
+        fi
+        wait_for_wayland
+        ensure_display
+        start_component "$2"
+        ;;
+    stop-component)
+        if [ -z "${2:-}" ]; then
+            error "Debe especificar el componente a detener (ej. widgets, bar, notifications)."
+            exit 1
+        fi
+        stop_component "$2"
+        ;;
     *)
-        echo "Uso: lunita-quickshell {start|stop|restart|status}"
+        echo "Uso: lunita-quickshell {start|stop|restart|status|start-component <comp>|stop-component <comp>}"
         exit 1
         ;;
 esac

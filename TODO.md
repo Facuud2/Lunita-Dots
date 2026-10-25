@@ -743,3 +743,17 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   2. Renderiza los anillos concéntricos con estética nativa iOS-Like sin caer en diseños genéricos ("AI Slop").
   3. Los anillos reflejan en tiempo real el porcentaje de progreso que el usuario decida registrar.
 - **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-049] Reparar Autoinicio del Servicio de Widgets de Quickshell al Iniciar Sesión
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_049_FIX`
+- **Módulo(s):** Core / Widgets / Autostart / Quickshell
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WeatherWidget.qml`, `core/.config/quickshell/widgets/HabitTrackerWidget.qml`, `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.local/bin/lunita-quickshell`, `core/.config/hypr/modules/autostart.lua`
+- **Descripción:** El servicio y demonio de widgets en Quickshell (`quickshell -p ~/.config/quickshell/widgets`) no arrancaba con el inicio del sistema durante la invocación de `lunita-quickshell start` desde `autostart.lua`. La investigación del log reveló errores fatales de parseo en QML: asignaciones no enteras a `font.pixelSize` (`13.5`, `12.5`, `10.5` en `WeatherWidget.qml`, `HabitTrackerWidget.qml` y `FilesWidget.qml`) y asignaciones inválidas de `horizontalAlignment` sobre componentes `Column`, lo que provocaba el cierre prematuro inmediato del proceso con código de error 255. Adicionalmente, `lunita-quickshell` carecía de los comandos explícitos `start-component` y `stop-component` requeridos por utilidades como `lunita-widgets-toggle`.
+- **Criterios de Aceptación:**
+  1. `quickshell -p ~/.config/quickshell/widgets` carga sin fallos de parseo de propiedades ni excepciones en la consola.
+  2. `lunita-quickshell status` reporta el proceso de widgets en estado Activo con PID asignado.
+  3. Soporte para `start-component` y `stop-component` en `lunita-quickshell`.
+  4. Los archivos modificados pasan las validaciones obligatorias `bash -n` y `luac -p`.
+- **Dependencias:** Ninguna (Ejecución independiente)
