@@ -390,10 +390,23 @@ Item {
 
     function getScreenWidgets(screenName) {
         var s = screenName || "HDMI-A-1";
-        if (root.screensLayout && root.screensLayout[s] && Array.isArray(root.screensLayout[s]))
-            return root.screensLayout[s];
+        var rawList = (root.screensLayout && root.screensLayout[s] && Array.isArray(root.screensLayout[s]))
+            ? root.screensLayout[s]
+            : defaultScreenWidgets(s);
 
-        return defaultScreenWidgets(s);
+        // Bloqueo permanente del widget de reloj en tamaño pequeño (170x170)
+        return rawList.map((w) => {
+            if (w && (w.type === "clock" || w.id === "clk")) {
+                if (w.width !== 170 || w.height !== 170 || w.size !== "small") {
+                    var copy = Object.assign({}, w);
+                    copy.width = 170;
+                    copy.height = 170;
+                    copy.size = "small";
+                    return copy;
+                }
+            }
+            return w;
+        });
     }
 
     function setScreenWidgets(screenName, list) {
@@ -444,6 +457,12 @@ Item {
         var list = getScreenWidgets(sName).slice();
         for (var i = 0; i < list.length; i++) {
             if (list[i].id === id) {
+                if (list[i].type === "clock" || list[i].id === "clk") {
+                    list[i].width = 170;
+                    list[i].height = 170;
+                    list[i].size = "small";
+                    break;
+                }
                 list[i].width = Math.round(newWidth);
                 list[i].height = Math.round(newHeight);
                 if (newSize)
@@ -553,93 +572,8 @@ Item {
     }
 
     function toggleClockExpanded(screenName) {
-        var s = screenName;
-        if (!s) {
-            for (var k in root.screensLayout) {
-                var arr = root.screensLayout[k];
-                if (arr && arr.some((w) => {
-                    return w.type === "clock" || w.id === "clk";
-                })) {
-                    s = k;
-                    break;
-                }
-            }
-        }
-        if (!s)
-            s = "HDMI-A-1";
-
-        var list = getScreenWidgets(s).slice();
-        var clkIdx = -1;
-        for (var i = 0; i < list.length; i++) {
-            if (list[i].type === "clock" || list[i].id === "clk") {
-                clkIdx = i;
-                break;
-            }
-        }
-        if (clkIdx === -1)
-            return ;
-
-        var isExpanded = clockExpandedScreens[s] || false;
-        var newExp = Object.assign({
-        }, clockExpandedScreens);
-        var newSaved = Object.assign({
-        }, savedClockScreens);
-        if (!isExpanded) {
-            newSaved[s] = JSON.parse(JSON.stringify(list));
-            var clk = Object.assign({
-            }, list[clkIdx]);
-            var targetClkX = clk.x - 184;
-            var targetClkY = clk.y;
-            var expandShift = 184;
-            for (var j = 0; j < list.length; j++) {
-                if (j === clkIdx)
-                    continue;
-
-                var w = Object.assign({
-                }, list[j]);
-                if (Math.abs(w.y - targetClkY) < 60 && w.x <= clk.x) {
-                    w.x -= expandShift;
-                    list[j] = w;
-                }
-            }
-            clk.x = targetClkX;
-            clk.width = 354;
-            clk.size = "medium";
-            list[clkIdx] = clk;
-            newExp[s] = true;
-        } else {
-            if (newSaved[s]) {
-                list = newSaved[s];
-                delete newSaved[s];
-            } else {
-                var clkItem = Object.assign({
-                }, list[clkIdx]);
-                clkItem.x += 184;
-                clkItem.width = 170;
-                clkItem.size = "small";
-                list[clkIdx] = clkItem;
-                for (var m = 0; m < list.length; m++) {
-                    if (m === clkIdx)
-                        continue;
-
-                    var ow = Object.assign({
-                    }, list[m]);
-                    if (Math.abs(ow.y - clkItem.y) < 60 && ow.x < clkItem.x) {
-                        ow.x += 184;
-                        list[m] = ow;
-                    }
-                }
-            }
-            newExp[s] = false;
-        }
-        clockExpandedScreens = newExp;
-        savedClockScreens = newSaved;
-        var copy = Object.assign({
-        }, root.screensLayout);
-        copy[s] = list;
-        root.screensLayout = copy;
-        root.widgetsList = getScreenWidgets("HDMI-A-1");
-        root.screenLayoutChanged(s);
+        // [ISSUE-051] Clock widget está bloqueado permanentemente en tamaño pequeño y no se expande
+        return ;
     }
 
     function selectCalendarDay(dayNumber) {

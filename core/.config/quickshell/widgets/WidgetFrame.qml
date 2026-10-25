@@ -8,6 +8,7 @@ Item {
     property var widgetData: null
     property var canvas: null
     property string screenName: canvas ? canvas.screenName : "default"
+    readonly property bool isClock: root.widgetData && (root.widgetData.type === "clock" || root.widgetData.id === "clk")
     // Visual State & Jiggle Animation
     property bool isDragging: dragArea.drag.active
     property bool isResizing: false
@@ -26,7 +27,10 @@ Item {
                 root.y = newData.y;
 
         }
-        if (!root.isResizing) {
+        if (root.isClock) {
+            root.width = 170;
+            root.height = 170;
+        } else if (!root.isResizing) {
             if (root.width !== newData.width)
                 root.width = newData.width;
 
@@ -39,14 +43,14 @@ Item {
     // Position and size properties
     x: widgetData ? widgetData.x : 0
     y: widgetData ? widgetData.y : 0
-    width: widgetData ? widgetData.width : 170
-    height: widgetData ? widgetData.height : 170
+    width: isClock ? 170 : (widgetData ? widgetData.width : 170)
+    height: isClock ? 170 : (widgetData ? widgetData.height : 170)
     Component.onCompleted: {
         if (widgetData) {
             root.x = widgetData.x;
             root.y = widgetData.y;
-            root.width = widgetData.width;
-            root.height = widgetData.height;
+            root.width = root.isClock ? 170 : widgetData.width;
+            root.height = root.isClock ? 170 : widgetData.height;
         }
     }
     // Elevation & Scale feedback while dragging
@@ -337,6 +341,8 @@ Item {
         Rectangle {
             id: resizeHandle
 
+            visible: !root.isClock
+            enabled: !root.isClock
             x: parent.width - width + 8
             y: parent.height - height + 8
             width: 28

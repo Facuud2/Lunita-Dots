@@ -776,11 +776,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** [ISSUE-044]
 
 ### [ISSUE-051] Simplificación del Widget de Reloj y bloqueo en tamaño pequeño
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO [x]
 - **Prioridad:** MEDIA
 - **Rama Requerida:** `ISSUE_050_REFACTOR`
 - **Módulo(s):** Temas / Widgets / Reloj y Lienzo (`DesktopGridCanvas`)
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Reloj y gestor de redimensionamiento del lienzo)
+- **Archivos Afectados:** `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`
 - **Descripción:** 
   1. Eliminar toda lógica, consulta e interfaz relacionada con el clima dentro del widget de Reloj, dejando exclusivamente la visualización horaria.
   2. Restringir las dimensiones del widget de Reloj para que sea el único widget del ecosistema bloqueado permanentemente en su variante de tamaño pequeño, deshabilitando los controles o tiradores de expansión/redimensionamiento para este componente específico.
