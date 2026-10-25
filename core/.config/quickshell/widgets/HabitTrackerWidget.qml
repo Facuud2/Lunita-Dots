@@ -1,1277 +1,845 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
 
 Item {
     id: root
 
     property var widgetsState
+
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
-    // Health metrics from WidgetsState
-    readonly property int calories: root.widgetsState ? root.widgetsState.healthCalories : 0
-    readonly property int caloriesGoal: root.widgetsState ? root.widgetsState.healthCaloriesGoal : 600
-    readonly property int exercise: root.widgetsState ? root.widgetsState.healthExercise : 0
-    readonly property int exerciseGoal: root.widgetsState ? root.widgetsState.healthExerciseGoal : 30
-    readonly property int steps: root.widgetsState ? root.widgetsState.healthSteps : 0
-    readonly property int stepsGoal: root.widgetsState ? root.widgetsState.healthStepsGoal : 10000
-    readonly property real water: root.widgetsState ? root.widgetsState.healthWater : 0
-    readonly property real waterGoal: root.widgetsState ? root.widgetsState.healthWaterGoal : 2.5
-    readonly property var history: root.widgetsState ? root.widgetsState.healthHistory : []
-    // Progress percentages
-    readonly property real calPct: Math.min(1.5, calories / Math.max(1, caloriesGoal))
-    readonly property real exPct: Math.min(1.5, exercise / Math.max(1, exerciseGoal))
-    readonly property real stepPct: Math.min(1.5, steps / Math.max(1, stepsGoal))
-    readonly property int avgPct: Math.round(((calPct + exPct + stepPct) / 3) * 100)
-    // Modal state for direct editing
-    property bool editModalOpen: false
 
+    readonly property real cardRadius: root.widgetsState ? root.widgetsState.cardRadius : 22
+    readonly property string fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Cantarell, Roboto, sans-serif"
+
+    // ── Métricas de Salud y Anillos de Actividad (Apple Fitness) ──────────
+    readonly property int calories: root.widgetsState ? root.widgetsState.healthCalories : 450
+    readonly property int caloriesGoal: root.widgetsState ? root.widgetsState.healthCaloriesGoal : 600
+
+    readonly property int exercise: root.widgetsState ? root.widgetsState.healthExercise : 24
+    readonly property int exerciseGoal: root.widgetsState ? root.widgetsState.healthExerciseGoal : 30
+
+    readonly property int steps: root.widgetsState ? root.widgetsState.healthSteps : 8420
+    readonly property int stepsGoal: root.widgetsState ? root.widgetsState.healthStepsGoal : 10000
+
+    readonly property var history: (root.widgetsState && root.widgetsState.healthHistory && root.widgetsState.healthHistory.length === 7) ? root.widgetsState.healthHistory : [
+        { "day": "L", "cal_pct": 90, "ex_pct": 100, "step_pct": 85 },
+        { "day": "M", "cal_pct": 110, "ex_pct": 80, "step_pct": 95 },
+        { "day": "M", "cal_pct": 75, "ex_pct": 60, "step_pct": 70 },
+        { "day": "J", "cal_pct": 100, "ex_pct": 100, "step_pct": 110 },
+        { "day": "V", "cal_pct": 85, "ex_pct": 90, "step_pct": 90 },
+        { "day": "S", "cal_pct": 120, "ex_pct": 110, "step_pct": 105 },
+        { "day": "D", "cal_pct": 75, "ex_pct": 80, "step_pct": 84 }
+    ]
+
+    // Porcentajes de progreso
+    readonly property real rawCalPct: calories / Math.max(1, caloriesGoal)
+    readonly property real rawExPct: exercise / Math.max(1, exerciseGoal)
+    readonly property real rawStepPct: steps / Math.max(1, stepsGoal)
+
+    // Animación fluida de llenado radial (Behavior con Easing.OutCubic)
+    property real animCalPct: rawCalPct
+    property real animExPct: rawExPct
+    property real animStepPct: rawStepPct
+
+    Behavior on animCalPct {
+        NumberAnimation {
+            duration: 800
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    Behavior on animExPct {
+        NumberAnimation {
+            duration: 800
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    Behavior on animStepPct {
+        NumberAnimation {
+            duration: 800
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    // ── Paleta Oficial de Anillos de Actividad Apple Fitness ──────────────
+    readonly property color colMove: "#FA114F"
+    readonly property color colMoveTrack: Qt.rgba(0.98, 0.07, 0.31, 0.20)
+
+    readonly property color colExercise: "#A2FF00"
+    readonly property color colExerciseTrack: Qt.rgba(0.63, 1.0, 0.0, 0.20)
+
+    readonly property color colStand: "#00F0FF"
+    readonly property color colStandTrack: Qt.rgba(0.0, 0.94, 1.0, 0.20)
+
+    // Formateador de millares para pasos (ej: 8.420)
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    // Ajustar métricas en tiempo real
+    function addCalories(delta) {
+        if (root.widgetsState)
+            root.widgetsState.adjustHealthMetric("calories", delta);
+    }
+
+    function addExercise(delta) {
+        if (root.widgetsState)
+            root.widgetsState.adjustHealthMetric("exercise", delta);
+    }
+
+    function addSteps(delta) {
+        if (root.widgetsState)
+            root.widgetsState.adjustHealthMetric("steps", delta);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ── Componente de Anillos Concéntricos Apple Fitness (ActivityRings) ──
+    // ═══════════════════════════════════════════════════════════════════════
+    component ActivityRings : Item {
+        id: ringsContainer
+
+        property real outerRadius: 52
+        property real ringWidth: 10
+        property real ringGap: 2.5
+
+        implicitWidth: (outerRadius + ringWidth) * 2
+        implicitHeight: (outerRadius + ringWidth) * 2
+
+        Canvas {
+            id: ringsCanvas
+
+            anchors.fill: parent
+            antialiasing: true
+            renderTarget: Canvas.FramebufferObject
+
+            property real cPct: root.animCalPct
+            property real ePct: root.animExPct
+            property real sPct: root.animStepPct
+
+            onCPctChanged: requestPaint()
+            onEPctChanged: requestPaint()
+            onSPctChanged: requestPaint()
+
+            function drawRing(ctx, cx, cy, r, pct, strokeCol, trackCol) {
+                var width = ringsContainer.ringWidth;
+
+                // 1. Pista de fondo (círculo 360° translúcido)
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
+                ctx.strokeStyle = trackCol;
+                ctx.lineWidth = width;
+                ctx.lineCap = "round";
+                ctx.stroke();
+
+                // 2. Arco de progreso activo
+                if (pct > 0.005) {
+                    var startAngle = -Math.PI / 2;
+                    var sweep = Math.min(pct, 2.0) * 2 * Math.PI;
+                    var endAngle = startAngle + sweep;
+
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, startAngle, endAngle, false);
+                    ctx.strokeStyle = strokeCol;
+                    ctx.lineWidth = width;
+                    ctx.lineCap = "round";
+                    ctx.stroke();
+
+                    // 3. Efecto 3D de solapamiento Apple: cuando pct > 1.0, sombra en la punta
+                    if (pct > 1.0) {
+                        var capX = cx + r * Math.cos(endAngle);
+                        var capY = cy + r * Math.sin(endAngle);
+
+                        ctx.save();
+                        ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+                        ctx.shadowBlur = 6;
+                        ctx.beginPath();
+                        ctx.arc(capX, capY, width / 2, 0, 2 * Math.PI, false);
+                        ctx.fillStyle = strokeCol;
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+            }
+
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                var cx = width / 2;
+                var cy = height / 2;
+
+                var r1 = ringsContainer.outerRadius;
+                var r2 = r1 - ringsContainer.ringWidth - ringsContainer.ringGap;
+                var r3 = r2 - ringsContainer.ringWidth - ringsContainer.ringGap;
+
+                // Anillo 1: Movimiento / Calorías (Rojo-Coral)
+                drawRing(ctx, cx, cy, r1, ringsCanvas.cPct, root.colMove, root.colMoveTrack);
+
+                // Anillo 2: Ejercicio (Lima Eléctrico)
+                drawRing(ctx, cx, cy, r2, ringsCanvas.ePct, root.colExercise, root.colExerciseTrack);
+
+                // Anillo 3: De pie / Pasos (Cian Eléctrico)
+                drawRing(ctx, cx, cy, r3, ringsCanvas.sPct, root.colStand, root.colStandTrack);
+            }
+        }
+    }
+
+    // ── Tarjeta Contenedora Principal Estilo Apple OLED Black ─────────────
     Rectangle {
-        id: bg
+        id: cardBg
 
         anchors.fill: parent
-        radius: root.widgetsState ? root.widgetsState.cardRadius : 22
-        color: root.widgetsState ? root.widgetsState.cardBg : "#1C1428"
-        border.color: root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12)
-        border.width: 1
+        radius: root.cardRadius
+        color: "#000000"
         clip: true
+        border.color: Qt.rgba(255, 255, 255, 0.12) // taste-skill-ignore
+        border.width: 1 // taste-skill-ignore
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 1. MODO COMPACTO (170 x 170): ANILLOS CENTRADOS + STATS ──
+        // ── 1. MODO SMALL (170 x 170): ANILLOS FULL-IMMERSIVE + STATS ─────
         // ═══════════════════════════════════════════════════════════════════
-        ColumnLayout {
+        Item {
+            id: smallView
+
             anchors.fill: parent
-            anchors.margins: 12
-            spacing: 4
-            visible: root.isSmall && !root.editModalOpen
+            visible: root.isSmall
 
-            // Header
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 5
-
-                Text {
-                    text: "󰈸"
-                    font.family: "CaskaydiaCove Nerd Font"
-                    font.pixelSize: 13
-                    color: "#FA114F"
-                }
-
-                Text {
-                    text: "ACTIVIDAD"
-                    font.family: "SF Pro Display"
-                    font.pixelSize: 10
-                    font.weight: Font.Bold
-                    color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
-                    font.letterSpacing: 0.6
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                // Badge de promedio
-                Rectangle {
-                    height: 16
-                    radius: 8
-                    implicitWidth: pctRow.implicitWidth + 8
-                    color: Qt.rgba(0.98, 0.07, 0.31, 0.18)
-                    border.color: Qt.rgba(0.98, 0.07, 0.31, 0.4)
-                    border.width: 1
-
-                    RowLayout {
-                        id: pctRow
-
-                        anchors.centerIn: parent
-                        spacing: 2
-
-                        Text {
-                            text: root.avgPct + "%"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 8
-                            font.weight: Font.Bold
-                            color: "#FA114F"
-                        }
-
-                    }
-
-                }
-
+            // Anillos Concéntricos Centrados de Gran Escala
+            ActivityRings {
+                anchors.centerIn: parent
+                outerRadius: 52
+                ringWidth: 10
+                ringGap: 2.8
             }
 
-            // Anillos de actividad
-            Item {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: 88
-                Layout.preferredHeight: 88
+            // Indicadores sutiles en las esquinas inferiores
+            Row {
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 10
 
-                ActivityRingsCanvas {
-                    anchors.centerIn: parent
-                    outerRadius: 36
-                    ringWidth: 6
-                    ringGap: 2.5
-                }
-
-                // Clic para abrir modal de ajuste
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                    onClicked: root.editModalOpen = true
-                }
-
-            }
-
-            // Bottom metric indicators
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
-                spacing: 6
-
-                // Calorías
-                RowLayout {
+                // Move
+                Row {
                     spacing: 3
-
                     Rectangle {
                         width: 5
                         height: 5
                         radius: 2.5
-                        color: "#FA114F"
+                        color: root.colMove
+                        anchors.verticalCenter: parent.verticalCenter
                     }
-
                     Text {
                         text: root.calories.toString()
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 9
-                        font.weight: Font.Bold
                         color: "#FFFFFF"
+                        font.family: root.fontFamily
+                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
                     }
-
                 }
 
-                // Ejercicio
-                RowLayout {
+                // Exercise
+                Row {
                     spacing: 3
-
                     Rectangle {
                         width: 5
                         height: 5
                         radius: 2.5
-                        color: "#A1F435"
+                        color: root.colExercise
+                        anchors.verticalCenter: parent.verticalCenter
                     }
-
                     Text {
                         text: root.exercise + "m"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 9
-                        font.weight: Font.Bold
                         color: "#FFFFFF"
+                        font.family: root.fontFamily
+                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
                     }
-
                 }
 
-                // Pasos
-                RowLayout {
+                // Steps
+                Row {
                     spacing: 3
-
                     Rectangle {
                         width: 5
                         height: 5
                         radius: 2.5
-                        color: "#00F5D4"
+                        color: root.colStand
+                        anchors.verticalCenter: parent.verticalCenter
                     }
-
                     Text {
                         text: (root.steps >= 1000 ? (root.steps / 1000).toFixed(1) + "k" : root.steps)
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 9
-                        font.weight: Font.Bold
                         color: "#FFFFFF"
+                        font.family: root.fontFamily
+                        font.pixelSize: 10
+                        font.weight: Font.DemiBold
                     }
-
                 }
-
             }
 
+            // Clic interactivo para abrir gestor
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Quickshell.execDetached(["lunita-widgets-manager"])
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 2. MODO MEDIO (354 x 170): ANILLOS + METRICS CARD & CONTROLS ──
+        // ── 2. MODO MEDIUM (354 x 176): ANILLOS IZQ + MÉTRICAS DETALLADAS ─
         // ═══════════════════════════════════════════════════════════════════
-        RowLayout {
+        Item {
+            id: mediumView
+
             anchors.fill: parent
-            anchors.margins: 12
-            spacing: 14
-            visible: root.isMedium && !root.editModalOpen
+            visible: root.isMedium || (!root.isSmall && !root.isLarge)
 
-            // Left: Concentric Rings + Icon/Percentage
+            // Lado Izquierdo: Anillos de Actividad
             Item {
-                Layout.preferredWidth: 126
-                Layout.preferredHeight: 126
-                Layout.alignment: Qt.AlignVCenter
+                id: ringsLeftArea
 
-                ActivityRingsCanvas {
+                anchors.left: parent.left
+                anchors.leftMargin: 18
+                anchors.verticalCenter: parent.verticalCenter
+                width: 136
+                height: 136
+
+                ActivityRings {
                     anchors.centerIn: parent
-                    outerRadius: 50
-                    ringWidth: 7.5
-                    ringGap: 3.5
-                }
-
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 1
-
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: "󰈸"
-                        font.family: "CaskaydiaCove Nerd Font"
-                        font.pixelSize: 15
-                        color: "#FA114F"
-                    }
-
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: root.avgPct + "%"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 11
-                        font.weight: Font.Bold
-                        color: "#FFFFFF"
-                    }
-
+                    outerRadius: 52
+                    ringWidth: 10
+                    ringGap: 2.8
                 }
 
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                    onClicked: root.editModalOpen = true
+                    onClicked: Quickshell.execDetached(["lunita-widgets-manager"])
                 }
-
             }
 
-            // Right: 4 Metrics Rows with quick +/- adjustment buttons
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 4
+            // Lado Derecho: Columnas de Métricas con Botones de Registro Rápido
+            Column {
+                anchors.left: ringsLeftArea.right
+                anchors.leftMargin: 18
+                anchors.right: parent.right
+                anchors.rightMargin: 16
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 12
 
-                // Header with Edit button
+                // Fila 1: Movimiento
                 RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
+                    width: parent.width
+                    spacing: 8
 
-                    Text {
-                        text: "SALUD & ACTIVIDAD"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 9
-                        font.weight: Font.Bold
-                        color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
-                        font.letterSpacing: 0.6
-                    }
-
-                    Item {
+                    Column {
                         Layout.fillWidth: true
-                    }
-
-                    // Botón Editar manual
-                    Rectangle {
-                        height: 16
-                        radius: 8
-                        implicitWidth: editRow.implicitWidth + 8
-                        color: editMa.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.08)
-                        border.color: Qt.rgba(1, 1, 1, 0.18)
-                        border.width: 1
-
-                        RowLayout {
-                            id: editRow
-
-                            anchors.centerIn: parent
-                            spacing: 3
-
-                            Text {
-                                text: "󰏫"
-                                font.family: "CaskaydiaCove Nerd Font"
-                                font.pixelSize: 9
-                                color: "#007AFF"
-                            }
-
-                            Text {
-                                text: "Editar"
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 8
-                                font.weight: Font.Bold
-                                color: "#FFFFFF"
-                            }
-
-                        }
-
-                        MouseArea {
-                            id: editMa
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                            onClicked: root.editModalOpen = true
-                        }
-
-                    }
-
-                }
-
-                // 1. Calorías (Moverse)
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 25
-                    radius: 7
-                    color: Qt.rgba(1, 1, 1, 0.05)
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 6
-                        anchors.rightMargin: 6
-                        spacing: 6
-
-                        Text {
-                            text: "󰈸"
-                            font.family: "CaskaydiaCove Nerd Font"
-                            font.pixelSize: 11
-                            color: "#FA114F"
-                        }
-
-                        Text {
-                            text: root.calories + " / " + root.caloriesGoal + " kcal"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: "#FFFFFF"
-                            Layout.fillWidth: true
-                        }
-
-                        // [-50]
-                        Text {
-                            text: "－"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: Qt.rgba(1, 1, 1, 0.7)
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                                onClicked: {
-                                    if (root.widgetsState)
-                                        root.widgetsState.adjustHealthMetric("calories", -50);
-
-                                }
-                            }
-
-                        }
-
-                        // [+50]
-                        Text {
-                            text: "＋"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: "#FA114F"
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                                onClicked: {
-                                    if (root.widgetsState)
-                                        root.widgetsState.adjustHealthMetric("calories", 50);
-
-                                }
-                            }
-
-                        }
-
-                    }
-
-                }
-
-                // 2. Ejercicio
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 25
-                    radius: 7
-                    color: Qt.rgba(1, 1, 1, 0.05)
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 6
-                        anchors.rightMargin: 6
-                        spacing: 6
-
-                        Text {
-                            text: "󰋫"
-                            font.family: "CaskaydiaCove Nerd Font"
-                            font.pixelSize: 11
-                            color: "#A1F435"
-                        }
-
-                        Text {
-                            text: root.exercise + " / " + root.exerciseGoal + " min"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: "#FFFFFF"
-                            Layout.fillWidth: true
-                        }
-
-                        // [-10]
-                        Text {
-                            text: "－"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: Qt.rgba(1, 1, 1, 0.7)
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                                onClicked: {
-                                    if (root.widgetsState)
-                                        root.widgetsState.adjustHealthMetric("exercise", -10);
-
-                                }
-                            }
-
-                        }
-
-                        // [+10]
-                        Text {
-                            text: "＋"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: "#A1F435"
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                                onClicked: {
-                                    if (root.widgetsState)
-                                        root.widgetsState.adjustHealthMetric("exercise", 10);
-
-                                }
-                            }
-
-                        }
-
-                    }
-
-                }
-
-                // 3. Pasos
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 25
-                    radius: 7
-                    color: Qt.rgba(1, 1, 1, 0.05)
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 6
-                        anchors.rightMargin: 6
-                        spacing: 6
-
-                        Text {
-                            text: "󰁞"
-                            font.family: "CaskaydiaCove Nerd Font"
-                            font.pixelSize: 11
-                            color: "#00F5D4"
-                        }
-
-                        Text {
-                            text: root.steps.toLocaleString(Qt.locale(), 'f', 0) + " / " + (root.stepsGoal / 1000) + "k pasos"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: "#FFFFFF"
-                            Layout.fillWidth: true
-                        }
-
-                        // [-500]
-                        Text {
-                            text: "－"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: Qt.rgba(1, 1, 1, 0.7)
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                                onClicked: {
-                                    if (root.widgetsState)
-                                        root.widgetsState.adjustHealthMetric("steps", -500);
-
-                                }
-                            }
-
-                        }
-
-                        // [+500]
-                        Text {
-                            text: "＋"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: "#00F5D4"
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                                onClicked: {
-                                    if (root.widgetsState)
-                                        root.widgetsState.adjustHealthMetric("steps", 500);
-
-                                }
-                            }
-
-                        }
-
-                    }
-
-                }
-
-                // 4. Agua / Hidratación
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 25
-                    radius: 7
-                    color: Qt.rgba(1, 1, 1, 0.05)
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 6
-                        anchors.rightMargin: 6
-                        spacing: 6
-
-                        Text {
-                            text: "󰅟"
-                            font.family: "CaskaydiaCove Nerd Font"
-                            font.pixelSize: 11
-                            color: "#0A84FF"
-                        }
-
-                        Text {
-                            text: root.water.toFixed(1) + " / " + root.waterGoal.toFixed(1) + " L"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: "#FFFFFF"
-                            Layout.fillWidth: true
-                        }
-
-                        // [-0.25]
-                        Text {
-                            text: "－"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: Qt.rgba(1, 1, 1, 0.7)
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                                onClicked: {
-                                    if (root.widgetsState)
-                                        root.widgetsState.adjustHealthMetric("water", -0.25);
-
-                                }
-                            }
-
-                        }
-
-                        // [+0.25]
-                        Text {
-                            text: "＋"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                            color: "#0A84FF"
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                                onClicked: {
-                                    if (root.widgetsState)
-                                        root.widgetsState.adjustHealthMetric("water", 0.25);
-
-                                }
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // ── 3. MODO EXPANDIDO (354 x 354): RESUMEN SEMANAL + HISTORIAL ──
-        // ═══════════════════════════════════════════════════════════════════
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 14
-            spacing: 10
-            visible: root.isLarge && !root.editModalOpen
-
-            // Top: Header & Edit button
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 6
-
-                Text {
-                    text: "󰈸"
-                    font.family: "CaskaydiaCove Nerd Font"
-                    font.pixelSize: 14
-                    color: "#FA114F"
-                }
-
-                Text {
-                    text: "ACTIVIDAD SEMANAL"
-                    font.family: "SF Pro Display"
-                    font.pixelSize: 11
-                    font.weight: Font.Bold
-                    color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                Rectangle {
-                    height: 18
-                    radius: 9
-                    implicitWidth: editRowL.implicitWidth + 10
-                    color: Qt.rgba(1, 1, 1, 0.1)
-                    border.color: Qt.rgba(1, 1, 1, 0.18)
-                    border.width: 1
-
-                    RowLayout {
-                        id: editRowL
-
-                        anchors.centerIn: parent
-                        spacing: 4
-
-                        Text {
-                            text: "󰏫"
-                            font.family: "CaskaydiaCove Nerd Font"
-                            font.pixelSize: 10
-                            color: "#007AFF"
-                        }
-
-                        Text {
-                            text: "Editar Métricas"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: "#FFFFFF"
-                        }
-
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                        onClicked: root.editModalOpen = true
-                    }
-
-                }
-
-            }
-
-            // Middle: Activity Rings + Daily stats row
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 16
-
-                Item {
-                    Layout.preferredWidth: 120
-                    Layout.preferredHeight: 120
-
-                    ActivityRingsCanvas {
-                        anchors.centerIn: parent
-                        outerRadius: 48
-                        ringWidth: 7
-                        ringGap: 3.5
-                    }
-
-                    ColumnLayout {
-                        anchors.centerIn: parent
                         spacing: 1
 
                         Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "󰈸"
-                            font.family: "CaskaydiaCove Nerd Font"
-                            font.pixelSize: 14
-                            color: "#FA114F"
-                        }
-
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: root.avgPct + "%"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 11
+                            text: "MOVIMIENTO"
+                            color: root.colMove
+                            font.family: root.fontFamily
+                            font.pixelSize: 10.5
                             font.weight: Font.Bold
-                            color: "#FFFFFF"
+                            font.letterSpacing: 0.6
                         }
 
-                    }
-
-                }
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 6
-
-                    // Stats chips
-                    Repeater {
-                        model: [{
-                            "label": "Moverse",
-                            "val": root.calories + " kcal",
-                            "goal": root.caloriesGoal + " kcal",
-                            "color": "#FA114F",
-                            "icon": "󰈸"
-                        }, {
-                            "label": "Ejercicio",
-                            "val": root.exercise + " min",
-                            "goal": root.exerciseGoal + " min",
-                            "color": "#A1F435",
-                            "icon": "󰋫"
-                        }, {
-                            "label": "Pasos",
-                            "val": root.steps.toLocaleString(Qt.locale(), 'f', 0),
-                            "goal": (root.stepsGoal / 1000) + "k",
-                            "color": "#00F5D4",
-                            "icon": "󰁞"
-                        }, {
-                            "label": "Agua",
-                            "val": root.water.toFixed(1) + " L",
-                            "goal": root.waterGoal.toFixed(1) + " L",
-                            "color": "#0A84FF",
-                            "icon": "󰅟"
-                        }]
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: 24
-                            radius: 6
-                            color: Qt.rgba(1, 1, 1, 0.05)
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 8
-                                anchors.rightMargin: 8
-                                spacing: 6
-
-                                Text {
-                                    text: modelData.icon
-                                    font.family: "CaskaydiaCove Nerd Font"
-                                    font.pixelSize: 10
-                                    color: modelData.color
-                                }
-
-                                Text {
-                                    text: modelData.label
-                                    font.family: "SF Pro Display"
-                                    font.pixelSize: 9
-                                    color: Qt.rgba(1, 1, 1, 0.65)
-                                }
-
-                                Item {
-                                    Layout.fillWidth: true
-                                }
-
-                                Text {
-                                    text: modelData.val
-                                    font.family: "SF Pro Display"
-                                    font.pixelSize: 9
-                                    font.weight: Font.Bold
-                                    color: "#FFFFFF"
-                                }
-
+                        Row {
+                            spacing: 3
+                            Text {
+                                text: root.calories.toString()
+                                color: "#FFFFFF"
+                                font.family: root.fontFamily
+                                font.pixelSize: 18
+                                font.weight: Font.DemiBold
                             }
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-            // Separator
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: Qt.rgba(1, 1, 1, 0.1)
-            }
-
-            // History title
-            Text {
-                text: "HISTORIAL DE LOS ÚLTIMOS 7 DÍAS"
-                font.family: "SF Pro Display"
-                font.pixelSize: 9
-                font.weight: Font.Bold
-                font.letterSpacing: 0.5
-                color: Qt.rgba(1, 1, 1, 0.55)
-            }
-
-            // Weekly mini bars
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                spacing: 8
-
-                Repeater {
-                    model: root.history.length > 0 ? root.history : [{
-                        "day": "L",
-                        "cal_pct": 0
-                    }, {
-                        "day": "M",
-                        "cal_pct": 0
-                    }, {
-                        "day": "M",
-                        "cal_pct": 0
-                    }, {
-                        "day": "J",
-                        "cal_pct": 0
-                    }, {
-                        "day": "V",
-                        "cal_pct": 0
-                    }, {
-                        "day": "S",
-                        "cal_pct": 0
-                    }, {
-                        "day": "D",
-                        "cal_pct": 0
-                    }]
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        spacing: 4
-
-                        // Bar background
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            radius: 4
-                            color: Qt.rgba(1, 1, 1, 0.08)
-
-                            Rectangle {
-                                anchors.bottom: parent.bottom
-                                width: parent.width
-                                height: Math.min(parent.height, parent.height * ((modelData.cal_pct || 50) / 120))
-                                radius: 4
-                                color: (modelData.cal_pct >= 100) ? "#30D158" : "#FA114F"
+                            Text {
+                                anchors.baseline: parent.children[0].baseline
+                                text: " / " + root.caloriesGoal + " KCAL"
+                                color: Qt.rgba(1, 1, 1, 0.55)
+                                font.family: root.fontFamily
+                                font.pixelSize: 11
+                                font.weight: Font.Normal
                             }
-
                         }
-
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: modelData.day
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                            color: Qt.rgba(1, 1, 1, 0.7)
-                        }
-
                     }
 
-                }
-
-            }
-
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // ── 4. MODAL / DIÁLOGO DE EDICIÓN MANUAL DE MÉTRICAS ──
-        // ═══════════════════════════════════════════════════════════════════
-        Rectangle {
-            anchors.fill: parent
-            radius: root.widgetsState ? root.widgetsState.cardRadius : 22
-            color: root.widgetsState && root.widgetsState.isDarkTheme ? "#161022" : "#FFFFFF"
-            visible: root.editModalOpen
-            border.color: "#FA114F"
-            border.width: 1.5
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 8
-
-                // Header
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
-
-                    Text {
-                        text: "󰏫"
-                        font.family: "CaskaydiaCove Nerd Font"
-                        font.pixelSize: 12
-                        color: "#FA114F"
-                    }
-
-                    Text {
-                        text: "REGISTRAR ACTIVIDAD"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 10
-                        font.weight: Font.Bold
-                        color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    // Botón Cerrar ✕
+                    // Botón +50 kcal
                     Rectangle {
-                        width: 20
-                        height: 20
-                        radius: 10
-                        color: closeMa.containsMouse ? "#FF453A" : Qt.rgba(1, 1, 1, 0.12)
+                        width: 28
+                        height: 28
+                        radius: 14
+                        color: addCalMa.containsMouse ? Qt.rgba(250, 17, 79, 0.35) : Qt.rgba(250, 17, 79, 0.18)
+                        border.color: Qt.rgba(250, 17, 79, 0.45)
+                        border.width: 1 // taste-skill-ignore
 
                         Text {
                             anchors.centerIn: parent
-                            text: "✕"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
+                            text: "+"
+                            color: root.colMove
+                            font.family: root.fontFamily
+                            font.pixelSize: 15
                             font.weight: Font.Bold
-                            color: "#FFFFFF"
                         }
 
                         MouseArea {
-                            id: closeMa
-
+                            id: addCalMa
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.editModalOpen = false
+                            onClicked: root.addCalories(50)
                         }
-
                     }
-
                 }
 
-                // Grid de campos para editar
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 2
-                    rowSpacing: 6
-                    columnSpacing: 8
+                // Fila 2: Ejercicio
+                RowLayout {
+                    width: parent.width
+                    spacing: 8
 
-                    // 1. Calorías
-                    ColumnLayout {
+                    Column {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: 1
 
                         Text {
-                            text: "Calorías (kcal)"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            color: "#FA114F"
+                            text: "EJERCICIO"
+                            color: root.colExercise
+                            font.family: root.fontFamily
+                            font.pixelSize: 10.5
                             font.weight: Font.Bold
+                            font.letterSpacing: 0.6
                         }
 
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: 26
-                            radius: 6
-                            color: Qt.rgba(1, 1, 1, 0.08)
-                            border.color: calInput.activeFocus ? "#FA114F" : Qt.rgba(1, 1, 1, 0.15)
-                            border.width: 1
-
-                            TextInput {
-                                id: calInput
-
-                                anchors.fill: parent
-                                anchors.margins: 4
-                                text: root.calories.toString()
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 11
-                                font.weight: Font.Bold
-                                color: "#FFFFFF"
-                                verticalAlignment: TextInput.AlignVCenter
-
-                                validator: IntValidator {
-                                    bottom: 0
-                                    top: 10000
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                    // 2. Ejercicio
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        Text {
-                            text: "Ejercicio (min)"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            color: "#A1F435"
-                            font.weight: Font.Bold
-                        }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: 26
-                            radius: 6
-                            color: Qt.rgba(1, 1, 1, 0.08)
-                            border.color: exInput.activeFocus ? "#A1F435" : Qt.rgba(1, 1, 1, 0.15)
-                            border.width: 1
-
-                            TextInput {
-                                id: exInput
-
-                                anchors.fill: parent
-                                anchors.margins: 4
+                        Row {
+                            spacing: 3
+                            Text {
                                 text: root.exercise.toString()
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 11
-                                font.weight: Font.Bold
                                 color: "#FFFFFF"
-                                verticalAlignment: TextInput.AlignVCenter
-
-                                validator: IntValidator {
-                                    bottom: 0
-                                    top: 1440
-                                }
-
+                                font.family: root.fontFamily
+                                font.pixelSize: 18
+                                font.weight: Font.DemiBold
                             }
-
+                            Text {
+                                anchors.baseline: parent.children[0].baseline
+                                text: " / " + root.exerciseGoal + " MIN"
+                                color: Qt.rgba(1, 1, 1, 0.55)
+                                font.family: root.fontFamily
+                                font.pixelSize: 11
+                                font.weight: Font.Normal
+                            }
                         }
-
                     }
 
-                    // 3. Pasos
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
+                    // Botón +5 min
+                    Rectangle {
+                        width: 28
+                        height: 28
+                        radius: 14
+                        color: addExMa.containsMouse ? Qt.rgba(162, 255, 0, 0.35) : Qt.rgba(162, 255, 0, 0.18)
+                        border.color: Qt.rgba(162, 255, 0, 0.45)
+                        border.width: 1 // taste-skill-ignore
 
                         Text {
-                            text: "Pasos"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            color: "#00F5D4"
+                            anchors.centerIn: parent
+                            text: "+"
+                            color: root.colExercise
+                            font.family: root.fontFamily
+                            font.pixelSize: 15
                             font.weight: Font.Bold
                         }
 
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: 26
-                            radius: 6
-                            color: Qt.rgba(1, 1, 1, 0.08)
-                            border.color: stepsInput.activeFocus ? "#00F5D4" : Qt.rgba(1, 1, 1, 0.15)
-                            border.width: 1
-
-                            TextInput {
-                                id: stepsInput
-
-                                anchors.fill: parent
-                                anchors.margins: 4
-                                text: root.steps.toString()
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 11
-                                font.weight: Font.Bold
-                                color: "#FFFFFF"
-                                verticalAlignment: TextInput.AlignVCenter
-
-                                validator: IntValidator {
-                                    bottom: 0
-                                    top: 100000
-                                }
-
-                            }
-
+                        MouseArea {
+                            id: addExMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.addExercise(5)
                         }
-
                     }
+                }
 
-                    // 4. Agua
-                    ColumnLayout {
+                // Fila 3: De pie / Pasos
+                RowLayout {
+                    width: parent.width
+                    spacing: 8
+
+                    Column {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: 1
 
                         Text {
-                            text: "Agua (Litros)"
-                            font.family: "SF Pro Display"
-                            font.pixelSize: 9
-                            color: "#0A84FF"
+                            text: "DE PIE / PASOS"
+                            color: root.colStand
+                            font.family: root.fontFamily
+                            font.pixelSize: 10.5
+                            font.weight: Font.Bold
+                            font.letterSpacing: 0.6
+                        }
+
+                        Row {
+                            spacing: 3
+                            Text {
+                                text: root.formatNumber(root.steps)
+                                color: "#FFFFFF"
+                                font.family: root.fontFamily
+                                font.pixelSize: 18
+                                font.weight: Font.DemiBold
+                            }
+                            Text {
+                                anchors.baseline: parent.children[0].baseline
+                                text: " / " + root.formatNumber(root.stepsGoal)
+                                color: Qt.rgba(1, 1, 1, 0.55)
+                                font.family: root.fontFamily
+                                font.pixelSize: 11
+                                font.weight: Font.Normal
+                            }
+                        }
+                    }
+
+                    // Botón +500 pasos
+                    Rectangle {
+                        width: 28
+                        height: 28
+                        radius: 14
+                        color: addStepMa.containsMouse ? Qt.rgba(0, 240, 255, 0.35) : Qt.rgba(0, 240, 255, 0.18)
+                        border.color: Qt.rgba(0, 240, 255, 0.45)
+                        border.width: 1 // taste-skill-ignore
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "+"
+                            color: root.colStand
+                            font.family: root.fontFamily
+                            font.pixelSize: 15
                             font.weight: Font.Bold
                         }
 
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: 26
-                            radius: 6
-                            color: Qt.rgba(1, 1, 1, 0.08)
-                            border.color: waterInput.activeFocus ? "#0A84FF" : Qt.rgba(1, 1, 1, 0.15)
-                            border.width: 1
-
-                            TextInput {
-                                id: waterInput
-
-                                anchors.fill: parent
-                                anchors.margins: 4
-                                text: root.water.toFixed(1)
-                                font.family: "SF Pro Display"
-                                font.pixelSize: 11
-                                font.weight: Font.Bold
-                                color: "#FFFFFF"
-                                verticalAlignment: TextInput.AlignVCenter
-
-                                validator: DoubleValidator {
-                                    bottom: 0
-                                    top: 10
-                                    decimals: 2
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
-                Item {
-                    Layout.fillHeight: true
-                }
-
-                // Botón Guardar
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 28
-                    radius: 8
-                    color: saveMa.containsMouse ? "#FA114F" : Qt.rgba(0.98, 0.07, 0.31, 0.85)
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "Guardar Cambios"
-                        font.family: "SF Pro Display"
-                        font.pixelSize: 10
-                        font.weight: Font.Bold
-                        color: "#FFFFFF"
-                    }
-
-                    MouseArea {
-                        id: saveMa
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (root.widgetsState) {
-                                var c = parseInt(calInput.text) || 0;
-                                var e = parseInt(exInput.text) || 0;
-                                var s = parseInt(stepsInput.text) || 0;
-                                var w = parseFloat(waterInput.text) || 0;
-                                root.widgetsState.saveHealthMetrics(c, e, s, w);
-                            }
-                            root.editModalOpen = false;
+                        MouseArea {
+                            id: addStepMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.addSteps(500)
                         }
                     }
-
                 }
-
             }
-
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── COMPONENTE REUTILIZABLE: ANILLOS DE ACTIVIDAD CONCÉNTRICOS ──
+        // ── 3. MODO LARGE (354 x 354): ANILLOS + GRÁFICO SEMANAL + QUICK ──
         // ═══════════════════════════════════════════════════════════════════
-        component ActivityRingsCanvas: Item {
-            id: ringsItem
+        Item {
+            id: largeView
 
-            property real outerRadius: 52
-            property real ringWidth: 7.5
-            property real ringGap: 3.5
+            anchors.fill: parent
+            visible: root.isLarge
 
-            implicitWidth: (outerRadius + ringWidth) * 2
-            implicitHeight: (outerRadius + ringWidth) * 2
-
-            Canvas {
-                id: ringCanvas
-
-                property real pCal: root.calPct
-                property real pEx: root.exPct
-                property real pStep: root.stepPct
-
-                function drawRing(r, pct, strokeColor, trackColor) {
-                    // 1. Track
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
-                    ctx.strokeStyle = trackColor;
-                    ctx.lineWidth = ringsItem.ringWidth;
-                    ctx.lineCap = "round";
-                    ctx.stroke();
-                    // 2. Active arc
-                    if (pct > 0.01) {
-                        var start = -Math.PI / 2;
-                        var sweep = pct * 2 * Math.PI;
-                        var end = start + sweep;
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, r, start, end, false);
-                        ctx.strokeStyle = strokeColor;
-                        ctx.lineWidth = ringsItem.ringWidth;
-                        ctx.lineCap = "round";
-                        ctx.stroke();
-                    }
-                }
-
+            Column {
                 anchors.fill: parent
-                renderTarget: Canvas.FramebufferObject
-                antialiasing: true
-                onPCalChanged: requestPaint()
-                onPExChanged: requestPaint()
-                onPStepChanged: requestPaint()
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.clearRect(0, 0, width, height);
-                    var cx = width / 2;
-                    var cy = height / 2;
-                    var r1 = ringsItem.outerRadius;
-                    var r2 = r1 - ringsItem.ringWidth - ringsItem.ringGap;
-                    var r3 = r2 - ringsItem.ringWidth - ringsItem.ringGap;
-                    // Anillo 1: Calorías / Moverse (Rojo vibrante #FA114F)
-                    drawRing(r1, ringCanvas.pCal, "#FA114F", "rgba(250, 17, 79, 0.22)");
-                    // Anillo 2: Ejercicio (Verde Lima #A1F435)
-                    drawRing(r2, ringCanvas.pEx, "#A1F435", "rgba(161, 244, 53, 0.22)");
-                    // Anillo 3: Pasos / De pie (Cian #00F5D4)
-                    drawRing(r3, ringCanvas.pStep, "#00F5D4", "rgba(0, 245, 212, 0.22)");
+                anchors.margins: 18
+                spacing: 16
+
+                // Sección 1: Anillos + Resumen de Métricas
+                RowLayout {
+                    width: parent.width
+                    spacing: 18
+
+                    Item {
+                        Layout.preferredWidth: 126
+                        Layout.preferredHeight: 126
+
+                        ActivityRings {
+                            anchors.centerIn: parent
+                            outerRadius: 48
+                            ringWidth: 9
+                            ringGap: 2.6
+                        }
+                    }
+
+                    Column {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        // Movimiento
+                        Column {
+                            spacing: 1
+                            Text {
+                                text: "MOVIMIENTO"
+                                color: root.colMove
+                                font.family: root.fontFamily
+                                font.pixelSize: 10.5
+                                font.weight: Font.Bold
+                                font.letterSpacing: 0.6
+                            }
+                            Row {
+                                spacing: 3
+                                Text {
+                                    text: root.calories.toString()
+                                    color: "#FFFFFF"
+                                    font.family: root.fontFamily
+                                    font.pixelSize: 17
+                                    font.weight: Font.DemiBold
+                                }
+                                Text {
+                                    anchors.baseline: parent.children[0].baseline
+                                    text: " / " + root.caloriesGoal + " KCAL"
+                                    color: Qt.rgba(1, 1, 1, 0.55)
+                                    font.family: root.fontFamily
+                                    font.pixelSize: 11
+                                }
+                            }
+                        }
+
+                        // Ejercicio
+                        Column {
+                            spacing: 1
+                            Text {
+                                text: "EJERCICIO"
+                                color: root.colExercise
+                                font.family: root.fontFamily
+                                font.pixelSize: 10.5
+                                font.weight: Font.Bold
+                                font.letterSpacing: 0.6
+                            }
+                            Row {
+                                spacing: 3
+                                Text {
+                                    text: root.exercise.toString()
+                                    color: "#FFFFFF"
+                                    font.family: root.fontFamily
+                                    font.pixelSize: 17
+                                    font.weight: Font.DemiBold
+                                }
+                                Text {
+                                    anchors.baseline: parent.children[0].baseline
+                                    text: " / " + root.exerciseGoal + " MIN"
+                                    color: Qt.rgba(1, 1, 1, 0.55)
+                                    font.family: root.fontFamily
+                                    font.pixelSize: 11
+                                }
+                            }
+                        }
+
+                        // De pie
+                        Column {
+                            spacing: 1
+                            Text {
+                                text: "DE PIE / PASOS"
+                                color: root.colStand
+                                font.family: root.fontFamily
+                                font.pixelSize: 10.5
+                                font.weight: Font.Bold
+                                font.letterSpacing: 0.6
+                            }
+                            Row {
+                                spacing: 3
+                                Text {
+                                    text: root.formatNumber(root.steps)
+                                    color: "#FFFFFF"
+                                    font.family: root.fontFamily
+                                    font.pixelSize: 17
+                                    font.weight: Font.DemiBold
+                                }
+                                Text {
+                                    anchors.baseline: parent.children[0].baseline
+                                    text: " / " + root.formatNumber(root.stepsGoal)
+                                    color: Qt.rgba(1, 1, 1, 0.55)
+                                    font.family: root.fontFamily
+                                    font.pixelSize: 11
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Sección 2: Historial Semanal Estilo Apple Activity
+                Rectangle {
+                    width: parent.width
+                    height: 86
+                    radius: 14
+                    color: Qt.rgba(255, 255, 255, 0.05)
+                    border.color: Qt.rgba(255, 255, 255, 0.08)
+                    border.width: 1 // taste-skill-ignore
+
+                    Row {
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        spacing: 0
+
+                        Repeater {
+                            model: 7
+
+                            Item {
+                                width: (parent.width) / 7
+                                height: parent.height
+
+                                readonly property var dayData: root.history[index] || ({ "day": "D", "cal_pct": 50, "ex_pct": 50, "step_pct": 50 })
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 6
+                                    horizontalAlignment: Text.AlignHCenter
+
+                                    // Barras triples concéntricas verticales
+                                    Row {
+                                        spacing: 3
+                                        anchors.horizontalCenter: parent.horizontalCenter
+
+                                        // Barra Move
+                                        Rectangle {
+                                            width: 4
+                                            height: 38
+                                            radius: 2
+                                            color: Qt.rgba(250, 17, 79, 0.20)
+
+                                            Rectangle {
+                                                anchors.bottom: parent.bottom
+                                                width: parent.width
+                                                height: Math.min(parent.height, Math.round(parent.height * (dayData.cal_pct / 100)))
+                                                radius: 2
+                                                color: root.colMove
+                                            }
+                                        }
+
+                                        // Barra Exercise
+                                        Rectangle {
+                                            width: 4
+                                            height: 38
+                                            radius: 2
+                                            color: Qt.rgba(162, 255, 0, 0.20)
+
+                                            Rectangle {
+                                                anchors.bottom: parent.bottom
+                                                width: parent.width
+                                                height: Math.min(parent.height, Math.round(parent.height * (dayData.ex_pct / 100)))
+                                                radius: 2
+                                                color: root.colExercise
+                                            }
+                                        }
+
+                                        // Barra Stand
+                                        Rectangle {
+                                            width: 4
+                                            height: 38
+                                            radius: 2
+                                            color: Qt.rgba(0, 240, 255, 0.20)
+
+                                            Rectangle {
+                                                anchors.bottom: parent.bottom
+                                                width: parent.width
+                                                height: Math.min(parent.height, Math.round(parent.height * (dayData.step_pct / 100)))
+                                                radius: 2
+                                                color: root.colStand
+                                            }
+                                        }
+                                    }
+
+                                    // Letra del Día
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: dayData.day || ""
+                                        color: Qt.rgba(1, 1, 1, 0.65)
+                                        font.family: root.fontFamily
+                                        font.pixelSize: 11
+                                        font.weight: Font.DemiBold
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Sección 3: Botones de Registro Rápido
+                RowLayout {
+                    width: parent.width
+                    spacing: 8
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 36
+                        radius: 12
+                        color: btnCalMa.containsMouse ? Qt.rgba(250, 17, 79, 0.32) : Qt.rgba(250, 17, 79, 0.16)
+                        border.color: Qt.rgba(250, 17, 79, 0.40)
+                        border.width: 1 // taste-skill-ignore
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "+100 kcal"
+                            color: root.colMove
+                            font.family: root.fontFamily
+                            font.pixelSize: 12
+                            font.weight: Font.Bold
+                        }
+
+                        MouseArea {
+                            id: btnCalMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.addCalories(100)
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 36
+                        radius: 12
+                        color: btnExMa.containsMouse ? Qt.rgba(162, 255, 0, 0.32) : Qt.rgba(162, 255, 0, 0.16)
+                        border.color: Qt.rgba(162, 255, 0, 0.40)
+                        border.width: 1 // taste-skill-ignore
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "+15 min"
+                            color: root.colExercise
+                            font.family: root.fontFamily
+                            font.pixelSize: 12
+                            font.weight: Font.Bold
+                        }
+
+                        MouseArea {
+                            id: btnExMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.addExercise(15)
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 36
+                        radius: 12
+                        color: btnStepMa.containsMouse ? Qt.rgba(0, 240, 255, 0.32) : Qt.rgba(0, 240, 255, 0.16)
+                        border.color: Qt.rgba(0, 240, 255, 0.40)
+                        border.width: 1 // taste-skill-ignore
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "+1.000 pasos"
+                            color: root.colStand
+                            font.family: root.fontFamily
+                            font.pixelSize: 12
+                            font.weight: Font.Bold
+                        }
+
+                        MouseArea {
+                            id: btnStepMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.addSteps(1000)
+                        }
+                    }
                 }
             }
-
         }
-
     }
-
 }
