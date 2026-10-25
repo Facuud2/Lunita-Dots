@@ -332,6 +332,19 @@ def main():
         save_notes_data(notes_data)
         print(json.dumps(get_current_state(), ensure_ascii=False))
 
+    elif action == "update_note" and len(sys.argv) >= 4:
+        # python3 timetable_provider.py update_note note_id title [body]
+        note_id = str(sys.argv[2])
+        new_title = sys.argv[3]
+        new_body = sys.argv[4] if len(sys.argv) > 4 else ""
+        for n in notes_data.get("notes_list", []):
+            if str(n.get("id")) == note_id:
+                n["title"] = new_title
+                n["body"] = new_body
+                break
+        save_notes_data(notes_data)
+        print(json.dumps(get_current_state(), ensure_ascii=False))
+
     else:
         print(json.dumps(get_current_state(), ensure_ascii=False))
 

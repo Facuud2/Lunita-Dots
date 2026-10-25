@@ -115,9 +115,31 @@ Item {
             root.activeNoteIndex = root.notesList.length - 1;
     }
 
+    property bool detailIsModified: false
+
     function openNoteDetail(noteItem) {
         root.selectedNote = noteItem;
+        detailTitleInput.text = noteItem ? (noteItem.title || "") : "";
+        detailBodyInput.text = noteItem ? (noteItem.body || "") : "";
+        root.detailIsModified = false;
         root.viewMode = "detail";
+    }
+
+    function saveNoteChanges() {
+        if (!root.selectedNote || !root.selectedNote.id)
+            return;
+        var newT = detailTitleInput.text.trim();
+        var newB = detailBodyInput.text.trim();
+        if (!newT) {
+            var lines = newB.split("\n");
+            newT = lines[0].substring(0, 32).trim() || "Nueva nota";
+        }
+        if (root.widgetsState && root.widgetsState.updateTimetableNote) {
+            root.widgetsState.updateTimetableNote(root.selectedNote.id, newT, newB);
+        }
+        root.selectedNote.title = newT;
+        root.selectedNote.body = newB;
+        root.detailIsModified = false;
     }
 
     function saveNewNote() {
@@ -359,6 +381,9 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
+                            if (root.detailIsModified) {
+                                root.saveNoteChanges();
+                            }
                             root.viewMode = "list";
                         }
                     }
@@ -366,6 +391,37 @@ Item {
 
                 Item {
                     Layout.fillWidth: true
+                }
+
+                // Botón 'Listo' para guardar cambios editados
+                Rectangle {
+                    id: saveEditBtn
+                    visible: root.detailIsModified
+                    Layout.preferredHeight: 26
+                    Layout.preferredWidth: saveEditTxt.width + 16
+                    radius: 13
+                    color: saveEditMa.containsMouse ? Qt.rgba(1, 1, 1, 0.45) : Qt.rgba(1, 1, 1, 0.28)
+                    scale: saveEditMa.pressed ? 0.94 : 1.0
+
+                    Text {
+                        id: saveEditTxt
+                        anchors.centerIn: parent
+                        text: "Listo"
+                        font.family: root.fontFamily
+                        font.pixelSize: 13
+                        font.weight: Font.Bold
+                        color: "#FFFFFF"
+                    }
+
+                    MouseArea {
+                        id: saveEditMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.saveNoteChanges();
+                        }
+                    }
                 }
 
                 // Botón Borrar Nota
@@ -890,17 +946,32 @@ Item {
                 Column {
                     id: detailColumn
                     width: parent.width
-                    spacing: 8
+                    spacing: 6
 
-                    // Título de la Nota
-                    Text {
+                    // Título Editable de la Nota
+                    Rectangle {
                         width: parent.width
-                        text: root.selectedNote ? (root.selectedNote.title || "Sin título") : ""
-                        font.family: root.fontFamily
-                        font.pixelSize: root.isLarge ? 18 : 16
-                        font.weight: Font.Bold
-                        color: root.textPrimaryColor
-                        wrapMode: Text.Wrap
+                        height: Math.max(34, detailTitleInput.implicitHeight + 8)
+                        radius: 6
+                        color: detailTitleInput.activeFocus ? root.inputBgColor : "transparent"
+                        border.color: detailTitleInput.activeFocus ? root.yellowHeaderColor : "transparent"
+                        border.width: 1
+
+                        TextInput {
+                            id: detailTitleInput
+                            anchors.fill: parent
+                            anchors.leftMargin: 6
+                            anchors.rightMargin: 6
+                            verticalAlignment: TextInput.AlignVCenter
+                            font.family: root.fontFamily
+                            font.pixelSize: root.isLarge ? 17 : 15
+                            font.weight: Font.Bold
+                            color: root.textPrimaryColor
+                            selectByMouse: true
+                            onTextEdited: {
+                                root.detailIsModified = true;
+                            }
+                        }
                     }
 
                     // Fecha y metadatos
@@ -913,23 +984,36 @@ Item {
                         color: root.textSecondaryColor
                     }
 
-                    // Divisor
+                    // Divisor hairline
                     Rectangle {
                         width: parent.width
                         height: 1
                         color: root.dividerColor
                     }
 
-                    // Cuerpo completo de la nota
-                    Text {
+                    // Cuerpo Editable de la Nota
+                    Rectangle {
                         width: parent.width
-                        text: root.selectedNote ? (root.selectedNote.body || "No hay texto adicional") : ""
-                        font.family: root.fontFamily
-                        font.pixelSize: 13
-                        font.weight: Font.Normal
-                        lineHeight: 1.35
-                        color: root.textPrimaryColor
-                        wrapMode: Text.Wrap
+                        height: Math.max(detailBodyInput.implicitHeight + 16, detailContainer.height - 110)
+                        radius: 6
+                        color: detailBodyInput.activeFocus ? root.inputBgColor : "transparent"
+                        border.color: detailBodyInput.activeFocus ? root.yellowHeaderColor : "transparent"
+                        border.width: 1
+
+                        TextEdit {
+                            id: detailBodyInput
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            font.family: root.fontFamily
+                            font.pixelSize: 13
+                            font.weight: Font.Normal
+                            color: root.textPrimaryColor
+                            wrapMode: TextEdit.Wrap
+                            selectByMouse: true
+                            onTextEdited: {
+                                root.detailIsModified = true;
+                            }
+                        }
                     }
                 }
             }

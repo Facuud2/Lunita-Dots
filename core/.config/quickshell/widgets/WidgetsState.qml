@@ -984,6 +984,11 @@ Item {
         ttProc.running = true;
     }
 
+    function updateTimetableNote(id, title, body) {
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "update_note", id.toString(), title, body || ""];
+        ttProc.running = true;
+    }
+
     // ── 12. Media Player (Now Playing) ──
     function parseMediaData(data) {
         try {
