@@ -970,7 +970,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         page_box.append(header_bar)
 
         # ── Contenedor Split: Izquierda (Cuadrícula) + Derecha (Drawer Lateral) ──
-        self.cal_split_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        self.cal_split_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         self.cal_split_box.set_vexpand(True)
         self.cal_split_box.set_hexpand(True)
 
@@ -1013,6 +1013,8 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         self.cal_side_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_LEFT)
         self.cal_side_revealer.set_transition_duration(220)
         self.cal_side_revealer.set_reveal_child(False)
+        self.cal_side_revealer.set_hexpand(False)
+        self.cal_side_revealer.set_vexpand(True)
 
         side_panel_widget = self.build_calendar_side_panel()
         self.cal_side_revealer.set_child(side_panel_widget)
@@ -1227,6 +1229,8 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         side_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         side_card.add_css_class("wm-cal-side-panel")
         side_card.set_size_request(345, -1)
+        side_card.set_margin_start(14)
+        side_card.set_hexpand(False)
         side_card.set_vexpand(True)
 
         # ── ZONA 1: Cabecera Fija del Panel Lateral ──
