@@ -684,11 +684,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna (Ejecución independiente)
 
 ### [ISSUE-045] Re-refactorización total del Widget de Clima (Basado en Imagen)
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO [x]
 - **Prioridad:** ALTA
 - **Rama Requerida:** `ISSUE_045_REFACTOR`
 - **Módulo(s):** Temas / Widgets / Clima
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Clima y servicio meteorológico)
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WeatherWidget.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/weather_provider.py`, `core/.local/bin/lunita-widgets-manager`
 - **Descripción:** Reconstruir el widget de Clima siguiendo al pie de la letra la imagen de referencia adjuntada en la sesión del prompt.
 - **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
   1. Respetar la ubicación exacta de la temperatura principal, pronóstico por horas/días, iconos climáticos y gradientes de fondo mostrados en la imagen.

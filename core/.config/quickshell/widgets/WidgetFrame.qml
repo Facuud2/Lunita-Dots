@@ -129,6 +129,9 @@ Item {
             if (t === "timetable")
                 return ttbComp;
 
+            if (t === "weather")
+                return wthComp;
+
             if (t === "media")
                 return medComp;
 
@@ -169,6 +172,15 @@ Item {
         ClockWidget {
             widgetsState: root.widgetsState
             canvas: root.canvas
+        }
+
+    }
+
+    Component {
+        id: wthComp
+
+        WeatherWidget {
+            widgetsState: root.widgetsState
         }
 
     }

@@ -373,6 +373,50 @@ Item {
 
             }
 
+            // Add Weather
+            Rectangle {
+                radius: 14
+                height: 28
+                implicitWidth: addWthText.implicitWidth + 16
+                color: addWthMa.containsMouse ? (root.isDarkTheme ? "rgba(255,255,255,0.20)" : "rgba(0,0,0,0.12)") : "transparent"
+                border.color: root.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
+                border.width: 1
+
+                RowLayout {
+                    id: addWthText
+
+                    anchors.centerIn: parent
+                    spacing: 4
+
+                    Text {
+                        text: "󰖐"
+                        font.family: "CaskaydiaCove Nerd Font"
+                        color: root.textColor
+                        font.pixelSize: 12
+                        font.weight: Font.Bold
+                    }
+
+                    Text {
+                        text: "Clima"
+                        color: root.textColor
+                        font.family: "SF Pro Display"
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                    }
+
+                }
+
+                MouseArea {
+                    id: addWthMa
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.addWidget("weather")
+                }
+
+            }
+
             // Add Network
             Rectangle {
                 radius: 14

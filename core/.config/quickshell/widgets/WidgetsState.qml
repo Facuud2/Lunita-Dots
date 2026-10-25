@@ -168,6 +168,11 @@ Item {
     property string clockDay: "28"
     property string clockWeekday: "LUN"
     property string weatherTemp: "--°C"
+    property string weatherTempVal: "13°"
+    property string weatherMax: "18°"
+    property string weatherMin: "11°"
+    property string weatherConditionType: "cloudy"
+    property string weatherCityName: "Buenos Aires"
     property string weatherIcon: "󰖐"
     property string weatherDesc: "Cargando..."
     property string weatherHumidity: "--%"
@@ -1323,6 +1328,11 @@ Item {
                 try {
                     var p = JSON.parse(data.trim());
                     root.weatherTemp = p.temp || "--°C";
+                    root.weatherTempVal = p.temp_val || (p.temp ? p.temp.replace("C", "") : "13°");
+                    root.weatherMax = p.max || "18°";
+                    root.weatherMin = p.min || "11°";
+                    root.weatherConditionType = p.condition_type || "cloudy";
+                    root.weatherCityName = p.city_name || (p.city ? p.city : "Buenos Aires");
                     root.weatherIcon = p.icon || "󰖐";
                     root.weatherDesc = p.desc || "";
                     root.weatherHumidity = p.humidity || "--%";

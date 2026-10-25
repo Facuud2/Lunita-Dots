@@ -65,6 +65,23 @@ def get_desc(code, raw_desc=""):
         return info[2]
     return raw_desc or "Templado"
 
+def get_condition_type(code):
+    c = str(code)
+    if c in ["113"]: return "sunny"
+    if c in ["116"]: return "partly_cloudy"
+    if c in ["119", "122"]: return "cloudy"
+    if c in ["176", "263", "266", "293", "296", "299", "302", "305", "308", "353", "356"]: return "rain"
+    if c in ["200", "386", "389", "392", "395"]: return "thunder"
+    if c in ["179", "182", "185", "227", "230", "311", "314"]: return "snow"
+    if c in ["143", "248", "260"]: return "fog"
+    return "cloudy"
+
+def format_ios_hour(hour):
+    h12 = hour % 12
+    h_num = 12 if h12 == 0 else h12
+    suffix = "a.m." if hour < 12 else "p.m."
+    return f"{h_num} {suffix}"
+
 def get_saved_location():
     if os.path.exists(LOCATION_FILE):
         try:
@@ -127,7 +144,7 @@ def parse_weather_data(raw, custom_city=None):
         detected_city = area.get("areaName", [{}])[0].get("value", "")
         city_display = (custom_city if custom_city else detected_city).upper()
 
-        # Extraer pronóstico de las próximas 4 horas
+        # Extraer pronóstico de las próximas 6 horas (estilo iOS Weather)
         hourly_forecast = []
         weather_days = raw.get("weather", [])
         all_hourly = []
@@ -141,14 +158,11 @@ def parse_weather_data(raw, custom_city=None):
                     "code": h.get("weatherCode", "113")
                 })
 
-        # Buscar las 4 siguientes horas relativas al momento actual
+        # Buscar las 6 siguientes horas relativas al momento actual
         cur_hour = now.hour
-        for step in range(1, 5):
-            target_hour = cur_hour + step
-            day_offset = 0
-            if target_hour >= 24:
-                target_hour -= 24
-                day_offset = 1
+        for step in range(0, 6):
+            target_hour = (cur_hour + step) % 24
+            day_offset = (cur_hour + step) // 24
 
             best_match = None
             min_diff = 999
@@ -163,18 +177,21 @@ def parse_weather_data(raw, custom_city=None):
             step_code = best_match["code"] if best_match else code
             step_is_night = (target_hour < 6 or target_hour >= 20)
             step_icon = get_icon(step_code, step_is_night)
-            time_label = f"{target_hour:02d}:00"
+            step_cond = get_condition_type(step_code)
+            time_label = format_ios_hour(target_hour)
 
             hourly_forecast.append({
                 "time": time_label,
+                "hour": target_hour,
                 "temp": step_temp,
-                "icon": step_icon
+                "icon": step_icon,
+                "condition_type": step_cond
             })
 
-        # Extraer pronóstico diario para días posteriores
+        # Extraer pronóstico diario para hasta 5 días posteriores
         daily_forecast = []
         days_names_es = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"]
-        for d_idx, day_obj in enumerate(weather_days[:3]):
+        for d_idx, day_obj in enumerate(weather_days[:5]):
             d_date_str = day_obj.get("date", "")
             max_t = day_obj.get("maxtempC", temp_c) + "°"
             min_t = day_obj.get("mintempC", temp_c) + "°"
@@ -183,6 +200,7 @@ def parse_weather_data(raw, custom_city=None):
             d_code = mid_h.get("weatherCode", code)
             d_desc = get_desc(d_code, mid_h.get("weatherDesc", [{}])[0].get("value", desc) if mid_h.get("weatherDesc") else desc)
             d_icon = get_icon(d_code, False)
+            d_cond = get_condition_type(d_code)
 
             if d_idx == 0:
                 d_label = "Hoy"
@@ -201,17 +219,31 @@ def parse_weather_data(raw, custom_city=None):
                 "max": max_t,
                 "min": min_t,
                 "icon": d_icon,
-                "desc": d_desc
+                "desc": d_desc,
+                "condition_type": d_cond
             })
+
+        today_max = daily_forecast[0]["max"] if daily_forecast else f"{int(temp_c)+3}°"
+        today_min = daily_forecast[0]["min"] if daily_forecast else f"{max(0, int(temp_c)-4)}°"
+        city_formatted = (custom_city if custom_city else detected_city).strip()
+        if not city_formatted or city_formatted.upper() == "BUENOS AIRES":
+            city_formatted = "Buenos Aires"
+        else:
+            city_formatted = city_formatted.title()
 
         return {
             "temp": f"{temp_c}°C",
+            "temp_val": f"{temp_c}°",
             "temp_num": int(temp_c),
+            "max": today_max,
+            "min": today_min,
+            "condition_type": get_condition_type(code),
             "icon": icon,
             "desc": desc,
             "humidity": humidity,
             "wind": wind_kmph,
             "city": city_display if city_display else "BUENOS AIRES",
+            "city_name": city_formatted,
             "is_custom_location": bool(custom_city),
             "hourly": hourly_forecast,
             "daily": daily_forecast
@@ -219,31 +251,40 @@ def parse_weather_data(raw, custom_city=None):
     except Exception:
         return None
 
-def fallback_data(city_name="BUENOS AIRES"):
+def fallback_data(city_name="Buenos Aires"):
     now = datetime.datetime.now()
-    is_night = (now.hour < 6 or now.hour >= 20)
     hourly = []
-    for step in range(1, 5):
+    for step in range(0, 6):
         h = (now.hour + step) % 24
         night = (h < 6 or h >= 20)
+        h_temp = 13 + (step if step < 4 else 5)
         hourly.append({
-            "time": f"{h:02d}:00",
-            "temp": "20°",
-            "icon": "󰖔" if night else "󰖙"
+            "time": format_ios_hour(h),
+            "hour": h,
+            "temp": f"{h_temp}°",
+            "icon": "󰖐" if step != 3 else "󰖕",
+            "condition_type": "cloudy" if step != 3 else "partly_cloudy"
         })
     daily = [
-        {"day": "Hoy", "date": now.strftime("%Y-%m-%d"), "max": "22°", "min": "14°", "icon": "󰖙", "desc": "Despejado"},
-        {"day": "Mañana", "date": (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d"), "max": "24°", "min": "15°", "icon": "󰖕", "desc": "Parcialmente nublado"},
-        {"day": (now + datetime.timedelta(days=2)).strftime("%a").upper(), "date": (now + datetime.timedelta(days=2)).strftime("%Y-%m-%d"), "max": "21°", "min": "13°", "icon": "󰖐", "desc": "Nublado"}
+        {"day": "Hoy", "date": now.strftime("%Y-%m-%d"), "max": "18°", "min": "11°", "icon": "󰖐", "desc": "Nublado", "condition_type": "cloudy"},
+        {"day": "Mañana", "date": (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d"), "max": "19°", "min": "12°", "icon": "󰖕", "desc": "Parcialmente nublado", "condition_type": "partly_cloudy"},
+        {"day": "MAR", "date": (now + datetime.timedelta(days=2)).strftime("%Y-%m-%d"), "max": "21°", "min": "13°", "icon": "󰖙", "desc": "Despejado", "condition_type": "sunny"},
+        {"day": "MIÉ", "date": (now + datetime.timedelta(days=3)).strftime("%Y-%m-%d"), "max": "20°", "min": "14°", "icon": "󰖖", "desc": "Lluvia ligera", "condition_type": "rain"},
+        {"day": "JUE", "date": (now + datetime.timedelta(days=4)).strftime("%Y-%m-%d"), "max": "18°", "min": "12°", "icon": "󰖐", "desc": "Nublado", "condition_type": "cloudy"}
     ]
     return {
-        "temp": "20°C",
-        "temp_num": 20,
-        "icon": "󰖔" if is_night else "󰖙",
-        "desc": "Agradable",
-        "humidity": "55%",
-        "wind": "15 km/h",
-        "city": city_name.upper(),
+        "temp": "13°C",
+        "temp_val": "13°",
+        "temp_num": 13,
+        "max": "18°",
+        "min": "11°",
+        "condition_type": "cloudy",
+        "icon": "󰖐",
+        "desc": "Nublado",
+        "humidity": "72%",
+        "wind": "14 km/h",
+        "city": "BUENOS AIRES",
+        "city_name": "Buenos Aires" if (not city_name or city_name.upper() == "BUENOS AIRES") else city_name.title(),
         "is_custom_location": False,
         "hourly": hourly,
         "daily": daily
