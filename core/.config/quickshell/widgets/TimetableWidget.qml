@@ -47,8 +47,17 @@ Item {
         target: root.widgetsState
         function onWantsKeyboardFocusChanged() {
             if (root.widgetsState && !root.widgetsState.wantsKeyboardFocus) {
-                if (root.viewMode !== "list") {
-                    if (root.detailIsModified) {
+                if (root.viewMode === "create") {
+                    var title = createTitleInput.text.trim();
+                    var body = createBodyInput.text.trim();
+                    if (title || body) {
+                        root.saveNewNote();
+                    } else {
+                        root.viewMode = "list";
+                    }
+                } else if (root.viewMode === "detail") {
+                    var isChanged = (root.selectedNote && (detailTitleInput.text.trim() !== (root.selectedNote.title || "").trim() || detailBodyInput.text.trim() !== (root.selectedNote.body || "").trim()));
+                    if (root.detailIsModified || isChanged) {
                         root.saveNoteChanges();
                     }
                     root.viewMode = "list";
@@ -281,6 +290,15 @@ Item {
             ColorAnimation { duration: 150 }
         }
 
+        // Absorb clicks on card background so they never fall through to desktop canvas
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                if (root.widgetsState)
+                    root.widgetsState.wantsKeyboardFocus = (root.viewMode === "detail" || root.viewMode === "create");
+            }
+        }
+
         // ═══════════════════════════════════════════════════════════════════
         // ── CABECERA AMARILLA (APPLE NOTES NATIVE STYLE) ───────────────────
         // ═══════════════════════════════════════════════════════════════════
@@ -306,6 +324,15 @@ Item {
                     anchors.bottom: parent.bottom
                     height: root.cardRadius
                     color: root.yellowHeaderColor
+                }
+            }
+
+            // Absorb clicks on header background so they never fall through to desktop canvas
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    if (root.widgetsState)
+                        root.widgetsState.wantsKeyboardFocus = (root.viewMode === "detail" || root.viewMode === "create");
                 }
             }
 
@@ -446,7 +473,7 @@ Item {
                 Rectangle {
                     id: backBtn
                     Layout.preferredHeight: 28
-                    Layout.preferredWidth: backContentRow.width + 12
+                    Layout.preferredWidth: Math.max(28, backContentRow.implicitWidth + 12)
                     radius: 14
                     color: backMa.containsMouse ? Qt.rgba(1, 1, 1, 0.30) : Qt.rgba(1, 1, 1, 0.15)
                     scale: backMa.pressed ? 0.95 : 1.0
@@ -454,7 +481,7 @@ Item {
                     RowLayout {
                         id: backContentRow
                         anchors.centerIn: parent
-                        spacing: 3
+                        spacing: 2
 
                         Text {
                             text: "‹"
@@ -466,6 +493,7 @@ Item {
                         }
 
                         Text {
+                            visible: !root.isSmall
                             text: "Notas"
                             font.family: root.fontFamily
                             font.pixelSize: 13
@@ -498,7 +526,7 @@ Item {
                     id: saveEditBtn
                     visible: root.detailIsModified || (root.selectedNote && (detailTitleInput.text.trim() !== (root.selectedNote.title || "").trim() || detailBodyInput.text.trim() !== (root.selectedNote.body || "").trim()))
                     Layout.preferredHeight: 26
-                    Layout.preferredWidth: saveEditTxt.width + 16
+                    Layout.preferredWidth: Math.max(48, saveEditTxt.implicitWidth + 16)
                     radius: 13
                     color: saveEditMa.containsMouse ? Qt.rgba(1, 1, 1, 0.45) : Qt.rgba(1, 1, 1, 0.28)
                     scale: saveEditMa.pressed ? 0.94 : 1.0
@@ -508,7 +536,7 @@ Item {
                         anchors.centerIn: parent
                         text: "Listo"
                         font.family: root.fontFamily
-                        font.pixelSize: 13
+                        font.pixelSize: 12
                         font.weight: Font.Bold
                         color: "#FFFFFF"
                     }
@@ -579,21 +607,22 @@ Item {
             // MODO CREAR: 'Cancelar' + 'Nueva Nota' + 'Listo'
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
+                anchors.leftMargin: 10
+                anchors.rightMargin: 10
                 spacing: 6
                 visible: root.viewMode === "create"
 
                 Rectangle {
+                    id: cancelBtn
                     Layout.preferredHeight: 26
-                    Layout.preferredWidth: cancelTxt.width + 12
+                    Layout.preferredWidth: Math.max(28, cancelTxt.implicitWidth + 14)
                     radius: 13
                     color: cancelMa.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
 
                     Text {
                         id: cancelTxt
                         anchors.centerIn: parent
-                        text: "Cancelar"
+                        text: root.isSmall ? "✕" : "Cancelar"
                         font.family: root.fontFamily
                         font.pixelSize: 13
                         font.weight: Font.Medium
@@ -606,34 +635,49 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
+                            createTitleInput.text = "";
+                            createBodyInput.text = "";
                             root.viewMode = "list";
                         }
                     }
                 }
 
+                // Título central interactivo: cliquear 'Nueva Nota' guarda la nota
                 Item {
                     Layout.fillWidth: true
-                }
+                    Layout.fillHeight: true
 
-                Text {
-                    text: "Nueva Nota"
-                    font.family: root.fontFamily
-                    font.pixelSize: 14
-                    font.weight: Font.Bold
-                    color: "#FFFFFF"
-                    Layout.alignment: Qt.AlignVCenter
-                }
+                    Text {
+                        anchors.centerIn: parent
+                        text: root.isSmall ? "Nueva" : "Nueva Nota"
+                        font.family: root.fontFamily
+                        font.pixelSize: root.isSmall ? 13 : 14
+                        font.weight: Font.Bold
+                        color: "#FFFFFF"
+                        elide: Text.ElideRight
+                    }
 
-                Item {
-                    Layout.fillWidth: true
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.saveNewNote();
+                        }
+                    }
                 }
 
                 Rectangle {
+                    id: saveBtn
                     Layout.preferredHeight: 26
-                    Layout.preferredWidth: saveTxt.width + 16
+                    Layout.preferredWidth: Math.max(52, saveTxt.implicitWidth + 18)
                     radius: 13
                     color: saveMa.containsMouse ? Qt.rgba(1, 1, 1, 0.45) : Qt.rgba(1, 1, 1, 0.28)
                     scale: saveMa.pressed ? 0.94 : 1.0
+
+                    Behavior on scale {
+                        NumberAnimation { duration: 100 }
+                    }
 
                     Text {
                         id: saveTxt
@@ -1055,6 +1099,17 @@ Item {
             visible: root.viewMode === "detail"
             clip: true
 
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    if (root.widgetsState)
+                        root.widgetsState.wantsKeyboardFocus = true;
+                    if (!detailTitleInput.activeFocus && !detailBodyInput.activeFocus) {
+                        detailBodyInput.forceActiveFocus();
+                    }
+                }
+            }
+
             Flickable {
                 anchors.fill: parent
                 anchors.leftMargin: 16
@@ -1180,6 +1235,17 @@ Item {
             anchors.topMargin: 8
             visible: root.viewMode === "create"
             clip: true
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    if (root.widgetsState)
+                        root.widgetsState.wantsKeyboardFocus = true;
+                    if (!createTitleInput.activeFocus && !createBodyInput.activeFocus) {
+                        createBodyInput.forceActiveFocus();
+                    }
+                }
+            }
 
             Column {
                 anchors.fill: parent
