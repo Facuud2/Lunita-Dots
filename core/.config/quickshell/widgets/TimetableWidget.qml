@@ -7,24 +7,28 @@ Item {
     id: root
 
     property var widgetsState
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+    readonly property bool nothing: skin ? skin.isNothing : false
+    readonly property string fontText: (nothing && skin) ? skin.fontText : "SF Pro Display"
+    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : "SF Pro Display"
 
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
     readonly property bool isDark: root.widgetsState ? root.widgetsState.isDarkTheme : false
-    readonly property real cardRadius: root.widgetsState ? root.widgetsState.cardRadius : 22
-    readonly property string fontFamily: "SF Pro Display, SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
+    readonly property real cardRadius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+    readonly property string fontFamily: nothing ? fontText : "SF Pro Display, SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
 
-    // ── Apple Notes Color Tokens ────────────────────────────────────────────
-    readonly property color cardBgColor: isDark ? (root.widgetsState ? root.widgetsState.cardBg : "#1C1C1E") : "#FFFFFF"
-    readonly property color cardBorderColor: isDark ? (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.10)) : Qt.rgba(0, 0, 0, 0.04)
-    readonly property color yellowHeaderColor: "#FCC603"
-    readonly property color textPrimaryColor: isDark ? "#FFFFFF" : "#000000"
-    readonly property color textSecondaryColor: isDark ? "#98989D" : "#8E8E93"
-    readonly property color dividerColor: isDark ? Qt.rgba(1, 1, 1, 0.12) : "#E2E2E3"
-    readonly property color perforationColor: isDark ? Qt.rgba(1, 1, 1, 0.20) : "#D1D1D6"
-    readonly property color inputBgColor: isDark ? Qt.rgba(255, 255, 255, 0.06) : Qt.rgba(0, 0, 0, 0.04)
+    // ── Notes Color Tokens (Nothing OS Monocromo vs Apple Notes) ────────────
+    readonly property color cardBgColor: root.nothing ? root.skin.card : (isDark ? (root.widgetsState ? root.widgetsState.cardBg : "#1C1C1E") : "#FFFFFF")
+    readonly property color cardBorderColor: root.nothing ? "transparent" : (isDark ? (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.10)) : Qt.rgba(0, 0, 0, 0.04))
+    readonly property color yellowHeaderColor: root.nothing ? root.skin.raised : "#FCC603"
+    readonly property color textPrimaryColor: root.nothing ? root.skin.ink : (isDark ? "#FFFFFF" : "#000000")
+    readonly property color textSecondaryColor: root.nothing ? root.skin.inkDim : (isDark ? "#98989D" : "#8E8E93")
+    readonly property color dividerColor: root.nothing ? root.skin.dotOff : (isDark ? Qt.rgba(1, 1, 1, 0.12) : "#E2E2E3")
+    readonly property color perforationColor: root.nothing ? root.skin.dotOff : (isDark ? Qt.rgba(1, 1, 1, 0.20) : "#D1D1D6")
+    readonly property color inputBgColor: root.nothing ? root.skin.raised : (isDark ? Qt.rgba(255, 255, 255, 0.06) : Qt.rgba(0, 0, 0, 0.04))
 
     readonly property var notesList: {
         if (root.widgetsState && root.widgetsState.ttNotesList !== undefined && root.widgetsState.ttNotesList !== null)
@@ -284,7 +288,7 @@ Item {
         clip: true
         color: root.cardBgColor
         border.color: root.cardBorderColor
-        border.width: 1
+        border.width: root.nothing ? 0 : 1
 
         Behavior on color {
             ColorAnimation { duration: 150 }
@@ -300,7 +304,7 @@ Item {
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── CABECERA AMARILLA (APPLE NOTES NATIVE STYLE) ───────────────────
+        // ── CABECERA DE NOTAS ──────────────────────────────────────────────
         // ═══════════════════════════════════════════════════════════════════
         Item {
             id: headerArea
@@ -311,7 +315,7 @@ Item {
             height: root.isLarge ? 48 : 40
             z: 10
 
-            // Fondo amarillo con esquinas superiores redondeadas
+            // Fondo de cabecera con esquinas superiores redondeadas
             Rectangle {
                 anchors.fill: parent
                 radius: root.cardRadius
@@ -337,7 +341,7 @@ Item {
             }
 
             // ── Contenido de Cabecera según viewMode ────────────────────────
-            // MODO LISTA: Carpeta + "Notas" + Botón '+'
+            // MODO LISTA: Carpeta / Dot + "Notas" + Botón '+'
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 14
@@ -354,9 +358,19 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 7
 
+                        // Nothing Signal Dot
+                        Rectangle {
+                            visible: root.nothing
+                            width: 6
+                            height: 6
+                            radius: 3
+                            color: root.skin ? root.skin.signal : "#D71921"
+                        }
+
                         // Icono vectorial de Carpeta Apple Notes
                         Canvas {
                             id: folderCanvas
+                            visible: !root.nothing
                             Layout.preferredWidth: 20
                             Layout.preferredHeight: 15
                             onPaint: {
@@ -389,7 +403,7 @@ Item {
                             font.family: root.fontFamily
                             font.pixelSize: 15
                             font.weight: Font.DemiBold
-                            color: "#FFFFFF"
+                            color: root.nothing ? (root.skin ? root.skin.ink : "#FFFFFF") : "#FFFFFF"
                         }
                     }
 
@@ -412,10 +426,10 @@ Item {
                 Text {
                     visible: root.isSmall && root.notesList && root.notesList.length > 1
                     text: (root.activeNoteIndex + 1) + "/" + root.notesList.length
-                    font.family: root.fontFamily
+                    font.family: root.nothing ? root.fontFigure : root.fontFamily
                     font.pixelSize: 11
                     font.weight: Font.Medium
-                    color: Qt.rgba(1, 1, 1, 0.85)
+                    color: root.nothing ? (root.skin ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.85)) : Qt.rgba(1, 1, 1, 0.85)
                     Layout.alignment: Qt.AlignVCenter
                 }
 
@@ -425,7 +439,7 @@ Item {
                     Layout.preferredWidth: 26
                     Layout.preferredHeight: 26
                     radius: 13
-                    color: addMa.containsMouse ? Qt.rgba(1, 1, 1, 0.35) : Qt.rgba(1, 1, 1, 0.20)
+                    color: root.nothing ? (addMa.containsMouse ? (root.skin ? root.skin.dotOff : Qt.rgba(1,1,1,0.25)) : (root.skin ? root.skin.card : Qt.rgba(1,1,1,0.15))) : (addMa.containsMouse ? Qt.rgba(1, 1, 1, 0.35) : Qt.rgba(1, 1, 1, 0.20))
                     scale: addMa.pressed ? 0.92 : 1.0
 
                     Behavior on scale {

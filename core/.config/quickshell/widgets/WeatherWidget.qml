@@ -9,12 +9,16 @@ Item {
 
     property var widgetsState
 
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+    readonly property bool nothing: root.skin ? root.skin.isNothing : false
+
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
-    readonly property real cardRadius: root.widgetsState ? root.widgetsState.cardRadius : 22
-    readonly property string fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Cantarell, sans-serif"
+    readonly property real cardRadius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+    readonly property string fontFamily: root.nothing ? root.skin.fontText : "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Cantarell, sans-serif"
+    readonly property string fontFigure: root.nothing ? root.skin.fontFigure : root.fontFamily
 
     // ── Datos reactivos obtenidos de widgetsState ──────────────────────────
     readonly property string cityName: (root.widgetsState && root.widgetsState.weatherCityName) ? root.widgetsState.weatherCityName : "Buenos Aires"
@@ -108,7 +112,7 @@ Item {
                 width: 12
                 height: 12
                 radius: 6
-                color: "#F59E0B" // taste-skill-ignore
+                color: root.nothing ? root.skin.ink : "#F59E0B"
             }
 
             // 2. Sol completo para cielo despejado
@@ -121,7 +125,7 @@ Item {
 
                 ShapePath {
                     strokeWidth: 0
-                    fillColor: "#F59E0B" // taste-skill-ignore
+                    fillColor: root.nothing ? root.skin.ink : "#F59E0B"
                     PathSvg {
                         path: "M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0-5c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1s-1-.45-1-1V3c0-.55.45-1 1-1zm0 15c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1s-1-.45-1-1v-2c0-.55.45-1 1-1zm10-6c0 .55-.45 1-1 1h-2c-.55 0-1-.45-1-1s.45-1 1-1h2c.55 0 1 .45 1 1zM6 12c0 .55-.45 1-1 1H3c-.55 0-1-.45-1-1s.45-1 1-1h2c.55 0 1 .45 1 1zm11.07-5.66c.39.39.39 1.02 0 1.41-.39.39-1.02.39-1.41 0l-1.41-1.41c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0l1.41 1.41zm-9.9 9.9c.39.39.39 1.02 0 1.41-.39.39-1.02.39-1.41 0l-1.41-1.41c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0l1.41 1.41zm9.9 0c-.39.39-1.02.39-1.41 0-.39-.39-.39-1.02 0-1.41l1.41-1.41c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41l-1.41 1.41zM7.17 6.34c-.39.39-1.02.39-1.41 0-.39-.39-.39-1.02 0-1.41l1.41-1.41c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41L7.17 6.34z"
                     }
@@ -155,7 +159,7 @@ Item {
 
                 ShapePath {
                     strokeWidth: 0
-                    fillColor: "#60A5FA" // taste-skill-ignore
+                    fillColor: root.nothing ? root.skin.inkDim : "#60A5FA"
                     PathSvg {
                         path: "M7 21c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1zm4 1.5c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1zm4-1.5c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1z"
                     }
@@ -172,7 +176,7 @@ Item {
 
                 ShapePath {
                     strokeWidth: 0
-                    fillColor: "#FBBF24"
+                    fillColor: root.nothing ? root.skin.signal : "#FBBF24"
                     PathSvg {
                         path: "M11 14h2.5l-2 6 5.5-5h-3l2.5-5h-5z"
                     }
@@ -188,13 +192,17 @@ Item {
         anchors.fill: parent
         radius: root.cardRadius
         clip: true
-        border.color: Qt.rgba(1, 1, 1, 0.12) // taste-skill-ignore
-        border.width: 1 // taste-skill-ignore
+        border.color: root.nothing ? "transparent" : Qt.rgba(1, 1, 1, 0.12)
+        border.width: root.nothing ? 0 : 1
+        color: root.nothing ? root.skin.card : "transparent"
 
-        gradient: Gradient { // taste-skill-ignore
-            GradientStop { position: 0.0; color: root.gradTop } // taste-skill-ignore
-            GradientStop { position: 1.0; color: root.gradBottom } // taste-skill-ignore
-        } // taste-skill-ignore
+        gradient: root.nothing ? null : appleGradient
+
+        Gradient {
+            id: appleGradient
+            GradientStop { position: 0.0; color: root.gradTop }
+            GradientStop { position: 1.0; color: root.gradBottom }
+        }
 
         // Interacción nativa: clic refresca los datos meteorológicos
         MouseArea {
@@ -232,19 +240,19 @@ Item {
                 Text {
                     width: parent.width
                     text: root.cityName
-                    color: "#FFFFFF"
+                    color: root.nothing ? root.skin.inkDim : "#FFFFFF"
                     font.family: root.fontFamily
-                    font.pixelSize: 15
-                    font.weight: Font.DemiBold
+                    font.pixelSize: root.nothing ? 13 : 15
+                    font.weight: Font.Medium
                     elide: Text.ElideRight
                 }
 
                 Text {
                     text: root.tempVal
-                    color: "#FFFFFF"
-                    font.family: root.fontFamily
-                    font.pixelSize: 48
-                    font.weight: Font.Light
+                    color: root.nothing ? root.skin.ink : "#FFFFFF"
+                    font.family: root.fontFigure
+                    font.pixelSize: root.nothing ? 48 : 48
+                    font.weight: root.nothing ? Font.Normal : Font.Light
                 }
             }
 
@@ -271,7 +279,7 @@ Item {
                 Text {
                     width: parent.width
                     text: root.conditionDesc
-                    color: "#FFFFFF"
+                    color: root.nothing ? root.skin.ink : "#FFFFFF"
                     font.family: root.fontFamily
                     font.pixelSize: 13
                     font.weight: Font.Medium
@@ -281,7 +289,7 @@ Item {
                 Text {
                     width: parent.width
                     text: "Máx. " + root.maxTemp + " Mín. " + root.minTemp
-                    color: Qt.rgba(1, 1, 1, 0.90)
+                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.90)
                     font.family: root.fontFamily
                     font.pixelSize: 12
                     font.weight: Font.Normal
@@ -309,18 +317,18 @@ Item {
 
                 Text {
                     text: root.cityName
-                    color: "#FFFFFF"
+                    color: root.nothing ? root.skin.inkDim : "#FFFFFF"
                     font.family: root.fontFamily
-                    font.pixelSize: 15
-                    font.weight: Font.DemiBold
+                    font.pixelSize: root.nothing ? 13 : 15
+                    font.weight: Font.Medium
                 }
 
                 Text {
                     text: root.tempVal
-                    color: "#FFFFFF"
-                    font.family: root.fontFamily
-                    font.pixelSize: 44
-                    font.weight: Font.Light
+                    color: root.nothing ? root.skin.ink : "#FFFFFF"
+                    font.family: root.fontFigure
+                    font.pixelSize: root.nothing ? 44 : 44
+                    font.weight: root.nothing ? Font.Normal : Font.Light
                 }
             }
 
@@ -346,7 +354,7 @@ Item {
                 Text {
                     anchors.right: parent.right
                     text: root.conditionDesc
-                    color: "#FFFFFF"
+                    color: root.nothing ? root.skin.ink : "#FFFFFF"
                     font.family: root.fontFamily
                     font.pixelSize: 13
                     font.weight: Font.Medium
@@ -356,7 +364,7 @@ Item {
                 Text {
                     anchors.right: parent.right
                     text: "Máx. " + root.maxTemp + " Mín. " + root.minTemp
-                    color: Qt.rgba(1, 1, 1, 0.90)
+                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.90)
                     font.family: root.fontFamily
                     font.pixelSize: 12
                     font.weight: Font.Normal
@@ -390,7 +398,7 @@ Item {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: index === 0 ? "Ahora" : (hItem.time || "")
-                                color: Qt.rgba(1, 1, 1, 0.85)
+                                color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.85)
                                 font.family: root.fontFamily
                                 font.pixelSize: 12
                                 font.weight: Font.Medium
@@ -405,9 +413,9 @@ Item {
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: hItem.temp || "--°"
-                                color: "#FFFFFF"
-                                font.family: root.fontFamily
-                                font.pixelSize: 14
+                                color: root.nothing ? root.skin.ink : "#FFFFFF"
+                                font.family: root.fontFigure
+                                font.pixelSize: root.nothing ? 13 : 14
                                 font.weight: Font.DemiBold
                             }
                         }
@@ -435,18 +443,18 @@ Item {
 
                 Text {
                     text: root.cityName
-                    color: "#FFFFFF"
+                    color: root.nothing ? root.skin.inkDim : "#FFFFFF"
                     font.family: root.fontFamily
-                    font.pixelSize: 16
-                    font.weight: Font.DemiBold
+                    font.pixelSize: root.nothing ? 14 : 16
+                    font.weight: Font.Medium
                 }
 
                 Text {
                     text: root.tempVal
-                    color: "#FFFFFF"
-                    font.family: root.fontFamily
-                    font.pixelSize: 48
-                    font.weight: Font.Light
+                    color: root.nothing ? root.skin.ink : "#FFFFFF"
+                    font.family: root.fontFigure
+                    font.pixelSize: root.nothing ? 52 : 48
+                    font.weight: root.nothing ? Font.Normal : Font.Light
                 }
             }
 
@@ -472,7 +480,7 @@ Item {
                 Text {
                     anchors.right: parent.right
                     text: root.conditionDesc
-                    color: "#FFFFFF"
+                    color: root.nothing ? root.skin.ink : "#FFFFFF"
                     font.family: root.fontFamily
                     font.pixelSize: 14
                     font.weight: Font.Medium
@@ -482,7 +490,7 @@ Item {
                 Text {
                     anchors.right: parent.right
                     text: "Máx. " + root.maxTemp + " Mín. " + root.minTemp
-                    color: Qt.rgba(1, 1, 1, 0.90)
+                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.90)
                     font.family: root.fontFamily
                     font.pixelSize: 13
                     font.weight: Font.Normal
@@ -501,8 +509,8 @@ Item {
                 anchors.right: parent.right
                 anchors.rightMargin: 16
                 height: 86
-                radius: 14
-                color: Qt.rgba(0, 0, 0, 0.12)
+                radius: root.nothing ? 16 : 14
+                color: root.nothing ? root.skin.raised : Qt.rgba(0, 0, 0, 0.12)
 
                 Row {
                     anchors.fill: parent
@@ -525,7 +533,7 @@ Item {
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: index === 0 ? "Ahora" : (hItem.time || "")
-                                    color: Qt.rgba(1, 1, 1, 0.85)
+                                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.85)
                                     font.family: root.fontFamily
                                     font.pixelSize: 11
                                     font.weight: Font.Medium
@@ -540,9 +548,9 @@ Item {
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: hItem.temp || "--°"
-                                    color: "#FFFFFF"
-                                    font.family: root.fontFamily
-                                    font.pixelSize: 13
+                                    color: root.nothing ? root.skin.ink : "#FFFFFF"
+                                    font.family: root.fontFigure
+                                    font.pixelSize: root.nothing ? 13 : 13
                                     font.weight: Font.DemiBold
                                 }
                             }
@@ -563,8 +571,8 @@ Item {
                 anchors.leftMargin: 16
                 anchors.right: parent.right
                 anchors.rightMargin: 16
-                radius: 14
-                color: Qt.rgba(0, 0, 0, 0.12)
+                radius: root.nothing ? 16 : 14
+                color: root.nothing ? root.skin.raised : Qt.rgba(0, 0, 0, 0.12)
 
                 Column {
                     anchors.fill: parent
@@ -587,7 +595,7 @@ Item {
                                 Text {
                                     Layout.preferredWidth: 64
                                     text: dItem.day || ""
-                                    color: "#FFFFFF"
+                                    color: root.nothing ? root.skin.ink : "#FFFFFF"
                                     font.family: root.fontFamily
                                     font.pixelSize: 13
                                     font.weight: Font.DemiBold
@@ -601,8 +609,8 @@ Item {
                                 Text {
                                     Layout.preferredWidth: 32
                                     text: dItem.min || ""
-                                    color: Qt.rgba(1, 1, 1, 0.75)
-                                    font.family: root.fontFamily
+                                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.75)
+                                    font.family: root.fontFigure
                                     font.pixelSize: 13
                                     horizontalAlignment: Text.AlignRight
                                 }

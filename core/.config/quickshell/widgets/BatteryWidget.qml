@@ -6,6 +6,10 @@ Item {
     id: root
 
     property var widgetsState
+
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+    readonly property bool nothing: root.skin ? root.skin.isNothing : false
+
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
@@ -27,11 +31,11 @@ Item {
         id: cardBg
 
         anchors.fill: parent
-        radius: root.widgetsState ? root.widgetsState.cardRadius : 22
+        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
         clip: true
-        color: root.widgetsState ? root.widgetsState.cardBg : "#231B3D"
-        border.color: root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12)
-        border.width: 1
+        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#231B3D")
+        border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12))
+        border.width: root.nothing ? 0 : 1
 
         // ═══════════════════════════════════════════════════════════════════
         // ── 1. VISTA MEDIUM (354 x 170): 4 ANILLOS HORIZONTALES (REFERENCIA) ──
@@ -75,10 +79,10 @@ Item {
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     text: root.activeDevices.length > 0 ? root.activeDevices[0].name : "Sin dispositivos BT"
-                    font.family: "SF Pro Display, Inter, system-ui, sans-serif"
+                    font.family: root.nothing ? root.skin.fontText : "SF Pro Display, Inter, system-ui, sans-serif"
                     font.pixelSize: 11
                     font.weight: Font.DemiBold
-                    color: Qt.rgba(1, 1, 1, 0.7)
+                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.7)
                     elide: Text.ElideRight
                     Layout.maximumWidth: 140
                 }
@@ -331,7 +335,7 @@ Item {
                             // 1. Pista circular de fondo (Track)
                             ctx.beginPath();
                             ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
-                            ctx.strokeStyle = empty ? "rgba(255, 255, 255, 0.14)" : "rgba(255, 255, 255, 0.18)";
+                            ctx.strokeStyle = root.nothing ? root.skin.dotOff : (empty ? "rgba(255, 255, 255, 0.14)" : "rgba(255, 255, 255, 0.18)");
                             ctx.lineWidth = slot.strokeWidth;
                             ctx.stroke();
                             if (empty)
@@ -341,12 +345,15 @@ Item {
                             var startAngle = -Math.PI / 2;
                             var sweepAngle = (pct / 100) * 2 * Math.PI;
                             var endAngle = startAngle + sweepAngle;
-                            // Color macOS: Verde vibrante (#30D158), Amarillo (<25%), Rojo (<12%)
                             var strokeColor = "#30D158";
-                            if (pct <= 12)
-                                strokeColor = "#FF453A";
-                            else if (pct <= 25)
-                                strokeColor = "#FF9F0A";
+                            if (root.nothing) {
+                                strokeColor = (pct <= 15) ? root.skin.signal : root.skin.ink;
+                            } else {
+                                if (pct <= 12)
+                                    strokeColor = "#FF453A";
+                                else if (pct <= 25)
+                                    strokeColor = "#FF9F0A";
+                            }
                             ctx.beginPath();
                             ctx.arc(cx, cy, r, startAngle, endAngle, false);
                             ctx.strokeStyle = strokeColor;
@@ -354,8 +361,8 @@ Item {
                             ctx.lineCap = "round";
                             ctx.stroke();
                             // 3. Icono vectorial del dispositivo en el centro
-                            ctx.strokeStyle = "rgba(255, 255, 255, 0.90)";
-                            ctx.fillStyle = "rgba(255, 255, 255, 0.90)";
+                            ctx.strokeStyle = root.nothing ? root.skin.ink : "rgba(255, 255, 255, 0.90)";
+                            ctx.fillStyle = root.nothing ? root.skin.ink : "rgba(255, 255, 255, 0.90)";
                             var s = slot.ringDiameter / 58;
                             if (dType === "headset") {
                                 // Diadema de auriculares
@@ -417,11 +424,11 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     visible: !slot.isEmpty
                     text: slot.deviceData ? (slot.deviceData.percent + " %") : ""
-                    font.family: "SF Pro Display, Inter, system-ui, sans-serif"
-                    font.pixelSize: 13
+                    font.family: root.nothing ? root.skin.fontFigure : "SF Pro Display, Inter, system-ui, sans-serif"
+                    font.pixelSize: root.nothing ? 12 : 13
                     font.weight: Font.Medium
                     font.italic: false
-                    color: "#FFFFFF"
+                    color: root.nothing ? (slot.deviceData && slot.deviceData.percent <= 15 ? root.skin.signal : root.skin.ink) : "#FFFFFF"
                 }
 
                 // Espacio reservado transparente para los slots vacíos

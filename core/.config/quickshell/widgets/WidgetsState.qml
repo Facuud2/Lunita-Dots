@@ -20,6 +20,12 @@ Item {
     readonly property string activeThemeId: activeTokens && activeTokens.theme_id ? activeTokens.theme_id : "macos-theme"
     readonly property var widgetTokens: activeTokens && activeTokens.widgets ? activeTokens.widgets : ({
     })
+    // ── Capa estética (skin) por tema: "nothing" | "apple" | "fluent" ──
+    readonly property WidgetSkin skin: WidgetSkin {
+        activeThemeId: root.activeThemeId
+        widgetTokens: root.widgetTokens
+        isDarkTheme: root.isDarkTheme
+    }
     readonly property int cardRadius: {
         if (widgetTokens && widgetTokens.card_radius !== undefined)
             return widgetTokens.card_radius;

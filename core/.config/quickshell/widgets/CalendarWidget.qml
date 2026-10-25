@@ -12,17 +12,22 @@ Item {
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
-    readonly property bool isDark: root.widgetsState ? root.widgetsState.isDarkTheme : false
-    readonly property real cardRadius: root.widgetsState ? root.widgetsState.cardRadius : 22
-    readonly property string fontFamily: "SF Pro Display, SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
+    readonly property bool nothing: root.widgetsState && root.widgetsState.skin && root.widgetsState.skin.isNothing
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
 
-    // ── Apple iOS Color Tokens ──────────────────────────────────────────────
-    readonly property color cardBgColor: isDark ? (root.widgetsState ? root.widgetsState.cardBg : "#1C1C1E") : "#FFFFFF"
-    readonly property color cardBorderColor: isDark ? (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.10)) : Qt.rgba(0, 0, 0, 0.04)
-    readonly property color redAccentColor: isDark ? "#FF453A" : "#E0483C"
-    readonly property color textPrimaryColor: isDark ? "#FFFFFF" : "#000000"
-    readonly property color textSecondaryColor: isDark ? "#98989D" : "#8E8E93"
-    readonly property color gridLineColor: isDark ? Qt.rgba(1, 1, 1, 0.12) : "#E5E5EA"
+    readonly property bool isDark: root.widgetsState ? root.widgetsState.isDarkTheme : false
+    readonly property real cardRadius: root.nothing ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+    readonly property string fontFigure: root.nothing ? root.skin.fontFigure : "SF Pro Display"
+    readonly property string fontText: root.nothing ? root.skin.fontText : "SF Pro Display, SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
+    readonly property string fontFamily: fontText
+
+    // ── Color Tokens ──────────────────────────────────────────────
+    readonly property color cardBgColor: root.nothing ? root.skin.card : (isDark ? (root.widgetsState ? root.widgetsState.cardBg : "#1C1C1E") : "#FFFFFF")
+    readonly property color cardBorderColor: root.nothing ? root.skin.cardBorder : (isDark ? (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.10)) : Qt.rgba(0, 0, 0, 0.04))
+    readonly property color redAccentColor: root.nothing ? root.skin.signal : (isDark ? "#FF453A" : "#E0483C")
+    readonly property color textPrimaryColor: root.nothing ? root.skin.ink : (isDark ? "#FFFFFF" : "#000000")
+    readonly property color textSecondaryColor: root.nothing ? root.skin.inkDim : (isDark ? "#98989D" : "#8E8E93")
+    readonly property color gridLineColor: root.nothing ? root.skin.dotOff : (isDark ? Qt.rgba(1, 1, 1, 0.12) : "#E5E5EA")
 
     // ── Live Date and Time State ───────────────────────────────────────────
     property date nowTime: new Date()
@@ -173,10 +178,10 @@ Item {
 
                 Text {
                     text: root.todayDayNum
-                    font.family: root.fontFamily
+                    font.family: root.nothing ? root.fontFigure : root.fontFamily
                     font.pixelSize: Math.max(36, Math.round(parent.width * 0.28))
                     font.weight: Font.Normal
-                    font.letterSpacing: -1.2
+                    font.letterSpacing: root.nothing ? 0 : -1.2
                     color: root.textPrimaryColor
                 }
             }
@@ -288,10 +293,10 @@ Item {
                     x: 0
                     y: Math.round(largeView.topHeaderY + largeView.height * 0.042)
                     text: root.todayDayNum
-                    font.family: root.fontFamily
+                    font.family: root.nothing ? root.fontFigure : root.fontFamily
                     font.pixelSize: Math.max(34, Math.round(largeView.height * 0.125))
                     font.weight: Font.Normal
-                    font.letterSpacing: -1.2
+                    font.letterSpacing: root.nothing ? 0 : -1.2
                     color: root.textPrimaryColor
                 }
 
@@ -574,10 +579,10 @@ Item {
 
                     Text {
                         text: root.todayDayNum
-                        font.family: root.fontFamily
+                        font.family: root.nothing ? root.fontFigure : root.fontFamily
                         font.pixelSize: 42
                         font.weight: Font.Normal
-                        font.letterSpacing: -1.2
+                        font.letterSpacing: root.nothing ? 0 : -1.2
                         color: root.textPrimaryColor
                     }
                 }

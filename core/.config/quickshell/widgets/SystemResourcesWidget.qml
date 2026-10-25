@@ -5,6 +5,10 @@ Item {
     id: root
 
     property var widgetsState
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+    readonly property bool nothing: skin ? skin.isNothing : false
+    readonly property string fontText: (nothing && skin) ? skin.fontText : "SF Pro Display"
+    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : "SF Pro Display"
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
@@ -12,10 +16,10 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: root.widgetsState ? root.widgetsState.cardRadius : 22
-        color: root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75)
-        border.color: root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14)
-        border.width: 1
+        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
+        border.color: root.nothing ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
+        border.width: root.nothing ? 0 : 1
         clip: true
 
         // ═══════════════════════════════════════════════════════════════════
@@ -55,7 +59,7 @@ Item {
                             ctx.beginPath();
                             ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
                             ctx.lineWidth = 4;
-                            ctx.strokeStyle = root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
+                            ctx.strokeStyle = root.nothing ? root.skin.dotOff : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)");
                             ctx.stroke();
                             var pct = Math.min(1, Math.max(0, (root.widgetsState ? root.widgetsState.cpuPercent : 0) / 100));
                             var startA = -0.5 * Math.PI;
@@ -63,7 +67,7 @@ Item {
                             ctx.arc(cx, cy, r, startA, startA + (pct * 2 * Math.PI), false);
                             ctx.lineWidth = 4;
                             ctx.lineCap = "round";
-                            ctx.strokeStyle = "#64D2FF";
+                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.ink) : "#64D2FF";
                             ctx.stroke();
                         }
 
@@ -84,19 +88,19 @@ Item {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "CPU"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 8
                             font.weight: Font.Bold
-                            color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                            color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                         }
 
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: (root.widgetsState ? root.widgetsState.cpuPercent : 0) + "%"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontFigure
                             font.pixelSize: 10
                             font.weight: Font.ExtraBold
-                            color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
                         }
 
                     }
@@ -106,10 +110,10 @@ Item {
                         anchors.top: cpuCanvas.bottom
                         anchors.topMargin: 2
                         text: "Núcleos"
-                        font.family: "SF Pro Display"
+                        font.family: root.fontText
                         font.pixelSize: 8
                         font.weight: Font.Medium
-                        color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                        color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                     }
 
                 }
@@ -136,7 +140,7 @@ Item {
                             ctx.beginPath();
                             ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
                             ctx.lineWidth = 4;
-                            ctx.strokeStyle = root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
+                            ctx.strokeStyle = root.nothing ? root.skin.dotOff : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)");
                             ctx.stroke();
                             var pct = Math.min(1, Math.max(0, (root.widgetsState ? root.widgetsState.ramPercent : 0) / 100));
                             var startA = -0.5 * Math.PI;
@@ -144,7 +148,7 @@ Item {
                             ctx.arc(cx, cy, r, startA, startA + (pct * 2 * Math.PI), false);
                             ctx.lineWidth = 4;
                             ctx.lineCap = "round";
-                            ctx.strokeStyle = "#30D158";
+                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.ink) : "#30D158";
                             ctx.stroke();
                         }
 
@@ -165,19 +169,19 @@ Item {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "RAM"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 8
                             font.weight: Font.Bold
-                            color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                            color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                         }
 
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: (root.widgetsState ? root.widgetsState.ramPercent : 0) + "%"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontFigure
                             font.pixelSize: 10
                             font.weight: Font.ExtraBold
-                            color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
                         }
 
                     }
@@ -187,10 +191,10 @@ Item {
                         anchors.top: ramCanvas.bottom
                         anchors.topMargin: 2
                         text: (root.widgetsState && root.widgetsState.ramUsed) ? root.widgetsState.ramUsed : "0 GB"
-                        font.family: "SF Pro Display"
+                        font.family: root.fontFigure
                         font.pixelSize: 8
                         font.weight: Font.ExtraBold
-                        color: "#30D158"
+                        color: root.nothing ? root.skin.ink : "#30D158"
                     }
 
                 }
@@ -225,7 +229,7 @@ Item {
                             ctx.beginPath();
                             ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
                             ctx.lineWidth = 4;
-                            ctx.strokeStyle = root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
+                            ctx.strokeStyle = root.nothing ? root.skin.dotOff : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)");
                             ctx.stroke();
                             var pct = Math.min(1, Math.max(0, (root.widgetsState ? root.widgetsState.gpuPercent : 0) / 100));
                             var startA = -0.5 * Math.PI;
@@ -233,7 +237,7 @@ Item {
                             ctx.arc(cx, cy, r, startA, startA + (pct * 2 * Math.PI), false);
                             ctx.lineWidth = 4;
                             ctx.lineCap = "round";
-                            ctx.strokeStyle = "#BF5AF2";
+                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.ink) : "#BF5AF2";
                             ctx.stroke();
                         }
 
@@ -254,19 +258,19 @@ Item {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "GPU"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 8
                             font.weight: Font.Bold
-                            color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                            color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                         }
 
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: (root.widgetsState ? root.widgetsState.gpuPercent : 0) + "%"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontFigure
                             font.pixelSize: 10
                             font.weight: Font.ExtraBold
-                            color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
                         }
 
                     }
@@ -276,10 +280,10 @@ Item {
                         anchors.top: gpuCanvas.bottom
                         anchors.topMargin: 2
                         text: (root.widgetsState && root.widgetsState.vramUsed) ? root.widgetsState.vramUsed : "0 GB"
-                        font.family: "SF Pro Display"
+                        font.family: root.fontFigure
                         font.pixelSize: 8
                         font.weight: Font.ExtraBold
-                        color: "#BF5AF2"
+                        color: root.nothing ? root.skin.ink : "#BF5AF2"
                     }
 
                 }
@@ -306,7 +310,7 @@ Item {
                             ctx.beginPath();
                             ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
                             ctx.lineWidth = 4;
-                            ctx.strokeStyle = root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)";
+                            ctx.strokeStyle = root.nothing ? root.skin.dotOff : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)");
                             ctx.stroke();
                             var pct = Math.min(1, Math.max(0, (root.widgetsState ? root.widgetsState.diskPercent : 0) / 100));
                             var startA = -0.5 * Math.PI;
@@ -314,7 +318,7 @@ Item {
                             ctx.arc(cx, cy, r, startA, startA + (pct * 2 * Math.PI), false);
                             ctx.lineWidth = 4;
                             ctx.lineCap = "round";
-                            ctx.strokeStyle = "#FF9F0A";
+                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.ink) : "#FF9F0A";
                             ctx.stroke();
                         }
 
@@ -335,19 +339,19 @@ Item {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "DISCO"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 8
                             font.weight: Font.Bold
-                            color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                            color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                         }
 
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: (root.widgetsState ? root.widgetsState.diskPercent : 0) + "%"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontFigure
                             font.pixelSize: 10
                             font.weight: Font.ExtraBold
-                            color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
                         }
 
                     }
@@ -357,10 +361,10 @@ Item {
                         anchors.top: diskCanvas.bottom
                         anchors.topMargin: 2
                         text: (root.widgetsState && root.widgetsState.diskUsed) ? root.widgetsState.diskUsed : "0 GB"
-                        font.family: "SF Pro Display"
+                        font.family: root.fontFigure
                         font.pixelSize: 8
                         font.weight: Font.Bold
-                        color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                        color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                     }
 
                 }
@@ -384,10 +388,10 @@ Item {
 
                 Text {
                     text: "MONITOR DE ACTIVIDAD"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontText
                     font.pixelSize: 10
                     font.weight: Font.ExtraBold
-                    color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                    color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                     font.letterSpacing: 0.5
                 }
 
@@ -399,7 +403,7 @@ Item {
                     height: 16
                     radius: 8
                     implicitWidth: liveRowM.implicitWidth + 10
-                    color: Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.15)
+                    color: root.nothing ? root.skin.raised : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.15)
 
                     RowLayout {
                         id: liveRowM
@@ -411,15 +415,15 @@ Item {
                             width: 5
                             height: 5
                             radius: 2.5
-                            color: "#64D2FF"
+                            color: root.nothing ? root.skin.signal : "#64D2FF"
                         }
 
                         Text {
                             text: "SISTEMA"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 8
                             font.weight: Font.Bold
-                            color: "#64D2FF"
+                            color: root.nothing ? root.skin.ink : "#64D2FF"
                         }
 
                     }
@@ -437,21 +441,21 @@ Item {
                     width: 22
                     height: 22
                     radius: 6
-                    color: Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.15)
+                    color: root.nothing ? root.skin.raised : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.15)
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰻠"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: "#64D2FF"
+                        color: root.nothing ? root.skin.ink : "#64D2FF"
                     }
 
                 }
 
                 Text {
                     text: "CPU"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontText
                     font.pixelSize: 11
                     font.weight: Font.Bold
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
@@ -462,13 +466,13 @@ Item {
                     Layout.fillWidth: true
                     height: 8
                     radius: 4
-                    color: Qt.rgba(1, 1, 1, 0.08)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08)
 
                     Rectangle {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.cpuPercent : 0)) / 100))
                         radius: 4
-                        color: "#64D2FF"
+                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#64D2FF"
 
                         Behavior on width {
                             NumberAnimation {
@@ -483,10 +487,10 @@ Item {
 
                 Text {
                     text: (root.widgetsState ? root.widgetsState.cpuPercent : 0) + "%"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontFigure
                     font.pixelSize: 11
                     font.weight: Font.ExtraBold
-                    color: "#64D2FF"
+                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#64D2FF"
                     Layout.preferredWidth: 40
                     horizontalAlignment: Text.AlignRight
                 }
@@ -502,21 +506,21 @@ Item {
                     width: 22
                     height: 22
                     radius: 6
-                    color: Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.15)
+                    color: root.nothing ? root.skin.raised : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.15)
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰍛"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: "#30D158"
+                        color: root.nothing ? root.skin.ink : "#30D158"
                     }
 
                 }
 
                 Text {
                     text: "RAM"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontText
                     font.pixelSize: 11
                     font.weight: Font.Bold
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
@@ -527,13 +531,13 @@ Item {
                     Layout.fillWidth: true
                     height: 8
                     radius: 4
-                    color: Qt.rgba(1, 1, 1, 0.08)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08)
 
                     Rectangle {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.ramPercent : 0)) / 100))
                         radius: 4
-                        color: "#30D158"
+                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#30D158"
 
                         Behavior on width {
                             NumberAnimation {
@@ -548,10 +552,10 @@ Item {
 
                 Text {
                     text: (root.widgetsState ? root.widgetsState.ramUsed : "0 GB") + " (" + (root.widgetsState ? root.widgetsState.ramPercent : 0) + "%)"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontFigure
                     font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: "#30D158"
+                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#30D158"
                     Layout.preferredWidth: 95
                     horizontalAlignment: Text.AlignRight
                 }
@@ -567,21 +571,21 @@ Item {
                     width: 22
                     height: 22
                     radius: 6
-                    color: Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.15)
+                    color: root.nothing ? root.skin.raised : Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.15)
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰢮"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: "#BF5AF2"
+                        color: root.nothing ? root.skin.ink : "#BF5AF2"
                     }
 
                 }
 
                 Text {
                     text: "GPU"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontText
                     font.pixelSize: 11
                     font.weight: Font.Bold
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
@@ -592,13 +596,13 @@ Item {
                     Layout.fillWidth: true
                     height: 8
                     radius: 4
-                    color: Qt.rgba(1, 1, 1, 0.08)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08)
 
                     Rectangle {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.gpuPercent : 0)) / 100))
                         radius: 4
-                        color: "#BF5AF2"
+                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#BF5AF2"
 
                         Behavior on width {
                             NumberAnimation {
@@ -613,10 +617,10 @@ Item {
 
                 Text {
                     text: (root.widgetsState ? root.widgetsState.gpuPercent : 0) + "% (" + (root.widgetsState ? root.widgetsState.vramUsed : "0 GB") + ")"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontFigure
                     font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: "#BF5AF2"
+                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#BF5AF2"
                     Layout.preferredWidth: 95
                     horizontalAlignment: Text.AlignRight
                 }
@@ -632,21 +636,21 @@ Item {
                     width: 22
                     height: 22
                     radius: 6
-                    color: Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.15)
+                    color: root.nothing ? root.skin.raised : Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.15)
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰋊"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: "#FF9F0A"
+                        color: root.nothing ? root.skin.ink : "#FF9F0A"
                     }
 
                 }
 
                 Text {
                     text: "SSD"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontText
                     font.pixelSize: 11
                     font.weight: Font.Bold
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
@@ -657,13 +661,13 @@ Item {
                     Layout.fillWidth: true
                     height: 8
                     radius: 4
-                    color: Qt.rgba(1, 1, 1, 0.08)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08)
 
                     Rectangle {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.diskPercent : 0)) / 100))
                         radius: 4
-                        color: "#FF9F0A"
+                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#FF9F0A"
 
                         Behavior on width {
                             NumberAnimation {
@@ -678,10 +682,10 @@ Item {
 
                 Text {
                     text: (root.widgetsState ? root.widgetsState.diskUsed : "0 GB") + " / " + (root.widgetsState ? root.widgetsState.diskTotal : "0 GB")
-                    font.family: "SF Pro Display"
+                    font.family: root.fontFigure
                     font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: "#FF9F0A"
+                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#FF9F0A"
                     Layout.preferredWidth: 95
                     horizontalAlignment: Text.AlignRight
                 }
@@ -708,15 +712,15 @@ Item {
                     text: "󰍛"
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 15
-                    color: "#64D2FF"
+                    color: root.nothing ? root.skin.ink : "#64D2FF"
                 }
 
                 Text {
                     text: "MONITOR DE RENDIMIENTO"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontText
                     font.pixelSize: 11
                     font.weight: Font.ExtraBold
-                    color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                    color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
                     font.letterSpacing: 0.6
                 }
 
@@ -729,8 +733,8 @@ Item {
                     height: 20
                     radius: 10
                     implicitWidth: liveRowL.implicitWidth + 12
-                    color: Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.15)
-                    border.color: Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.3)
+                    color: root.nothing ? root.skin.raised : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.15)
+                    border.color: root.nothing ? "transparent" : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.3)
                     border.width: 1
 
                     RowLayout {
@@ -743,7 +747,7 @@ Item {
                             width: 6
                             height: 6
                             radius: 3
-                            color: "#30D158"
+                            color: root.nothing ? root.skin.signal : "#30D158"
 
                             SequentialAnimation on opacity {
                                 loops: Animation.Infinite
@@ -768,10 +772,10 @@ Item {
 
                         Text {
                             text: "EN TIEMPO REAL"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 9
                             font.weight: Font.Bold
-                            color: "#30D158"
+                            color: root.nothing ? root.skin.ink : "#30D158"
                         }
 
                     }
@@ -792,9 +796,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: 14
-                    color: Qt.rgba(1, 1, 1, 0.05)
-                    border.color: Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.22)
+                    radius: root.nothing ? 16 : 14
+                    color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                    border.color: root.nothing ? "transparent" : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.22)
                     border.width: 1
 
                     ColumnLayout {
@@ -813,14 +817,14 @@ Item {
                                 width: 22
                                 height: 22
                                 radius: 6
-                                color: Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.18)
+                                color: root.nothing ? root.skin.card : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.18)
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰻠"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: "#64D2FF"
+                                    color: root.nothing ? root.skin.ink : "#64D2FF"
                                 }
 
                             }
@@ -833,19 +837,19 @@ Item {
                                 Text {
                                     Layout.fillWidth: true
                                     text: "Procesador"
-                                    font.family: "SF Pro Display"
+                                    font.family: root.fontText
                                     font.pixelSize: 10
                                     font.weight: Font.Bold
-                                    color: "#FFFFFF"
+                                    color: root.nothing ? root.skin.ink : "#FFFFFF"
                                     elide: Text.ElideRight
                                 }
 
                                 Text {
                                     Layout.fillWidth: true
                                     text: "CPU"
-                                    font.family: "SF Pro Display"
+                                    font.family: root.fontText
                                     font.pixelSize: 8
-                                    color: Qt.rgba(1, 1, 1, 0.5)
+                                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.5)
                                     elide: Text.ElideRight
                                 }
 
@@ -853,10 +857,10 @@ Item {
 
                             Text {
                                 text: (root.widgetsState ? root.widgetsState.cpuPercent : 0) + "%"
-                                font.family: "SF Pro Display"
+                                font.family: root.fontFigure
                                 font.pixelSize: 14
                                 font.weight: Font.Bold
-                                color: "#64D2FF"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#64D2FF"
                                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                             }
 
@@ -871,13 +875,13 @@ Item {
                             Layout.fillWidth: true
                             height: 6
                             radius: 3
-                            color: Qt.rgba(1, 1, 1, 0.1)
+                            color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
 
                             Rectangle {
                                 height: parent.height
                                 width: Math.max(5, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.cpuPercent : 0)) / 100))
                                 radius: 3
-                                color: "#64D2FF"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#64D2FF"
 
                                 Behavior on width {
                                     NumberAnimation {
@@ -893,9 +897,9 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: "Carga general del sistema"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 8
-                            color: Qt.rgba(1, 1, 1, 0.55)
+                            color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.55)
                             elide: Text.ElideRight
                         }
 
@@ -907,9 +911,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: 14
-                    color: Qt.rgba(1, 1, 1, 0.05)
-                    border.color: Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.22)
+                    radius: root.nothing ? 16 : 14
+                    color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                    border.color: root.nothing ? "transparent" : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.22)
                     border.width: 1
 
                     ColumnLayout {
@@ -928,14 +932,14 @@ Item {
                                 width: 22
                                 height: 22
                                 radius: 6
-                                color: Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.18)
+                                color: root.nothing ? root.skin.card : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.18)
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰍛"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: "#30D158"
+                                    color: root.nothing ? root.skin.ink : "#30D158"
                                 }
 
                             }
@@ -948,19 +952,19 @@ Item {
                                 Text {
                                     Layout.fillWidth: true
                                     text: "Memoria RAM"
-                                    font.family: "SF Pro Display"
+                                    font.family: root.fontText
                                     font.pixelSize: 10
                                     font.weight: Font.Bold
-                                    color: "#FFFFFF"
+                                    color: root.nothing ? root.skin.ink : "#FFFFFF"
                                     elide: Text.ElideRight
                                 }
 
                                 Text {
                                     Layout.fillWidth: true
                                     text: "Unificada"
-                                    font.family: "SF Pro Display"
+                                    font.family: root.fontText
                                     font.pixelSize: 8
-                                    color: Qt.rgba(1, 1, 1, 0.5)
+                                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.5)
                                     elide: Text.ElideRight
                                 }
 
@@ -968,10 +972,10 @@ Item {
 
                             Text {
                                 text: (root.widgetsState ? root.widgetsState.ramPercent : 0) + "%"
-                                font.family: "SF Pro Display"
+                                font.family: root.fontFigure
                                 font.pixelSize: 14
                                 font.weight: Font.Bold
-                                color: "#30D158"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#30D158"
                                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                             }
 
@@ -986,13 +990,13 @@ Item {
                             Layout.fillWidth: true
                             height: 6
                             radius: 3
-                            color: Qt.rgba(1, 1, 1, 0.1)
+                            color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
 
                             Rectangle {
                                 height: parent.height
                                 width: Math.max(5, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.ramPercent : 0)) / 100))
                                 radius: 3
-                                color: "#30D158"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#30D158"
 
                                 Behavior on width {
                                     NumberAnimation {
@@ -1008,9 +1012,9 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: (root.widgetsState ? root.widgetsState.ramUsed : "0 GB") + " en uso de " + (root.widgetsState ? root.widgetsState.ramTotal : "0 GB")
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 8
-                            color: Qt.rgba(1, 1, 1, 0.65)
+                            color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.65)
                             elide: Text.ElideRight
                         }
 
@@ -1022,9 +1026,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: 14
-                    color: Qt.rgba(1, 1, 1, 0.05)
-                    border.color: Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.22)
+                    radius: root.nothing ? 16 : 14
+                    color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                    border.color: root.nothing ? "transparent" : Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.22)
                     border.width: 1
 
                     ColumnLayout {
@@ -1043,14 +1047,14 @@ Item {
                                 width: 22
                                 height: 22
                                 radius: 6
-                                color: Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.18)
+                                color: root.nothing ? root.skin.card : Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.18)
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰢮"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: "#BF5AF2"
+                                    color: root.nothing ? root.skin.ink : "#BF5AF2"
                                 }
 
                             }
@@ -1063,19 +1067,19 @@ Item {
                                 Text {
                                     Layout.fillWidth: true
                                     text: "Tarjeta Gráfica"
-                                    font.family: "SF Pro Display"
+                                    font.family: root.fontText
                                     font.pixelSize: 10
                                     font.weight: Font.Bold
-                                    color: "#FFFFFF"
+                                    color: root.nothing ? root.skin.ink : "#FFFFFF"
                                     elide: Text.ElideRight
                                 }
 
                                 Text {
                                     Layout.fillWidth: true
                                     text: "GPU & VRAM"
-                                    font.family: "SF Pro Display"
+                                    font.family: root.fontText
                                     font.pixelSize: 8
-                                    color: Qt.rgba(1, 1, 1, 0.5)
+                                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.5)
                                     elide: Text.ElideRight
                                 }
 
@@ -1083,10 +1087,10 @@ Item {
 
                             Text {
                                 text: (root.widgetsState ? root.widgetsState.gpuPercent : 0) + "%"
-                                font.family: "SF Pro Display"
+                                font.family: root.fontFigure
                                 font.pixelSize: 14
                                 font.weight: Font.Bold
-                                color: "#BF5AF2"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#BF5AF2"
                                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                             }
 
@@ -1101,13 +1105,13 @@ Item {
                             Layout.fillWidth: true
                             height: 6
                             radius: 3
-                            color: Qt.rgba(1, 1, 1, 0.1)
+                            color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
 
                             Rectangle {
                                 height: parent.height
                                 width: Math.max(5, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.gpuPercent : 0)) / 100))
                                 radius: 3
-                                color: "#BF5AF2"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#BF5AF2"
 
                                 Behavior on width {
                                     NumberAnimation {
@@ -1123,9 +1127,9 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: "VRAM: " + (root.widgetsState ? root.widgetsState.vramUsed : "0 GB") + " asignados"
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 8
-                            color: Qt.rgba(1, 1, 1, 0.65)
+                            color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.65)
                             elide: Text.ElideRight
                         }
 
@@ -1137,9 +1141,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: 14
-                    color: Qt.rgba(1, 1, 1, 0.05)
-                    border.color: Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.22)
+                    radius: root.nothing ? 16 : 14
+                    color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                    border.color: root.nothing ? "transparent" : Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.22)
                     border.width: 1
 
                     ColumnLayout {
@@ -1158,14 +1162,14 @@ Item {
                                 width: 22
                                 height: 22
                                 radius: 6
-                                color: Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.18)
+                                color: root.nothing ? root.skin.card : Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.18)
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰋊"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: "#FF9F0A"
+                                    color: root.nothing ? root.skin.ink : "#FF9F0A"
                                 }
 
                             }
@@ -1178,19 +1182,19 @@ Item {
                                 Text {
                                     Layout.fillWidth: true
                                     text: "Almacenamiento"
-                                    font.family: "SF Pro Display"
+                                    font.family: root.fontText
                                     font.pixelSize: 10
                                     font.weight: Font.Bold
-                                    color: "#FFFFFF"
+                                    color: root.nothing ? root.skin.ink : "#FFFFFF"
                                     elide: Text.ElideRight
                                 }
 
                                 Text {
                                     Layout.fillWidth: true
                                     text: "SSD Principal"
-                                    font.family: "SF Pro Display"
+                                    font.family: root.fontText
                                     font.pixelSize: 8
-                                    color: Qt.rgba(1, 1, 1, 0.5)
+                                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.5)
                                     elide: Text.ElideRight
                                 }
 
@@ -1198,10 +1202,10 @@ Item {
 
                             Text {
                                 text: (root.widgetsState ? root.widgetsState.diskPercent : 0) + "%"
-                                font.family: "SF Pro Display"
+                                font.family: root.fontFigure
                                 font.pixelSize: 14
                                 font.weight: Font.Bold
-                                color: "#FF9F0A"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#FF9F0A"
                                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                             }
 
@@ -1216,13 +1220,13 @@ Item {
                             Layout.fillWidth: true
                             height: 6
                             radius: 3
-                            color: Qt.rgba(1, 1, 1, 0.1)
+                            color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
 
                             Rectangle {
                                 height: parent.height
                                 width: Math.max(5, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.diskPercent : 0)) / 100))
                                 radius: 3
-                                color: "#FF9F0A"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#FF9F0A"
 
                                 Behavior on width {
                                     NumberAnimation {
@@ -1238,9 +1242,9 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: (root.widgetsState ? root.widgetsState.diskUsed : "0 GB") + " ocupados de " + (root.widgetsState ? root.widgetsState.diskTotal : "0 GB")
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 8
-                            color: Qt.rgba(1, 1, 1, 0.65)
+                            color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.65)
                             elide: Text.ElideRight
                         }
 

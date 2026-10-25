@@ -815,3 +815,25 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   2. En modo manual, el usuario puede introducir valores concretos desde el widget y persistirlos en el almacenamiento local.
   3. Al vincular una cuenta de Strava, el widget obtiene periódicamente las métricas recientes y actualiza los anillos de actividad de forma automática.
 - **Dependencias:** [ISSUE-048]
+
+---
+
+### [ISSUE-054] Rediseño Estético Exclusivo de Widgets de Escritorio al Estilo NothingOS
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_054_STYLE`
+- **Módulo(s):** Temas / Widgets / Quickshell / `lunita-default`
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WidgetSkin.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/NdDotRing.qml`, `core/.config/quickshell/widgets/NdDotBar.qml`, `core/.config/quickshell/widgets/NdDotGrid.qml`, `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/WeatherWidget.qml`, `core/.config/quickshell/widgets/BatteryWidget.qml`, `core/.config/quickshell/widgets/NetworkWidget.qml`, `core/.config/quickshell/widgets/SystemResourcesWidget.qml`, `core/.config/quickshell/widgets/GitActivityWidget.qml`, `core/.config/quickshell/widgets/HabitTrackerWidget.qml`, `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/MediaWidget.qml`, `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`
+- **Descripción:** Rediseñar la capa visual de los 12 widgets de escritorio en Quickshell adoptando la identidad NothingOS (Nothing Phone / Nothing OS 2.5/3.0) para el tema `lunita-default`, preservando íntegramente las funcionalidades, interactividad, gestos y APIs subyacentes:
+  1. **Arquitectura desacoplada de Skin:** Implementación de `WidgetSkin.qml` y primitivas dot-matrix (`NdDotRing`, `NdDotBar`, `NdDotGrid`), garantizando que la lógica de backend sea compartida y otros temas puedan mantener o definir sus propios skins (Apple en macOS, Fluent en Modern-Win11).
+  2. **Lenguaje Visual NothingOS:**
+     - Paleta monocromática estricta (negro `#111111`, gris `#1C1C1C`, blanco `#F5F5F5`, gris medio `#8F8F8F`) con acento de señal único rojo Nothing (`#D71921`) para estados activos/"en vivo".
+     - Tipografía dual: cifras y datos principales en matriz de puntos LED (*NDOT 47* / *Doto*), textos de interfaz y cuerpo en *Space Grotesk*.
+     - Tarjetas planas sin degradados, sombras ni blur; radio consistente de 24px.
+  3. **Adaptación de los 12 widgets:** Reloj apilado digital, Clima monocromo plano, Anillos de progreso por puntos en Recursos/Salud/Batería, Heatmap de puntos en GitHub Activity, papel de puntos en Notas y carátula vinilo en Media.
+- **Criterios de Aceptación:**
+  1. Todos los widgets muestran la estética NothingOS en `lunita-default`.
+  2. Ninguna funcionalidad previa (interacción de notas, smart stack, providers, IPC) se degrada ni altera.
+  3. El tema `macos-theme` mantiene su diseño previo sin regresiones.
+  4. Quickshell carga limpiamente sin errores de sintaxis QML.
+- **Dependencias:** [ISSUE-050], [ISSUE-051]

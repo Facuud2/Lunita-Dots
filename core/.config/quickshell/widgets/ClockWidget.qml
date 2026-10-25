@@ -7,6 +7,9 @@ Item {
     property var widgetsState: null
     property var canvas: null
 
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+    readonly property bool nothing: root.skin ? root.skin.isNothing : false
+
     // Forzar dimensiones pequeñas estándar (170 x 170)
     width: 170
     height: 170
@@ -15,19 +18,91 @@ Item {
         id: cardBg
 
         anchors.fill: parent
-        radius: root.widgetsState ? root.widgetsState.cardRadius : 22
+        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
         clip: true
-        color: root.widgetsState ? root.widgetsState.cardBg : "#211A39"
-        border.color: root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12)
-        border.width: 1
+        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#211A39")
+        border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12))
+        border.width: root.nothing ? 0 : 1
 
         // ═══════════════════════════════════════════════════════════════════
         // ── ESFERA ANALÓGICA EXCLUSIVA (Reloj Suave macOS, Centrado) ───────
         // ═══════════════════════════════════════════════════════════════════
         AnalogClockFace {
             id: mainClockFace
+            visible: !root.nothing
             anchors.centerIn: parent
             dialSize: 142
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // ── SKIN NOTHING: HORA DOT-MATRIX APILADA ──────────────────────────
+        // ═══════════════════════════════════════════════════════════════════
+        Item {
+            id: nothingFace
+
+            property date now: new Date()
+
+            anchors.fill: parent
+            anchors.margins: root.nothing ? root.skin.pad : 16
+            visible: root.nothing
+
+            Timer {
+                interval: 1000
+                running: nothingFace.visible
+                repeat: true
+                triggeredOnStart: true
+                onTriggered: nothingFace.now = new Date()
+            }
+
+            // Punto rojo de "en vivo": late con los segundos
+            Rectangle {
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.topMargin: 4
+                width: 8
+                height: 8
+                radius: 4
+                color: root.nothing ? root.skin.signal : "red"
+                opacity: nothingFace.now.getSeconds() % 2 === 0 ? 1 : 0.25
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 250 }
+                }
+            }
+
+            Column {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.topMargin: -4
+                spacing: -14
+
+                Text {
+                    text: Qt.formatTime(nothingFace.now, "HH")
+                    font.family: root.nothing ? root.skin.fontFigure : "Doto"
+                    font.pixelSize: 54
+                    color: root.nothing ? root.skin.ink : "white"
+                }
+
+                Text {
+                    text: Qt.formatTime(nothingFace.now, "mm")
+                    font.family: root.nothing ? root.skin.fontFigure : "Doto"
+                    font.pixelSize: 54
+                    color: root.nothing ? root.skin.inkDim : "grey"
+                }
+            }
+
+            Text {
+                anchors.left: parent.left
+                anchors.bottom: parent.bottom
+                text: {
+                    var s = nothingFace.now.toLocaleDateString(Qt.locale("es_AR"), "ddd d MMM");
+                    return s.charAt(0).toUpperCase() + s.slice(1).replace(/\./g, "");
+                }
+                font.family: root.nothing ? root.skin.fontText : "sans-serif"
+                font.pixelSize: root.nothing ? root.skin.sizeBody : 14
+                font.weight: Font.Medium
+                color: root.nothing ? root.skin.ink : "white"
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -43,7 +118,7 @@ Item {
 
             Timer {
                 interval: 200
-                running: true
+                running: clockFace.visible
                 repeat: true
                 onTriggered: dialCanvas.requestPaint()
             }

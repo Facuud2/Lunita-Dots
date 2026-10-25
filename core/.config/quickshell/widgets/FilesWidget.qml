@@ -12,17 +12,20 @@ Item {
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
-    readonly property real cardRadius: root.widgetsState ? root.widgetsState.cardRadius : 22
-    readonly property string fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Cantarell, sans-serif"
+    readonly property bool nothing: root.widgetsState && root.widgetsState.skin && root.widgetsState.skin.isNothing
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
 
-    // ── Colores de la estética iOS Files Aqua / Menta ─────────────────────
+    readonly property real cardRadius: root.nothing ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+    readonly property string fontFamily: root.nothing ? root.skin.fontText : "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Cantarell, sans-serif"
+
+    // ── Colores de la estética Files ─────────────────────
     readonly property color gradTop: "#86D8CA" // taste-skill-ignore
     readonly property color gradBottom: "#65C0B1" // taste-skill-ignore
-    readonly property color textPrimary: "#114B44"
-    readonly property color textSecondary: "#306962"
-    readonly property color shelfLineColor: Qt.rgba(255, 255, 255, 0.28)
-    readonly property color pillBgColor: Qt.rgba(255, 255, 255, 0.26)
-    readonly property color pillBorderColor: Qt.rgba(255, 255, 255, 0.35)
+    readonly property color textPrimary: root.nothing ? root.skin.ink : "#114B44"
+    readonly property color textSecondary: root.nothing ? root.skin.inkDim : "#306962"
+    readonly property color shelfLineColor: root.nothing ? root.skin.dotOff : Qt.rgba(255, 255, 255, 0.28)
+    readonly property color pillBgColor: root.nothing ? root.skin.surface : Qt.rgba(255, 255, 255, 0.26)
+    readonly property color pillBorderColor: root.nothing ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.35)
 
     // ── Datos reactivos de archivos ───────────────────────────────────────
     readonly property var fallbackFiles: [
@@ -142,11 +145,11 @@ Item {
         property string fileType: "pdf"
         property string fileName: ""
 
-        color: "#FFFFFF"
+        color: root.nothing ? root.skin.surface : "#FFFFFF"
         radius: 4
         clip: true
-        border.color: Qt.rgba(0, 0, 0, 0.10) // taste-skill-ignore
-        border.width: 1 // taste-skill-ignore
+        border.color: root.nothing ? root.skin.dotOff : Qt.rgba(0, 0, 0, 0.10)
+        border.width: 1
 
         // 1. Imagen real (si existe thumbnail del sistema o es imagen directa)
         Image {
@@ -178,7 +181,9 @@ Item {
                 anchors.right: parent.right
                 anchors.rightMargin: 2
                 height: thumbRoot.height > 50 ? 9 : 6
-                color: thumbRoot.fileType === "image" ? "#10B981" : (thumbRoot.fileName.toLowerCase().indexOf("cv") !== -1 ? "#B91C1C" : "#D97706") // taste-skill-ignore
+                color: root.nothing
+                    ? (thumbRoot.fileName.toLowerCase().indexOf("cv") !== -1 ? root.skin.signal : root.skin.inkDim)
+                    : (thumbRoot.fileType === "image" ? "#10B981" : (thumbRoot.fileName.toLowerCase().indexOf("cv") !== -1 ? "#B91C1C" : "#D97706"))
                 radius: 1.5
 
                 Rectangle {
@@ -205,53 +210,53 @@ Item {
 
                 Rectangle {
                     width: parent.width * 0.90
-                    height: 1.5 // taste-skill-ignore
+                    height: 1.5
                     radius: 0.75
-                    color: Qt.rgba(0, 0, 0, 0.22)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(0, 0, 0, 0.22)
                 }
 
                 Rectangle {
                     width: parent.width * 0.75
-                    height: 1.5 // taste-skill-ignore
+                    height: 1.5
                     radius: 0.75
-                    color: Qt.rgba(0, 0, 0, 0.18)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(0, 0, 0, 0.18)
                 }
 
                 Rectangle {
                     width: parent.width * 0.85
-                    height: 1.5 // taste-skill-ignore
+                    height: 1.5
                     radius: 0.75
-                    color: Qt.rgba(0, 0, 0, 0.18)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(0, 0, 0, 0.18)
                 }
 
                 Rectangle {
                     width: parent.width * 0.60
-                    height: 1.5 // taste-skill-ignore
+                    height: 1.5
                     radius: 0.75
-                    color: Qt.rgba(0, 0, 0, 0.16)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(0, 0, 0, 0.16)
                 }
 
                 Rectangle {
                     width: parent.width * 0.80
-                    height: 1.5 // taste-skill-ignore
+                    height: 1.5
                     radius: 0.75
-                    color: Qt.rgba(0, 0, 0, 0.16)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(0, 0, 0, 0.14)
                     visible: thumbRoot.height > 50
                 }
 
                 Rectangle {
                     width: parent.width * 0.70
-                    height: 1.5 // taste-skill-ignore
+                    height: 1.5
                     radius: 0.75
-                    color: Qt.rgba(0, 0, 0, 0.16)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(0, 0, 0, 0.16)
                     visible: thumbRoot.height > 50
                 }
 
                 Rectangle {
                     width: parent.width * 0.50
-                    height: 1.5 // taste-skill-ignore
+                    height: 1.5
                     radius: 0.75
-                    color: Qt.rgba(0, 0, 0, 0.14)
+                    color: root.nothing ? root.skin.dotOff : Qt.rgba(0, 0, 0, 0.14)
                     visible: thumbRoot.height > 60
                 }
             }
@@ -265,13 +270,17 @@ Item {
         anchors.fill: parent
         radius: root.cardRadius
         clip: true
-        border.color: Qt.rgba(255, 255, 255, 0.35) // taste-skill-ignore
-        border.width: 1 // taste-skill-ignore
+        color: root.nothing ? root.skin.card : "transparent"
+        border.color: root.nothing ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.35)
+        border.width: root.nothing ? 0 : 1
 
-        gradient: Gradient { // taste-skill-ignore
-            GradientStop { position: 0.0; color: root.gradTop } // taste-skill-ignore
-            GradientStop { position: 1.0; color: root.gradBottom } // taste-skill-ignore
-        } // taste-skill-ignore
+        gradient: root.nothing ? null : cardGrad
+
+        Gradient {
+            id: cardGrad
+            GradientStop { position: 0.0; color: root.gradTop }
+            GradientStop { position: 1.0; color: root.gradBottom }
+        }
 
         // ═══════════════════════════════════════════════════════════════════
         // ── 1. MODO SMALL (170 x 170): EXACTO A REFERENCIA IMAGEN 1 ───────
@@ -547,7 +556,9 @@ Item {
                         width: 5
                         height: 5
                         radius: 2.5
-                        color: index === root.activePage ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45)
+                        color: root.nothing
+                            ? (index === root.activePage ? root.skin.signal : root.skin.dotOff)
+                            : (index === root.activePage ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45))
 
                         MouseArea {
                             anchors.fill: parent

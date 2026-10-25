@@ -11,7 +11,10 @@ Item {
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
-    readonly property real cardRadius: root.widgetsState ? root.widgetsState.cardRadius : 22
+    readonly property bool nothing: root.widgetsState && root.widgetsState.skin && root.widgetsState.skin.isNothing
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+
+    readonly property real cardRadius: root.nothing ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22)
     readonly property string currentPhotoPath: {
         if (root.widgetsState && root.widgetsState.photoPath)
             return root.widgetsState.photoPath;
@@ -28,10 +31,10 @@ Item {
 
         anchors.fill: parent
         radius: root.cardRadius
-        color: "#1C1C1E"
+        color: root.nothing ? root.skin.card : "#1C1C1E"
         clip: true
-        border.color: Qt.rgba(255, 255, 255, 0.18) // taste-skill-ignore
-        border.width: 1 // taste-skill-ignore
+        border.color: root.nothing ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.18)
+        border.width: root.nothing ? 0 : 1
 
         // ═══════════════════════════════════════════════════════════════════
         // ── 1. Capa Fotográfica Full-Bleed con Máscara Squircle (iOS) ─────
@@ -161,9 +164,11 @@ Item {
                 width: 5.5
                 height: 5.5
                 radius: 2.75
-                color: root.activeDot === 0 ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45)
-                border.color: Qt.rgba(0, 0, 0, 0.30) // taste-skill-ignore
-                border.width: 0.5 // taste-skill-ignore
+                color: root.nothing
+                    ? (root.activeDot === 0 ? root.skin.signal : root.skin.dotOff)
+                    : (root.activeDot === 0 ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45))
+                border.color: root.nothing ? "transparent" : Qt.rgba(0, 0, 0, 0.30)
+                border.width: root.nothing ? 0 : 0.5
 
                 MouseArea {
                     anchors.fill: parent
@@ -180,9 +185,11 @@ Item {
                 width: 5.5
                 height: 5.5
                 radius: 2.75
-                color: root.activeDot === 1 ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45)
-                border.color: Qt.rgba(0, 0, 0, 0.30) // taste-skill-ignore
-                border.width: 0.5 // taste-skill-ignore
+                color: root.nothing
+                    ? (root.activeDot === 1 ? root.skin.signal : root.skin.dotOff)
+                    : (root.activeDot === 1 ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45))
+                border.color: root.nothing ? "transparent" : Qt.rgba(0, 0, 0, 0.30)
+                border.width: root.nothing ? 0 : 0.5
 
                 MouseArea {
                     anchors.fill: parent

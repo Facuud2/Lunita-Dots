@@ -7,15 +7,19 @@ Item {
     id: root
 
     property var widgetsState
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+    readonly property bool nothing: skin ? skin.isNothing : false
+    readonly property string fontText: (nothing && skin) ? skin.fontText : "SF Pro Display"
+    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : "SF Pro Display"
 
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
     readonly property real cardRadius: root.widgetsState ? root.widgetsState.cardRadius : 22
-    readonly property string fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Cantarell, Roboto, sans-serif"
+    readonly property string fontFamily: nothing ? fontText : "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Cantarell, Roboto, sans-serif"
 
-    // ── Métricas de Salud y Anillos de Actividad (Apple Fitness) ──────────
+    // ── Métricas de Salud y Anillos de Actividad ──────────
     readonly property int calories: root.widgetsState ? root.widgetsState.healthCalories : 450
     readonly property int caloriesGoal: root.widgetsState ? root.widgetsState.healthCaloriesGoal : 600
 
@@ -66,15 +70,15 @@ Item {
         }
     }
 
-    // ── Paleta Oficial de Anillos de Actividad Apple Fitness ──────────────
-    readonly property color colMove: "#FA114F"
-    readonly property color colMoveTrack: Qt.rgba(0.98, 0.07, 0.31, 0.20)
+    // ── Paleta de Anillos de Actividad (NothingOS Monocromo + Signal Red) ──
+    readonly property color colMove: nothing ? skin.signal : "#FA114F"
+    readonly property color colMoveTrack: nothing ? skin.dotOff : Qt.rgba(0.98, 0.07, 0.31, 0.20)
 
-    readonly property color colExercise: "#A2FF00"
-    readonly property color colExerciseTrack: Qt.rgba(0.63, 1.0, 0.0, 0.20)
+    readonly property color colExercise: nothing ? skin.ink : "#A2FF00"
+    readonly property color colExerciseTrack: nothing ? skin.dotOff : Qt.rgba(0.63, 1.0, 0.0, 0.20)
 
-    readonly property color colStand: "#00F0FF"
-    readonly property color colStandTrack: Qt.rgba(0.0, 0.94, 1.0, 0.20)
+    readonly property color colStand: nothing ? skin.inkDim : "#00F0FF"
+    readonly property color colStandTrack: nothing ? skin.dotOff : Qt.rgba(0.0, 0.94, 1.0, 0.20)
 
     // Formateador de millares para pasos (ej: 8.420)
     function formatNumber(num) {
@@ -189,16 +193,16 @@ Item {
         }
     }
 
-    // ── Tarjeta Contenedora Principal Estilo Apple OLED Black ─────────────
+    // ── Tarjeta Contenedora Principal ─────────────
     Rectangle {
         id: cardBg
 
         anchors.fill: parent
-        radius: root.cardRadius
-        color: "#000000"
+        radius: root.nothing ? root.skin.radius : root.cardRadius
+        color: root.nothing ? root.skin.card : "#000000"
         clip: true
-        border.color: Qt.rgba(255, 255, 255, 0.12) // taste-skill-ignore
-        border.width: 1 // taste-skill-ignore
+        border.color: root.nothing ? "transparent" : Qt.rgba(255, 255, 255, 0.12)
+        border.width: root.nothing ? 0 : 1
 
         // ═══════════════════════════════════════════════════════════════════
         // ── 1. MODO SMALL (170 x 170): ANILLOS FULL-IMMERSIVE + STATS ─────
@@ -375,9 +379,9 @@ Item {
                         width: 28
                         height: 28
                         radius: 14
-                        color: addCalMa.containsMouse ? Qt.rgba(250, 17, 79, 0.35) : Qt.rgba(250, 17, 79, 0.18)
-                        border.color: Qt.rgba(250, 17, 79, 0.45)
-                        border.width: 1 // taste-skill-ignore
+                        color: root.nothing ? (addCalMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (addCalMa.containsMouse ? Qt.rgba(250, 17, 79, 0.35) : Qt.rgba(250, 17, 79, 0.18))
+                        border.color: root.nothing ? "transparent" : Qt.rgba(250, 17, 79, 0.45)
+                        border.width: root.nothing ? 0 : 1
 
                         Text {
                             anchors.centerIn: parent
@@ -441,9 +445,9 @@ Item {
                         width: 28
                         height: 28
                         radius: 14
-                        color: addExMa.containsMouse ? Qt.rgba(162, 255, 0, 0.35) : Qt.rgba(162, 255, 0, 0.18)
-                        border.color: Qt.rgba(162, 255, 0, 0.45)
-                        border.width: 1 // taste-skill-ignore
+                        color: root.nothing ? (addExMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (addExMa.containsMouse ? Qt.rgba(162, 255, 0, 0.35) : Qt.rgba(162, 255, 0, 0.18))
+                        border.color: root.nothing ? "transparent" : Qt.rgba(162, 255, 0, 0.45)
+                        border.width: root.nothing ? 0 : 1
 
                         Text {
                             anchors.centerIn: parent
@@ -507,9 +511,9 @@ Item {
                         width: 28
                         height: 28
                         radius: 14
-                        color: addStepMa.containsMouse ? Qt.rgba(0, 240, 255, 0.35) : Qt.rgba(0, 240, 255, 0.18)
-                        border.color: Qt.rgba(0, 240, 255, 0.45)
-                        border.width: 1 // taste-skill-ignore
+                        color: root.nothing ? (addStepMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (addStepMa.containsMouse ? Qt.rgba(0, 240, 255, 0.35) : Qt.rgba(0, 240, 255, 0.18))
+                        border.color: root.nothing ? "transparent" : Qt.rgba(0, 240, 255, 0.45)
+                        border.width: root.nothing ? 0 : 1
 
                         Text {
                             anchors.centerIn: parent
@@ -659,14 +663,14 @@ Item {
                     }
                 }
 
-                // Sección 2: Historial Semanal Estilo Apple Activity
+                // Sección 2: Historial Semanal
                 Rectangle {
                     width: parent.width
                     height: 86
-                    radius: 14
-                    color: Qt.rgba(255, 255, 255, 0.05)
-                    border.color: Qt.rgba(255, 255, 255, 0.08)
-                    border.width: 1 // taste-skill-ignore
+                    radius: root.nothing ? 16 : 14
+                    color: root.nothing ? root.skin.raised : Qt.rgba(255, 255, 255, 0.05)
+                    border.color: root.nothing ? "transparent" : Qt.rgba(255, 255, 255, 0.08)
+                    border.width: root.nothing ? 0 : 1
 
                     Row {
                         anchors.fill: parent
@@ -696,7 +700,7 @@ Item {
                                             width: 4
                                             height: 38
                                             radius: 2
-                                            color: Qt.rgba(250, 17, 79, 0.20)
+                                            color: root.colMoveTrack
 
                                             Rectangle {
                                                 anchors.bottom: parent.bottom
@@ -712,7 +716,7 @@ Item {
                                             width: 4
                                             height: 38
                                             radius: 2
-                                            color: Qt.rgba(162, 255, 0, 0.20)
+                                            color: root.colExerciseTrack
 
                                             Rectangle {
                                                 anchors.bottom: parent.bottom
@@ -728,7 +732,7 @@ Item {
                                             width: 4
                                             height: 38
                                             radius: 2
-                                            color: Qt.rgba(0, 240, 255, 0.20)
+                                            color: root.colStandTrack
 
                                             Rectangle {
                                                 anchors.bottom: parent.bottom
@@ -744,7 +748,7 @@ Item {
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: dayData.day || ""
-                                        color: Qt.rgba(1, 1, 1, 0.65)
+                                        color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.65)
                                         font.family: root.fontFamily
                                         font.pixelSize: 11
                                         font.weight: Font.DemiBold
@@ -763,10 +767,10 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 36
-                        radius: 12
-                        color: btnCalMa.containsMouse ? Qt.rgba(250, 17, 79, 0.32) : Qt.rgba(250, 17, 79, 0.16)
-                        border.color: Qt.rgba(250, 17, 79, 0.40)
-                        border.width: 1 // taste-skill-ignore
+                        radius: root.nothing ? 14 : 12
+                        color: root.nothing ? (btnCalMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (btnCalMa.containsMouse ? Qt.rgba(250, 17, 79, 0.32) : Qt.rgba(250, 17, 79, 0.16))
+                        border.color: root.nothing ? "transparent" : Qt.rgba(250, 17, 79, 0.40)
+                        border.width: root.nothing ? 0 : 1
 
                         Text {
                             anchors.centerIn: parent
@@ -789,10 +793,10 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 36
-                        radius: 12
-                        color: btnExMa.containsMouse ? Qt.rgba(162, 255, 0, 0.32) : Qt.rgba(162, 255, 0, 0.16)
-                        border.color: Qt.rgba(162, 255, 0, 0.40)
-                        border.width: 1 // taste-skill-ignore
+                        radius: root.nothing ? 14 : 12
+                        color: root.nothing ? (btnExMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (btnExMa.containsMouse ? Qt.rgba(162, 255, 0, 0.32) : Qt.rgba(162, 255, 0, 0.16))
+                        border.color: root.nothing ? "transparent" : Qt.rgba(162, 255, 0, 0.40)
+                        border.width: root.nothing ? 0 : 1
 
                         Text {
                             anchors.centerIn: parent
@@ -815,10 +819,10 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 36
-                        radius: 12
-                        color: btnStepMa.containsMouse ? Qt.rgba(0, 240, 255, 0.32) : Qt.rgba(0, 240, 255, 0.16)
-                        border.color: Qt.rgba(0, 240, 255, 0.40)
-                        border.width: 1 // taste-skill-ignore
+                        radius: root.nothing ? 14 : 12
+                        color: root.nothing ? (btnStepMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (btnStepMa.containsMouse ? Qt.rgba(0, 240, 255, 0.32) : Qt.rgba(0, 240, 255, 0.16))
+                        border.color: root.nothing ? "transparent" : Qt.rgba(0, 240, 255, 0.40)
+                        border.width: root.nothing ? 0 : 1
 
                         Text {
                             anchors.centerIn: parent
