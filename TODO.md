@@ -759,11 +759,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna (Ejecución independiente)
 
 ### [ISSUE-050] Interactividad completa, vistas de detalle y gestos en el Widget de Notas
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO [x]
 - **Prioridad:** ALTA
 - **Rama Requerida:** `ISSUE_049_FEAT`
 - **Módulo(s):** Temas / Widgets / Notas
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Notas), `core/.local/bin/lunita-widgets-manager`
+- **Archivos Afectados:** `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.local/bin/lunita-widgets-manager`
 - **Descripción:** Dotar de interactividad completa al widget de Notas en el escritorio:
   1. **Vista de detalle y navegación:** Al hacer clic sobre el título de una nota en el listado, el widget debe transicionar hacia una vista completa mostrando el contenido íntegro de la nota seleccionada, incluyendo un botón de retroceso ("Atrás") para volver al listado general.
   2. **Creación directa:** Incorporar un botón de acción rápida (`+`) dentro del widget que permita crear y guardar nuevas notas sin necesidad de abrir el gestor externo.

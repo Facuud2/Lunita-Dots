@@ -1825,6 +1825,32 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         group_notes.add(notes_scroll)
         content.append(group_notes)
 
+        # ── Grupo 5: Tarjetas de Notas de Escritorio (Apple Notes) ──
+        group_notes_list = Adw.PreferencesGroup()
+        group_notes_list.set_title("Tarjetas de Notas del Widget")
+        group_notes_list.set_description("Gestiona las notas visibles en las tarjetas y vista completa del widget.")
+
+        self.notes_list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        group_notes_list.add(self.notes_list_box)
+
+        add_note_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.new_note_title = Gtk.Entry(placeholder_text="Título de la nota")
+        self.new_note_title.set_hexpand(True)
+        self.new_note_body = Gtk.Entry(placeholder_text="Cuerpo / Contenido")
+        self.new_note_body.set_hexpand(True)
+
+        btn_add_note = Gtk.Button(label="+ Añadir Nota")
+        btn_add_note.connect("clicked", self.on_add_note_item)
+
+        add_note_box.append(self.new_note_title)
+        add_note_box.append(self.new_note_body)
+        add_note_box.append(btn_add_note)
+        group_notes_list.set_header_suffix(add_note_box)
+
+        self.current_notes_list = list(tt_data.get("notes_list", []))
+        self.rebuild_notes_list()
+        content.append(group_notes_list)
+
         # Botón Guardar
         btn_save_tt = Gtk.Button(label="Guardar Todo y Sincronizar Widget de Notas & Agenda")
         btn_save_tt.add_css_class("wm-btn-primary")
@@ -1839,13 +1865,23 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
             "career": "Agenda Diaria",
             "schedule": [],
             "tasks": [],
-            "notes": ""
+            "notes": "",
+            "notes_list": []
         }
         if TIMETABLE_FILE.exists():
             try:
                 with open(TIMETABLE_FILE, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     default_data.update(data)
+            except Exception:
+                pass
+        notes_file = CONFIG_DIR / "notes.json"
+        if notes_file.exists():
+            try:
+                with open(notes_file, "r", encoding="utf-8") as nf:
+                    nd = json.load(nf)
+                    if "notes_list" in nd:
+                        default_data["notes_list"] = nd["notes_list"]
             except Exception:
                 pass
         return default_data
@@ -2007,6 +2043,7 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
                     ndata = json.load(nf)
             ndata["notes"] = notes_text
             ndata["tasks"] = self.current_tasks
+            ndata["notes_list"] = self.current_notes_list
             with open(notes_file, "w", encoding="utf-8") as nf:
                 json.dump(ndata, nf, ensure_ascii=False, indent=2)
         except Exception:
@@ -2014,6 +2051,80 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
 
         threading.Thread(target=self._run_timetable_refresh, daemon=True).start()
         self.show_toast("Horario y notas guardadas correctamente")
+
+    def rebuild_notes_list(self):
+        while child := self.notes_list_box.get_first_child():
+            self.notes_list_box.remove(child)
+
+        for note in self.current_notes_list:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            row.add_css_class("wm-event-row")
+
+            title_entry = Gtk.Entry(text=note.get("title", ""))
+            title_entry.set_size_request(160, -1)
+            title_entry.connect("changed", lambda e, nid=note.get("id"): self.on_rename_note_title(nid, e.get_text()))
+            row.append(title_entry)
+
+            body_entry = Gtk.Entry(text=note.get("body", ""))
+            body_entry.set_hexpand(True)
+            body_entry.connect("changed", lambda e, nid=note.get("id"): self.on_change_note_body(nid, e.get_text()))
+            row.append(body_entry)
+
+            date_lbl = Gtk.Label(label=note.get("date", "Hoy"))
+            date_lbl.add_css_class("wm-pill")
+            row.append(date_lbl)
+
+            del_btn = Gtk.Button(icon_name="user-trash-symbolic")
+            del_btn.add_css_class("wm-btn-danger")
+            del_btn.connect("clicked", lambda _, nid=note.get("id"): self.on_delete_note_item(nid))
+            row.append(del_btn)
+
+            self.notes_list_box.append(row)
+
+    def on_rename_note_title(self, note_id: str, new_title: str):
+        for n in self.current_notes_list:
+            if str(n.get("id")) == str(note_id):
+                n["title"] = new_title
+                break
+
+    def on_change_note_body(self, note_id: str, new_body: str):
+        for n in self.current_notes_list:
+            if str(n.get("id")) == str(note_id):
+                n["body"] = new_body
+                break
+
+    def on_delete_note_item(self, note_id: str):
+        self.current_notes_list = [n for n in self.current_notes_list if str(n.get("id")) != str(note_id)]
+        self.rebuild_notes_list()
+        self.show_toast("Nota eliminada")
+
+    def on_add_note_item(self, _):
+        title = self.new_note_title.get_text().strip()
+        body = self.new_note_body.get_text().strip()
+        if not title and not body:
+            return
+        if not title:
+            title = body[:30]
+
+        import time
+        from datetime import datetime
+        now = datetime.now()
+        days_es = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+        date_str = days_es[now.weekday()]
+
+        new_n = {
+            "id": f"n_{int(time.time() * 1000)}",
+            "title": title,
+            "body": body or "No hay texto adicional",
+            "date": date_str,
+            "color": "#FCC603",
+            "has_thumbnail": False
+        }
+        self.current_notes_list.insert(0, new_n)
+        self.new_note_title.set_text("")
+        self.new_note_body.set_text("")
+        self.rebuild_notes_list()
+        self.show_toast("Nota agregada")
 
     def _run_timetable_refresh(self):
         try:
