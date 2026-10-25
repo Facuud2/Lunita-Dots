@@ -112,7 +112,7 @@ Item {
                 width: 12
                 height: 12
                 radius: 6
-                color: root.nothing ? root.skin.ink : "#F59E0B"
+                color: root.nothing ? root.skin.amber : "#F59E0B"
             }
 
             // 2. Sol completo para cielo despejado
@@ -125,7 +125,7 @@ Item {
 
                 ShapePath {
                     strokeWidth: 0
-                    fillColor: root.nothing ? root.skin.ink : "#F59E0B"
+                    fillColor: root.nothing ? root.skin.amber : "#F59E0B"
                     PathSvg {
                         path: "M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0-5c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1s-1-.45-1-1V3c0-.55.45-1 1-1zm0 15c.55 0 1 .45 1 1v2c0 .55-.45 1-1 1s-1-.45-1-1v-2c0-.55.45-1 1-1zm10-6c0 .55-.45 1-1 1h-2c-.55 0-1-.45-1-1s.45-1 1-1h2c.55 0 1 .45 1 1zM6 12c0 .55-.45 1-1 1H3c-.55 0-1-.45-1-1s.45-1 1-1h2c.55 0 1 .45 1 1zm11.07-5.66c.39.39.39 1.02 0 1.41-.39.39-1.02.39-1.41 0l-1.41-1.41c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0l1.41 1.41zm-9.9 9.9c.39.39.39 1.02 0 1.41-.39.39-1.02.39-1.41 0l-1.41-1.41c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0l1.41 1.41zm9.9 0c-.39.39-1.02.39-1.41 0-.39-.39-.39-1.02 0-1.41l1.41-1.41c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41l-1.41 1.41zM7.17 6.34c-.39.39-1.02.39-1.41 0-.39-.39-.39-1.02 0-1.41l1.41-1.41c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41L7.17 6.34z"
                     }
@@ -159,7 +159,7 @@ Item {
 
                 ShapePath {
                     strokeWidth: 0
-                    fillColor: root.nothing ? root.skin.inkDim : "#60A5FA"
+                    fillColor: root.nothing ? root.skin.cyan : "#60A5FA"
                     PathSvg {
                         path: "M7 21c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1zm4 1.5c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1zm4-1.5c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1z"
                     }
@@ -176,7 +176,7 @@ Item {
 
                 ShapePath {
                     strokeWidth: 0
-                    fillColor: root.nothing ? root.skin.signal : "#FBBF24"
+                    fillColor: root.nothing ? root.skin.yellow : "#FBBF24"
                     PathSvg {
                         path: "M11 14h2.5l-2 6 5.5-5h-3l2.5-5h-5z"
                     }

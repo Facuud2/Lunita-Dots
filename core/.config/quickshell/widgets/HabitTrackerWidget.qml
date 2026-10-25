@@ -70,15 +70,15 @@ Item {
         }
     }
 
-    // ── Paleta de Anillos de Actividad (NothingOS Monocromo + Signal Red) ──
+    // ── Paleta de Anillos de Actividad (NothingOS Balanceada: Signal Red + Mint Green + Cyan) ──
     readonly property color colMove: nothing ? skin.signal : "#FA114F"
-    readonly property color colMoveTrack: nothing ? skin.dotOff : Qt.rgba(0.98, 0.07, 0.31, 0.20)
+    readonly property color colMoveTrack: nothing ? Qt.rgba(Qt.color(skin.signal).r, Qt.color(skin.signal).g, Qt.color(skin.signal).b, 0.20) : Qt.rgba(0.98, 0.07, 0.31, 0.20)
 
-    readonly property color colExercise: nothing ? skin.ink : "#A2FF00"
-    readonly property color colExerciseTrack: nothing ? skin.dotOff : Qt.rgba(0.63, 1.0, 0.0, 0.20)
+    readonly property color colExercise: nothing ? skin.green : "#A2FF00"
+    readonly property color colExerciseTrack: nothing ? Qt.rgba(Qt.color(skin.green).r, Qt.color(skin.green).g, Qt.color(skin.green).b, 0.20) : Qt.rgba(0.63, 1.0, 0.0, 0.20)
 
-    readonly property color colStand: nothing ? skin.inkDim : "#00F0FF"
-    readonly property color colStandTrack: nothing ? skin.dotOff : Qt.rgba(0.0, 0.94, 1.0, 0.20)
+    readonly property color colStand: nothing ? skin.cyan : "#00F0FF"
+    readonly property color colStandTrack: nothing ? Qt.rgba(Qt.color(skin.cyan).r, Qt.color(skin.cyan).g, Qt.color(skin.cyan).b, 0.20) : Qt.rgba(0.0, 0.94, 1.0, 0.20)
 
     // Formateador de millares para pasos (ej: 8.420)
     function formatNumber(num) {

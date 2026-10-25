@@ -99,7 +99,7 @@ Item {
                             text: isCiFail ? "󰅚" : "󰄬"
                             font.family: "CaskaydiaCove Nerd Font"
                             font.pixelSize: 9
-                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.ink : "#30D158")
+                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158")
                         }
 
                         Text {
@@ -107,7 +107,7 @@ Item {
                             font.family: root.fontText
                             font.pixelSize: 8
                             font.weight: Font.Bold
-                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.ink : "#30D158")
+                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158")
                         }
 
                     }
@@ -136,10 +136,10 @@ Item {
                             color: {
                                 var lvl = modelData.level !== undefined ? modelData.level : 0;
                                 if (root.nothing) {
-                                    if (lvl === 4) return root.skin.ink;
-                                    if (lvl === 3) return "rgba(245, 245, 245, 0.70)";
-                                    if (lvl === 2) return "rgba(245, 245, 245, 0.42)";
-                                    if (lvl === 1) return "rgba(245, 245, 245, 0.20)";
+                                    if (lvl === 4) return root.skin.green;
+                                    if (lvl === 3) return Qt.rgba(0, 0.90, 0.60, 0.75);
+                                    if (lvl === 2) return Qt.rgba(0, 0.90, 0.60, 0.50);
+                                    if (lvl === 1) return Qt.rgba(0, 0.90, 0.60, 0.25);
                                     return root.skin.dotOff;
                                 }
                                 if (lvl === 4)
@@ -316,7 +316,7 @@ Item {
                             text: isCiFail ? "󰅚" : "󰄬"
                             font.family: "CaskaydiaCove Nerd Font"
                             font.pixelSize: 11
-                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.ink : "#30D158")
+                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158")
                         }
 
                         Text {
@@ -324,7 +324,7 @@ Item {
                             font.family: root.fontText
                             font.pixelSize: 9
                             font.weight: Font.Bold
-                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.ink : "#30D158")
+                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158")
                         }
 
                     }
@@ -389,10 +389,10 @@ Item {
                                     color: {
                                         var lvl = modelData.level !== undefined ? modelData.level : 0;
                                         if (root.nothing) {
-                                            if (lvl === 4) return root.skin.ink;
-                                            if (lvl === 3) return "rgba(245, 245, 245, 0.70)";
-                                            if (lvl === 2) return "rgba(245, 245, 245, 0.42)";
-                                            if (lvl === 1) return "rgba(245, 245, 245, 0.20)";
+                                            if (lvl === 4) return root.skin.green;
+                                            if (lvl === 3) return Qt.rgba(0, 0.90, 0.60, 0.75);
+                                            if (lvl === 2) return Qt.rgba(0, 0.90, 0.60, 0.50);
+                                            if (lvl === 1) return Qt.rgba(0, 0.90, 0.60, 0.25);
                                             return root.skin.dotOff;
                                         }
                                         if (lvl === 4)

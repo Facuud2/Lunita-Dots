@@ -37,9 +37,8 @@ QtObject {
     readonly property string fontFigure: ndotLoader.status === FontLoader.Ready ? ndotLoader.name : "Doto"
     readonly property string fontText: "Space Grotesk"
 
-    // ── Paleta Nothing: monocromo estricto + un único rojo de señal ──
-    // Superficie plana opaca, sin bordes ni sombras: el relieve es un
-    // escalón de tono (card → raised).
+    // ── Paleta Nothing: monocromo base + acentos cromáticos funcionales ──
+    // Superficie plana opaca con relieve por tono (card → raised)
     readonly property color card: isDarkTheme ? "#111111" : "#F2F2F2"
     readonly property color cardBorder: "transparent"
     readonly property color raised: isDarkTheme ? "#1C1C1C" : "#E4E4E4"
@@ -47,7 +46,15 @@ QtObject {
     readonly property color ink: isDarkTheme ? "#F5F5F5" : "#0A0A0A"
     readonly property color inkDim: isDarkTheme ? "#8F8F8F" : "#5C5C5C"
     readonly property color dotOff: isDarkTheme ? "#2C2C2C" : "#CFCFCF"
-    readonly property color signal: "#D71921"
+
+    // ── Acentos Funcionales NothingOS (tonalidad Nothing vibrante y equilibrada) ──
+    readonly property color signal: "#D71921"       // Rojo icónico Nothing
+    readonly property color amber: "#FF6B00"        // Ámbar Nothing (calidez, advertencia, sol)
+    readonly property color yellow: "#F5D020"       // Amarillo Nothing (notas, rayo)
+    readonly property color green: "#00E599"        // Menta / Cyber Green Nothing (batería, git, conectado)
+    readonly property color cyan: "#00D2FF"         // Azul Hielo / Cyan Nothing (red, agua, disco)
+    readonly property color purple: "#A78BFA"       // Lavanda Nothing (multimedia, eventos)
+
     // Superficie invertida (papel de notas): blanco con tinta negra.
     readonly property color paper: "#F5F5F5"
     readonly property color paperInk: "#0A0A0A"

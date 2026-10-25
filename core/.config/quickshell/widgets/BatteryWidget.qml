@@ -347,7 +347,14 @@ Item {
                             var endAngle = startAngle + sweepAngle;
                             var strokeColor = "#30D158";
                             if (root.nothing) {
-                                strokeColor = (pct <= 15) ? root.skin.signal : root.skin.ink;
+                                if (charging)
+                                    strokeColor = root.skin.green;
+                                else if (pct <= 12)
+                                    strokeColor = root.skin.signal;
+                                else if (pct <= 25)
+                                    strokeColor = root.skin.amber;
+                                else
+                                    strokeColor = root.skin.green;
                             } else {
                                 if (pct <= 12)
                                     strokeColor = "#FF453A";
@@ -428,7 +435,9 @@ Item {
                     font.pixelSize: root.nothing ? 12 : 13
                     font.weight: Font.Medium
                     font.italic: false
-                    color: root.nothing ? (slot.deviceData && slot.deviceData.percent <= 15 ? root.skin.signal : root.skin.ink) : "#FFFFFF"
+                    color: root.nothing
+                        ? (slot.deviceData && slot.deviceData.percent <= 12 ? root.skin.signal : (slot.deviceData && slot.deviceData.percent <= 25 ? root.skin.amber : root.skin.green))
+                        : "#FFFFFF"
                 }
 
                 // Espacio reservado transparente para los slots vacíos

@@ -67,7 +67,7 @@ Item {
                             ctx.arc(cx, cy, r, startA, startA + (pct * 2 * Math.PI), false);
                             ctx.lineWidth = 4;
                             ctx.lineCap = "round";
-                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.ink) : "#64D2FF";
+                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.cyan) : "#64D2FF";
                             ctx.stroke();
                         }
 
@@ -100,7 +100,7 @@ Item {
                             font.family: root.fontFigure
                             font.pixelSize: 10
                             font.weight: Font.ExtraBold
-                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
+                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.cyan) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
                         }
 
                     }
@@ -148,7 +148,7 @@ Item {
                             ctx.arc(cx, cy, r, startA, startA + (pct * 2 * Math.PI), false);
                             ctx.lineWidth = 4;
                             ctx.lineCap = "round";
-                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.ink) : "#30D158";
+                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.green) : "#30D158";
                             ctx.stroke();
                         }
 
@@ -181,7 +181,7 @@ Item {
                             font.family: root.fontFigure
                             font.pixelSize: 10
                             font.weight: Font.ExtraBold
-                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
+                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.green) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
                         }
 
                     }
@@ -194,7 +194,7 @@ Item {
                         font.family: root.fontFigure
                         font.pixelSize: 8
                         font.weight: Font.ExtraBold
-                        color: root.nothing ? root.skin.ink : "#30D158"
+                        color: root.nothing ? root.skin.green : "#30D158"
                     }
 
                 }
@@ -237,7 +237,7 @@ Item {
                             ctx.arc(cx, cy, r, startA, startA + (pct * 2 * Math.PI), false);
                             ctx.lineWidth = 4;
                             ctx.lineCap = "round";
-                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.ink) : "#BF5AF2";
+                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.purple) : "#BF5AF2";
                             ctx.stroke();
                         }
 
@@ -270,7 +270,7 @@ Item {
                             font.family: root.fontFigure
                             font.pixelSize: 10
                             font.weight: Font.ExtraBold
-                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
+                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.purple) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
                         }
 
                     }
@@ -283,7 +283,7 @@ Item {
                         font.family: root.fontFigure
                         font.pixelSize: 8
                         font.weight: Font.ExtraBold
-                        color: root.nothing ? root.skin.ink : "#BF5AF2"
+                        color: root.nothing ? root.skin.purple : "#BF5AF2"
                     }
 
                 }
@@ -318,7 +318,7 @@ Item {
                             ctx.arc(cx, cy, r, startA, startA + (pct * 2 * Math.PI), false);
                             ctx.lineWidth = 4;
                             ctx.lineCap = "round";
-                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.ink) : "#FF9F0A";
+                            ctx.strokeStyle = root.nothing ? (pct >= 0.85 ? root.skin.signal : root.skin.amber) : "#FF9F0A";
                             ctx.stroke();
                         }
 
@@ -351,7 +351,7 @@ Item {
                             font.family: root.fontFigure
                             font.pixelSize: 10
                             font.weight: Font.ExtraBold
-                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
+                            color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.amber) : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
                         }
 
                     }
@@ -363,8 +363,8 @@ Item {
                         text: (root.widgetsState && root.widgetsState.diskUsed) ? root.widgetsState.diskUsed : "0 GB"
                         font.family: root.fontFigure
                         font.pixelSize: 8
-                        font.weight: Font.Bold
-                        color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
+                        font.weight: Font.ExtraBold
+                        color: root.nothing ? root.skin.amber : "#FF9F0A"
                     }
 
                 }
@@ -448,7 +448,7 @@ Item {
                         text: "󰻠"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: root.nothing ? root.skin.ink : "#64D2FF"
+                        color: root.nothing ? root.skin.cyan : "#64D2FF"
                     }
 
                 }
@@ -472,7 +472,7 @@ Item {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.cpuPercent : 0)) / 100))
                         radius: 4
-                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#64D2FF"
+                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.cyan) : "#64D2FF"
 
                         Behavior on width {
                             NumberAnimation {
@@ -490,7 +490,7 @@ Item {
                     font.family: root.fontFigure
                     font.pixelSize: 11
                     font.weight: Font.ExtraBold
-                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#64D2FF"
+                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.cyan) : "#64D2FF"
                     Layout.preferredWidth: 40
                     horizontalAlignment: Text.AlignRight
                 }
@@ -513,7 +513,7 @@ Item {
                         text: "󰍛"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: root.nothing ? root.skin.ink : "#30D158"
+                        color: root.nothing ? root.skin.green : "#30D158"
                     }
 
                 }
@@ -537,7 +537,7 @@ Item {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.ramPercent : 0)) / 100))
                         radius: 4
-                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#30D158"
+                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.green) : "#30D158"
 
                         Behavior on width {
                             NumberAnimation {
@@ -555,7 +555,7 @@ Item {
                     font.family: root.fontFigure
                     font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#30D158"
+                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.green) : "#30D158"
                     Layout.preferredWidth: 95
                     horizontalAlignment: Text.AlignRight
                 }
@@ -578,7 +578,7 @@ Item {
                         text: "󰢮"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: root.nothing ? root.skin.ink : "#BF5AF2"
+                        color: root.nothing ? root.skin.purple : "#BF5AF2"
                     }
 
                 }
@@ -602,7 +602,7 @@ Item {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.gpuPercent : 0)) / 100))
                         radius: 4
-                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#BF5AF2"
+                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.purple) : "#BF5AF2"
 
                         Behavior on width {
                             NumberAnimation {
@@ -620,7 +620,7 @@ Item {
                     font.family: root.fontFigure
                     font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#BF5AF2"
+                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.purple) : "#BF5AF2"
                     Layout.preferredWidth: 95
                     horizontalAlignment: Text.AlignRight
                 }
@@ -643,7 +643,7 @@ Item {
                         text: "󰋊"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: root.nothing ? root.skin.ink : "#FF9F0A"
+                        color: root.nothing ? root.skin.amber : "#FF9F0A"
                     }
 
                 }
@@ -667,7 +667,7 @@ Item {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.diskPercent : 0)) / 100))
                         radius: 4
-                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#FF9F0A"
+                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.amber) : "#FF9F0A"
 
                         Behavior on width {
                             NumberAnimation {
@@ -685,7 +685,7 @@ Item {
                     font.family: root.fontFigure
                     font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#FF9F0A"
+                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.amber) : "#FF9F0A"
                     Layout.preferredWidth: 95
                     horizontalAlignment: Text.AlignRight
                 }
@@ -824,7 +824,7 @@ Item {
                                     text: "󰻠"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: root.nothing ? root.skin.ink : "#64D2FF"
+                                    color: root.nothing ? root.skin.cyan : "#64D2FF"
                                 }
 
                             }
@@ -860,7 +860,7 @@ Item {
                                 font.family: root.fontFigure
                                 font.pixelSize: 14
                                 font.weight: Font.Bold
-                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#64D2FF"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.cyan) : "#64D2FF"
                                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                             }
 
@@ -881,7 +881,7 @@ Item {
                                 height: parent.height
                                 width: Math.max(5, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.cpuPercent : 0)) / 100))
                                 radius: 3
-                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#64D2FF"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.cyan) : "#64D2FF"
 
                                 Behavior on width {
                                     NumberAnimation {
@@ -899,7 +899,7 @@ Item {
                             text: "Carga general del sistema"
                             font.family: root.fontText
                             font.pixelSize: 8
-                            color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.55)
+                            color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.65)
                             elide: Text.ElideRight
                         }
 
@@ -939,7 +939,7 @@ Item {
                                     text: "󰍛"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: root.nothing ? root.skin.ink : "#30D158"
+                                    color: root.nothing ? root.skin.green : "#30D158"
                                 }
 
                             }
@@ -975,7 +975,7 @@ Item {
                                 font.family: root.fontFigure
                                 font.pixelSize: 14
                                 font.weight: Font.Bold
-                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#30D158"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.green) : "#30D158"
                                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                             }
 
@@ -996,7 +996,7 @@ Item {
                                 height: parent.height
                                 width: Math.max(5, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.ramPercent : 0)) / 100))
                                 radius: 3
-                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#30D158"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.green) : "#30D158"
 
                                 Behavior on width {
                                     NumberAnimation {
@@ -1054,7 +1054,7 @@ Item {
                                     text: "󰢮"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: root.nothing ? root.skin.ink : "#BF5AF2"
+                                    color: root.nothing ? root.skin.purple : "#BF5AF2"
                                 }
 
                             }
@@ -1090,7 +1090,7 @@ Item {
                                 font.family: root.fontFigure
                                 font.pixelSize: 14
                                 font.weight: Font.Bold
-                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#BF5AF2"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.purple) : "#BF5AF2"
                                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                             }
 
@@ -1111,7 +1111,7 @@ Item {
                                 height: parent.height
                                 width: Math.max(5, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.gpuPercent : 0)) / 100))
                                 radius: 3
-                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#BF5AF2"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.purple) : "#BF5AF2"
 
                                 Behavior on width {
                                     NumberAnimation {
@@ -1169,7 +1169,7 @@ Item {
                                     text: "󰋊"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: root.nothing ? root.skin.ink : "#FF9F0A"
+                                    color: root.nothing ? root.skin.amber : "#FF9F0A"
                                 }
 
                             }
@@ -1205,7 +1205,7 @@ Item {
                                 font.family: root.fontFigure
                                 font.pixelSize: 14
                                 font.weight: Font.Bold
-                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#FF9F0A"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.amber) : "#FF9F0A"
                                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                             }
 
@@ -1226,7 +1226,7 @@ Item {
                                 height: parent.height
                                 width: Math.max(5, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.diskPercent : 0)) / 100))
                                 radius: 3
-                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.ink) : "#FF9F0A"
+                                color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.amber) : "#FF9F0A"
 
                                 Behavior on width {
                                     NumberAnimation {

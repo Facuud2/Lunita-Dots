@@ -53,7 +53,7 @@ Item {
                             font.family: root.fontFigure
                             font.pixelSize: 18
                             font.weight: Font.DemiBold
-                            color: root.textColor
+                            color: root.nothing ? root.skin.cyan : root.textColor
                         }
 
                         Text {
@@ -71,7 +71,7 @@ Item {
                         font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Medium
-                        color: root.nothing ? root.skin.inkDim : "#64D2FF"
+                        color: root.nothing ? root.skin.cyan : "#64D2FF"
                     }
 
                 }
@@ -89,7 +89,7 @@ Item {
                             font.family: root.fontFigure
                             font.pixelSize: 18
                             font.weight: Font.DemiBold
-                            color: root.nothing ? root.skin.inkDim : root.textColor
+                            color: root.nothing ? root.skin.green : root.textColor
                         }
 
                         Text {
@@ -107,7 +107,7 @@ Item {
                         font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Medium
-                        color: root.nothing ? root.skin.inkDim : "#30D158"
+                        color: root.nothing ? root.skin.green : "#30D158"
                     }
 
                 }
@@ -160,7 +160,7 @@ Item {
                         ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
                         ctx.lineWidth = 1.5;
                         if (root.nothing) {
-                            ctx.strokeStyle = "rgba(245, 245, 245, 0.85)";
+                            ctx.strokeStyle = root.skin.cyan;
                         } else {
                             ctx.strokeStyle = root.isDarkTheme ? "rgba(48, 209, 88, 0.75)" : "rgba(36, 170, 70, 0.85)";
                         }
@@ -172,8 +172,8 @@ Item {
                         ctx.closePath();
                         var grad = ctx.createLinearGradient(0, 0, 0, h);
                         if (root.nothing) {
-                            grad.addColorStop(0, "rgba(245, 245, 245, 0.12)");
-                            grad.addColorStop(1, "rgba(245, 245, 245, 0.0)");
+                            grad.addColorStop(0, "rgba(0, 210, 255, 0.22)");
+                            grad.addColorStop(1, "rgba(0, 210, 255, 0.0)");
                         } else {
                             grad.addColorStop(0, root.isDarkTheme ? "rgba(48, 209, 88, 0.22)" : "rgba(48, 209, 88, 0.16)");
                             grad.addColorStop(1, "rgba(48, 209, 88, 0.0)");
@@ -240,7 +240,7 @@ Item {
                         font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.ExtraBold
-                        color: root.nothing ? (root.netStatus === "UP" ? root.skin.ink : root.skin.signal) : root.accentGreen
+                        color: root.nothing ? (root.netStatus === "UP" ? root.skin.green : root.skin.signal) : root.accentGreen
                     }
 
                 }

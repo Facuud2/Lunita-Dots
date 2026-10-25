@@ -338,14 +338,14 @@ Item {
                         width: 28
                         height: 28
                         radius: 14
-                        color: root.nothing ? root.skin.ink : domColor
+                        color: root.nothing ? (root.isPlaying ? root.skin.signal : root.skin.ink) : domColor
 
                         Text {
                             anchors.centerIn: parent
                             text: root.isPlaying ? "󰏤" : "󰐊"
                             font.family: "CaskaydiaCove Nerd Font"
                             font.pixelSize: 14
-                            color: root.nothing ? root.skin.card : "#FFFFFF"
+                            color: root.nothing ? (root.isPlaying ? "#FFFFFF" : root.skin.card) : "#FFFFFF"
                         }
 
                         MouseArea {
@@ -506,14 +506,14 @@ Item {
                     width: 28
                     height: 28
                     radius: 14
-                    color: root.nothing ? root.skin.ink : domColor
+                    color: root.nothing ? (root.isPlaying ? root.skin.signal : root.skin.ink) : domColor
 
                     Text {
                         anchors.centerIn: parent
                         text: root.isPlaying ? "󰏤" : "󰐊"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 14
-                        color: root.nothing ? root.skin.card : "#FFFFFF"
+                        color: root.nothing ? (root.isPlaying ? "#FFFFFF" : root.skin.card) : "#FFFFFF"
                     }
 
                     MouseArea {
@@ -761,7 +761,7 @@ Item {
                     Layout.alignment: Qt.AlignBottom
                     height: Math.max(3.5, specRow.spectrumHeight * (barVal / 100))
                     radius: root.nothing ? 1 : 2
-                    color: root.nothing ? root.skin.ink : "transparent"
+                    color: root.nothing ? (root.isPlaying ? root.skin.green : root.skin.dotOff) : "transparent"
 
                     gradient: root.nothing ? null : specGrad
 

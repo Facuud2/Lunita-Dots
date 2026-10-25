@@ -358,13 +358,13 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 7
 
-                        // Nothing Signal Dot
+                        // Nothing Notes Dot
                         Rectangle {
                             visible: root.nothing
                             width: 6
                             height: 6
                             radius: 3
-                            color: root.skin ? root.skin.signal : "#D71921"
+                            color: root.skin ? root.skin.yellow : "#F5D020"
                         }
 
                         // Icono vectorial de Carpeta Apple Notes
@@ -456,7 +456,7 @@ Item {
                         font.family: root.fontFamily
                         font.pixelSize: 18
                         font.weight: Font.Bold
-                        color: "#FFFFFF"
+                        color: root.nothing ? (root.skin ? root.skin.yellow : "#F5D020") : "#FFFFFF"
                         anchors.verticalCenterOffset: -1
                     }
 
