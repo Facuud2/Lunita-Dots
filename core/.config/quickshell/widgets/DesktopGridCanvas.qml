@@ -106,6 +106,17 @@ Item {
         root.syncFrames();
     }
 
+    // ── Background Canvas MouseArea: Dismiss keyboard focus when clicking desktop background ──
+    MouseArea {
+        anchors.fill: parent
+        z: -1
+        enabled: root.widgetsState ? root.widgetsState.wantsKeyboardFocus : false
+        onClicked: {
+            if (root.widgetsState)
+                root.widgetsState.wantsKeyboardFocus = false;
+        }
+    }
+
     // ── 1. Persistent Dynamic Widgets Container (No flickering/recreation) ──
     Item {
         id: widgetsContainer

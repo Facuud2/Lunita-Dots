@@ -8,6 +8,9 @@ Item {
 
     // ── Edit Mode State ──
     property bool isEditing: false
+
+    // ── Keyboard Interactivity State (for interactive desktop widget inputs) ──
+    property bool wantsKeyboardFocus: false
     // ── Theme State (Synced with Lunita Color Scheme & Theme Tokens) ──
     property bool isDarkTheme: true
     property var activeTokens: ({

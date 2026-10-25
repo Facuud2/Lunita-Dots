@@ -83,6 +83,26 @@ Item {
     property string viewMode: "list"
     property var selectedNote: null
 
+    onViewModeChanged: {
+        if (root.widgetsState) {
+            root.widgetsState.wantsKeyboardFocus = (root.viewMode === "detail" || root.viewMode === "create");
+        }
+    }
+
+    Connections {
+        target: root.widgetsState
+        function onWantsKeyboardFocusChanged() {
+            if (root.widgetsState && !root.widgetsState.wantsKeyboardFocus) {
+                if (root.viewMode !== "list") {
+                    if (root.detailIsModified) {
+                        root.saveNoteChanges();
+                    }
+                    root.viewMode = "list";
+                }
+            }
+        }
+    }
+
     // ── Smart Stack Navigation Properties ──────────────────────────────────
     property int activeNoteIndex: 0
     property real lastWheelTime: 0
@@ -243,6 +263,7 @@ Item {
         detailBodyInput.text = noteItem ? (noteItem.body || "") : "";
         root.detailIsModified = false;
         root.viewMode = "detail";
+        detailTitleInput.forceActiveFocus();
     }
 
     function saveNoteChanges() {
@@ -450,6 +471,7 @@ Item {
                             createTitleInput.text = "";
                             createBodyInput.text = "";
                             root.viewMode = "create";
+                            createTitleInput.forceActiveFocus();
                         }
                     }
                 }
@@ -1051,8 +1073,18 @@ Item {
                             font.weight: Font.Bold
                             color: root.textPrimaryColor
                             selectByMouse: true
+                            activeFocusOnTab: true
                             onTextEdited: {
                                 root.detailIsModified = true;
+                            }
+                            Keys.onReturnPressed: {
+                                detailBodyInput.forceActiveFocus();
+                            }
+                            Keys.onEscapePressed: {
+                                if (root.detailIsModified) {
+                                    root.saveNoteChanges();
+                                }
+                                root.viewMode = "list";
                             }
                         }
                     }
@@ -1093,8 +1125,15 @@ Item {
                             color: root.textPrimaryColor
                             wrapMode: TextEdit.Wrap
                             selectByMouse: true
+                            activeFocusOnTab: true
                             onTextEdited: {
                                 root.detailIsModified = true;
+                            }
+                            Keys.onEscapePressed: {
+                                if (root.detailIsModified) {
+                                    root.saveNoteChanges();
+                                }
+                                root.viewMode = "list";
                             }
                         }
                     }
@@ -1143,6 +1182,13 @@ Item {
                         font.weight: Font.DemiBold
                         color: root.textPrimaryColor
                         selectByMouse: true
+                        activeFocusOnTab: true
+                        Keys.onReturnPressed: {
+                            createBodyInput.forceActiveFocus();
+                        }
+                        Keys.onEscapePressed: {
+                            root.viewMode = "list";
+                        }
 
                         Text {
                             anchors.fill: parent
@@ -1178,18 +1224,23 @@ Item {
                         anchors.fill: parent
                         anchors.margins: 10
                         contentWidth: width
-                        contentHeight: createBodyInput.height
+                        contentHeight: Math.max(height, createBodyInput.implicitHeight)
                         clip: true
 
                         TextEdit {
                             id: createBodyInput
                             width: parent.width
+                            height: Math.max(parent.height, implicitHeight)
                             font.family: root.fontFamily
                             font.pixelSize: 13
                             font.weight: Font.Normal
                             color: root.textPrimaryColor
                             wrapMode: TextEdit.Wrap
                             selectByMouse: true
+                            activeFocusOnTab: true
+                            Keys.onEscapePressed: {
+                                root.viewMode = "list";
+                            }
 
                             Text {
                                 anchors.fill: parent

@@ -27,6 +27,9 @@ Scope {
                 WlrLayershell.layer: WlrLayer.Bottom
                 WlrLayershell.namespace: "macos-desktop-widgets"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.keyboardFocus: globalWidgetsState.wantsKeyboardFocus
+                    ? WlrKeyboardFocus.Exclusive
+                    : WlrKeyboardFocus.None
 
                 anchors {
                     top: true
