@@ -1,14 +1,6 @@
 [config]
 source_color_index = 0
 
-[templates.eww_colors]
-input_path = '~/.config/matugen/templates/eww-colors.scss'
-output_path = '~/.config/eww/colors.scss'
-
-# [templates.ags_colors]
-# input_path = '~/.config/matugen/templates/ags-colors.scss'
-# output_path = '~/.config/ags/colors.scss'
-
 [templates.hyprland_colors]
 input_path = '~/.config/matugen/templates/hyprland-colors.lua'
 output_path = '~/.config/hypr/modules/colors.lua'

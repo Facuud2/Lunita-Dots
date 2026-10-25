@@ -66,12 +66,24 @@ def send_ipc_command(pipe_path: Path, cmd: str) -> bool:
 
 
 def ensure_widgets_daemon_running() -> bool:
+    try:
+        res = subprocess.run(
+            ["lunita-quickshell", "start-component", "widgets"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+        )
+        if res.returncode == 0:
+            return True
+    except Exception:
+        pass
+
     cfg_dir = resolve_widgets_config_dir()
     if cfg_dir is None:
         return False
     try:
         subprocess.Popen(
-            ["quickshell", "-d", "-n", "-p", str(cfg_dir)],
+            ["quickshell", "-p", str(cfg_dir)],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -90,20 +102,12 @@ def main() -> None:
 
     # If pipe wasn't ready or daemon isn't running, start the widgets daemon and wait for the IPC pipe
     if ensure_widgets_daemon_running():
-        for _ in range(25):
+        for _ in range(30):
             time.sleep(0.1)
             if send_ipc_command(pipe_path, cmd):
                 return
 
-    # Fallback: open the graphical widgets manager on the desktop tab
-    try:
-        subprocess.Popen(
-            ["lunita-widgets-manager", "--tab", "desktop"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    except Exception:
-        pass
+    sys.exit(1)
 
 
 if __name__ == "__main__":

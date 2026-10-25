@@ -4,47 +4,103 @@
 # Captures download/upload speeds, IP, active interface and raw KB/s for sparkline
 # ==============================================================================
 
-import time
 import json
+import os
+from pathlib import Path
 import socket
-import psutil
+import time
+
 
 def get_default_interface_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        s.connect(('8.8.8.8', 80))
+        s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
     except Exception:
-        ip = '127.0.0.1'
+        ip = "127.0.0.1"
     finally:
         s.close()
-    
-    # Detect interface name associated with this IP
+
     iface_name = "Ethernet"
-    try:
-        for iface, addrs in psutil.net_if_addrs().items():
-            for addr in addrs:
-                if addr.family == socket.AF_INET and addr.address == ip:
-                    if iface.startswith("wl"):
-                        iface_name = "Wi-Fi"
-                    elif iface.startswith(("en", "eth")):
-                        iface_name = "Ethernet"
-                    else:
-                        iface_name = iface
-                    break
-    except Exception:
-        pass
+    route_file = Path("/proc/net/route")
+    if route_file.exists():
+        try:
+            with open(route_file, "r", encoding="utf-8") as f:
+                for line in f.readlines()[1:]:
+                    parts = line.strip().split()
+                    if len(parts) >= 2 and parts[1] == "00000000":
+                        raw_iface = parts[0]
+                        if raw_iface.startswith("wl"):
+                            iface_name = "Wi-Fi"
+                        elif raw_iface.startswith(("en", "eth")):
+                            iface_name = "Ethernet"
+                        else:
+                            iface_name = raw_iface
+                        break
+        except Exception:
+            pass
 
     return ip, iface_name
 
+
+def read_net_bytes():
+    rx, tx = 0, 0
+    dev_file = Path("/proc/net/dev")
+    if not dev_file.exists():
+        return rx, tx
+
+    try:
+        with open(dev_file, "r", encoding="utf-8") as f:
+            for line in f.readlines()[2:]:
+                parts = line.split(":")
+                if len(parts) == 2:
+                    iface = parts[0].strip()
+                    if iface == "lo":
+                        continue
+                    vals = parts[1].split()
+                    if len(vals) >= 9:
+                        rx += int(vals[0])
+                        tx += int(vals[8])
+    except Exception:
+        pass
+    return rx, tx
+
+
 def main():
     try:
-        t1 = psutil.net_io_counters()
-        time.sleep(0.25)
-        t2 = psutil.net_io_counters()
+        cache_file = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "lunita_net_last"
+        now = time.time()
+        rx2, tx2 = read_net_bytes()
 
-        db = (t2.bytes_recv - t1.bytes_recv) / 0.25
-        ub = (t2.bytes_sent - t1.bytes_sent) / 0.25
+        db = 0.0
+        ub = 0.0
+
+        if cache_file.exists():
+            try:
+                content = cache_file.read_text(encoding="utf-8").strip().split()
+                t_prev = float(content[0])
+                rx1 = int(content[1])
+                tx1 = int(content[2])
+                dt = now - t_prev
+                if dt > 0.05:
+                    db = max(0.0, (rx2 - rx1) / dt)
+                    ub = max(0.0, (tx2 - tx1) / dt)
+            except Exception:
+                pass
+
+        if db == 0.0 and ub == 0.0 and not cache_file.exists():
+            # First run: quick sample
+            time.sleep(0.2)
+            rx3, tx3 = read_net_bytes()
+            db = max(0.0, (rx3 - rx2) / 0.2)
+            ub = max(0.0, (tx3 - tx2) / 0.2)
+            rx2, tx2 = rx3, tx3
+            now = time.time()
+
+        try:
+            cache_file.write_text(f"{now} {rx2} {tx2}\n", encoding="utf-8")
+        except Exception:
+            pass
 
         down_kb = db / 1024.0
         up_kb = ub / 1024.0
@@ -71,7 +127,7 @@ def main():
             "total_kb": round(down_kb + up_kb, 1),
             "ip": ip,
             "interface": iface,
-            "status": "UP"
+            "status": "UP",
         }
         print(json.dumps(payload))
     except Exception:
@@ -81,6 +137,7 @@ def main():
             "down_kb": 0, "up_kb": 0, "total_kb": 0,
             "ip": "127.0.0.1", "interface": "Ethernet", "status": "UP"
         }))
+
 
 if __name__ == "__main__":
     main()

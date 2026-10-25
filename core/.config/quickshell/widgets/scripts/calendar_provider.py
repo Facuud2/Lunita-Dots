@@ -31,14 +31,16 @@ def get_default_events(year, month, day):
                 "title": "Reunión de planificación",
                 "time": "15:00 - 16:00",
                 "category": "Trabajo",
-                "color": "#0A84FF"
+                "color": "#0A84FF",
+                "shape": "star"
             },
             {
                 "id": "ev_2",
                 "title": "Revisión de Lunita-Dots",
                 "time": "18:30 - 19:30",
                 "category": "Desarrollo",
-                "color": "#30D158"
+                "color": "#30D158",
+                "shape": "circle"
             }
         ],
         tomorrow_str: [
@@ -47,7 +49,8 @@ def get_default_events(year, month, day):
                 "title": "Presentación de diseño",
                 "time": "11:00 - 12:00",
                 "category": "Diseño",
-                "color": "#FF9F0A"
+                "color": "#FF9F0A",
+                "shape": "triangle"
             }
         ],
         in_three_days_str: [
@@ -56,7 +59,8 @@ def get_default_events(year, month, day):
                 "title": "Cena con amigos",
                 "time": "21:00",
                 "category": "Personal",
-                "color": "#BF5AF2"
+                "color": "#BF5AF2",
+                "shape": "square"
             }
         ]
     }
@@ -112,13 +116,16 @@ def get_month_data(year=None, month=None):
             d_str = str(d) if d != 0 else ""
             has_ev = d_str in events_by_day
             ev_list = events_by_day.get(d_str, [])
+            primary_ev = ev_list[0] if ev_list else {}
             week_days.append({
                 "day": d_str,
                 "in_month": d != 0,
                 "is_today": (d == now.day and month == now.month and year == now.year),
                 "has_events": has_ev,
                 "events_count": len(ev_list),
-                "dot_color": ev_list[0].get("color", "#0A84FF") if ev_list else ""
+                "dot_color": primary_ev.get("color", "#0A84FF") if ev_list else "",
+                "marker_shape": primary_ev.get("shape", "circle") if ev_list else "circle",
+                "events": ev_list
             })
         weeks.append(week_days)
 
@@ -137,7 +144,9 @@ def main():
     action = sys.argv[1] if len(sys.argv) > 1 else "get"
 
     if action == "get":
-        data = get_month_data(now.year, now.month)
+        year = int(sys.argv[2]) if len(sys.argv) > 2 else now.year
+        month = int(sys.argv[3]) if len(sys.argv) > 3 else now.month
+        data = get_month_data(year, month)
         print(json.dumps(data))
 
     elif action == "events_for_day":
@@ -151,13 +160,14 @@ def main():
         }))
 
     elif action == "add":
-        # python3 calendar_provider.py add 2026-09-29 "15:00" "Reunión" "Trabajo" "#0A84FF"
+        # python3 calendar_provider.py add 2026-09-29 "15:00" "Reunión" "Trabajo" "#0A84FF" "star"
         if len(sys.argv) >= 5:
             date_str = sys.argv[2]
             time_str = sys.argv[3]
             title_str = sys.argv[4]
             category = sys.argv[5] if len(sys.argv) > 5 else "General"
             color = sys.argv[6] if len(sys.argv) > 6 else "#0A84FF"
+            shape = sys.argv[7] if len(sys.argv) > 7 else "circle"
 
             events = load_events()
             if date_str not in events:
@@ -169,7 +179,8 @@ def main():
                 "title": title_str,
                 "time": time_str,
                 "category": category,
-                "color": color
+                "color": color,
+                "shape": shape
             }
             events[date_str].append(new_ev)
             save_events(events)

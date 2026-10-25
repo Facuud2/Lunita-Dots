@@ -10,6 +10,7 @@
     "launcher": "quickshell-win11-startmenu",
     "powermenu": "wlogout-fluent-glass",
     "notifications": "quickshell-fluent-notifications",
+    "widgets": "quickshell-widgets",
     "clipboard": "rofi-cliphist",
     "color_engine": "fluent-mica",
     "wallpaper_picker": "hyprquickpaper",

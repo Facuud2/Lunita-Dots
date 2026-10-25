@@ -5,56 +5,60 @@ import Quickshell.Io
 
 Item {
     id: root
+
     property var widgetsState
     property var canvas: null
-
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
     readonly property bool isWide: isMedium || isLarge
-
     readonly property color domColor: root.widgetsState && root.widgetsState.mediaDominantColor ? root.widgetsState.mediaDominantColor : "#0A84FF"
     readonly property bool isPlaying: root.widgetsState ? !!root.widgetsState.mediaIsPlaying : false
-
     // ── Cava Visualizer Frequency Bars (16 bands) ──
     property var cavaBars: [4, 6, 8, 12, 10, 16, 14, 20, 18, 15, 12, 10, 8, 6, 4, 3]
+
+    // Reset visualizer bars when paused
+    onIsPlayingChanged: {
+        if (!isPlaying)
+            root.cavaBars = [3, 4, 3, 5, 4, 6, 5, 7, 5, 4, 5, 4, 3, 4, 3, 2];
+
+    }
 
     // Cava process runner (active when expanded and playing)
     Process {
         id: cavaProc
+
         command: ["bash", root.widgetsState ? root.widgetsState.scriptsDir + "/cava_runner.sh" : ""]
         running: root.isWide && root.isPlaying
+
         stdout: SplitParser {
             splitMarker: "\n"
-            onRead: data => {
+            onRead: (data) => {
                 var raw = data.trim();
-                if (!raw) return;
+                if (!raw)
+                    return ;
+
                 var parts = raw.split(";");
                 var vals = [];
                 for (var i = 0; i < parts.length; i++) {
                     var p = parts[i].trim();
-                    if (p !== "") {
+                    if (p !== "")
                         vals.push(Math.min(100, Math.max(3, parseInt(p) || 0)));
-                    }
+
                 }
-                if (vals.length >= 12) {
+                if (vals.length >= 12)
                     root.cavaBars = vals.slice(0, 16);
-                }
+
             }
         }
-    }
 
-    // Reset visualizer bars when paused
-    onIsPlayingChanged: {
-        if (!isPlaying) {
-            root.cavaBars = [3, 4, 3, 5, 4, 6, 5, 7, 5, 4, 5, 4, 3, 4, 3, 2];
-        }
     }
 
     Rectangle {
         id: bg
+
         anchors.fill: parent
-        radius: 22
+        radius: root.widgetsState ? root.widgetsState.cardRadius : 22
         color: root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75)
         border.color: root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14)
         border.width: 1
@@ -63,48 +67,33 @@ Item {
         // ── Dominant Color Glow ──
         Rectangle {
             anchors.fill: parent
-            radius: 22
+            radius: root.widgetsState ? root.widgetsState.cardRadius : 22
+
             gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.22) }
-                GradientStop { position: 0.6; color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.06) }
-                GradientStop { position: 1.0; color: "transparent" }
-            }
-            Behavior on color { ColorAnimation { duration: 400 } }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // ── COMPONENTE REUTILIZABLE: ESPECTRO VISUALIZADOR CAVA ──
-        // ═══════════════════════════════════════════════════════════════════
-        component SpectrumVisualizer: RowLayout {
-            id: specRow
-            property real spectrumHeight: 30
-            property real barSpacing: 3.5
-
-            spacing: barSpacing
-            Layout.fillWidth: true
-            Layout.preferredHeight: spectrumHeight
-
-            Repeater {
-                model: 16
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignBottom
-                    
-                    property real barVal: index < root.cavaBars.length ? root.cavaBars[index] : 4
-                    height: Math.max(3.5, specRow.spectrumHeight * (barVal / 100.0))
-                    radius: 2
-
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.95) }
-                        GradientStop { position: 1.0; color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.50) }
-                    }
-
-                    Behavior on height {
-                        NumberAnimation { duration: 55; easing.type: Easing.OutQuad }
-                    }
+                GradientStop {
+                    position: 0
+                    color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.22)
                 }
+
+                GradientStop {
+                    position: 0.6
+                    color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.06)
+                }
+
+                GradientStop {
+                    position: 1
+                    color: "transparent"
+                }
+
             }
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 400
+                }
+
+            }
+
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -128,6 +117,7 @@ Item {
 
                 Image {
                     id: albumArt
+
                     anchors.fill: parent
                     source: root.widgetsState && root.widgetsState.mediaArtUrl ? root.widgetsState.mediaArtUrl : ""
                     fillMode: Image.PreserveAspectCrop
@@ -157,7 +147,9 @@ Item {
                         font.weight: Font.Bold
                         color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
                     }
+
                 }
+
             }
 
             // Right side: Header, Track Info, Cava Visualizer, Progress & Controls
@@ -187,7 +179,9 @@ Item {
                         font.letterSpacing: 0.8
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     // Botón Colapsar ‹
                     Rectangle {
@@ -207,16 +201,21 @@ Item {
 
                         MouseArea {
                             id: collapseMa
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                             onClicked: {
-                                if (root.canvas) root.canvas.toggleMediaExpanded();
-                                else if (root.widgetsState) root.widgetsState.toggleMediaExpanded();
+                                if (root.canvas)
+                                    root.canvas.toggleMediaExpanded();
+                                else if (root.widgetsState)
+                                    root.widgetsState.toggleMediaExpanded();
                             }
                         }
+
                     }
+
                 }
 
                 // Title & Artist
@@ -263,26 +262,41 @@ Item {
                             radius: 1.5
                             width: Math.max(3, parent.width * (root.widgetsState ? root.widgetsState.mediaProgress : 0))
                             color: domColor
-                            Behavior on width { NumberAnimation { duration: 250 } }
+
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: 250
+                                }
+
+                            }
+
                         }
+
                     }
 
                     RowLayout {
                         Layout.fillWidth: true
+
                         Text {
                             text: root.widgetsState ? root.widgetsState.mediaPositionStr : "0:00"
                             font.family: "JetBrains Mono"
                             font.pixelSize: 8
                             color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
                         }
-                        Item { Layout.fillWidth: true }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
                         Text {
                             text: root.widgetsState ? root.widgetsState.mediaLengthStr : "0:00"
                             font.family: "JetBrains Mono"
                             font.pixelSize: 8
                             color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
                         }
+
                     }
+
                 }
 
                 // Media Controls Row
@@ -295,15 +309,22 @@ Item {
                         text: "󰒮"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 17
-                        color: prevMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1,1,1,0.6))
+                        color: prevMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
+
                         MouseArea {
                             id: prevMa
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                            onClicked: if (root.widgetsState) root.widgetsState.mediaPrevious();
+                            onClicked: {
+                                if (root.widgetsState)
+                                    root.widgetsState.mediaPrevious();
+
+                            }
                         }
+
                     }
 
                     // Play/Pause Circle
@@ -325,8 +346,13 @@ Item {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                            onClicked: if (root.widgetsState) root.widgetsState.mediaPlayPause();
+                            onClicked: {
+                                if (root.widgetsState)
+                                    root.widgetsState.mediaPlayPause();
+
+                            }
                         }
+
                     }
 
                     // Next
@@ -334,18 +360,28 @@ Item {
                         text: "󰒭"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 17
-                        color: nextMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1,1,1,0.6))
+                        color: nextMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
+
                         MouseArea {
                             id: nextMa
+
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                            onClicked: if (root.widgetsState) root.widgetsState.mediaNext();
+                            onClicked: {
+                                if (root.widgetsState)
+                                    root.widgetsState.mediaNext();
+
+                            }
                         }
+
                     }
+
                 }
+
             }
+
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -360,16 +396,25 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 4
-                Text { text: "󰎆"; font.family: "CaskaydiaCove Nerd Font"; font.pixelSize: 12; color: domColor }
+
+                Text {
+                    text: "󰎆"
+                    font.family: "CaskaydiaCove Nerd Font"
+                    font.pixelSize: 12
+                    color: domColor
+                }
+
                 Text {
                     text: "MÚSICA"
                     font.family: "SF Pro Display"
                     font.pixelSize: 9
                     font.weight: Font.Bold
-                    color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1,1,1,0.5)
+                    color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
                 }
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 // Botón Expandir ›
                 Rectangle {
@@ -389,16 +434,21 @@ Item {
 
                     MouseArea {
                         id: expandMa
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                         onClicked: {
-                            if (root.canvas) root.canvas.toggleMediaExpanded();
-                            else if (root.widgetsState) root.widgetsState.toggleMediaExpanded();
+                            if (root.canvas)
+                                root.canvas.toggleMediaExpanded();
+                            else if (root.widgetsState)
+                                root.widgetsState.toggleMediaExpanded();
                         }
                     }
+
                 }
+
             }
 
             Text {
@@ -417,10 +467,12 @@ Item {
                 font.family: "SF Pro Display"
                 font.pixelSize: 10
                 elide: Text.ElideRight
-                color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1,1,1,0.6)
+                color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
             }
 
-            Item { Layout.fillHeight: true }
+            Item {
+                Layout.fillHeight: true
+            }
 
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter
@@ -431,11 +483,17 @@ Item {
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 16
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+
                     MouseArea {
                         anchors.fill: parent
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                        onClicked: if (root.widgetsState) root.widgetsState.mediaPrevious();
+                        onClicked: {
+                            if (root.widgetsState)
+                                root.widgetsState.mediaPrevious();
+
+                        }
                     }
+
                 }
 
                 Rectangle {
@@ -443,6 +501,7 @@ Item {
                     height: 28
                     radius: 14
                     color: domColor
+
                     Text {
                         anchors.centerIn: parent
                         text: root.isPlaying ? "󰏤" : "󰐊"
@@ -450,11 +509,17 @@ Item {
                         font.pixelSize: 14
                         color: "#FFFFFF"
                     }
+
                     MouseArea {
                         anchors.fill: parent
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                        onClicked: if (root.widgetsState) root.widgetsState.mediaPlayPause();
+                        onClicked: {
+                            if (root.widgetsState)
+                                root.widgetsState.mediaPlayPause();
+
+                        }
                     }
+
                 }
 
                 Text {
@@ -462,13 +527,21 @@ Item {
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 16
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+
                     MouseArea {
                         anchors.fill: parent
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                        onClicked: if (root.widgetsState) root.widgetsState.mediaNext();
+                        onClicked: {
+                            if (root.widgetsState)
+                                root.widgetsState.mediaNext();
+
+                        }
                     }
+
                 }
+
             }
+
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -493,6 +566,7 @@ Item {
 
                 Image {
                     id: albumArtLarge
+
                     anchors.fill: parent
                     source: root.widgetsState && root.widgetsState.mediaArtUrl ? root.widgetsState.mediaArtUrl : ""
                     fillMode: Image.PreserveAspectCrop
@@ -522,7 +596,9 @@ Item {
                         font.weight: Font.Bold
                         color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
                     }
+
                 }
+
             }
 
             Text {
@@ -552,7 +628,7 @@ Item {
                 font.weight: Font.Medium
                 elide: Text.ElideRight
                 maximumLineCount: 1
-                color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1,1,1,0.6)
+                color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
             }
 
             // Spectrum
@@ -572,15 +648,22 @@ Item {
                     text: "󰒮"
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 22
-                    color: prevLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : Qt.rgba(1,1,1,0.7)
+                    color: prevLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : Qt.rgba(1, 1, 1, 0.7)
+
                     MouseArea {
                         id: prevLargeMa
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                        onClicked: if (root.widgetsState) root.widgetsState.mediaPrevious();
+                        onClicked: {
+                            if (root.widgetsState)
+                                root.widgetsState.mediaPrevious();
+
+                        }
                     }
+
                 }
 
                 Rectangle {
@@ -588,8 +671,7 @@ Item {
                     height: 38
                     radius: 19
                     color: playLargeMa.containsMouse ? Qt.darker(domColor, 1.15) : domColor
-                    scale: playLargeMa.pressed ? 0.94 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 100 } }
+                    scale: playLargeMa.pressed ? 0.94 : 1
 
                     Text {
                         anchors.centerIn: parent
@@ -601,29 +683,104 @@ Item {
 
                     MouseArea {
                         id: playLargeMa
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                        onClicked: if (root.widgetsState) root.widgetsState.mediaPlayPause();
+                        onClicked: {
+                            if (root.widgetsState)
+                                root.widgetsState.mediaPlayPause();
+
+                        }
                     }
+
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 100
+                        }
+
+                    }
+
                 }
 
                 Text {
                     text: "󰒭"
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 22
-                    color: nextLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : Qt.rgba(1,1,1,0.7)
+                    color: nextLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : Qt.rgba(1, 1, 1, 0.7)
+
                     MouseArea {
                         id: nextLargeMa
+
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
-                        onClicked: if (root.widgetsState) root.widgetsState.mediaNext();
+                        onClicked: {
+                            if (root.widgetsState)
+                                root.widgetsState.mediaNext();
+
+                        }
                     }
+
                 }
+
             }
+
         }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // ── COMPONENTE REUTILIZABLE: ESPECTRO VISUALIZADOR CAVA ──
+        // ═══════════════════════════════════════════════════════════════════
+        component SpectrumVisualizer: RowLayout {
+            id: specRow
+
+            property real spectrumHeight: 30
+            property real barSpacing: 3.5
+
+            spacing: barSpacing
+            Layout.fillWidth: true
+            Layout.preferredHeight: spectrumHeight
+
+            Repeater {
+                model: 16
+
+                Rectangle {
+                    property real barVal: index < root.cavaBars.length ? root.cavaBars[index] : 4
+
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignBottom
+                    height: Math.max(3.5, specRow.spectrumHeight * (barVal / 100))
+                    radius: 2
+
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0
+                            color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.95)
+                        }
+
+                        GradientStop {
+                            position: 1
+                            color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.5)
+                        }
+
+                    }
+
+                    Behavior on height {
+                        NumberAnimation {
+                            duration: 55
+                            easing.type: Easing.OutQuad
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
     }
+
 }

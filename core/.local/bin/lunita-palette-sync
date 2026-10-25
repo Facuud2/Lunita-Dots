@@ -185,6 +185,30 @@ def main():
         "surface_opacity": surface_opacity,
         "overrides": overrides
     }
+
+    # ── Tokens específicos para adaptación estética de Widgets de escritorio ──
+    if theme_id == "modern-win11-theme":
+        widget_radius = 10
+        widget_bg = "rgba(32, 32, 32, 0.88)" if target_mode == "dark" else "rgba(243, 243, 243, 0.88)"
+        widget_border = "rgba(255, 255, 255, 0.08)" if target_mode == "dark" else "rgba(0, 0, 0, 0.08)"
+    elif theme_id == "lunita-default":
+        widget_radius = 16
+        widget_bg = surface
+        widget_border = border
+    else:  # macos-theme
+        widget_radius = 22
+        widget_bg = "rgba(31, 35, 46, 0.75)" if target_mode == "dark" else "rgba(250, 250, 255, 0.82)"
+        widget_border = "rgba(255, 255, 255, 0.14)" if target_mode == "dark" else "rgba(0, 0, 0, 0.12)"
+
+    active_tokens["widgets"] = {
+        "card_radius": widget_radius,
+        "card_bg": widget_bg,
+        "card_border": widget_border,
+        "accent": accent,
+        "font_ui": font_ui,
+        "font_display": font_display
+    }
+
     ACTIVE_TOKENS_FILE.write_text(json.dumps(active_tokens, indent=2) + "\n")
 
     # --------------------------------------------------------------------------

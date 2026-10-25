@@ -13,6 +13,16 @@ Item {
     implicitHeight: 460
     width: 680
     height: 460
+    Keys.onEscapePressed: (event) => {
+        root.spotlightState.closeSpotlight();
+        event.accepted = true;
+    }
+    onVisibleChanged: {
+        if (visible && root.spotlightState && root.spotlightState.isOpen) {
+            searchField.forceActiveFocus();
+            searchField.selectAll();
+        }
+    }
 
     // ── Main Frosted Glass Card ──
     Rectangle {
@@ -34,6 +44,14 @@ Item {
             color: "transparent"
             border.color: root.spotlightState.panelInnerSheen
             border.width: 1
+        }
+
+        // Prevent clicking inside panel from bubbling to outside click catcher
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: {
+            }
         }
 
         ColumnLayout {

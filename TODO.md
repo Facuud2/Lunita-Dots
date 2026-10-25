@@ -510,3 +510,128 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   4. `lunita-theme-selector` adapta sus acentos dinámicamente según la paleta del tema seleccionado.
   5. Ningún cambio fue pusheado al repositorio remoto.
 - **Dependencias:** [ISSUE-028], [ISSUE-030]
+
+### [ISSUE-032] Cierre automático de Spotlight/Finder al hacer clic fuera de la ventana
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_032_FIX`
+- **Módulo(s):** Core / Temas / Spotlight
+- **Archivos Afectados:** `themes/macos-theme/.config/quickshell/spotlight/shell.qml`, `themes/macos-theme/.config/quickshell/spotlight/SpotlightView.qml`
+- **Descripción:** Actualmente el modal de Spotlight/Finder (`SUPER+SPACE`) permanece abierto aunque el usuario haga clic fuera de su superficie. Se debe capturar la pérdida de foco o implementar un contenedor subyacente (`MouseArea` de pantalla completa transparente detrás del cuadro de búsqueda o manejo de foco en `PanelWindow`) para que cualquier clic fuera de la interfaz dibujada por Quickshell cierre el componente inmediatamente.
+- **Criterios de Aceptación:**
+  1. Hacer clic en cualquier punto externo a la ventana de Spotlight cierra el modal de forma instantánea.
+  2. La interacción interna (escritura, selección de resultados y clic dentro del modal) no dispara el cierre accidental.
+- **Dependencias:** Ninguna
+
+### [ISSUE-035] Adaptación estética dinámica de widgets por tema con persistencia de layout
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_035_FEAT`
+- **Módulo(s):** Core / Temas / Widgets
+- **Archivos Afectados:** `core/.config/quickshell/widgets/`, `themes/macos-theme/.config/quickshell/widgets/`, `core/.local/bin/lunita-palette-sync`, `core/.local/bin/lunita-quickshell`, `themes/lunita-default/theme.json`, `themes/modern-win11-theme/theme.json`
+- **Descripción:** Los widgets de escritorio deben adaptar su diseño visual (bordes, desenfoque, tipografía y paleta de colores) dinámicamente según el tema activo (`lunita-default`, `macOS-Theme`, `Modern-Win11-Theme`), pero manteniendo una única configuración persistente de estado: qué widgets están activos, sus dimensiones y sus coordenadas en pantalla deben conservarse intactos al cambiar de un tema a otro.
+- **Criterios de Aceptación:**
+  1. Cambiar de tema transforma la estética de los widgets en pantalla para coincidir con el lenguaje visual del nuevo tema.
+  2. La posición, tamaño y visibilidad de los widgets activos se mantienen sin reiniciarse ni desacomodarse entre cambios de tema.
+- **Dependencias:** [ISSUE-019]
+
+### [ISSUE-036] Estandarización de clic izquierdo (edición) y clic derecho (menú) en botón de widgets
+- **Estado:** COMPLETADO
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_036_FEAT`
+- **Módulo(s):** Temas / Bar-Dock / Widgets
+- **Archivos Afectados:** `themes/macos-theme/.config/quickshell/bar/BarView.qml`, `themes/modern-win11-theme/.config/quickshell/dock/TrayPlatter.qml`, `themes/modern-win11-theme/.config/quickshell/dock/DockState.qml`, `themes/lunita-default/.config/quickshell/bar/CompactPill.qml`, `core/.local/bin/lunita-widgets-toggle`
+- **Descripción:** Unificar el comportamiento del botón de control de widgets en los 3 temas mediante el manejo de botones en `MouseArea` (`acceptedButtons: Qt.LeftButton | Qt.RightButton`):
+  - **Clic izquierdo:** Activa/desactiva directamente el modo de edición en pantalla (`lunita-widgets-toggle`) para arrastrar, reposicionar y redimensionar los widgets.
+  - **Clic derecho:** Abre exclusivamente la interfaz gráfica de configuración (`lunita-widgets-manager`).
+- **Criterios de Aceptación:**
+  1. En los 3 temas, el clic izquierdo sobre el icono de widgets habilita el arrastre y redimensionamiento en el escritorio.
+  2. En los 3 temas, el clic derecho abre la ventana del menú de configuración de widgets.
+- **Dependencias:** Ninguna
+
+### [ISSUE-038] Reparación crítica de carga de datos y renderizado en widgets de escritorio
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_038_FIX`
+- **Módulo(s):** Core / Widgets (Backend & QML)
+- **Archivos Afectados:** `core/.config/quickshell/widgets/scripts/sys_provider.py`, `core/.config/quickshell/widgets/scripts/net_provider.py`, `core/.config/quickshell/widgets/NetworkWidget.qml`, `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`
+- **Descripción:** Todos los widgets de escritorio (a excepción del reloj/hora) se encuentran rotos y se renderizan vacíos sin cargar información. El agente debe auditar el flujo de datos (procesos `Process` en QML, lectura de JSON locales, permisos de ejecución en scripts de Python/Bash y rutas tras últimas refactorizaciones) y restaurar la ingesta y visualización de datos en cada widget.
+- **Criterios de Aceptación:**
+  1. Todos los widgets activos cargan, parsean y muestran su información correspondiente en tiempo real sin quedar en blanco.
+  2. No se registran errores de lectura o rutas inexistentes en los logs de `lunita-quickshell`.
+- **Dependencias:** Ninguna
+
+### [ISSUE-033] Integración de paleta dinámica Matugen en el Clipboard de lunita-default
+- **Estado:** COMPLETADO
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_033_FEAT`
+- **Módulo(s):** Lunita-Default / Clipboard / Matugen
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/clipboard/ClipboardState.qml`, `themes/lunita-default/.config/quickshell/launcher/LauncherState.qml`, `themes/lunita-default/.config/quickshell/bar/Theme.qml`, `themes/lunita-default/.config/quickshell/bar/CompactPill.qml`, `core/.config/quickshell/hyprquickpaper/commands.sh`, `core/.config/quickshell/widgets/WidgetsState.qml`
+- **Descripción:** El portapapeles de `lunita-default` utiliza actualmente una paleta estática inspirada en NothingOS con acentos rojizos fijos. Se debe vincular el componente QML del portapapeles con los tokens de color generados por Matugen para que adopte dinámicamente la paleta extraída del fondo de pantalla activo, manteniendo coherencia visual con el resto del tema.
+- **Criterios de Aceptación:**
+  1. El portapapeles de `lunita-default` elimina los colores rojizos hardcodeados y consume las variables dinámicas de Matugen.
+  2. Al cambiar de wallpaper en `lunita-default`, el portapapeles actualiza sus colores de fondo, bordes y acentos automáticamente.
+- **Dependencias:** [ISSUE-021]
+
+### [ISSUE-034] Eliminación definitiva de Eww y sus widgets en lunita-default
+- **Estado:** COMPLETADO
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_034_CHORE`
+- **Módulo(s):** Lunita-Default / Core
+- **Archivos Afectados:** `themes/lunita-default/.config/eww/`, `themes/lunita-default/theme.json`, `themes/lunita-default/.config/matugen/config.toml`, `themes/lunita-default/.config/matugen/templates/eww-colors.scss`, `themes/lunita-default/.config/matugen/hooks/update-theme.sh`, `core/.local/bin/lunita-theme`, `themes/lunita-default/README.md`, `.gitignore`
+- **Descripción:** Purgar por completo la carpeta `.config/eww` dentro de `lunita-default`, así como cualquier plantilla de Matugen, referencia en `theme.json` o llamada al demonio `eww` en los scripts de inicio y cambio de tema, dado que serán reemplazados por el ecosistema de widgets nativos en Quickshell.
+- **Criterios de Aceptación:**
+  1. El directorio `.config/eww` ya no existe en `themes/lunita-default/`.
+  2. `lunita-theme` y `matugen` no intentan invocar ni generar plantillas para Eww.
+- **Dependencias:** Ninguna
+
+### [ISSUE-037] Incorporación de widgets de escritorio y botón de control en Dynamic Island de lunita-default
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_037_FEAT`
+- **Módulo(s):** Lunita-Default / Bar (Dynamic Island) / Widgets
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/bar/CompactPill.qml`, `themes/lunita-default/.config/quickshell/bar/QuickActions.qml`, `themes/lunita-default/theme.json`
+- **Descripción:** Habilitar el lienzo de widgets de escritorio (`widgets`) dentro del ciclo de vida de `lunita-default` y añadir un botón dedicado en la Dynamic Island para gestionar dichos widgets, respetando la convención de clic izquierdo (modo arrastre/redimensionado) y clic derecho (abrir menú gestor).
+- **Criterios de Aceptación:**
+  1. Los widgets de escritorio se inician y se muestran de forma nativa al aplicar `lunita-default`.
+  2. La Dynamic Island incluye el botón de widgets con soporte para clic izquierdo (edición) y clic derecho (menú).
+- **Dependencias:** [ISSUE-035], [ISSUE-036]
+
+### [ISSUE-039] Rediseño de Calendario en el menú de widgets con eventos por día e indicadores geométricos
+- **Estado:** COMPLETADO
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_039_FEAT`
+- **Módulo(s):** GUI / Widgets Manager / Calendario
+- **Archivos Afectados:** `core/.local/bin/lunita-widgets-manager`, `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/calendar_provider.py`
+- **Descripción:** Rediseñar la sección de Calendario dentro de `lunita-widgets-manager` para que la cuadrícula mensual ocupe toda el área de la ventana. Al hacer clic sobre la celda de un día específico, debe desplegarse un diálogo/panel para agregar o editar eventos y notas asociados a esa fecha. Se deben conservar los colores de categorización actuales e incorporar la elección de un marcador geométrico sutil por evento: estrella, círculo, triángulo o cuadrado.
+- **Criterios de Aceptación:**
+  1. El calendario se expande ocupando la totalidad de la vista en el gestor de widgets.
+  2. Hacer clic en cualquier día permite crear/editar notas y eventos para esa fecha, asignándoles color y forma geométrica (estrella, círculo, triángulo o cuadrado).
+  3. Los marcadores geométricos y eventos se guardan y se reflejan visualmente tanto en el gestor como en el widget de escritorio.
+- **Dependencias:** [ISSUE-038]
+
+### [ISSUE-040] Rediseño del widget de Notas/Agenda estilo iOS/iPadOS y purga de referencias a UNaB
+- **Estado:** COMPLETADO
+- **Prioridad:** MEDIA
+- **Rama Sugerida:** `ISSUE_040_FEAT`
+- **Módulo(s):** GUI / Widgets Manager / Widgets QML
+- **Archivos Afectados:** `core/.local/bin/lunita-widgets-manager`, `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/timetable_provider.py`, `core/.config/quickshell/hyprquickpaper/shell-coverflow-clear.qml`, `core/.config/quickshell/hyprquickpaper/shell-coverflow-minimal.qml`, `core/.config/quickshell/hyprquickpaper/shell-coverflow.qml`, `core/.config/quickshell/hyprquickpaper/shell-hexcomb.qml`, `themes/lunita-default/wallpaper/wallpaper2.jpg`
+- **Descripción:** 
+  1. Rediseñar el widget de escritorio de Notas y Agenda adoptando el paradigma visual de iOS/iPadOS: una tarjeta limpia que exhibe el título y el contenido de la nota activa, permitiendo alternar suavemente entre distintas tarjetas/notas al hacer scroll vertical (hacia arriba o hacia abajo con `WheelHandler`).
+  2. Eliminar absolutamente todo rastro, pestaña, plantilla de horario o referencia a "UNaB" tanto en el código de `lunita-widgets-manager` como en los widgets QML y archivos de configuración por defecto.
+- **Criterios de Aceptación:**
+  1. El widget de Notas muestra título y cuerpo en formato tarjeta y cambia de nota dinámicamente mediante scroll vertical.
+  2. `grep -ri "unab" core/ themes/` no arroja ningún resultado en el repositorio.
+- **Dependencias:** [ISSUE-038]
+
+### [ISSUE-041] Restricción de instancia única (Singleton) en el menú gestor de widgets
+- **Estado:** COMPLETADO
+- **Prioridad:** ALTA
+- **Rama Sugerida:** `ISSUE_041_FIX`
+- **Módulo(s):** GUI / Widgets Manager
+- **Archivos Afectados:** `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Actualmente es posible abrir múltiples ventanas simultáneas de `lunita-widgets-manager`. Se debe garantizar el comportamiento de instancia única (Singleton) utilizando el registro nativo de `Adw.Application` / `Gtk.Application` mediante un `application_id` único (ej. `org.lunita.WidgetsManager`) o un bloqueo por archivo en `$XDG_RUNTIME_DIR`. Si el usuario invoca el menú cuando ya está abierto, debe enfocar y traer al frente (`present()`) la ventana existente en lugar de crear un proceso duplicado.
+- **Criterios de Aceptación:**
+  1. Ejecutar `lunita-widgets-manager` múltiples veces desde terminal o mediante clic derecho en las barras nunca abre más de una ventana.
+  2. Si la ventana ya existe en segundo plano, una nueva invocación le devuelve el foco en el escritorio actual.
+- **Dependencias:** Ninguna
