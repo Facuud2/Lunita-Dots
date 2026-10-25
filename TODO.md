@@ -635,3 +635,111 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   1. Ejecutar `lunita-widgets-manager` múltiples veces desde terminal o mediante clic derecho en las barras nunca abre más de una ventana.
   2. Si la ventana ya existe en segundo plano, una nueva invocación le devuelve el foco en el escritorio actual.
 - **Dependencias:** Ninguna
+
+### [ISSUE-042] Re-refactorización total del Widget de Calendario (Basado en Imagen)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_042_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Calendario
+- **Archivos Afectados:** `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Reestructurar desde cero el widget de Calendario replicando con precisión milimétrica la imagen de referencia adjunta en el prompt de ejecución. Debe operar como una tarea 100% aislada e independiente del resto de los widgets.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Seguir estrictamente la composición, proporciones, paddings y jerarquía tipográfica de la imagen proporcionada.
+  2. Aplicar el flujo de diseño **UX/UI Pro** bajo estética **iOS-Like** pura (bordes continuos tipo *squircle*, desenfoque translúcido sutil, contraste limpio y ausencia total de sobrecarga visual o "AI Slop").
+- **Criterios de Aceptación:**
+  1. El trabajo se realiza y confirma exclusivamente dentro de la rama `ISSUE_042_REFACTOR`.
+  2. La interfaz QML resultante es fiel a la imagen adjunta en el prompt y respeta las guías iOS-Like.
+  3. El widget funciona de manera autónoma sin romper ni depender de otros widgets del lienzo.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-043] Re-refactorización total del Widget de Dispositivos Conectados (Basado en Imagen)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_043_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Dispositivos y Batería
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Dispositivos/Batería y scripts recolectores UPower/Bluetooth)
+- **Descripción:** Rediseñar por completo el widget de Dispositivos Conectados y niveles de batería guiándose estrictamente por la imagen de referencia adjunta al momento de ejecutar esta tarea.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Replicar exactamente la disposición de anillos/barras de batería, iconografía de periféricos y distribución espacial de la captura adjunta.
+  2. Aplicar los estándares de **UX/UI Pro** y **Anti AI-Slop**, priorizando legibilidad inmediata, micro-interacciones suaves y acabado nativo **iOS-Like**.
+- **Criterios de Aceptación:**
+  1. El desarrollo se encapsula en la rama `ISSUE_043_REFACTOR`.
+  2. El resultado visual coincide exactamente con la imagen adjunta en el prompt.
+  3. Muestra el estado real del equipo y periféricos conectados sin acoplarse a otras tareas.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-044] Re-refactorización total del Widget de Notas (Basado en Imagen)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_044_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Notas
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Notas), `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Reestructurar íntegramente el widget de Notas basándose de forma estricta en la imagen de referencia suministrada en el prompt. Debe mantener navegación fluida por scroll entre notas y sincronización con el gestor.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Obedecer fielmente el diseño de cabecera, líneas divisoras, márgenes internos y estilo de tarjeta de la imagen adjunta.
+  2. Ejecutar bajo el estándar **UX/UI Pro** + **Anti AI-Slop**, logrando la estética nativa de Apple Notes en **iOS/iPadOS**.
+- **Criterios de Aceptación:**
+  1. Todo cambio queda registrado únicamente en la rama `ISSUE_044_REFACTOR`.
+  2. La apariencia final calca la referencia visual provista y elimina cualquier elemento genérico no solicitado.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-045] Re-refactorización total del Widget de Clima (Basado en Imagen)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_045_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Clima
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Clima y servicio meteorológico)
+- **Descripción:** Reconstruir el widget de Clima siguiendo al pie de la letra la imagen de referencia adjuntada en la sesión del prompt.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Respetar la ubicación exacta de la temperatura principal, pronóstico por horas/días, iconos climáticos y gradientes de fondo mostrados en la imagen.
+  2. Aplicar directrices **UX/UI Pro** y **Anti AI-Slop** para lograr un acabado **iOS Weather-Like** limpio, con pesos tipográficos precisos y sin sombras ni bordes artificiales.
+- **Criterios de Aceptación:**
+  1. Desarrollo aislado en la rama `ISSUE_045_REFACTOR`.
+  2. Coincidencia visual estricta con la imagen de referencia adjunta y carga correcta de datos climáticos.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-046] Creación del nuevo Widget de Archivos (Basado en Imagen)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_046_FEAT`
+- **Módulo(s):** Temas / Widgets / Archivos (Nuevo Componente)
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Nuevo componente QML de Archivos), `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Desarrollar desde cero un nuevo widget de Archivos recientes/anclados para el escritorio, tomando como especificación visual absoluta la imagen adjunta en el prompt al iniciar la tarea.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Construir la grilla o lista de archivos, previsualizaciones de iconos, truncado de nombres y espaciados exactamente como dicta la imagen de referencia.
+  2. Implementar con el flujo **UX/UI Pro** y **Anti AI-Slop**, emulando la estética del widget de *Files* de **iOS/iPadOS** y abriendo los elementos con `xdg-open` o Dolphin al interactuar.
+- **Criterios de Aceptación:**
+  1. Rama exclusiva `ISSUE_046_FEAT` creada y utilizada para el feature.
+  2. El nuevo widget se registra en el lienzo y su diseño replica la imagen adjunta sin desviaciones.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-047] Re-refactorización total del Widget de Imágenes (Basado en Imagen)
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Requerida:** `ISSUE_047_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Imágenes y Fotos
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Fotos/Imágenes), `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Reestructurar por completo el widget de Imágenes/Galería ajustándolo estrictamente al diseño de la imagen de referencia proporcionada en el prompt.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Recortar las imágenes con el radio de curvatura (`radius` / `OpacityMask` / `MultiEffect`) exacto de la referencia, respetando superposiciones de texto o controles si la imagen los incluye.
+  2. Aplicar **UX/UI Pro** y **Anti AI-Slop** para conseguir una presentación fotográfica limpia al estilo **iOS Photos Widget**, con transiciones suaves (`CrossFade`) y escalado `PreserveAspectCrop`.
+- **Criterios de Aceptación:**
+  1. Trabajo confinado en la rama `ISSUE_047_REFACTOR`.
+  2. Fidelidad visual absoluta respecto a la imagen suministrada en el prompt.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-048] Rediseño autónomo del Widget de Fitness con Anillos de Actividad (Sin Imagen)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_048_FEAT`
+- **Módulo(s):** Temas / Widgets / Fitness & Hábitos
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Fitness con Canvas/Shapes), `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Rediseñar el widget de Fitness e integrar un sistema de **Anillos de Actividad concéntricos** que se llenen dinámicamente a medida que el usuario registre su progreso diario desde el gestor de widgets o mediante interacción directa. **Nota para el agente:** Esta es la única tarea de la serie que NO incluye imagen de referencia adjunta; el agente es responsable de diseñar la interfaz de forma autónoma.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Aplicar rigurosamente el flujo **UX/UI Pro** y **Anti AI-Slop** siguiendo el estándar visual de **Apple Fitness (iOS/watchOS)**: fondo oscuro profundo de alto contraste, tres anillos concéntricos con bordes redondeados (`lineCap: "round"`), pistas de fondo translúcidas y métricas tipográficas limpias al costado.
+  2. Incluir animaciones fluidas de llenado radial cuando cambien los valores registrados por el usuario.
+- **Criterios de Aceptación:**
+  1. Implementado íntegramente en la rama `ISSUE_048_FEAT`.
+  2. Renderiza los anillos concéntricos con estética nativa iOS-Like sin caer en diseños genéricos ("AI Slop").
+  3. Los anillos reflejan en tiempo real el porcentaje de progreso que el usuario decida registrar.
+- **Dependencias:** Ninguna (Ejecución independiente)
