@@ -947,6 +947,16 @@ Item {
         ttProc.running = true;
     }
 
+    function addTimetableNote(title, body, date, color) {
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "add_note", title, body, date || "Hoy", color || "#FCC603"];
+        ttProc.running = true;
+    }
+
+    function deleteTimetableNote(id) {
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "delete_note", id.toString()];
+        ttProc.running = true;
+    }
+
     // ── 12. Media Player (Now Playing) ──
     function parseMediaData(data) {
         try {

@@ -45,24 +45,51 @@ DEFAULT_NOTES_DATA = {
     "notes_list": [
         {
             "id": "n1",
-            "title": "Ideas de Diseño",
-            "body": "Revisar paletas dinámicas de Matugen y consistencia visual en Quickshell y paneles.",
-            "date": "HOY",
-            "color": "#FF9F0A"
+            "title": "Nueva nota",
+            "body": "Nota a mano",
+            "date": "miércoles",
+            "color": "#FCC603",
+            "has_thumbnail": True
         },
         {
             "id": "n2",
-            "title": "Configuración de Sistema",
-            "body": "Optimizar arranque y servicios systemd para inicio y apagado instantáneo.",
-            "date": "AYER",
-            "color": "#0A84FF"
+            "title": "Gabriela Gama",
+            "body": "No hay texto adicional",
+            "date": "martes",
+            "color": "#0A84FF",
+            "has_thumbnail": False
         },
         {
             "id": "n3",
-            "title": "Recordatorios Lunita",
-            "body": "Sincronizar marcadores y widgets de escritorio en los tres temas activos.",
-            "date": "20 OCT",
-            "color": "#30D158"
+            "title": "Manifestations",
+            "body": "No hay texto adicional",
+            "date": "martes",
+            "color": "#30D158",
+            "has_thumbnail": False
+        },
+        {
+            "id": "n4",
+            "title": "Luli Dayli",
+            "body": "No soy ni influencer, ni tiktoker, ni instagramer...",
+            "date": "9/11/26",
+            "color": "#BF5AF2",
+            "has_thumbnail": False
+        },
+        {
+            "id": "n5",
+            "title": "Success Story",
+            "body": "No hay texto adicional",
+            "date": "9/8/26",
+            "color": "#FF3B30",
+            "has_thumbnail": False
+        },
+        {
+            "id": "n6",
+            "title": "D 🎀🎀🎀",
+            "body": "Rompe los estándares normales. A ella le gusta...",
+            "date": "8/30/26",
+            "color": "#FF2D55",
+            "has_thumbnail": False
         }
     ],
     "notes": "• Recordar sincronizar calendario y widgets\n• Revisar métricas de salud\n• Deploy de actualización"
@@ -97,7 +124,7 @@ def load_notes_data():
                 d["tasks"] = DEFAULT_NOTES_DATA["tasks"]
             if "notes" not in d:
                 d["notes"] = DEFAULT_NOTES_DATA["notes"]
-            if "notes_list" not in d:
+            if "notes_list" not in d or not d["notes_list"]:
                 d["notes_list"] = DEFAULT_NOTES_DATA["notes_list"]
             return d
     except Exception:
@@ -278,6 +305,30 @@ def main():
 
     elif action == "set_notes" and len(sys.argv) >= 3:
         notes_data["notes"] = sys.argv[2]
+        save_notes_data(notes_data)
+        print(json.dumps(get_current_state(), ensure_ascii=False))
+
+    elif action == "add_note" and len(sys.argv) >= 4:
+        # python3 timetable_provider.py add_note "Title" "Body" [date] [color]
+        title = sys.argv[2]
+        body = sys.argv[3]
+        date_str = sys.argv[4] if len(sys.argv) > 4 else "Hoy"
+        color = sys.argv[5] if len(sys.argv) > 5 else "#FCC603"
+        new_note = {
+            "id": f"n_{int(time.time() * 1000)}",
+            "title": title,
+            "body": body,
+            "date": date_str,
+            "color": color,
+            "has_thumbnail": False
+        }
+        notes_data.setdefault("notes_list", []).insert(0, new_note)
+        save_notes_data(notes_data)
+        print(json.dumps(get_current_state(), ensure_ascii=False))
+
+    elif action == "delete_note" and len(sys.argv) >= 3:
+        note_id = str(sys.argv[2])
+        notes_data["notes_list"] = [n for n in notes_data.get("notes_list", []) if str(n.get("id")) != note_id]
         save_notes_data(notes_data)
         print(json.dumps(get_current_state(), ensure_ascii=False))
 

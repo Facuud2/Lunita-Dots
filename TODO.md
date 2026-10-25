@@ -669,11 +669,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna (Ejecución independiente)
 
 ### [ISSUE-044] Re-refactorización total del Widget de Notas (Basado en Imagen)
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO [x]
 - **Prioridad:** ALTA
 - **Rama Requerida:** `ISSUE_044_REFACTOR`
 - **Módulo(s):** Temas / Widgets / Notas
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Notas), `core/.local/bin/lunita-widgets-manager`
+- **Archivos Afectados:** `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/scripts/timetable_provider.py`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.local/bin/lunita-widgets-manager`
 - **Descripción:** Reestructurar íntegramente el widget de Notas basándose de forma estricta en la imagen de referencia suministrada en el prompt. Debe mantener navegación fluida por scroll entre notas y sincronización con el gestor.
 - **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
   1. Obedecer fielmente el diseño de cabecera, líneas divisoras, márgenes internos y estilo de tarjeta de la imagen adjunta.

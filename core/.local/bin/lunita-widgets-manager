@@ -1996,6 +1996,20 @@ class WidgetsManagerWindow(Adw.ApplicationWindow):
         with open(TIMETABLE_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
+        # Sincronizar también con notes.json para el proveedor de notas
+        notes_file = CONFIG_DIR / "notes.json"
+        try:
+            ndata = {}
+            if notes_file.exists():
+                with open(notes_file, "r", encoding="utf-8") as nf:
+                    ndata = json.load(nf)
+            ndata["notes"] = notes_text
+            ndata["tasks"] = self.current_tasks
+            with open(notes_file, "w", encoding="utf-8") as nf:
+                json.dump(ndata, nf, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+
         threading.Thread(target=self._run_timetable_refresh, daemon=True).start()
         self.show_toast("Horario y notas guardadas correctamente")
 
