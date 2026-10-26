@@ -5,6 +5,12 @@ Item {
     id: root
 
     property var widgetsState
+
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+    readonly property bool nothing: root.skin ? root.skin.isNothing : false
+    readonly property string fontText: root.nothing ? root.skin.fontText : "SF Pro Display, Inter, sans-serif"
+    readonly property string fontFigure: root.nothing ? root.skin.fontFigure : "SF Pro Display, Inter, sans-serif"
+
     readonly property string netDownVal: root.widgetsState ? (root.widgetsState.netDownVal || "0") : "0"
     readonly property string netDownUnit: root.widgetsState ? (root.widgetsState.netDownUnit || "KB/s") : "KB/s"
     readonly property string netUpVal: root.widgetsState ? (root.widgetsState.netUpVal || "0") : "0"
@@ -12,21 +18,32 @@ Item {
     readonly property string netStatus: root.widgetsState ? (root.widgetsState.netStatus || "UP") : "UP"
     readonly property string netInterface: root.widgetsState ? (root.widgetsState.netInterface || "Ethernet") : "Ethernet"
     readonly property string netIp: root.widgetsState ? (root.widgetsState.netIp || "127.0.0.1") : "127.0.0.1"
-    readonly property color textColor: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
-    readonly property color textDim: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
-    readonly property color accentGreen: root.widgetsState ? root.widgetsState.accentGreen : "#30D158"
+    readonly property color textColor: root.nothing ? root.skin.ink : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
+    readonly property color textDim: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
+    readonly property color accentGreen: root.nothing ? root.skin.ink : (root.widgetsState ? root.widgetsState.accentGreen : "#30D158")
     readonly property bool isDarkTheme: root.widgetsState ? root.widgetsState.isDarkTheme : true
 
     Rectangle {
+        id: cardBg
         anchors.fill: parent
-        radius: root.widgetsState ? root.widgetsState.cardRadius : 22
-        color: root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75)
-        border.color: root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14)
-        border.width: 1
+        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
+        border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
+        border.width: root.nothing ? 0 : 1
+        scale: cardMa.pressed ? 0.985 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
+
+        MouseArea {
+            id: cardMa
+            anchors.fill: parent
+            hoverEnabled: true
+        }
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 12
+            anchors.margins: root.nothing ? root.skin.pad : 12
             spacing: 4
 
             // ── Top Row: Speed (Download & Upload) ──
@@ -44,28 +61,28 @@ Item {
 
                         Text {
                             text: root.netDownVal
-                            font.family: "SF Pro Display"
+                            font.family: root.fontFigure
                             font.pixelSize: 18
-                            font.weight: Font.ExtraBold
-                            color: root.textColor
+                            font.weight: Font.DemiBold
+                            color: root.nothing ? root.skin.cyan : root.textColor
                         }
 
                         Text {
                             text: root.netDownUnit
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 9
-                            font.weight: Font.Bold
+                            font.weight: Font.Medium
                             color: root.textDim
                         }
 
                     }
 
                     Text {
-                        text: "󰇚 Bajada"
-                        font.family: "SF Pro Display"
+                        text: "↓ Bajada"
+                        font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Medium
-                        color: "#64D2FF"
+                        color: root.nothing ? root.skin.cyan : "#64D2FF"
                     }
 
                 }
@@ -80,28 +97,28 @@ Item {
 
                         Text {
                             text: root.netUpVal
-                            font.family: "SF Pro Display"
+                            font.family: root.fontFigure
                             font.pixelSize: 18
-                            font.weight: Font.ExtraBold
-                            color: root.textColor
+                            font.weight: Font.DemiBold
+                            color: root.nothing ? root.skin.green : root.textColor
                         }
 
                         Text {
                             text: root.netUpUnit
-                            font.family: "SF Pro Display"
+                            font.family: root.fontText
                             font.pixelSize: 9
-                            font.weight: Font.Bold
+                            font.weight: Font.Medium
                             color: root.textDim
                         }
 
                     }
 
                     Text {
-                        text: "󰕒 Subida"
-                        font.family: "SF Pro Display"
+                        text: "↑ Subida"
+                        font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Medium
-                        color: "#30D158"
+                        color: root.nothing ? root.skin.green : "#30D158"
                     }
 
                 }
@@ -131,10 +148,9 @@ Item {
                         for (var i = 0; i < history.length; i++) {
                             if (history[i] > maxVal)
                                 maxVal = history[i];
-
                         }
                         var stepX = w / (history.length - 1);
-                        // 1. Trazar Curva Suavizada de Línea Tenue
+                        // 1. Trazar Curva Suavizada de Línea
                         ctx.beginPath();
                         var pts = [];
                         for (var j = 0; j < history.length; j++) {
@@ -153,17 +169,26 @@ Item {
                             ctx.quadraticCurveTo(pts[k - 1].x, pts[k - 1].y, midX, midY);
                         }
                         ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-                        // Guardar ruta de la línea para trazar el contorno tenue
                         ctx.lineWidth = 1.5;
-                        ctx.strokeStyle = root.isDarkTheme ? "rgba(48, 209, 88, 0.75)" : "rgba(36, 170, 70, 0.85)";
+                        if (root.nothing) {
+                            ctx.strokeStyle = root.skin.cyan;
+                        } else {
+                            ctx.strokeStyle = root.isDarkTheme ? "rgba(48, 209, 88, 0.75)" : "rgba(36, 170, 70, 0.85)";
+                        }
                         ctx.stroke();
+
                         // 2. Relleno Degradado Sutil Translúcido
                         ctx.lineTo(w, h);
                         ctx.lineTo(0, h);
                         ctx.closePath();
                         var grad = ctx.createLinearGradient(0, 0, 0, h);
-                        grad.addColorStop(0, root.isDarkTheme ? "rgba(48, 209, 88, 0.22)" : "rgba(48, 209, 88, 0.16)");
-                        grad.addColorStop(1, "rgba(48, 209, 88, 0.0)");
+                        if (root.nothing) {
+                            grad.addColorStop(0, "rgba(0, 210, 255, 0.22)");
+                            grad.addColorStop(1, "rgba(0, 210, 255, 0.0)");
+                        } else {
+                            grad.addColorStop(0, root.isDarkTheme ? "rgba(48, 209, 88, 0.22)" : "rgba(48, 209, 88, 0.16)");
+                            grad.addColorStop(1, "rgba(48, 209, 88, 0.0)");
+                        }
                         ctx.fillStyle = grad;
                         ctx.fill();
                     }
@@ -185,7 +210,7 @@ Item {
                     anchors.bottomMargin: 1
                     anchors.rightMargin: 2
                     text: "60s"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontText
                     font.pixelSize: 8
                     font.weight: Font.Bold
                     color: root.textDim
@@ -198,7 +223,7 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: root.isDarkTheme ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"
+                color: root.nothing ? root.skin.dotOff : (root.isDarkTheme ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)")
             }
 
             // ── Bottom Info Rows: Status, Interface & IP ──
@@ -211,7 +236,7 @@ Item {
 
                     Text {
                         text: "Estado"
-                        font.family: "SF Pro Display"
+                        font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Medium
                         color: root.textDim
@@ -223,10 +248,10 @@ Item {
 
                     Text {
                         text: root.netStatus
-                        font.family: "SF Pro Display"
+                        font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.ExtraBold
-                        color: root.accentGreen
+                        color: root.nothing ? (root.netStatus === "UP" ? root.skin.green : root.skin.signal) : root.accentGreen
                     }
 
                 }
@@ -236,7 +261,7 @@ Item {
 
                     Text {
                         text: "Interfaz"
-                        font.family: "SF Pro Display"
+                        font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Medium
                         color: root.textDim
@@ -248,7 +273,7 @@ Item {
 
                     Text {
                         text: root.netInterface
-                        font.family: "SF Pro Display"
+                        font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Bold
                         color: root.textColor
@@ -261,7 +286,7 @@ Item {
 
                     Text {
                         text: "IP"
-                        font.family: "SF Pro Display"
+                        font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Medium
                         color: root.textDim
@@ -273,7 +298,7 @@ Item {
 
                     Text {
                         text: root.netIp
-                        font.family: "CaskaydiaCove Nerd Font"
+                        font.family: root.nothing ? root.fontFigure : "CaskaydiaCove Nerd Font"
                         font.pixelSize: 9
                         font.weight: Font.Normal
                         color: root.textColor

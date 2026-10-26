@@ -725,25 +725,38 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
                     text=True
                 )
 
-                # Monitorear activamente el proceso y el estado del tema
-                max_wait_seconds = 20
+                stdout_chunks = []
+                stderr_chunks = []
+
+                def read_stream(stream, sink):
+                    try:
+                        for line in iter(stream.readline, ''):
+                            sink.append(line)
+                        stream.close()
+                    except Exception:
+                        pass
+
+                t_out = threading.Thread(target=read_stream, args=(proc.stdout, stdout_chunks), daemon=True)
+                t_err = threading.Thread(target=read_stream, args=(proc.stderr, stderr_chunks), daemon=True)
+                t_out.start()
+                t_err.start()
+
+                # Monitorear activamente el proceso asegurando margen suficiente
+                max_wait_seconds = 35.0
                 poll_interval = 0.5
                 elapsed = 0.0
 
                 while True:
                     ret = proc.poll()
                     if ret is not None:
-                        # El proceso terminó por sí mismo
-                        _, stderr_data = proc.communicate()
+                        # El proceso terminó por sí mismo; esperar a vaciar pipes
+                        t_out.join(timeout=1.0)
+                        t_err.join(timeout=1.0)
                         if ret != 0:
-                            # Si falló con código distinto de 0, verificar si a pesar de todo se aplicó
+                            stderr_data = "".join(stderr_chunks).strip()
+                            stdout_data = "".join(stdout_chunks).strip()
                             if get_current_theme_id() != theme.id:
-                                error_msg = (stderr_data or "").strip() or f"Código de salida: {ret}"
-                        break
-
-                    # Verificar si los archivos de estado ya confirman que el tema fue aplicado
-                    if get_current_theme_id() == theme.id and elapsed >= 3.0:
-                        # El tema ya está aplicado con éxito; los daemons en segundo plano pueden seguir corriendo
+                                error_msg = stderr_data or stdout_data or f"Código de salida: {ret}"
                         break
 
                     import time
@@ -751,7 +764,6 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
                     elapsed += poll_interval
 
                     if elapsed >= max_wait_seconds:
-                        # Si se alcanzó el límite de tiempo, comprobar el estado real
                         if get_current_theme_id() != theme.id:
                             proc.kill()
                             error_msg = "El proceso tardó demasiado en aplicar el tema"

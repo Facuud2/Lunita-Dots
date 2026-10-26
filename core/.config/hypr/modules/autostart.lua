@@ -42,7 +42,7 @@ function M.setup()
     hl.exec_cmd("sh -c 'systemctl --user start awww || pgrep -x awww-daemon >/dev/null || awww-daemon &'")
     hl.exec_cmd("sh -c 'sleep 0.8; export PATH=\"" .. home .. "/.local/bin:$PATH\"; command -v lunita-wallpaper >/dev/null 2>&1 && lunita-wallpaper restore || true'")
 
-    -- 5. Quickshell (Barra Superior, Dock, Notificaciones, OSD, Spotlight, Launcher)
+    -- 5. Quickshell (Barra Superior, Dock, Notificaciones, OSD, Spotlight, Launcher, Widgets, Clipboard)
     hl.exec_cmd("sh -c 'sleep 0.5; export PATH=\"" .. home .. "/.local/bin:$PATH\"; lunita-quickshell start'")
 
 

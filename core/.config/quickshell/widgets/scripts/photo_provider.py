@@ -15,8 +15,9 @@ VALID_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".jfif"}
 SEARCH_DIRS = [
     os.path.expanduser("~/Imagenes"),
     os.path.expanduser("~/Imágenes"),
-    "/Imagenes",
-    os.path.expanduser("~/Pictures")
+    os.path.expanduser("~/Pictures"),
+    os.path.expanduser("~/Wallpapers"),
+    os.path.expanduser("~/Downloads")
 ]
 
 def get_all_images():
@@ -67,6 +68,8 @@ def main():
     if not images:
         print(json.dumps({
             "path": "",
+            "prev_path": "",
+            "next_path": "",
             "title": "Sin Fotos",
             "subtitle": "Recuerdos",
             "index": 1,
@@ -94,6 +97,8 @@ def main():
         if not images:
             print(json.dumps({
                 "path": "",
+                "prev_path": "",
+                "next_path": "",
                 "title": "Sin Fotos",
                 "subtitle": "Recuerdos",
                 "index": 1,
@@ -116,8 +121,15 @@ def main():
     save_state(state)
 
     item = images[cur_idx]
+    prev_idx = (cur_idx - 1 + len(images)) % len(images)
+    next_idx = (cur_idx + 1) % len(images)
+    prev_item = images[prev_idx]
+    next_item = images[next_idx]
+
     print(json.dumps({
         "path": item["path"],
+        "prev_path": prev_item["path"],
+        "next_path": next_item["path"],
         "title": item["title"],
         "subtitle": item["subtitle"],
         "index": cur_idx + 1,

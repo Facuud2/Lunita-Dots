@@ -205,13 +205,15 @@ start_component() {
         return 1
     fi
 
-    if [ ! -d "$config_dir" ]; then
+    if [ ! -d "$config_dir" ] || [ ! -f "$config_dir/shell.qml" ]; then
         local current_theme
         current_theme="$(get_active_theme)"
-        if [ -d "$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp" ]; then
+        if [ -f "$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp/shell.qml" ]; then
             config_dir="$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp"
-        elif [ -d "$DOTS_DIR/core/.config/quickshell/$comp" ]; then
+        elif [ -f "$DOTS_DIR/core/.config/quickshell/$comp/shell.qml" ]; then
             config_dir="$DOTS_DIR/core/.config/quickshell/$comp"
+        elif [ -f "$HOME/.config/quickshell/$comp/shell.qml" ]; then
+            config_dir="$HOME/.config/quickshell/$comp"
         else
             return 0
         fi
@@ -236,6 +238,9 @@ stop_component() {
     fi
     if [ "$comp" = "osd" ]; then
         pkill -u "$UID" -f "osd_listener.py" 2>/dev/null || true
+    fi
+    if [ "$comp" = "widgets" ]; then
+        pkill -u "$UID" -f "widget_ipc_listener.py" 2>/dev/null || true
     fi
 }
 
@@ -281,6 +286,7 @@ cmd_stop() {
     pkill -u "$UID" -x quickshell 2>/dev/null || true
     pkill -u "$UID" -x qs 2>/dev/null || true
     pkill -u "$UID" -f "osd_listener.py" 2>/dev/null || true
+    pkill -u "$UID" -f "widget_ipc_listener.py" 2>/dev/null || true
     success "Instancias de Quickshell finalizadas."
 }
 
@@ -288,6 +294,11 @@ cmd_restart() {
     cmd_stop
     sleep 0.4
     cmd_start
+    # Garantizar que el servicio de widgets esté activo si el tema lo soporta
+    if is_component_enabled_in_theme "widgets" && ! is_component_running "widgets"; then
+        sleep 0.2
+        start_component "widgets"
+    fi
 }
 
 cmd_status() {
@@ -327,8 +338,24 @@ case "$1" in
     status|list)
         cmd_status
         ;;
+    start-component)
+        if [ -z "${2:-}" ]; then
+            error "Debe especificar el componente a iniciar (ej. widgets, bar, notifications)."
+            exit 1
+        fi
+        wait_for_wayland
+        ensure_display
+        start_component "$2"
+        ;;
+    stop-component)
+        if [ -z "${2:-}" ]; then
+            error "Debe especificar el componente a detener (ej. widgets, bar, notifications)."
+            exit 1
+        fi
+        stop_component "$2"
+        ;;
     *)
-        echo "Uso: lunita-quickshell {start|stop|restart|status}"
+        echo "Uso: lunita-quickshell {start|stop|restart|status|start-component <comp>|stop-component <comp>}"
         exit 1
         ;;
 esac

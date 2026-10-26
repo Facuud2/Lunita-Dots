@@ -8,11 +8,16 @@ Item {
 
     property var widgetsState
     property var canvas: null
+    readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+    readonly property bool nothing: skin ? skin.isNothing : false
+    readonly property string fontText: (nothing && skin) ? skin.fontText : "SF Pro Display"
+    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : "SF Pro Display"
+
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
     readonly property bool isWide: isMedium || isLarge
-    readonly property color domColor: root.widgetsState && root.widgetsState.mediaDominantColor ? root.widgetsState.mediaDominantColor : "#0A84FF"
+    readonly property color domColor: root.nothing ? (root.skin ? root.skin.ink : "#F5F5F5") : (root.widgetsState && root.widgetsState.mediaDominantColor ? root.widgetsState.mediaDominantColor : "#0A84FF")
     readonly property bool isPlaying: root.widgetsState ? !!root.widgetsState.mediaIsPlaying : false
     // ── Cava Visualizer Frequency Bars (16 bands) ──
     property var cavaBars: [4, 6, 8, 12, 10, 16, 14, 20, 18, 15, 12, 10, 8, 6, 4, 3]
@@ -58,16 +63,27 @@ Item {
         id: bg
 
         anchors.fill: parent
-        radius: root.widgetsState ? root.widgetsState.cardRadius : 22
-        color: root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75)
-        border.color: root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14)
-        border.width: 1
+        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
+        border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
+        border.width: root.nothing ? 0 : 1
         clip: true
+        scale: cardMa.pressed ? 0.985 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
 
-        // ── Dominant Color Glow ──
+        MouseArea {
+            id: cardMa
+            anchors.fill: parent
+            hoverEnabled: true
+        }
+
+        // ── Dominant Color Glow (Desactivado en Nothing para estética plana) ──
         Rectangle {
             anchors.fill: parent
-            radius: root.widgetsState ? root.widgetsState.cardRadius : 22
+            radius: bg.radius
+            visible: !root.nothing
 
             gradient: Gradient {
                 GradientStop {
@@ -189,6 +205,13 @@ Item {
                         height: 18
                         radius: 9
                         color: collapseMa.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(1, 1, 1, 0.08)
+                        scale: collapseMa.pressed ? 0.88 : (collapseMa.containsMouse ? 1.12 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -222,7 +245,7 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: root.widgetsState && root.widgetsState.mediaTitle ? root.widgetsState.mediaTitle : "Sin reproducción"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontText
                     font.pixelSize: 12
                     font.weight: Font.Bold
                     elide: Text.ElideRight
@@ -233,11 +256,11 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: root.widgetsState && root.widgetsState.mediaArtist ? root.widgetsState.mediaArtist : "Ningún reproductor activo"
-                    font.family: "SF Pro Display"
+                    font.family: root.fontText
                     font.pixelSize: 10
                     font.weight: Font.Medium
                     elide: Text.ElideRight
-                    color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
+                    color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
                 }
 
                 // ── CAVA SPECTRUM VISUALIZER ──
@@ -255,17 +278,18 @@ Item {
                         Layout.fillWidth: true
                         height: 3
                         radius: 1.5
-                        color: root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.10)"
+                        color: root.nothing ? root.skin.dotOff : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.10)")
 
                         Rectangle {
                             height: parent.height
                             radius: 1.5
                             width: Math.max(3, parent.width * (root.widgetsState ? root.widgetsState.mediaProgress : 0))
-                            color: domColor
+                            color: root.nothing ? root.skin.signal : domColor
 
                             Behavior on width {
                                 NumberAnimation {
                                     duration: 250
+                                    easing.type: Easing.OutCubic
                                 }
 
                             }
@@ -279,9 +303,9 @@ Item {
 
                         Text {
                             text: root.widgetsState ? root.widgetsState.mediaPositionStr : "0:00"
-                            font.family: "JetBrains Mono"
+                            font.family: root.nothing ? root.fontFigure : "JetBrains Mono"
                             font.pixelSize: 8
-                            color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                            color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                         }
 
                         Item {
@@ -290,9 +314,9 @@ Item {
 
                         Text {
                             text: root.widgetsState ? root.widgetsState.mediaLengthStr : "0:00"
-                            font.family: "JetBrains Mono"
+                            font.family: root.nothing ? root.fontFigure : "JetBrains Mono"
                             font.pixelSize: 8
-                            color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                            color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                         }
 
                     }
@@ -310,6 +334,10 @@ Item {
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 17
                         color: prevMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
+                        scale: prevMa.pressed ? 0.88 : (prevMa.containsMouse ? 1.15 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
 
                         MouseArea {
                             id: prevMa
@@ -332,18 +360,27 @@ Item {
                         width: 28
                         height: 28
                         radius: 14
-                        color: domColor
+                        color: root.nothing ? (root.isPlaying ? root.skin.signal : root.skin.ink) : domColor
+                        scale: playMedMa.pressed ? 0.88 : (playMedMa.containsMouse ? 1.08 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
                             text: root.isPlaying ? "󰏤" : "󰐊"
                             font.family: "CaskaydiaCove Nerd Font"
                             font.pixelSize: 14
-                            color: "#FFFFFF"
+                            color: root.nothing ? (root.isPlaying ? "#FFFFFF" : root.skin.card) : "#FFFFFF"
                         }
 
                         MouseArea {
+                            id: playMedMa
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                             onClicked: {
@@ -361,6 +398,10 @@ Item {
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 17
                         color: nextMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
+                        scale: nextMa.pressed ? 0.88 : (nextMa.containsMouse ? 1.15 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
 
                         MouseArea {
                             id: nextMa
@@ -422,6 +463,13 @@ Item {
                     height: 18
                     radius: 9
                     color: expandMa.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(1, 1, 1, 0.08)
+                    scale: expandMa.pressed ? 0.88 : (expandMa.containsMouse ? 1.12 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     Text {
                         anchors.centerIn: parent
@@ -454,7 +502,7 @@ Item {
             Text {
                 Layout.fillWidth: true
                 text: root.widgetsState && root.widgetsState.mediaTitle ? root.widgetsState.mediaTitle : "Sin reproducción"
-                font.family: "SF Pro Display"
+                font.family: root.fontText
                 font.pixelSize: 11
                 font.weight: Font.Bold
                 elide: Text.ElideRight
@@ -464,10 +512,10 @@ Item {
             Text {
                 Layout.fillWidth: true
                 text: root.widgetsState && root.widgetsState.mediaArtist ? root.widgetsState.mediaArtist : "Reproductor"
-                font.family: "SF Pro Display"
+                font.family: root.fontText
                 font.pixelSize: 10
                 elide: Text.ElideRight
-                color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
+                color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
             }
 
             Item {
@@ -483,9 +531,16 @@ Item {
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 16
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                    scale: prevSmallMa.pressed ? 0.88 : (prevSmallMa.containsMouse ? 1.15 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
 
                     MouseArea {
+                        id: prevSmallMa
                         anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                         onClicked: {
                             if (root.widgetsState)
@@ -500,18 +555,28 @@ Item {
                     width: 28
                     height: 28
                     radius: 14
-                    color: domColor
+                    color: root.nothing ? (root.isPlaying ? root.skin.signal : root.skin.ink) : domColor
+                    scale: playSmallMa.pressed ? 0.88 : (playSmallMa.containsMouse ? 1.08 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     Text {
                         anchors.centerIn: parent
                         text: root.isPlaying ? "󰏤" : "󰐊"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 14
-                        color: "#FFFFFF"
+                        color: root.nothing ? (root.isPlaying ? "#FFFFFF" : root.skin.card) : "#FFFFFF"
                     }
 
                     MouseArea {
+                        id: playSmallMa
                         anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                         onClicked: {
                             if (root.widgetsState)
@@ -527,9 +592,16 @@ Item {
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 16
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                    scale: nextSmallMa.pressed ? 0.88 : (nextSmallMa.containsMouse ? 1.15 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
 
                     MouseArea {
+                        id: nextSmallMa
                         anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                         onClicked: {
                             if (root.widgetsState)
@@ -591,10 +663,10 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: (root.widgetsState && root.widgetsState.mediaArtist === "YouTube") ? "YouTube" : "Multimedia"
-                        font.family: "SF Pro Display"
+                        font.family: root.nothing ? root.skin.fontText : "SF Pro Display"
                         font.pixelSize: 11
                         font.weight: Font.Bold
-                        color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5)
+                        color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.5))
                     }
 
                 }
@@ -608,12 +680,12 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 horizontalAlignment: Text.AlignHCenter
                 text: root.widgetsState && root.widgetsState.mediaTitle ? root.widgetsState.mediaTitle : "Sin reproducción"
-                font.family: "SF Pro Display"
+                font.family: root.nothing ? root.skin.fontText : "SF Pro Display"
                 font.pixelSize: 14
                 font.weight: Font.Bold
                 elide: Text.ElideRight
                 maximumLineCount: 1
-                color: "#FFFFFF"
+                color: root.nothing ? root.skin.ink : "#FFFFFF"
             }
 
             Text {
@@ -623,12 +695,12 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 horizontalAlignment: Text.AlignHCenter
                 text: root.widgetsState && root.widgetsState.mediaArtist ? root.widgetsState.mediaArtist : "Reproductor"
-                font.family: "SF Pro Display"
+                font.family: root.nothing ? root.skin.fontText : "SF Pro Display"
                 font.pixelSize: 11
                 font.weight: Font.Medium
                 elide: Text.ElideRight
                 maximumLineCount: 1
-                color: root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)
+                color: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
             }
 
             // Spectrum
@@ -648,7 +720,11 @@ Item {
                     text: "󰒮"
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 22
-                    color: prevLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : Qt.rgba(1, 1, 1, 0.7)
+                    color: prevLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.7))
+                    scale: prevLargeMa.pressed ? 0.88 : (prevLargeMa.containsMouse ? 1.15 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
 
                     MouseArea {
                         id: prevLargeMa
@@ -670,15 +746,23 @@ Item {
                     width: 38
                     height: 38
                     radius: 19
-                    color: playLargeMa.containsMouse ? Qt.darker(domColor, 1.15) : domColor
-                    scale: playLargeMa.pressed ? 0.94 : 1
+                    color: playLargeMa.containsMouse
+                        ? (root.nothing ? Qt.rgba(1, 1, 1, 0.85) : Qt.darker(domColor, 1.15))
+                        : (root.nothing ? root.skin.ink : domColor)
+                    scale: playLargeMa.pressed ? 0.88 : (playLargeMa.containsMouse ? 1.08 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     Text {
                         anchors.centerIn: parent
                         text: root.isPlaying ? "󰏤" : "󰐊"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 16
-                        color: "#FFFFFF"
+                        color: root.nothing ? root.skin.card : "#FFFFFF"
                     }
 
                     MouseArea {
@@ -695,20 +779,17 @@ Item {
                         }
                     }
 
-                    Behavior on scale {
-                        NumberAnimation {
-                            duration: 100
-                        }
-
-                    }
-
                 }
 
                 Text {
                     text: "󰒭"
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 22
-                    color: nextLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : Qt.rgba(1, 1, 1, 0.7)
+                    color: nextLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.7))
+                    scale: nextLargeMa.pressed ? 0.88 : (nextLargeMa.containsMouse ? 1.15 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
 
                     MouseArea {
                         id: nextLargeMa
@@ -752,9 +833,13 @@ Item {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignBottom
                     height: Math.max(3.5, specRow.spectrumHeight * (barVal / 100))
-                    radius: 2
+                    radius: root.nothing ? 1 : 2
+                    color: root.nothing ? (root.isPlaying ? root.skin.green : root.skin.dotOff) : "transparent"
 
-                    gradient: Gradient {
+                    gradient: root.nothing ? null : specGrad
+
+                    Gradient {
+                        id: specGrad
                         GradientStop {
                             position: 0
                             color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.95)
@@ -764,7 +849,6 @@ Item {
                             position: 1
                             color: Qt.rgba(domColor.r, domColor.g, domColor.b, 0.5)
                         }
-
                     }
 
                     Behavior on height {

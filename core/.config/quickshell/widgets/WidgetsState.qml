@@ -8,6 +8,9 @@ Item {
 
     // ── Edit Mode State ──
     property bool isEditing: false
+
+    // ── Keyboard Interactivity State (for interactive desktop widget inputs) ──
+    property bool wantsKeyboardFocus: false
     // ── Theme State (Synced with Lunita Color Scheme & Theme Tokens) ──
     property bool isDarkTheme: true
     property var activeTokens: ({
@@ -17,6 +20,12 @@ Item {
     readonly property string activeThemeId: activeTokens && activeTokens.theme_id ? activeTokens.theme_id : "macos-theme"
     readonly property var widgetTokens: activeTokens && activeTokens.widgets ? activeTokens.widgets : ({
     })
+    // ── Capa estética (skin) por tema: "nothing" | "apple" | "fluent" ──
+    readonly property WidgetSkin skin: WidgetSkin {
+        activeThemeId: root.activeThemeId
+        widgetTokens: root.widgetTokens
+        isDarkTheme: root.isDarkTheme
+    }
     readonly property int cardRadius: {
         if (widgetTokens && widgetTokens.card_radius !== undefined)
             return widgetTokens.card_radius;
@@ -142,6 +151,8 @@ Item {
     property var netHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     // ── Photo / Memories Data ──
     property string photoPath: ""
+    property string photoPrevPath: ""
+    property string photoNextPath: ""
     property string photoRawPath: ""
     property string photoTitle: "Recuerdos"
     property string photoCategory: "Destacados"
@@ -168,6 +179,11 @@ Item {
     property string clockDay: "28"
     property string clockWeekday: "LUN"
     property string weatherTemp: "--°C"
+    property string weatherTempVal: "13°"
+    property string weatherMax: "18°"
+    property string weatherMin: "11°"
+    property string weatherConditionType: "cloudy"
+    property string weatherCityName: "Buenos Aires"
     property string weatherIcon: "󰖐"
     property string weatherDesc: "Cargando..."
     property string weatherHumidity: "--%"
@@ -246,6 +262,10 @@ Item {
     property color mediaDominantColor: "#0A84FF"
     property bool mediaExpanded: false
     property var savedMediaBeforeExpansion: null
+    // ── 13. Files Widget Data (iOS Files-Style Recent Documents) ──
+    property var filesList: []
+    property int filesTotal: 0
+    property int filesPage: 0
     // ── Configuration Paths ──
     readonly property string configDir: Quickshell.env("HOME") + "/.config/lunita"
     readonly property string layoutFile: configDir + "/widgets_layout_qml.json"
@@ -378,10 +398,23 @@ Item {
 
     function getScreenWidgets(screenName) {
         var s = screenName || "HDMI-A-1";
-        if (root.screensLayout && root.screensLayout[s] && Array.isArray(root.screensLayout[s]))
-            return root.screensLayout[s];
+        var rawList = (root.screensLayout && root.screensLayout[s] && Array.isArray(root.screensLayout[s]))
+            ? root.screensLayout[s]
+            : defaultScreenWidgets(s);
 
-        return defaultScreenWidgets(s);
+        // Bloqueo permanente del widget de reloj en tamaño pequeño (170x170)
+        return rawList.map((w) => {
+            if (w && (w.type === "clock" || w.id === "clk")) {
+                if (w.width !== 170 || w.height !== 170 || w.size !== "small") {
+                    var copy = Object.assign({}, w);
+                    copy.width = 170;
+                    copy.height = 170;
+                    copy.size = "small";
+                    return copy;
+                }
+            }
+            return w;
+        });
     }
 
     function setScreenWidgets(screenName, list) {
@@ -432,6 +465,12 @@ Item {
         var list = getScreenWidgets(sName).slice();
         for (var i = 0; i < list.length; i++) {
             if (list[i].id === id) {
+                if (list[i].type === "clock" || list[i].id === "clk") {
+                    list[i].width = 170;
+                    list[i].height = 170;
+                    list[i].size = "small";
+                    break;
+                }
                 list[i].width = Math.round(newWidth);
                 list[i].height = Math.round(newHeight);
                 if (newSize)
@@ -541,93 +580,8 @@ Item {
     }
 
     function toggleClockExpanded(screenName) {
-        var s = screenName;
-        if (!s) {
-            for (var k in root.screensLayout) {
-                var arr = root.screensLayout[k];
-                if (arr && arr.some((w) => {
-                    return w.type === "clock" || w.id === "clk";
-                })) {
-                    s = k;
-                    break;
-                }
-            }
-        }
-        if (!s)
-            s = "HDMI-A-1";
-
-        var list = getScreenWidgets(s).slice();
-        var clkIdx = -1;
-        for (var i = 0; i < list.length; i++) {
-            if (list[i].type === "clock" || list[i].id === "clk") {
-                clkIdx = i;
-                break;
-            }
-        }
-        if (clkIdx === -1)
-            return ;
-
-        var isExpanded = clockExpandedScreens[s] || false;
-        var newExp = Object.assign({
-        }, clockExpandedScreens);
-        var newSaved = Object.assign({
-        }, savedClockScreens);
-        if (!isExpanded) {
-            newSaved[s] = JSON.parse(JSON.stringify(list));
-            var clk = Object.assign({
-            }, list[clkIdx]);
-            var targetClkX = clk.x - 184;
-            var targetClkY = clk.y;
-            var expandShift = 184;
-            for (var j = 0; j < list.length; j++) {
-                if (j === clkIdx)
-                    continue;
-
-                var w = Object.assign({
-                }, list[j]);
-                if (Math.abs(w.y - targetClkY) < 60 && w.x <= clk.x) {
-                    w.x -= expandShift;
-                    list[j] = w;
-                }
-            }
-            clk.x = targetClkX;
-            clk.width = 354;
-            clk.size = "medium";
-            list[clkIdx] = clk;
-            newExp[s] = true;
-        } else {
-            if (newSaved[s]) {
-                list = newSaved[s];
-                delete newSaved[s];
-            } else {
-                var clkItem = Object.assign({
-                }, list[clkIdx]);
-                clkItem.x += 184;
-                clkItem.width = 170;
-                clkItem.size = "small";
-                list[clkIdx] = clkItem;
-                for (var m = 0; m < list.length; m++) {
-                    if (m === clkIdx)
-                        continue;
-
-                    var ow = Object.assign({
-                    }, list[m]);
-                    if (Math.abs(ow.y - clkItem.y) < 60 && ow.x < clkItem.x) {
-                        ow.x += 184;
-                        list[m] = ow;
-                    }
-                }
-            }
-            newExp[s] = false;
-        }
-        clockExpandedScreens = newExp;
-        savedClockScreens = newSaved;
-        var copy = Object.assign({
-        }, root.screensLayout);
-        copy[s] = list;
-        root.screensLayout = copy;
-        root.widgetsList = getScreenWidgets("HDMI-A-1");
-        root.screenLayoutChanged(s);
+        // [ISSUE-051] Clock widget está bloqueado permanentemente en tamaño pequeño y no se expande
+        return ;
     }
 
     function selectCalendarDay(dayNumber) {
@@ -877,6 +831,24 @@ Item {
         weatherProc.running = true;
     }
 
+    // ── Files Widget Functions ──
+    function refreshFiles() {
+        filesProc.command = ["python3", root.scriptsDir + "/files_provider.py"];
+        filesProc.running = true;
+    }
+
+    function openFile(filePath) {
+        if (filePath && filePath.trim() !== "") {
+            Quickshell.execDetached(["python3", root.scriptsDir + "/files_provider.py", "open", filePath.trim()]);
+        }
+    }
+
+    function openFileFolder(filePath) {
+        if (filePath && filePath.trim() !== "") {
+            Quickshell.execDetached(["python3", root.scriptsDir + "/files_provider.py", "open_dir", filePath.trim()]);
+        }
+    }
+
     // ── 8. Battery & Ecosystem Devices ──
     function syncBattery() {
         batProc.command = ["python3", root.scriptsDir + "/device_battery_provider.py", "sync"];
@@ -928,22 +900,72 @@ Item {
     }
 
     function toggleTimetableTask(id) {
+        ttProc.running = false;
         ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "toggle_task", id.toString()];
         ttProc.running = true;
     }
 
     function addTimetableTask(title, tag, due) {
+        ttProc.running = false;
         ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "add_task", title, tag || "General", due || "Pendiente"];
         ttProc.running = true;
     }
 
     function deleteTimetableTask(id) {
+        ttProc.running = false;
         ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "delete_task", id.toString()];
         ttProc.running = true;
     }
 
     function setTimetableNotes(notes) {
+        ttProc.running = false;
         ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "set_notes", notes];
+        ttProc.running = true;
+    }
+
+    function addTimetableNote(title, body, date, color) {
+        var newNote = {
+            "id": "n_" + Date.now(),
+            "title": title,
+            "body": body || "",
+            "date": date || "Hoy",
+            "color": color || "#FCC603",
+            "has_thumbnail": false
+        };
+        var currentList = (root.ttNotesList || []).slice();
+        currentList.unshift(newNote);
+        root.ttNotesList = currentList;
+
+        ttProc.running = false;
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "add_note", title, body || "", date || "Hoy", color || "#FCC603"];
+        ttProc.running = true;
+    }
+
+    function deleteTimetableNote(id) {
+        var targetId = id.toString();
+        root.ttNotesList = (root.ttNotesList || []).filter(function(n) { return String(n.id) !== targetId; });
+
+        ttProc.running = false;
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "delete_note", targetId];
+        ttProc.running = true;
+    }
+
+    function updateTimetableNote(id, title, body) {
+        var targetId = id.toString();
+        var currentList = (root.ttNotesList || []).slice();
+        for (var i = 0; i < currentList.length; i++) {
+            if (String(currentList[i].id) === targetId) {
+                var copy = Object.assign({}, currentList[i]);
+                copy.title = title;
+                copy.body = body;
+                currentList[i] = copy;
+                break;
+            }
+        }
+        root.ttNotesList = currentList;
+
+        ttProc.running = false;
+        ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "update_note", targetId, title, body || ""];
         ttProc.running = true;
     }
 
@@ -1027,17 +1049,43 @@ Item {
         watchChanges: true
         onFileChanged: calendarEventsWatcher.reload()
         onTextChanged: {
+            calProc.running = false;
             calProc.command = ["python3", root.scriptsDir + "/calendar_provider.py", "get"];
             calProc.running = true;
         }
     }
 
+    FileView {
+        id: notesWatcher
+
+        path: Quickshell.env("HOME") + "/.config/lunita/notes.json"
+        watchChanges: true
+        onFileChanged: notesWatcher.reload()
+        onTextChanged: {
+            ttProc.running = false;
+            ttProc.command = ["python3", root.scriptsDir + "/timetable_provider.py", "get"];
+            ttProc.running = true;
+        }
+    }
+
     // ── Widget Edit Mode IPC Listener ──
+    Timer {
+        id: ipcRestartTimer
+        interval: 1000
+        repeat: false
+        onTriggered: {
+            widgetIpcProc.running = true;
+        }
+    }
+
     Process {
         id: widgetIpcProc
 
         command: ["python3", "-u", root.scriptsDir + "/widget_ipc_listener.py"]
         running: true
+        onExited: {
+            ipcRestartTimer.restart();
+        }
 
         stdout: SplitParser {
             splitMarker: "\n"
@@ -1219,6 +1267,8 @@ Item {
                     var p = JSON.parse(data.trim());
                     root.photoDirection = p.direction || 1;
                     root.photoPath = p.path || "";
+                    root.photoPrevPath = p.prev_path || "";
+                    root.photoNextPath = p.next_path || "";
                     root.photoTitle = p.title || "Recuerdos";
                     root.photoCategory = p.subtitle || "Fotos";
                     root.photoIndex = p.index || 1;
@@ -1313,6 +1363,11 @@ Item {
                 try {
                     var p = JSON.parse(data.trim());
                     root.weatherTemp = p.temp || "--°C";
+                    root.weatherTempVal = p.temp_val || (p.temp ? p.temp.replace("C", "") : "13°");
+                    root.weatherMax = p.max || "18°";
+                    root.weatherMin = p.min || "11°";
+                    root.weatherConditionType = p.condition_type || "cloudy";
+                    root.weatherCityName = p.city_name || (p.city ? p.city : "Buenos Aires");
                     root.weatherIcon = p.icon || "󰖐";
                     root.weatherDesc = p.desc || "";
                     root.weatherHumidity = p.humidity || "--%";
@@ -1328,6 +1383,36 @@ Item {
             }
         }
 
+    }
+
+    Timer {
+        interval: 60000 // 1 minuto
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            filesProc.command = ["python3", root.scriptsDir + "/files_provider.py"];
+            filesProc.running = true;
+        }
+    }
+
+    Process {
+        id: filesProc
+
+        command: ["python3", root.scriptsDir + "/files_provider.py"]
+
+        stdout: SplitParser {
+            onRead: (data) => {
+                try {
+                    var p = JSON.parse(data.trim());
+                    if (p && p.files) {
+                        root.filesList = p.files;
+                        root.filesTotal = p.total || p.files.length;
+                    }
+                } catch (e) {
+                }
+            }
+        }
     }
 
     Timer {

@@ -42,29 +42,7 @@ DEFAULT_NOTES_DATA = {
             "due": "Mañana"
         }
     ],
-    "notes_list": [
-        {
-            "id": "n1",
-            "title": "Ideas de Diseño",
-            "body": "Revisar paletas dinámicas de Matugen y consistencia visual en Quickshell y paneles.",
-            "date": "HOY",
-            "color": "#FF9F0A"
-        },
-        {
-            "id": "n2",
-            "title": "Configuración de Sistema",
-            "body": "Optimizar arranque y servicios systemd para inicio y apagado instantáneo.",
-            "date": "AYER",
-            "color": "#0A84FF"
-        },
-        {
-            "id": "n3",
-            "title": "Recordatorios Lunita",
-            "body": "Sincronizar marcadores y widgets de escritorio en los tres temas activos.",
-            "date": "20 OCT",
-            "color": "#30D158"
-        }
-    ],
+    "notes_list": [],
     "notes": "• Recordar sincronizar calendario y widgets\n• Revisar métricas de salud\n• Deploy de actualización"
 }
 
@@ -98,7 +76,7 @@ def load_notes_data():
             if "notes" not in d:
                 d["notes"] = DEFAULT_NOTES_DATA["notes"]
             if "notes_list" not in d:
-                d["notes_list"] = DEFAULT_NOTES_DATA["notes_list"]
+                d["notes_list"] = []
             return d
     except Exception:
         return DEFAULT_NOTES_DATA.copy()
@@ -198,7 +176,7 @@ def get_current_state():
         "schedule": today_events if today_events else upcoming_events[:5],
         "tasks": notes_data.get("tasks", []),
         "notes": notes_data.get("notes", ""),
-        "notes_list": notes_data.get("notes_list", DEFAULT_NOTES_DATA["notes_list"])
+        "notes_list": notes_data.get("notes_list", [])
     }
 
 def main():
@@ -278,6 +256,43 @@ def main():
 
     elif action == "set_notes" and len(sys.argv) >= 3:
         notes_data["notes"] = sys.argv[2]
+        save_notes_data(notes_data)
+        print(json.dumps(get_current_state(), ensure_ascii=False))
+
+    elif action == "add_note" and len(sys.argv) >= 4:
+        # python3 timetable_provider.py add_note "Title" "Body" [date] [color]
+        title = sys.argv[2]
+        body = sys.argv[3]
+        date_str = sys.argv[4] if len(sys.argv) > 4 else "Hoy"
+        color = sys.argv[5] if len(sys.argv) > 5 else "#FCC603"
+        new_note = {
+            "id": f"n_{int(time.time() * 1000)}",
+            "title": title,
+            "body": body,
+            "date": date_str,
+            "color": color,
+            "has_thumbnail": False
+        }
+        notes_data.setdefault("notes_list", []).insert(0, new_note)
+        save_notes_data(notes_data)
+        print(json.dumps(get_current_state(), ensure_ascii=False))
+
+    elif action == "delete_note" and len(sys.argv) >= 3:
+        note_id = str(sys.argv[2])
+        notes_data["notes_list"] = [n for n in notes_data.get("notes_list", []) if str(n.get("id")) != note_id]
+        save_notes_data(notes_data)
+        print(json.dumps(get_current_state(), ensure_ascii=False))
+
+    elif action == "update_note" and len(sys.argv) >= 4:
+        # python3 timetable_provider.py update_note note_id title [body]
+        note_id = str(sys.argv[2])
+        new_title = sys.argv[3]
+        new_body = sys.argv[4] if len(sys.argv) > 4 else ""
+        for n in notes_data.get("notes_list", []):
+            if str(n.get("id")) == note_id:
+                n["title"] = new_title
+                n["body"] = new_body
+                break
         save_notes_data(notes_data)
         print(json.dumps(get_current_state(), ensure_ascii=False))
 

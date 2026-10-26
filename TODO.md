@@ -635,3 +635,291 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   1. Ejecutar `lunita-widgets-manager` múltiples veces desde terminal o mediante clic derecho en las barras nunca abre más de una ventana.
   2. Si la ventana ya existe en segundo plano, una nueva invocación le devuelve el foco en el escritorio actual.
 - **Dependencias:** Ninguna
+
+### [ISSUE-042] Re-refactorización total del Widget de Calendario (Basado en Imagen)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_042_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Calendario
+- **Archivos Afectados:** `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Reestructurar desde cero el widget de Calendario replicando con precisión milimétrica la imagen de referencia adjunta en el prompt de ejecución. Debe operar como una tarea 100% aislada e independiente del resto de los widgets.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Seguir estrictamente la composición, proporciones, paddings y jerarquía tipográfica de la imagen proporcionada.
+  2. Aplicar el flujo de diseño **UX/UI Pro** bajo estética **iOS-Like** pura (bordes continuos tipo *squircle*, desenfoque translúcido sutil, contraste limpio y ausencia total de sobrecarga visual o "AI Slop").
+- **Criterios de Aceptación:**
+  1. El trabajo se realiza y confirma exclusivamente dentro de la rama `ISSUE_042_REFACTOR`.
+  2. La interfaz QML resultante es fiel a la imagen adjunta en el prompt y respeta las guías iOS-Like.
+  3. El widget funciona de manera autónoma sin romper ni depender de otros widgets del lienzo.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-043] Re-refactorización total del Widget de Dispositivos Conectados (Basado en Imagen)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_043_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Dispositivos y Batería
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Dispositivos/Batería y scripts recolectores UPower/Bluetooth)
+- **Descripción:** Rediseñar por completo el widget de Dispositivos Conectados y niveles de batería guiándose estrictamente por la imagen de referencia adjunta al momento de ejecutar esta tarea.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Replicar exactamente la disposición de anillos/barras de batería, iconografía de periféricos y distribución espacial de la captura adjunta.
+  2. Aplicar los estándares de **UX/UI Pro** y **Anti AI-Slop**, priorizando legibilidad inmediata, micro-interacciones suaves y acabado nativo **iOS-Like**.
+- **Criterios de Aceptación:**
+  1. El desarrollo se encapsula en la rama `ISSUE_043_REFACTOR`.
+  2. El resultado visual coincide exactamente con la imagen adjunta en el prompt.
+  3. Muestra el estado real del equipo y periféricos conectados sin acoplarse a otras tareas.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-044] Re-refactorización total del Widget de Notas (Basado en Imagen)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_044_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Notas
+- **Archivos Afectados:** `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/scripts/timetable_provider.py`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Reestructurar íntegramente el widget de Notas basándose de forma estricta en la imagen de referencia suministrada en el prompt. Debe mantener navegación fluida por scroll entre notas y sincronización con el gestor.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Obedecer fielmente el diseño de cabecera, líneas divisoras, márgenes internos y estilo de tarjeta de la imagen adjunta.
+  2. Ejecutar bajo el estándar **UX/UI Pro** + **Anti AI-Slop**, logrando la estética nativa de Apple Notes en **iOS/iPadOS**.
+- **Criterios de Aceptación:**
+  1. Todo cambio queda registrado únicamente en la rama `ISSUE_044_REFACTOR`.
+  2. La apariencia final calca la referencia visual provista y elimina cualquier elemento genérico no solicitado.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-045] Re-refactorización total del Widget de Clima (Basado en Imagen)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_045_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Clima
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WeatherWidget.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/weather_provider.py`, `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Reconstruir el widget de Clima siguiendo al pie de la letra la imagen de referencia adjuntada en la sesión del prompt.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Respetar la ubicación exacta de la temperatura principal, pronóstico por horas/días, iconos climáticos y gradientes de fondo mostrados en la imagen.
+  2. Aplicar directrices **UX/UI Pro** y **Anti AI-Slop** para lograr un acabado **iOS Weather-Like** limpio, con pesos tipográficos precisos y sin sombras ni bordes artificiales.
+- **Criterios de Aceptación:**
+  1. Desarrollo aislado en la rama `ISSUE_045_REFACTOR`.
+  2. Coincidencia visual estricta con la imagen de referencia adjunta y carga correcta de datos climáticos.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-046] Creación del nuevo Widget de Archivos (Basado en Imagen)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_046_FEAT`
+- **Módulo(s):** Temas / Widgets / Archivos (Nuevo Componente)
+- **Archivos Afectados:** `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/files_provider.py`, `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Desarrollar desde cero un nuevo widget de Archivos recientes/anclados para el escritorio, tomando como especificación visual absoluta la imagen adjunta en el prompt al iniciar la tarea.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Construir la grilla o lista de archivos, previsualizaciones de iconos, truncado de nombres y espaciados exactamente como dicta la imagen de referencia.
+  2. Implementar con el flujo **UX/UI Pro** y **Anti AI-Slop**, emulando la estética del widget de *Files* de **iOS/iPadOS** y abriendo los elementos con `xdg-open` o Dolphin al interactuar.
+- **Criterios de Aceptación:**
+  1. Rama exclusiva `ISSUE_046_FEAT` creada y utilizada para el feature.
+  2. El nuevo widget se registra en el lienzo y su diseño replica la imagen adjunta sin desviaciones.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-047] Re-refactorización total del Widget de Imágenes (Basado en Imagen)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** MEDIA
+- **Rama Requerida:** `ISSUE_047_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Imágenes y Fotos
+- **Archivos Afectados:** `core/.config/quickshell/widgets/PhotoWidget.qml`, `core/.config/quickshell/widgets/scripts/photo_provider.py`
+- **Descripción:** Reestructurar por completo el widget de Imágenes/Galería ajustándolo estrictamente al diseño de la imagen de referencia proporcionada en el prompt.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Recortar las imágenes con el radio de curvatura (`radius` / `OpacityMask` / `MultiEffect`) exacto de la referencia, respetando superposiciones de texto o controles si la imagen los incluye.
+  2. Aplicar **UX/UI Pro** y **Anti AI-Slop** para conseguir una presentación fotográfica limpia al estilo **iOS Photos Widget**, con transiciones suaves (`CrossFade`) y escalado `PreserveAspectCrop`.
+- **Criterios de Aceptación:**
+  1. Trabajo confinado en la rama `ISSUE_047_REFACTOR`.
+  2. Fidelidad visual absoluta respecto a la imagen suministrada en el prompt.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-048] Rediseño autónomo del Widget de Fitness con Anillos de Actividad (Sin Imagen)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_048_FEAT`
+- **Módulo(s):** Temas / Widgets / Fitness & Hábitos
+- **Archivos Afectados:** `core/.config/quickshell/widgets/HabitTrackerWidget.qml`
+- **Descripción:** Rediseñar el widget de Fitness e integrar un sistema de **Anillos de Actividad concéntricos** que se llenen dinámicamente a medida que el usuario registre su progreso diario desde el gestor de widgets o mediante interacción directa. **Nota para el agente:** Esta es la única tarea de la serie que NO incluye imagen de referencia adjunta; el agente es responsable de diseñar la interfaz de forma autónoma.
+- **Directrices de Diseño (UX/UI Pro & Anti AI-Slop):**
+  1. Aplicar rigurosamente el flujo **UX/UI Pro** y **Anti AI-Slop** siguiendo el estándar visual de **Apple Fitness (iOS/watchOS)**: fondo oscuro profundo de alto contraste, tres anillos concéntricos con bordes redondeados (`lineCap: "round"`), pistas de fondo translúcidas y métricas tipográficas limpias al costado.
+  2. Incluir animaciones fluidas de llenado radial cuando cambien los valores registrados por el usuario.
+- **Criterios de Aceptación:**
+  1. Implementado íntegramente en la rama `ISSUE_048_FEAT`.
+  2. Renderiza los anillos concéntricos con estética nativa iOS-Like sin caer en diseños genéricos ("AI Slop").
+  3. Los anillos reflejan en tiempo real el porcentaje de progreso que el usuario decida registrar.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-049] Reparar Autoinicio del Servicio de Widgets de Quickshell al Iniciar Sesión
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_049_FIX`
+- **Módulo(s):** Core / Widgets / Autostart / Quickshell
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WeatherWidget.qml`, `core/.config/quickshell/widgets/HabitTrackerWidget.qml`, `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.local/bin/lunita-quickshell`, `core/.config/hypr/modules/autostart.lua`
+- **Descripción:** El servicio y demonio de widgets en Quickshell (`quickshell -p ~/.config/quickshell/widgets`) no arrancaba con el inicio del sistema durante la invocación de `lunita-quickshell start` desde `autostart.lua`. La investigación del log reveló errores fatales de parseo en QML: asignaciones no enteras a `font.pixelSize` (`13.5`, `12.5`, `10.5` en `WeatherWidget.qml`, `HabitTrackerWidget.qml` y `FilesWidget.qml`) y asignaciones inválidas de `horizontalAlignment` sobre componentes `Column`, lo que provocaba el cierre prematuro inmediato del proceso con código de error 255. Adicionalmente, `lunita-quickshell` carecía de los comandos explícitos `start-component` y `stop-component` requeridos por utilidades como `lunita-widgets-toggle`.
+- **Criterios de Aceptación:**
+  1. `quickshell -p ~/.config/quickshell/widgets` carga sin fallos de parseo de propiedades ni excepciones en la consola.
+  2. `lunita-quickshell status` reporta el proceso de widgets en estado Activo con PID asignado.
+  3. Soporte para `start-component` y `stop-component` en `lunita-quickshell`.
+  4. Los archivos modificados pasan las validaciones obligatorias `bash -n` y `luac -p`.
+- **Dependencias:** Ninguna (Ejecución independiente)
+
+### [ISSUE-050] Interactividad completa, vistas de detalle, edición y gestos en el Widget de Notas
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_049_FEAT`
+- **Módulo(s):** Temas / Widgets / Notas
+- **Archivos Afectados:** `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/shell.qml`, `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/scripts/timetable_provider.py`, `core/.config/quickshell/widgets/scripts/widget_ipc_listener.py`, `core/.local/bin/lunita-widgets-manager`, `core/.local/bin/lunita-widgets-toggle`, `core/.local/bin/lunita-quickshell`
+- **Descripción:** Dotar de interactividad completa al widget de Notas en el escritorio:
+  1. **Vista de detalle y navegación:** Al hacer clic sobre el título de una nota en el listado, el widget transiciona hacia una vista completa mostrando el contenido íntegro de la nota seleccionada, con botón de retroceso ("Atrás") para volver al listado general.
+  2. **Creación directa:** Botón de acción rápida (`+`) en el encabezado del widget para redactar y guardar notas directamente sin abrir el gestor externo.
+  3. **Edición interactiva en vivo:** Al abrir cualquier nota en la vista de detalle, sus campos de título y contenido son editables (`TextInput` / `TextEdit`) con guardado automático persistente al presionar "Listo" o retroceder.
+  4. **Efecto Smart Stack vertical en modo compacto:** En tamaño pequeño, la transición entre notas existentes se produce con una animación vertical fluida (hacia arriba o abajo) estilo pila inteligente de iOS mediante `DragHandler` y `WheelHandler`.
+- **Criterios de Aceptación:**
+  1. Hacer clic en una nota despliega su detalle completo editable y permite persistir modificaciones o regresar al listado.
+  2. El botón `+` permite crear nuevas notas con título y cuerpo persistidos en el almacenamiento JSON.
+  3. En tamaño compacto, la navegación vertical cicla exclusivamente entre las notas existentes con efecto de pila inteligente tridimensional y microindicador de página.
+- **Dependencias:** [ISSUE-044]
+
+### [ISSUE-051] Simplificación del Widget de Reloj y bloqueo en tamaño pequeño
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** MEDIA
+- **Rama Requerida:** `ISSUE_050_REFACTOR`
+- **Módulo(s):** Temas / Widgets / Reloj y Lienzo (`DesktopGridCanvas`)
+- **Archivos Afectados:** `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`
+- **Descripción:** 
+  1. Eliminar toda lógica, consulta e interfaz relacionada con el clima dentro del widget de Reloj, dejando exclusivamente la visualización horaria.
+  2. Restringir las dimensiones del widget de Reloj para que sea el único widget del ecosistema bloqueado permanentemente en su variante de tamaño pequeño, deshabilitando los controles o tiradores de expansión/redimensionamiento para este componente específico.
+- **Criterios de Aceptación:**
+  1. El widget de Reloj no muestra datos ni iconos meteorológicos ni realiza llamadas a servicios de clima.
+  2. En el modo de edición de widgets (`lunita-widgets-toggle`), el reloj permite ser reposicionado pero bloquea cualquier intento de expandirlo a tamaños medianos o grandes.
+- **Dependencias:** Ninguna
+
+### [ISSUE-052] Animación vertical estilo Smart Stack (iOS) en el Widget de Imágenes
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** MEDIA
+- **Rama Requerida:** `ISSUE_052_FEAT`
+- **Módulo(s):** Temas / Widgets / Imágenes
+- **Archivos Afectados:** `core/.config/quickshell/widgets/PhotoWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/photo_provider.py`
+- **Descripción:** Reemplazar el cambio estático de fotografías por una animación vertical de subida y bajada idéntica al comportamiento de la "Pila Inteligente" (*Smart Stack*) de iOS. Al deslizar/arrastrar verticalmente o rotar automáticamente el carrusel, las imágenes deben desplazarse en el eje Y con físicas de resorte (`SpringAnimation` / curvas Bezier iOS-Like), escala sutil de profundidad e indicadores laterales temporales de posición.
+- **Criterios de Aceptación:**
+  1. Las imágenes transicionan desplazándose verticalmente hacia arriba o hacia abajo con efecto de pila tridimensional estilo iOS.
+  2. El usuario puede cambiar de foto manualmente deslizando hacia arriba/abajo con el cursor o rueda del ratón, además de la rotación automática.
+- **Dependencias:** [ISSUE-047]
+
+### [ISSUE-053] Registro manual en vivo e integración con Strava en el Widget de Salud/Fitness
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_052_FEAT`
+- **Módulo(s):** Temas / Widgets / Fitness & Backend de Sincronización
+- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Fitness y scripts de sincronización), `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Reemplazar los botones genéricos de incremento de pasos y movimiento en el widget de Salud por un sistema dual de ingesta de datos accesible desde el propio widget:
+  1. **Modo Manual Interactivo:** Permitir ingresar o ajustar directamente desde la interfaz del widget las métricas del día (pasos, calorías/movimiento, minutos de ejercicio) actualizando los anillos de actividad en tiempo real.
+  2. **Modo Dinámico (Strava API):** Implementar un flujo de conexión y sincronización con la API de Strava para extraer automáticamente las actividades físicas del usuario, traduciendo distancia, tiempo y gasto calórico al progreso de los anillos sin intervención manual.
+- **Criterios de Aceptación:**
+  1. Se eliminan los botones genéricos de prueba y se incorpora una vista/control limpio en el widget para alternar entre entrada manual y sincronización con Strava.
+  2. En modo manual, el usuario puede introducir valores concretos desde el widget y persistirlos en el almacenamiento local.
+  3. Al vincular una cuenta de Strava, el widget obtiene periódicamente las métricas recientes y actualiza los anillos de actividad de forma automática.
+- **Dependencias:** [ISSUE-048]
+
+---
+
+### [ISSUE-054] Rediseño Estético Exclusivo de Widgets de Escritorio al Estilo NothingOS
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_054_STYLE`
+- **Módulo(s):** Temas / Widgets / Quickshell / `lunita-default`
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WidgetSkin.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/NdDotRing.qml`, `core/.config/quickshell/widgets/NdDotBar.qml`, `core/.config/quickshell/widgets/NdDotGrid.qml`, `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/WeatherWidget.qml`, `core/.config/quickshell/widgets/BatteryWidget.qml`, `core/.config/quickshell/widgets/NetworkWidget.qml`, `core/.config/quickshell/widgets/SystemResourcesWidget.qml`, `core/.config/quickshell/widgets/GitActivityWidget.qml`, `core/.config/quickshell/widgets/HabitTrackerWidget.qml`, `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/MediaWidget.qml`, `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`
+- **Descripción:** Rediseñar la capa visual de los 12 widgets de escritorio en Quickshell adoptando la identidad NothingOS (Nothing Phone / Nothing OS 2.5/3.0) para el tema `lunita-default`, preservando íntegramente las funcionalidades, interactividad, gestos y APIs subyacentes:
+  1. **Arquitectura desacoplada de Skin:** Implementación de `WidgetSkin.qml` y primitivas dot-matrix (`NdDotRing`, `NdDotBar`, `NdDotGrid`), garantizando que la lógica de backend sea compartida y otros temas puedan mantener o definir sus propios skins (Apple en macOS, Fluent en Modern-Win11).
+  2. **Lenguaje Visual NothingOS:**
+     - Paleta monocromática estricta (negro `#111111`, gris `#1C1C1C`, blanco `#F5F5F5`, gris medio `#8F8F8F`) con acento de señal único rojo Nothing (`#D71921`) para estados activos/"en vivo".
+     - Tipografía dual: cifras y datos principales en matriz de puntos LED (*NDOT 47* / *Doto*), textos de interfaz y cuerpo en *Space Grotesk*.
+     - Tarjetas planas sin degradados, sombras ni blur; radio consistente de 24px.
+  3. **Adaptación de los 12 widgets:** Reloj apilado digital, Clima monocromo plano, Anillos de progreso por puntos en Recursos/Salud/Batería, Heatmap de puntos en GitHub Activity, papel de puntos en Notas y carátula vinilo en Media.
+- **Criterios de Aceptación:**
+  1. Todos los widgets muestran la estética NothingOS en `lunita-default`.
+  2. Ninguna funcionalidad previa (interacción de notas, smart stack, providers, IPC) se degrada ni altera.
+  3. El tema `macos-theme` mantiene su diseño previo sin regresiones.
+  4. Quickshell carga limpiamente sin errores de sintaxis QML.
+- **Dependencias:** [ISSUE-050], [ISSUE-051]
+
+---
+
+### [ISSUE-055] Desktop Grid a Pantalla Completa, Red Visual Dinámica y Auto-Reflow
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_055_FEAT`
+- **Módulo(s):** Temas / Widgets / Quickshell / Desktop Grid
+- **Archivos Afectados:** `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/DesktopGridGuide.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`
+- **Descripción:** Transformar el lienzo del escritorio en una cuadrícula completa modular matemática adaptativa inspirada en iOS / iPadOS / macOS y Ryoku:
+  1. **Red Visual Dinámica (`DesktopGridGuide.qml`):** Guía de celdas y retícula visible en modo edición que se activa al arrastrar widgets con proyección en vivo del área de destino (*Ghost Slot / Drop Target*).
+  2. **Motor de Colisión y Auto-Reflow:** Detección de solapamiento en coordenadas de celda y desplazamiento reactivo suave (*Push / Swap*) de los widgets en conflicto para evitar superposiciones no deseadas.
+  3. **Suavizado Ergonómico del Jiggle:** Reducción de amplitud a ±0.45° a 360ms y congelamiento automático del temblor al posicionar el cursor sobre el control de redimensión o durante la redimensión activa para garantizar estabilidad y precisión.
+- **Criterios de Aceptación:**
+  1. El lienzo calcula dinámicamente columnas y filas según la resolución de la pantalla.
+  2. Al mover un widget sobre otro, el widget en conflicto se desliza suavemente a una celda libre contigua.
+  3. La red visual proyecta la silueta de destino del widget arrastrado con sus dimensiones reales (1x1, 2x1 o 2x2).
+  4. El temblor jiggle es suave y se detiene automáticamente sobre el handle de resize.
+- **Dependencias:** [ISSUE-052], [ISSUE-054]
+
+---
+
+### [ISSUE-056] Pulido y Estandarización de Transiciones y Micro-interacciones de Widgets (transitions-polish & transitions-dev)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_052_FEAT`
+- **Módulo(s):** Temas / Widgets / Quickshell / Animaciones & Micro-interacciones
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/DesktopGridGuide.qml`, `core/.config/quickshell/widgets/BatteryWidget.qml`, `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.config/quickshell/widgets/GitActivityWidget.qml`, `core/.config/quickshell/widgets/HabitTrackerWidget.qml`, `core/.config/quickshell/widgets/MediaWidget.qml`, `core/.config/quickshell/widgets/NdDotBar.qml`, `core/.config/quickshell/widgets/NdDotRing.qml`, `core/.config/quickshell/widgets/NetworkWidget.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`, `core/.config/quickshell/widgets/SystemResourcesWidget.qml`, `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/WeatherWidget.qml`
+- **Descripción:** Auditar y refactorizar exhaustivamente todos los widgets y componentes de Quickshell aplicando las reglas canónicas de las skills `transitions-polish` y `transitions-dev`:
+  1. **Estandarización de Duraciones y Curvas Canónicas:**
+     - Armonización de micro-interacciones a escala canónica: `--duration-quick` (150ms) para retroalimentación táctil y hover, `--duration-fast` (250ms) para deslizamientos de tarjetas y reposicionamientos del grid, `--duration-medium` (350ms) para medidores y barras de progreso.
+     - Reemplazo de easings genéricos o faltantes por curvas canónicas: `Easing.OutCubic` (`--ease-smooth-out`) y `Easing.InOutSine` (`--ease-in-out`).
+  2. **Micro-interacciones y Respuesta Háptica Visual (Transitions-dev):**
+     - Incorporación de escala táctil al pulsar (`scale: pressed ? 0.985 : 1.0` en tarjetas; `scale: pressed ? 0.88-0.92 : (containsMouse ? 1.05-1.12 : 1.0)` en botones y controles interactivos) con `Behavior on scale` y `ColorAnimation`.
+     - Interpolación reactiva con `animPct` / `animValue` en medidores radiales (`NdDotRing`, `BatteryWidget`), barras de puntos (`NdDotBar`) y barras de progreso del sistema para eliminar saltos bruscos ante cambios en tiempo real.
+- **Criterios de Aceptación:**
+  1. Todos los widgets disponen de respuesta táctil al click y hover suave.
+  2. Todas las animaciones respetan estrictamente la escala de tokens de duración y easing canónico.
+  3. Quickshell compila y carga sin errores ni advertencias de sintaxis QML.
+- **Dependencias:** [ISSUE-054], [ISSUE-055]
+
+---
+
+### [ISSUE-057] Sincronización de Celda por Centro, Supresión de Retícula y Dwell Timer estilo iOS en Desktop Grid
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_052_FEAT`
+- **Módulo(s):** Temas / Widgets / Quickshell / Desktop Grid
+- **Archivos Afectados:** `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/DesktopGridGuide.qml`
+- **Descripción:** Corregir fallos de sincronización, origen flotante del aura y superposición múltiple de widgets al reordenar el escritorio:
+  1. **Cálculo de Celda por Centro Geométrico:** Refactorización de `xToCol` y `yToRow` para calcular la posición destino basada en el centro exacto del widget (`centerX = px + width / 2.0`), eliminando saltos prematuros o asimétricos al cruzar columnas en widgets medianos (2x1, 2x2).
+  2. **Supresión de Retícula y Refinado del Ghost Slot:** Eliminación de la matriz estática de 50 celdas que saturaba la pantalla. Rediseño del `ghostSlot` estilo drop placeholder sutil de iOS / Nothing (sin bordes rojos ni cruces invasivas) y supresión del salto flotante desde `(-1, -1)` al iniciar el arrastre mediante guardas en `Behavior on x/y`.
+  3. **Dwell Timer estilo iOS / macOS:** Incorporación de un temporizador de permanencia (`dwellTimer` de 340ms) que evita el desplazamiento errático de widgets situados al pasar de paso sobre ellos; el reflow sólo se dispara si el usuario sostiene deliberadamente el widget sobre una posición ocupada.
+  4. **Motor de Reflow Libre de Colisiones con Matriz de Ocupación:** Sustitución de la lógica previa por una matriz virtual de ocupación bidimensional `occ[r][c]`. Implementa el intercambio (*swap*) directo si cabe en el hueco de origen, o reubica ordenadamente cada widget colisionado en celdas contiguas según distancia Manhattan mínima garantizando cero solapamientos o widgets duplicados en la misma celda.
+- **Criterios de Aceptación:**
+  1. El aura / ghostSlot nace en la posición inicial del widget sin volar desde la esquina de la pantalla.
+  2. El aura se reposiciona sincronizadamente con el centro del widget sin saltos prematuros.
+  3. La retícula repetitiva de fondo ya no cubre la pantalla innecesariamente.
+  4. Los widgets situados no se mueven si el widget arrastrado solo pasa por encima rápidamente; se apartan tras 340ms de permanencia sobre ellos.
+  5. Dos o más widgets arrastrados a una misma posición no se superponen ni se montan entre sí.
+  6. Quickshell carga limpiamente sin errores sintácticos.
+- **Dependencias:** [ISSUE-055], [ISSUE-056]
+
+---
+
+### [ISSUE-058] Corrección de Timeout en Theme Selector y Persistencia del Servicio de Widgets al Cambiar de Tema
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_052_FEAT`
+- **Módulo(s):** Temas / Orquestador CLI / Quickshell / Theme Selector
+- **Archivos Afectados:** `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-theme-selector`, `core/.local/bin/lunita-quickshell`, `core/.config/quickshell/widgets/WidgetSkin.qml`
+- **Descripción:** Corregir el bloqueo/timeout al cambiar de tema por primera vez en `lunita-theme-selector` y garantizar que el servicio de widgets se mantenga en ejecución continua:
+  1. **Prevención de Deadlock en Pipes de Subprocess:** Se reemplazó la espera ciega con `proc.poll()` en `lunita-theme-selector` por hilos lectores de streaming concurrente para `stdout` y `stderr`. Esto evita que el buffer del pipe de 64KB del kernel se sature y congele a `lunita-theme apply`, eliminando el falso timeout de 20s. Se amplió además el umbral de seguridad a 35s.
+  2. **Optimización de Escaneo de Directorios (400x más rápido en frío):** En `clean_legacy_links` de `lunita-theme`, se limitó el escaneo de `.local/share` exclusivamente a las carpetas donde Lunita-Dots instala activos (`fonts`, `icons`, `applications`, `themes`, `user-places.xbel`), evitando recorrer cientos de miles de archivos de Steam, Wine o Flatpaks en frío.
+  3. **Blindaje de Concurrencia (Flock):** Se incorporó un archivo de bloqueo `/tmp/lunita_theme_apply.lock` en `cmd_apply` para evitar que dos procesos de cambio de tema compitan entre sí y maten las instancias de Quickshell en segundo plano.
+  4. **Persistencia y Resiliencia del Servicio de Widgets:**
+     - Se eliminó la carpeta residual vacía `themes/macos-theme/.config/quickshell/widgets/` que provocaba que GNU Stow creara un enlace a un directorio sin `shell.qml`.
+     - Se reforzó `start_component` en `lunita-quickshell` para validar la existencia física de `shell.qml` antes de invocar el daemon, con fallback automático a `core/.config/quickshell/widgets/shell.qml`.
+     - Se aseguró en `cmd_restart` la verificación activa y levantamiento garantizado del daemon de `widgets`.
+     - En `WidgetSkin.qml` se condicionó la carga de la fuente NDOT 47 exclusivamente a temas NothingOS, eliminando advertencias en otros temas.
+- **Criterios de Aceptación:**
+  1. `lunita-theme-selector` aplica temas de forma ágil sin lanzar el error "El proceso tardó demasiado en aplicar el tema".
+  2. El servicio de widgets permanece activo (`lunita-quickshell status` reporta `widgets: Activo`) tras alternar entre temas.
+  3. No existen condiciones de carrera entre llamadas concurrentes a `lunita-theme apply`.
+  4. La sintaxis de Bash, Python y QML pasa todas las validaciones sin errores.
+- **Dependencias:** [ISSUE-057]
