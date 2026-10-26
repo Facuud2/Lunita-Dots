@@ -32,7 +32,7 @@ QtObject {
     // NDOT 47 viaja con la Dynamic Island de lunita-default; Doto es el
     // respaldo dot-matrix instalado en el sistema.
     property FontLoader ndotLoader: FontLoader {
-        source: "file://" + Quickshell.env("HOME") + "/.config/quickshell/bar/fonts/ndot-47-inspired-by-nothing.otf"
+        source: isNothing ? ("file://" + Quickshell.env("HOME") + "/.config/quickshell/bar/fonts/ndot-47-inspired-by-nothing.otf") : ""
     }
     readonly property string fontFigure: ndotLoader.status === FontLoader.Ready ? ndotLoader.name : "Doto"
     readonly property string fontText: "Space Grotesk"

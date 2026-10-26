@@ -151,10 +151,26 @@ if target_pkg and os.path.isdir(target_pkg):
 scan_dirs = [
     os.path.join(home, '.config'),
     os.path.join(home, '.local', 'bin'),
-    os.path.join(home, '.local', 'share'),
     os.path.join(home, '.icons'),
     os.path.join(home, '.oh-my-zsh', 'custom')
 ]
+
+# Para .local/share, escanear únicamente subdirectorios donde Lunita-Dots instala activos (evitando Steam/Flatpak/etc.)
+share_base = os.path.join(home, '.local', 'share')
+if os.path.isdir(share_base):
+    for sub in ['fonts', 'icons', 'applications', 'themes']:
+        sp = os.path.join(share_base, sub)
+        if os.path.isdir(sp):
+            scan_dirs.append(sp)
+    # user-places.xbel vive directamente en .local/share
+    xbel = os.path.join(share_base, 'user-places.xbel')
+    if os.path.islink(xbel):
+        try:
+            if not os.path.exists(xbel):
+                os.unlink(xbel)
+        except Exception:
+            pass
+
 for base in scan_dirs:
     if not os.path.exists(base): continue
     for root, dirs, files in os.walk(base, topdown=False):
@@ -438,6 +454,14 @@ cmd_apply() {
         exit 1
     fi
 
+    # Bloqueo para evitar ejecuciones simultáneas de lunita-theme apply
+    local lock_file="/tmp/lunita_theme_apply.lock"
+    exec 200>"$lock_file"
+    if ! flock -n 200; then
+        warn "Ya hay una aplicación de tema en curso. Esperando a que finalice..."
+        flock 200
+    fi
+
     local current
     current="$(get_current_theme 2>/dev/null || true)"
 
@@ -462,6 +486,12 @@ cmd_apply() {
 
     # 3. Vincular paquete core (siempre activo e independiente del tema)
     clean_legacy_links "$DOTS_DIR/core"
+    # Asegurar que el symlink de widgets no esté roto ni apunte a un tema sin shell.qml
+    if [ -L "$HOME/.config/quickshell/widgets" ]; then
+        if [ ! -e "$HOME/.config/quickshell/widgets" ] || [ ! -f "$HOME/.config/quickshell/widgets/shell.qml" ]; then
+            rm -f "$HOME/.config/quickshell/widgets"
+        fi
+    fi
     stow -d "$DOTS_DIR" -t "$HOME" -S core
 
     # 4. Vincular el nuevo tema

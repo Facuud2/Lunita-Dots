@@ -205,13 +205,15 @@ start_component() {
         return 1
     fi
 
-    if [ ! -d "$config_dir" ]; then
+    if [ ! -d "$config_dir" ] || [ ! -f "$config_dir/shell.qml" ]; then
         local current_theme
         current_theme="$(get_active_theme)"
-        if [ -d "$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp" ]; then
+        if [ -f "$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp/shell.qml" ]; then
             config_dir="$DOTS_DIR/themes/$current_theme/.config/quickshell/$comp"
-        elif [ -d "$DOTS_DIR/core/.config/quickshell/$comp" ]; then
+        elif [ -f "$DOTS_DIR/core/.config/quickshell/$comp/shell.qml" ]; then
             config_dir="$DOTS_DIR/core/.config/quickshell/$comp"
+        elif [ -f "$HOME/.config/quickshell/$comp/shell.qml" ]; then
+            config_dir="$HOME/.config/quickshell/$comp"
         else
             return 0
         fi
@@ -292,6 +294,11 @@ cmd_restart() {
     cmd_stop
     sleep 0.4
     cmd_start
+    # Garantizar que el servicio de widgets esté activo si el tema lo soporta
+    if is_component_enabled_in_theme "widgets" && ! is_component_running "widgets"; then
+        sleep 0.2
+        start_component "widgets"
+    fi
 }
 
 cmd_status() {

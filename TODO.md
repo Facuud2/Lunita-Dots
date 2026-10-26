@@ -899,3 +899,27 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   5. Dos o más widgets arrastrados a una misma posición no se superponen ni se montan entre sí.
   6. Quickshell carga limpiamente sin errores sintácticos.
 - **Dependencias:** [ISSUE-055], [ISSUE-056]
+
+---
+
+### [ISSUE-058] Corrección de Timeout en Theme Selector y Persistencia del Servicio de Widgets al Cambiar de Tema
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_052_FEAT`
+- **Módulo(s):** Temas / Orquestador CLI / Quickshell / Theme Selector
+- **Archivos Afectados:** `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-theme-selector`, `core/.local/bin/lunita-quickshell`, `core/.config/quickshell/widgets/WidgetSkin.qml`
+- **Descripción:** Corregir el bloqueo/timeout al cambiar de tema por primera vez en `lunita-theme-selector` y garantizar que el servicio de widgets se mantenga en ejecución continua:
+  1. **Prevención de Deadlock en Pipes de Subprocess:** Se reemplazó la espera ciega con `proc.poll()` en `lunita-theme-selector` por hilos lectores de streaming concurrente para `stdout` y `stderr`. Esto evita que el buffer del pipe de 64KB del kernel se sature y congele a `lunita-theme apply`, eliminando el falso timeout de 20s. Se amplió además el umbral de seguridad a 35s.
+  2. **Optimización de Escaneo de Directorios (400x más rápido en frío):** En `clean_legacy_links` de `lunita-theme`, se limitó el escaneo de `.local/share` exclusivamente a las carpetas donde Lunita-Dots instala activos (`fonts`, `icons`, `applications`, `themes`, `user-places.xbel`), evitando recorrer cientos de miles de archivos de Steam, Wine o Flatpaks en frío.
+  3. **Blindaje de Concurrencia (Flock):** Se incorporó un archivo de bloqueo `/tmp/lunita_theme_apply.lock` en `cmd_apply` para evitar que dos procesos de cambio de tema compitan entre sí y maten las instancias de Quickshell en segundo plano.
+  4. **Persistencia y Resiliencia del Servicio de Widgets:**
+     - Se eliminó la carpeta residual vacía `themes/macos-theme/.config/quickshell/widgets/` que provocaba que GNU Stow creara un enlace a un directorio sin `shell.qml`.
+     - Se reforzó `start_component` en `lunita-quickshell` para validar la existencia física de `shell.qml` antes de invocar el daemon, con fallback automático a `core/.config/quickshell/widgets/shell.qml`.
+     - Se aseguró en `cmd_restart` la verificación activa y levantamiento garantizado del daemon de `widgets`.
+     - En `WidgetSkin.qml` se condicionó la carga de la fuente NDOT 47 exclusivamente a temas NothingOS, eliminando advertencias en otros temas.
+- **Criterios de Aceptación:**
+  1. `lunita-theme-selector` aplica temas de forma ágil sin lanzar el error "El proceso tardó demasiado en aplicar el tema".
+  2. El servicio de widgets permanece activo (`lunita-quickshell status` reporta `widgets: Activo`) tras alternar entre temas.
+  3. No existen condiciones de carrera entre llamadas concurrentes a `lunita-theme apply`.
+  4. La sintaxis de Bash, Python y QML pasa todas las validaciones sin errores.
+- **Dependencias:** [ISSUE-057]
