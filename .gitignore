@@ -47,3 +47,10 @@ themes/*/.config/vesktop/themes/lunita.theme.css
 themes/*/.config/kdeglobals
 themes/*/.local/share/color-schemes/Lunita.colors
 .lunita-theme
+
+# Artefactos y configuración local de agentes AI
+.agents/
+.claude/
+.minimax/
+skills-lock.json
+
