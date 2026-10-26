@@ -7,8 +7,9 @@ Item {
     property var widgetsState
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: skin ? skin.isNothing : false
-    readonly property string fontText: (nothing && skin) ? skin.fontText : "SF Pro Display"
-    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : "SF Pro Display"
+    readonly property bool fluent: skin ? skin.isFluent : false
+    readonly property string fontText: (skin && (nothing || fluent)) ? skin.fontText : "SF Pro Display"
+    readonly property string fontFigure: (skin && (nothing || fluent)) ? skin.fontFigure : "SF Pro Display"
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
@@ -40,9 +41,9 @@ Item {
         id: bg
 
         anchors.fill: parent
-        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
-        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
-        border.color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14)))
+        radius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22))
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75)))
+        border.color: isCiFail ? (root.fluent ? "#E81123" : (root.nothing ? root.skin.signal : "#FF453A")) : (root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))))
         border.width: isCiFail ? 1.5 : (root.nothing ? 0 : 1)
         clip: true
         scale: cardMa.pressed ? 0.985 : 1.0
@@ -93,10 +94,10 @@ Item {
                 // CI/CD Badge
                 Rectangle {
                     height: 16
-                    radius: 8
+                    radius: root.fluent ? 6 : 8
                     implicitWidth: ciRow.implicitWidth + 8
-                    color: root.nothing ? root.skin.raised : (isCiFail ? Qt.rgba(1, 0.27, 0.23, 0.2) : Qt.rgba(0.19, 0.82, 0.35, 0.2))
-                    border.color: root.nothing ? (isCiFail ? root.skin.signal : "transparent") : (isCiFail ? "#FF453A" : "#30D158")
+                    color: root.fluent ? (isCiFail ? Qt.rgba(232 / 255, 17 / 255, 35 / 255, 0.15) : Qt.rgba(16 / 255, 124 / 255, 65 / 255, 0.15)) : (root.nothing ? root.skin.raised : (isCiFail ? Qt.rgba(1, 0.27, 0.23, 0.2) : Qt.rgba(0.19, 0.82, 0.35, 0.2)))
+                    border.color: root.fluent ? (isCiFail ? "#E81123" : "#107C41") : (root.nothing ? (isCiFail ? root.skin.signal : "transparent") : (isCiFail ? "#FF453A" : "#30D158"))
                     border.width: 1
 
                     RowLayout {
@@ -109,7 +110,7 @@ Item {
                             text: isCiFail ? "󰅚" : "󰄬"
                             font.family: "CaskaydiaCove Nerd Font"
                             font.pixelSize: 9
-                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158")
+                            color: root.fluent ? (isCiFail ? "#E81123" : "#107C41") : (isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158"))
                         }
 
                         Text {
@@ -117,7 +118,7 @@ Item {
                             font.family: root.fontText
                             font.pixelSize: 8
                             font.weight: Font.Bold
-                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158")
+                            color: root.fluent ? (isCiFail ? "#E81123" : "#107C41") : (isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158"))
                         }
 
                     }
@@ -142,9 +143,16 @@ Item {
                         Rectangle {
                             width: 12
                             height: 12
-                            radius: root.nothing ? width / 2 : 2.5
+                            radius: root.fluent ? 3 : (root.nothing ? width / 2 : 2.5)
                             color: {
                                 var lvl = modelData.level !== undefined ? modelData.level : 0;
+                                if (root.fluent) {
+                                    if (lvl === 4) return "#2ea043";
+                                    if (lvl === 3) return "#238636";
+                                    if (lvl === 2) return "#196127";
+                                    if (lvl === 1) return "#0e4429";
+                                    return "rgba(255, 255, 255, 0.06)";
+                                }
                                 if (root.nothing) {
                                     if (lvl === 4) return root.skin.green;
                                     if (lvl === 3) return Qt.rgba(0, 0.90, 0.60, 0.75);
@@ -166,7 +174,7 @@ Item {
 
                                 return root.widgetsState && root.widgetsState.isDarkTheme ? "#161B22" : "#E1E4E8";
                             }
-                            border.color: root.nothing ? "transparent" : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)")
+                            border.color: root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"))
                             border.width: 0.5
                         }
 
@@ -189,9 +197,9 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                radius: root.nothing ? 12 : 10
-                color: root.nothing ? root.skin.raised : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)")
-                border.color: root.nothing ? "transparent" : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)")
+                radius: root.fluent ? 6 : (root.nothing ? 12 : 10)
+                color: root.fluent ? root.skin.cardAlt : (root.nothing ? root.skin.raised : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"))
+                border.color: root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"))
                 border.width: 1
 
                 ColumnLayout {
@@ -310,10 +318,10 @@ Item {
                 // Badge CI/CD
                 Rectangle {
                     height: 20
-                    radius: 10
+                    radius: root.fluent ? 6 : 10
                     implicitWidth: ciLargeRow.implicitWidth + 12
-                    color: root.nothing ? root.skin.raised : (isCiFail ? Qt.rgba(1, 0.27, 0.23, 0.22) : Qt.rgba(0.19, 0.82, 0.35, 0.22))
-                    border.color: root.nothing ? (isCiFail ? root.skin.signal : "transparent") : (isCiFail ? "#FF453A" : "#30D158")
+                    color: root.fluent ? (isCiFail ? Qt.rgba(232 / 255, 17 / 255, 35 / 255, 0.15) : Qt.rgba(16 / 255, 124 / 255, 65 / 255, 0.15)) : (root.nothing ? root.skin.raised : (isCiFail ? Qt.rgba(1, 0.27, 0.23, 0.22) : Qt.rgba(0.19, 0.82, 0.35, 0.22)))
+                    border.color: root.fluent ? (isCiFail ? "#E81123" : "#107C41") : (root.nothing ? (isCiFail ? root.skin.signal : "transparent") : (isCiFail ? "#FF453A" : "#30D158"))
                     border.width: 1
 
                     RowLayout {
@@ -326,7 +334,7 @@ Item {
                             text: isCiFail ? "󰅚" : "󰄬"
                             font.family: "CaskaydiaCove Nerd Font"
                             font.pixelSize: 11
-                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158")
+                            color: root.fluent ? (isCiFail ? "#E81123" : "#107C41") : (isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158"))
                         }
 
                         Text {
@@ -334,7 +342,7 @@ Item {
                             font.family: root.fontText
                             font.pixelSize: 9
                             font.weight: Font.Bold
-                            color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158")
+                            color: root.fluent ? (isCiFail ? "#E81123" : "#107C41") : (isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? root.skin.green : "#30D158"))
                         }
 
                     }
@@ -347,9 +355,9 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 height: 52
-                radius: root.nothing ? 16 : 12
-                color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
-                border.color: root.nothing ? "transparent" : Qt.rgba(1, 1, 1, 0.08)
+                radius: root.fluent ? 6 : (root.nothing ? 16 : 12)
+                color: root.fluent ? root.skin.cardAlt : (root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05))
+                border.color: root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : Qt.rgba(1, 1, 1, 0.08))
                 border.width: 1
 
                 RowLayout {
@@ -395,9 +403,16 @@ Item {
                                 Rectangle {
                                     width: 16
                                     height: 16
-                                    radius: root.nothing ? width / 2 : 3.5
+                                    radius: root.fluent ? 3 : (root.nothing ? width / 2 : 3.5)
                                     color: {
                                         var lvl = modelData.level !== undefined ? modelData.level : 0;
+                                        if (root.fluent) {
+                                            if (lvl === 4) return "#2ea043";
+                                            if (lvl === 3) return "#238636";
+                                            if (lvl === 2) return "#196127";
+                                            if (lvl === 1) return "#0e4429";
+                                            return "rgba(255, 255, 255, 0.06)";
+                                        }
                                         if (root.nothing) {
                                             if (lvl === 4) return root.skin.green;
                                             if (lvl === 3) return Qt.rgba(0, 0.90, 0.60, 0.75);
@@ -419,7 +434,7 @@ Item {
 
                                         return root.widgetsState && root.widgetsState.isDarkTheme ? "#161B22" : "#E1E4E8";
                                     }
-                                    border.color: root.nothing ? "transparent" : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)")
+                                    border.color: root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : (root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)"))
                                     border.width: 0.5
                                 }
 
@@ -476,9 +491,9 @@ Item {
                 delegate: Rectangle {
                     width: parent ? parent.width : 326
                     height: 48
-                    radius: root.nothing ? 14 : 10
-                    color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
-                    border.color: root.nothing ? "transparent" : Qt.rgba(1, 1, 1, 0.07)
+                    radius: root.fluent ? 6 : (root.nothing ? 14 : 10)
+                    color: root.fluent ? root.skin.cardAlt : (root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05))
+                    border.color: root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : Qt.rgba(1, 1, 1, 0.07))
                     border.width: 1
 
                     ColumnLayout {
@@ -496,9 +511,9 @@ Item {
                             // Repo Pill
                             Rectangle {
                                 height: 16
-                                radius: 8
+                                radius: root.fluent ? 4 : 8
                                 implicitWidth: repoTxt.implicitWidth + 8
-                                color: root.nothing ? root.skin.card : Qt.rgba(0, 122 / 255, 255 / 255, 0.18)
+                                color: root.fluent ? Qt.rgba(0, 120 / 255, 212 / 255, 0.15) : (root.nothing ? root.skin.card : Qt.rgba(0, 122 / 255, 255 / 255, 0.18))
 
                                 Text {
                                     id: repoTxt
@@ -508,7 +523,7 @@ Item {
                                     font.family: root.fontText
                                     font.pixelSize: 9
                                     font.weight: Font.Bold
-                                    color: root.nothing ? root.skin.ink : "#0A84FF"
+                                    color: root.fluent ? "#0078D4" : (root.nothing ? root.skin.ink : "#0A84FF")
                                 }
 
                             }

@@ -9,6 +9,7 @@ Item {
 
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: root.skin ? root.skin.isNothing : false
+    readonly property bool fluent: root.skin ? root.skin.isFluent : (root.widgetsState && root.widgetsState.activeThemeId === "modern-win11-theme")
 
     // Forzar dimensiones pequeñas estándar (170 x 170)
     width: 170
@@ -18,10 +19,10 @@ Item {
         id: cardBg
 
         anchors.fill: parent
-        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+        radius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22))
         clip: true
-        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#211A39")
-        border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12))
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#211A39"))
+        border.color: root.nothing ? "transparent" : (root.fluent ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12)))
         border.width: root.nothing ? 0 : 1
         scale: cardMa.pressed ? 0.985 : 1.0
 
@@ -52,9 +53,174 @@ Item {
         // ═══════════════════════════════════════════════════════════════════
         AnalogClockFace {
             id: mainClockFace
-            visible: !root.nothing
+            visible: !root.nothing && !root.fluent
             anchors.centerIn: parent
             dialSize: 142
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // ── SKIN FLUENT: DIGITAL BENTO CLOCK WINDOWS 11 ────────────────────
+        // ═══════════════════════════════════════════════════════════════════
+        Item {
+            id: fluentFace
+
+            property date now: new Date()
+
+            anchors.fill: parent
+            anchors.margins: root.skin ? root.skin.pad : 14
+            visible: root.fluent
+
+            Timer {
+                interval: 1000
+                running: fluentFace.visible
+                repeat: true
+                triggeredOnStart: true
+                onTriggered: fluentFace.now = new Date()
+            }
+
+            // Top Header: Chip "Reloj" y punto de señal de segundos
+            Rectangle {
+                id: topChip
+                anchors.left: parent.left
+                anchors.top: parent.top
+                height: 22
+                width: chipLayout.implicitWidth + 14
+                radius: root.skin ? root.skin.radiusControl : 6
+                color: root.skin ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                border.color: root.skin ? root.skin.cardBorder : Qt.rgba(1, 1, 1, 0.08)
+                border.width: 1
+
+                RowLayout {
+                    id: chipLayout
+                    anchors.centerIn: parent
+                    spacing: 5
+
+                    Text {
+                        text: "󱑂"
+                        font.family: "Symbols Nerd Font"
+                        font.pixelSize: 11
+                        color: root.skin ? root.skin.accent : "#0078D4"
+                    }
+
+                    Text {
+                        text: "Reloj"
+                        font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
+                        color: root.skin ? root.skin.ink : "#FFFFFF"
+                    }
+                }
+            }
+
+            Rectangle {
+                anchors.right: parent.right
+                anchors.verticalCenter: topChip.verticalCenter
+                width: 6
+                height: 6
+                radius: 3
+                color: root.skin ? root.skin.accent : "#0078D4"
+                opacity: fluentFace.now.getSeconds() % 2 === 0 ? 1 : 0.35
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 250; easing.type: Easing.InOutSine }
+                }
+            }
+
+            // Hora Principal Digital con Segundos
+            Item {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: topChip.bottom
+                anchors.bottom: secBar.top
+                anchors.topMargin: 4
+                anchors.bottomMargin: 6
+
+                RowLayout {
+                    anchors.centerIn: parent
+                    spacing: 4
+
+                    Text {
+                        text: Qt.formatTime(fluentFace.now, "HH:mm")
+                        font.family: root.skin ? root.skin.fontFigure : "Segoe UI Variable Display"
+                        font.pixelSize: 34
+                        font.weight: Font.DemiBold
+                        color: root.skin ? root.skin.ink : "#FFFFFF"
+                    }
+
+                    ColumnLayout {
+                        spacing: 0
+
+                        Text {
+                            text: Qt.formatTime(fluentFace.now, "ss")
+                            font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                            font.pixelSize: 12
+                            font.weight: Font.Bold
+                            color: root.skin ? root.skin.accent : "#0078D4"
+                        }
+
+                        Text {
+                            text: Qt.formatTime(fluentFace.now, "ap").toUpperCase()
+                            font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                            font.pixelSize: 10
+                            font.weight: Font.Medium
+                            color: root.skin ? root.skin.inkDim : "#94A3B8"
+                        }
+                    }
+                }
+            }
+
+            // Barra sutil de progreso de segundos
+            Rectangle {
+                id: secBar
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: bottomRow.top
+                anchors.bottomMargin: 8
+                height: 2
+                radius: 1
+                color: root.skin ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.10)
+
+                Rectangle {
+                    height: parent.height
+                    radius: parent.radius
+                    width: Math.max(2, parent.width * ((fluentFace.now.getSeconds() + 1) / 60.0))
+                    color: root.skin ? root.skin.accent : "#0078D4"
+
+                    Behavior on width {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                }
+            }
+
+            // Fila inferior: Fecha formateada y zona
+            RowLayout {
+                id: bottomRow
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                spacing: 4
+
+                Text {
+                    Layout.fillWidth: true
+                    text: {
+                        var s = fluentFace.now.toLocaleDateString(Qt.locale("es_AR"), "ddd, d MMM");
+                        return s.charAt(0).toUpperCase() + s.slice(1).replace(/\./g, "");
+                    }
+                    font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                    font.pixelSize: 11
+                    font.weight: Font.Medium
+                    color: root.skin ? root.skin.inkDim : "#94A3B8"
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    text: "Local"
+                    font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                    font.pixelSize: 10
+                    font.weight: Font.Normal
+                    color: root.skin ? root.skin.inkMuted : Qt.rgba(1, 1, 1, 0.44)
+                }
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════

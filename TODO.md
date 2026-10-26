@@ -923,3 +923,21 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   3. No existen condiciones de carrera entre llamadas concurrentes a `lunita-theme apply`.
   4. La sintaxis de Bash, Python y QML pasa todas las validaciones sin errores.
 - **Dependencias:** [ISSUE-057]
+
+### [ISSUE-059] Rediseño integral y autónomo de los Widgets de Escritorio en Modern-Win11-Theme
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_059_REFACTOR`
+- **Módulo(s):** Modern-Win11-Theme / Widgets (Todos los componentes QML)
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WidgetSkin.qml`, `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/BatteryWidget.qml`, `core/.config/quickshell/widgets/WeatherWidget.qml`, `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`, `core/.config/quickshell/widgets/HabitTrackerWidget.qml`, `core/.config/quickshell/widgets/SystemResourcesWidget.qml`, `core/.config/quickshell/widgets/NetworkWidget.qml`, `core/.config/quickshell/widgets/MediaWidget.qml`, `core/.config/quickshell/widgets/GitActivityWidget.qml`, `themes/modern-win11-theme/theme.json`, `core/.local/bin/lunita-palette-sync`, `TODO.md`
+- **Descripción:** Rediseño integral de todos los widgets de escritorio existentes para el tema `Modern-Win11-Theme`. Se aplicó una dirección visual cohesiva de Fluent Design moderno (Windows 11) con superficies Mica/Acrylic translúcidas calibradas, radios estandarizados (10px en tarjeta exterior, 6px en controles internos), tipografía Segoe UI Variable y paleta cromática semántica Fluent (azul `#0078D4`, teal `#00B7C3`, púrpura `#8764B8`, naranja `#F7630C`, verde `#107C41`, amarillo Sticky Notes `#FCE100` y acento de error `#E81123`).
+- **Directrices de Diseño y Adaptación de Skills (CSS ➔ QML):**
+  1. **`/anti-slop-frontend`:** Eliminación de gradientes planos saturados o fondos genéricos. Bordes sutiles de 1px con refracción sutil, jerarquía estricta y superficies Mica/Acrylic de alta fidelidad.
+  2. **`/ui-ux-pro-max`:** Jerarquía clara, métricas prominentes con Segoe UI Variable Display / Bold, etiquetas de metadatos atenuadas, paddings proporcionales y layouts Bento en reloj y batería.
+  3. **`/design-taste-frontend`:** Composición Bento en widgets compactos, medianos y grandes. Selector de dispositivos Bluetooth/periféricos en batería con indicadores de color, sticky notes con franja de color superior, monitor de recursos con barras calibradas y reproductor multimedia con acento Fluent.
+  4. **`/transitions-dev`:** Micro-interacciones de 150ms-250ms con curvas `Easing.OutCubic` en `Behavior on scale` para mouse presses, `Behavior on width` en progress bars, y transiciones de color en botones e interruptores interactivos.
+- **Criterios de Aceptación:**
+  1. El trabajo se desarrolla y confirma en la rama `ISSUE_059_REFACTOR`.
+  2. Todos los widgets del tema `Modern-Win11-Theme` presentan un lenguaje visual cohesivo, original y de nivel de producción, libre de estética genérica ("AI Slop").
+  3. Las propiedades visuales y animaciones están implementadas en QML puro y válido sin romper la ingesta de datos ni la persistencia de posiciones del lienzo (`DesktopGridCanvas`).
+- **Dependencias:** Ninguna

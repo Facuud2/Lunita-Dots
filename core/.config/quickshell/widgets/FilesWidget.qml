@@ -14,18 +14,19 @@ Item {
 
     readonly property bool nothing: root.widgetsState && root.widgetsState.skin && root.widgetsState.skin.isNothing
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
+    readonly property bool fluent: root.skin ? root.skin.isFluent : (root.widgetsState && root.widgetsState.activeThemeId === "modern-win11-theme")
 
-    readonly property real cardRadius: root.nothing ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22)
-    readonly property string fontFamily: root.nothing ? root.skin.fontText : "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Cantarell, sans-serif"
+    readonly property real cardRadius: root.nothing ? root.skin.radiusCard : (root.fluent ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22))
+    readonly property string fontFamily: root.nothing ? root.skin.fontText : (root.fluent ? root.skin.fontText : "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Cantarell, sans-serif")
 
     // ── Colores de la estética Files ─────────────────────
     readonly property color gradTop: "#86D8CA" // taste-skill-ignore
     readonly property color gradBottom: "#65C0B1" // taste-skill-ignore
-    readonly property color textPrimary: root.nothing ? root.skin.ink : "#114B44"
-    readonly property color textSecondary: root.nothing ? root.skin.inkDim : "#306962"
-    readonly property color shelfLineColor: root.nothing ? root.skin.dotOff : Qt.rgba(255, 255, 255, 0.28)
-    readonly property color pillBgColor: root.nothing ? root.skin.surface : Qt.rgba(255, 255, 255, 0.26)
-    readonly property color pillBorderColor: root.nothing ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.35)
+    readonly property color textPrimary: root.nothing ? root.skin.ink : (root.fluent ? root.skin.ink : "#114B44")
+    readonly property color textSecondary: root.nothing ? root.skin.inkDim : (root.fluent ? root.skin.inkDim : "#306962")
+    readonly property color shelfLineColor: root.nothing ? root.skin.dotOff : (root.fluent ? root.skin.dotOff : Qt.rgba(255, 255, 255, 0.28))
+    readonly property color pillBgColor: root.nothing ? root.skin.surface : (root.fluent ? root.skin.surface : Qt.rgba(255, 255, 255, 0.26))
+    readonly property color pillBorderColor: root.nothing ? root.skin.cardBorder : (root.fluent ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.35))
 
     // ── Datos reactivos de archivos ───────────────────────────────────────
     readonly property var fallbackFiles: [
@@ -270,11 +271,11 @@ Item {
         anchors.fill: parent
         radius: root.cardRadius
         clip: true
-        color: root.nothing ? root.skin.card : "transparent"
-        border.color: root.nothing ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.35)
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : "transparent")
+        border.color: root.nothing ? root.skin.cardBorder : (root.fluent ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.35))
         border.width: root.nothing ? 0 : 1
 
-        gradient: root.nothing ? null : cardGrad
+        gradient: (root.nothing || root.fluent) ? null : cardGrad
 
         Gradient {
             id: cardGrad

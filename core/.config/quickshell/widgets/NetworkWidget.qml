@@ -8,8 +8,9 @@ Item {
 
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: root.skin ? root.skin.isNothing : false
-    readonly property string fontText: root.nothing ? root.skin.fontText : "SF Pro Display, Inter, sans-serif"
-    readonly property string fontFigure: root.nothing ? root.skin.fontFigure : "SF Pro Display, Inter, sans-serif"
+    readonly property bool fluent: root.skin ? root.skin.isFluent : false
+    readonly property string fontText: (root.skin && (root.nothing || root.fluent)) ? root.skin.fontText : "SF Pro Display, Inter, sans-serif"
+    readonly property string fontFigure: (root.skin && (root.nothing || root.fluent)) ? root.skin.fontFigure : "SF Pro Display, Inter, sans-serif"
 
     readonly property string netDownVal: root.widgetsState ? (root.widgetsState.netDownVal || "0") : "0"
     readonly property string netDownUnit: root.widgetsState ? (root.widgetsState.netDownUnit || "KB/s") : "KB/s"
@@ -18,17 +19,17 @@ Item {
     readonly property string netStatus: root.widgetsState ? (root.widgetsState.netStatus || "UP") : "UP"
     readonly property string netInterface: root.widgetsState ? (root.widgetsState.netInterface || "Ethernet") : "Ethernet"
     readonly property string netIp: root.widgetsState ? (root.widgetsState.netIp || "127.0.0.1") : "127.0.0.1"
-    readonly property color textColor: root.nothing ? root.skin.ink : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF")
-    readonly property color textDim: root.nothing ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
-    readonly property color accentGreen: root.nothing ? root.skin.ink : (root.widgetsState ? root.widgetsState.accentGreen : "#30D158")
+    readonly property color textColor: root.nothing ? root.skin.ink : (root.fluent ? root.skin.ink : (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"))
+    readonly property color textDim: root.nothing ? root.skin.inkDim : (root.fluent ? root.skin.inkDim : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6)))
+    readonly property color accentGreen: root.nothing ? root.skin.ink : (root.fluent ? "#107C41" : (root.widgetsState ? root.widgetsState.accentGreen : "#30D158"))
     readonly property bool isDarkTheme: root.widgetsState ? root.widgetsState.isDarkTheme : true
 
     Rectangle {
         id: cardBg
         anchors.fill: parent
-        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
-        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
-        border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
+        radius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22))
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75)))
+        border.color: root.nothing ? "transparent" : (root.fluent ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14)))
         border.width: root.nothing ? 0 : 1
         scale: cardMa.pressed ? 0.985 : 1.0
         Behavior on scale {
@@ -43,7 +44,7 @@ Item {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: root.nothing ? root.skin.pad : 12
+            anchors.margins: root.nothing ? root.skin.pad : (root.fluent ? 14 : 12)
             spacing: 4
 
             // ── Top Row: Speed (Download & Upload) ──
@@ -64,7 +65,7 @@ Item {
                             font.family: root.fontFigure
                             font.pixelSize: 18
                             font.weight: Font.DemiBold
-                            color: root.nothing ? root.skin.cyan : root.textColor
+                            color: root.nothing ? root.skin.cyan : (root.fluent ? "#0078D4" : root.textColor)
                         }
 
                         Text {
@@ -82,7 +83,7 @@ Item {
                         font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Medium
-                        color: root.nothing ? root.skin.cyan : "#64D2FF"
+                        color: root.nothing ? root.skin.cyan : (root.fluent ? "#0078D4" : "#64D2FF")
                     }
 
                 }
@@ -100,7 +101,7 @@ Item {
                             font.family: root.fontFigure
                             font.pixelSize: 18
                             font.weight: Font.DemiBold
-                            color: root.nothing ? root.skin.green : root.textColor
+                            color: root.nothing ? root.skin.green : (root.fluent ? "#107C41" : root.textColor)
                         }
 
                         Text {
@@ -118,7 +119,7 @@ Item {
                         font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.Medium
-                        color: root.nothing ? root.skin.green : "#30D158"
+                        color: root.nothing ? root.skin.green : (root.fluent ? "#107C41" : "#30D158")
                     }
 
                 }
@@ -172,6 +173,8 @@ Item {
                         ctx.lineWidth = 1.5;
                         if (root.nothing) {
                             ctx.strokeStyle = root.skin.cyan;
+                        } else if (root.fluent) {
+                            ctx.strokeStyle = "#0078D4";
                         } else {
                             ctx.strokeStyle = root.isDarkTheme ? "rgba(48, 209, 88, 0.75)" : "rgba(36, 170, 70, 0.85)";
                         }
@@ -185,6 +188,9 @@ Item {
                         if (root.nothing) {
                             grad.addColorStop(0, "rgba(0, 210, 255, 0.22)");
                             grad.addColorStop(1, "rgba(0, 210, 255, 0.0)");
+                        } else if (root.fluent) {
+                            grad.addColorStop(0, "rgba(0, 120, 212, 0.25)");
+                            grad.addColorStop(1, "rgba(0, 120, 212, 0.0)");
                         } else {
                             grad.addColorStop(0, root.isDarkTheme ? "rgba(48, 209, 88, 0.22)" : "rgba(48, 209, 88, 0.16)");
                             grad.addColorStop(1, "rgba(48, 209, 88, 0.0)");
@@ -223,7 +229,7 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: root.nothing ? root.skin.dotOff : (root.isDarkTheme ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)")
+                color: root.nothing ? root.skin.dotOff : (root.fluent ? root.skin.cardBorder : (root.isDarkTheme ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"))
             }
 
             // ── Bottom Info Rows: Status, Interface & IP ──
@@ -251,7 +257,7 @@ Item {
                         font.family: root.fontText
                         font.pixelSize: 9
                         font.weight: Font.ExtraBold
-                        color: root.nothing ? (root.netStatus === "UP" ? root.skin.green : root.skin.signal) : root.accentGreen
+                        color: root.nothing ? (root.netStatus === "UP" ? root.skin.green : root.skin.signal) : (root.fluent ? (root.netStatus === "UP" ? "#107C41" : "#E81123") : root.accentGreen)
                     }
 
                 }

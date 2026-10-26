@@ -9,15 +9,16 @@ Item {
     property var widgetsState
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: skin ? skin.isNothing : false
-    readonly property string fontText: (nothing && skin) ? skin.fontText : "SF Pro Display"
-    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : "SF Pro Display"
+    readonly property bool fluent: skin ? skin.isFluent : (root.widgetsState && root.widgetsState.activeThemeId === "modern-win11-theme")
+    readonly property string fontText: (nothing && skin) ? skin.fontText : (fluent && skin ? skin.fontText : "SF Pro Display")
+    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : (fluent && skin ? skin.fontFigure : "SF Pro Display")
 
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
-    readonly property real cardRadius: root.widgetsState ? root.widgetsState.cardRadius : 22
-    readonly property string fontFamily: nothing ? fontText : "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Cantarell, Roboto, sans-serif"
+    readonly property real cardRadius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22))
+    readonly property string fontFamily: nothing ? fontText : (fluent ? fontText : "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', Cantarell, Roboto, sans-serif")
 
     // ── Métricas de Salud y Anillos de Actividad ──────────
     readonly property int calories: root.widgetsState ? root.widgetsState.healthCalories : 450
@@ -70,15 +71,15 @@ Item {
         }
     }
 
-    // ── Paleta de Anillos de Actividad (NothingOS Balanceada: Signal Red + Mint Green + Cyan) ──
-    readonly property color colMove: nothing ? skin.signal : "#FA114F"
-    readonly property color colMoveTrack: nothing ? Qt.rgba(Qt.color(skin.signal).r, Qt.color(skin.signal).g, Qt.color(skin.signal).b, 0.20) : Qt.rgba(0.98, 0.07, 0.31, 0.20)
+    // ── Paleta de Anillos de Actividad ──
+    readonly property color colMove: nothing ? skin.signal : (fluent ? root.skin.amber : "#FA114F")
+    readonly property color colMoveTrack: nothing ? Qt.rgba(Qt.color(skin.signal).r, Qt.color(skin.signal).g, Qt.color(skin.signal).b, 0.20) : (fluent ? Qt.rgba(Qt.color(root.skin.amber).r, Qt.color(root.skin.amber).g, Qt.color(root.skin.amber).b, 0.20) : Qt.rgba(0.98, 0.07, 0.31, 0.20))
 
-    readonly property color colExercise: nothing ? skin.green : "#A2FF00"
-    readonly property color colExerciseTrack: nothing ? Qt.rgba(Qt.color(skin.green).r, Qt.color(skin.green).g, Qt.color(skin.green).b, 0.20) : Qt.rgba(0.63, 1.0, 0.0, 0.20)
+    readonly property color colExercise: nothing ? skin.green : (fluent ? root.skin.accent : "#A2FF00")
+    readonly property color colExerciseTrack: nothing ? Qt.rgba(Qt.color(skin.green).r, Qt.color(skin.green).g, Qt.color(skin.green).b, 0.20) : (fluent ? Qt.rgba(Qt.color(root.skin.accent).r, Qt.color(root.skin.accent).g, Qt.color(root.skin.accent).b, 0.20) : Qt.rgba(0.63, 1.0, 0.0, 0.20))
 
-    readonly property color colStand: nothing ? skin.cyan : "#00F0FF"
-    readonly property color colStandTrack: nothing ? Qt.rgba(Qt.color(skin.cyan).r, Qt.color(skin.cyan).g, Qt.color(skin.cyan).b, 0.20) : Qt.rgba(0.0, 0.94, 1.0, 0.20)
+    readonly property color colStand: nothing ? skin.cyan : (fluent ? root.skin.green : "#00F0FF")
+    readonly property color colStandTrack: nothing ? Qt.rgba(Qt.color(skin.cyan).r, Qt.color(skin.cyan).g, Qt.color(skin.cyan).b, 0.20) : (fluent ? Qt.rgba(Qt.color(root.skin.green).r, Qt.color(root.skin.green).g, Qt.color(root.skin.green).b, 0.20) : Qt.rgba(0.0, 0.94, 1.0, 0.20))
 
     // Formateador de millares para pasos (ej: 8.420)
     function formatNumber(num) {
@@ -198,10 +199,10 @@ Item {
         id: cardBg
 
         anchors.fill: parent
-        radius: root.nothing ? root.skin.radius : root.cardRadius
-        color: root.nothing ? root.skin.card : "#000000"
+        radius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radiusCard : root.cardRadius)
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : "#000000")
         clip: true
-        border.color: root.nothing ? "transparent" : Qt.rgba(255, 255, 255, 0.12)
+        border.color: root.nothing ? "transparent" : (root.fluent ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.12))
         border.width: root.nothing ? 0 : 1
         scale: cardMa.pressed ? 0.985 : 1.0
         Behavior on scale {
