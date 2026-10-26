@@ -45,6 +45,16 @@ Item {
         border.color: isCiFail ? (root.nothing ? root.skin.signal : "#FF453A") : (root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14)))
         border.width: isCiFail ? 1.5 : (root.nothing ? 0 : 1)
         clip: true
+        scale: cardMa.pressed ? 0.985 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
+
+        MouseArea {
+            id: cardMa
+            anchors.fill: parent
+            hoverEnabled: true
+        }
 
         // ═══════════════════════════════════════════════════════════════════
         // ── 1. MODO COMPACTO (170 x 170) ──

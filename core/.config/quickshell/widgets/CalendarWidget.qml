@@ -130,7 +130,7 @@ Item {
         scale: cardMa.pressed ? 0.985 : 1.0
 
         Behavior on scale {
-            NumberAnimation { duration: 120; easing.type: Easing.OutQuad }
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
         }
 
         Behavior on color {

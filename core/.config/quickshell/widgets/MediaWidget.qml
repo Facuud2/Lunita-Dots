@@ -68,6 +68,16 @@ Item {
         border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
         border.width: root.nothing ? 0 : 1
         clip: true
+        scale: cardMa.pressed ? 0.985 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
+
+        MouseArea {
+            id: cardMa
+            anchors.fill: parent
+            hoverEnabled: true
+        }
 
         // ── Dominant Color Glow (Desactivado en Nothing para estética plana) ──
         Rectangle {
@@ -195,6 +205,13 @@ Item {
                         height: 18
                         radius: 9
                         color: collapseMa.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(1, 1, 1, 0.08)
+                        scale: collapseMa.pressed ? 0.88 : (collapseMa.containsMouse ? 1.12 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -272,6 +289,7 @@ Item {
                             Behavior on width {
                                 NumberAnimation {
                                     duration: 250
+                                    easing.type: Easing.OutCubic
                                 }
 
                             }
@@ -316,6 +334,10 @@ Item {
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 17
                         color: prevMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
+                        scale: prevMa.pressed ? 0.88 : (prevMa.containsMouse ? 1.15 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
 
                         MouseArea {
                             id: prevMa
@@ -339,6 +361,13 @@ Item {
                         height: 28
                         radius: 14
                         color: root.nothing ? (root.isPlaying ? root.skin.signal : root.skin.ink) : domColor
+                        scale: playMedMa.pressed ? 0.88 : (playMedMa.containsMouse ? 1.08 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -349,7 +378,9 @@ Item {
                         }
 
                         MouseArea {
+                            id: playMedMa
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                             onClicked: {
@@ -367,6 +398,10 @@ Item {
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 17
                         color: nextMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.widgetsState ? root.widgetsState.textDim : Qt.rgba(1, 1, 1, 0.6))
+                        scale: nextMa.pressed ? 0.88 : (nextMa.containsMouse ? 1.15 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
 
                         MouseArea {
                             id: nextMa
@@ -428,6 +463,13 @@ Item {
                     height: 18
                     radius: 9
                     color: expandMa.containsMouse ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(1, 1, 1, 0.08)
+                    scale: expandMa.pressed ? 0.88 : (expandMa.containsMouse ? 1.12 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     Text {
                         anchors.centerIn: parent
@@ -489,9 +531,16 @@ Item {
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 16
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                    scale: prevSmallMa.pressed ? 0.88 : (prevSmallMa.containsMouse ? 1.15 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
 
                     MouseArea {
+                        id: prevSmallMa
                         anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                         onClicked: {
                             if (root.widgetsState)
@@ -507,6 +556,13 @@ Item {
                     height: 28
                     radius: 14
                     color: root.nothing ? (root.isPlaying ? root.skin.signal : root.skin.ink) : domColor
+                    scale: playSmallMa.pressed ? 0.88 : (playSmallMa.containsMouse ? 1.08 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     Text {
                         anchors.centerIn: parent
@@ -517,7 +573,10 @@ Item {
                     }
 
                     MouseArea {
+                        id: playSmallMa
                         anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                         onClicked: {
                             if (root.widgetsState)
@@ -533,9 +592,16 @@ Item {
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 16
                     color: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
+                    scale: nextSmallMa.pressed ? 0.88 : (nextSmallMa.containsMouse ? 1.15 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
 
                     MouseArea {
+                        id: nextSmallMa
                         anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         enabled: root.widgetsState ? !root.widgetsState.isEditing : true
                         onClicked: {
                             if (root.widgetsState)
@@ -655,6 +721,10 @@ Item {
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 22
                     color: prevLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.7))
+                    scale: prevLargeMa.pressed ? 0.88 : (prevLargeMa.containsMouse ? 1.15 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
 
                     MouseArea {
                         id: prevLargeMa
@@ -679,7 +749,13 @@ Item {
                     color: playLargeMa.containsMouse
                         ? (root.nothing ? Qt.rgba(1, 1, 1, 0.85) : Qt.darker(domColor, 1.15))
                         : (root.nothing ? root.skin.ink : domColor)
-                    scale: playLargeMa.pressed ? 0.94 : 1
+                    scale: playLargeMa.pressed ? 0.88 : (playLargeMa.containsMouse ? 1.08 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     Text {
                         anchors.centerIn: parent
@@ -703,13 +779,6 @@ Item {
                         }
                     }
 
-                    Behavior on scale {
-                        NumberAnimation {
-                            duration: 100
-                        }
-
-                    }
-
                 }
 
                 Text {
@@ -717,6 +786,10 @@ Item {
                     font.family: "CaskaydiaCove Nerd Font"
                     font.pixelSize: 22
                     color: nextLargeMa.containsMouse ? (root.widgetsState ? root.widgetsState.textColor : "#FFFFFF") : (root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.7))
+                    scale: nextLargeMa.pressed ? 0.88 : (nextLargeMa.containsMouse ? 1.15 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
 
                     MouseArea {
                         id: nextLargeMa

@@ -51,21 +51,21 @@ Item {
 
     Behavior on animCalPct {
         NumberAnimation {
-            duration: 800
+            duration: 350
             easing.type: Easing.OutCubic
         }
     }
 
     Behavior on animExPct {
         NumberAnimation {
-            duration: 800
+            duration: 350
             easing.type: Easing.OutCubic
         }
     }
 
     Behavior on animStepPct {
         NumberAnimation {
-            duration: 800
+            duration: 350
             easing.type: Easing.OutCubic
         }
     }
@@ -203,6 +203,16 @@ Item {
         clip: true
         border.color: root.nothing ? "transparent" : Qt.rgba(255, 255, 255, 0.12)
         border.width: root.nothing ? 0 : 1
+        scale: cardMa.pressed ? 0.985 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
+
+        MouseArea {
+            id: cardMa
+            anchors.fill: parent
+            hoverEnabled: true
+        }
 
         // ═══════════════════════════════════════════════════════════════════
         // ── 1. MODO SMALL (170 x 170): ANILLOS FULL-IMMERSIVE + STATS ─────
@@ -382,6 +392,13 @@ Item {
                         color: root.nothing ? (addCalMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (addCalMa.containsMouse ? Qt.rgba(250, 17, 79, 0.35) : Qt.rgba(250, 17, 79, 0.18))
                         border.color: root.nothing ? "transparent" : Qt.rgba(250, 17, 79, 0.45)
                         border.width: root.nothing ? 0 : 1
+                        scale: addCalMa.pressed ? 0.88 : (addCalMa.containsMouse ? 1.08 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -448,6 +465,13 @@ Item {
                         color: root.nothing ? (addExMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (addExMa.containsMouse ? Qt.rgba(162, 255, 0, 0.35) : Qt.rgba(162, 255, 0, 0.18))
                         border.color: root.nothing ? "transparent" : Qt.rgba(162, 255, 0, 0.45)
                         border.width: root.nothing ? 0 : 1
+                        scale: addExMa.pressed ? 0.88 : (addExMa.containsMouse ? 1.08 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -514,6 +538,13 @@ Item {
                         color: root.nothing ? (addStepMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (addStepMa.containsMouse ? Qt.rgba(0, 240, 255, 0.35) : Qt.rgba(0, 240, 255, 0.18))
                         border.color: root.nothing ? "transparent" : Qt.rgba(0, 240, 255, 0.45)
                         border.width: root.nothing ? 0 : 1
+                        scale: addStepMa.pressed ? 0.88 : (addStepMa.containsMouse ? 1.08 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -771,6 +802,13 @@ Item {
                         color: root.nothing ? (btnCalMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (btnCalMa.containsMouse ? Qt.rgba(250, 17, 79, 0.32) : Qt.rgba(250, 17, 79, 0.16))
                         border.color: root.nothing ? "transparent" : Qt.rgba(250, 17, 79, 0.40)
                         border.width: root.nothing ? 0 : 1
+                        scale: btnCalMa.pressed ? 0.94 : (btnCalMa.containsMouse ? 1.03 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -797,6 +835,13 @@ Item {
                         color: root.nothing ? (btnExMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (btnExMa.containsMouse ? Qt.rgba(162, 255, 0, 0.32) : Qt.rgba(162, 255, 0, 0.16))
                         border.color: root.nothing ? "transparent" : Qt.rgba(162, 255, 0, 0.40)
                         border.width: root.nothing ? 0 : 1
+                        scale: btnExMa.pressed ? 0.94 : (btnExMa.containsMouse ? 1.03 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent
@@ -823,6 +868,13 @@ Item {
                         color: root.nothing ? (btnStepMa.containsMouse ? root.skin.dotOff : root.skin.raised) : (btnStepMa.containsMouse ? Qt.rgba(0, 240, 255, 0.32) : Qt.rgba(0, 240, 255, 0.16))
                         border.color: root.nothing ? "transparent" : Qt.rgba(0, 240, 255, 0.40)
                         border.width: root.nothing ? 0 : 1
+                        scale: btnStepMa.pressed ? 0.94 : (btnStepMa.containsMouse ? 1.03 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         Text {
                             anchors.centerIn: parent

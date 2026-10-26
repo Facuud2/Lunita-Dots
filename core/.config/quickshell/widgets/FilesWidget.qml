@@ -321,6 +321,7 @@ Item {
                         readonly property var fItem: root.activeFiles[index]
 
                         MouseArea {
+                            id: smallItemMa
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -334,6 +335,10 @@ Item {
                             Column {
                                 anchors.centerIn: parent
                                 spacing: 4
+                                scale: smallItemMa.pressed ? 0.94 : (smallItemMa.containsMouse ? 1.04 : 1.0)
+                                Behavior on scale {
+                                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                                }
 
                                 FileThumbnail {
                                     anchors.horizontalCenter: parent.horizontalCenter
@@ -389,6 +394,13 @@ Item {
                         color: pillMa.containsMouse ? Qt.rgba(255, 255, 255, 0.36) : root.pillBgColor
                         border.color: root.pillBorderColor
                         border.width: 1 // taste-skill-ignore
+                        scale: pillMa.pressed ? 0.96 : (pillMa.containsMouse ? 1.02 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         readonly property var fItem: root.activeFiles[index]
 
@@ -499,6 +511,7 @@ Item {
                         visible: fItem !== null
 
                         MouseArea {
+                            id: largeDocMa
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
@@ -514,6 +527,10 @@ Item {
                             Column {
                                 anchors.centerIn: parent
                                 spacing: 5
+                                scale: largeDocMa.pressed ? 0.94 : (largeDocMa.containsMouse ? 1.04 : 1.0)
+                                Behavior on scale {
+                                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                                }
 
                                 FileThumbnail {
                                     anchors.horizontalCenter: parent.horizontalCenter
@@ -553,14 +570,23 @@ Item {
                     model: 3
 
                     Rectangle {
+                        id: dotItem
                         width: 5
                         height: 5
                         radius: 2.5
                         color: root.nothing
                             ? (index === root.activePage ? root.skin.signal : root.skin.dotOff)
                             : (index === root.activePage ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45))
+                        scale: dotMa.pressed ? 0.8 : (index === root.activePage ? 1.25 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         MouseArea {
+                            id: dotMa
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {

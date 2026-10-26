@@ -24,11 +24,22 @@ Item {
     readonly property bool isDarkTheme: root.widgetsState ? root.widgetsState.isDarkTheme : true
 
     Rectangle {
+        id: cardBg
         anchors.fill: parent
         radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
         color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
         border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
         border.width: root.nothing ? 0 : 1
+        scale: cardMa.pressed ? 0.985 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
+
+        MouseArea {
+            id: cardMa
+            anchors.fill: parent
+            hoverEnabled: true
+        }
 
         ColumnLayout {
             anchors.fill: parent

@@ -856,3 +856,24 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   3. La red visual proyecta la silueta de destino del widget arrastrado con sus dimensiones reales (1x1, 2x1 o 2x2).
   4. El temblor jiggle es suave y se detiene automáticamente sobre el handle de resize.
 - **Dependencias:** [ISSUE-052], [ISSUE-054]
+
+---
+
+### [ISSUE-056] Pulido y Estandarización de Transiciones y Micro-interacciones de Widgets (transitions-polish & transitions-dev)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_052_FEAT`
+- **Módulo(s):** Temas / Widgets / Quickshell / Animaciones & Micro-interacciones
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WidgetFrame.qml`, `core/.config/quickshell/widgets/DesktopGridGuide.qml`, `core/.config/quickshell/widgets/BatteryWidget.qml`, `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.config/quickshell/widgets/GitActivityWidget.qml`, `core/.config/quickshell/widgets/HabitTrackerWidget.qml`, `core/.config/quickshell/widgets/MediaWidget.qml`, `core/.config/quickshell/widgets/NdDotBar.qml`, `core/.config/quickshell/widgets/NdDotRing.qml`, `core/.config/quickshell/widgets/NetworkWidget.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`, `core/.config/quickshell/widgets/SystemResourcesWidget.qml`, `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/WeatherWidget.qml`
+- **Descripción:** Auditar y refactorizar exhaustivamente todos los widgets y componentes de Quickshell aplicando las reglas canónicas de las skills `transitions-polish` y `transitions-dev`:
+  1. **Estandarización de Duraciones y Curvas Canónicas:**
+     - Armonización de micro-interacciones a escala canónica: `--duration-quick` (150ms) para retroalimentación táctil y hover, `--duration-fast` (250ms) para deslizamientos de tarjetas y reposicionamientos del grid, `--duration-medium` (350ms) para medidores y barras de progreso.
+     - Reemplazo de easings genéricos o faltantes por curvas canónicas: `Easing.OutCubic` (`--ease-smooth-out`) y `Easing.InOutSine` (`--ease-in-out`).
+  2. **Micro-interacciones y Respuesta Háptica Visual (Transitions-dev):**
+     - Incorporación de escala táctil al pulsar (`scale: pressed ? 0.985 : 1.0` en tarjetas; `scale: pressed ? 0.88-0.92 : (containsMouse ? 1.05-1.12 : 1.0)` en botones y controles interactivos) con `Behavior on scale` y `ColorAnimation`.
+     - Interpolación reactiva con `animPct` / `animValue` en medidores radiales (`NdDotRing`, `BatteryWidget`), barras de puntos (`NdDotBar`) y barras de progreso del sistema para eliminar saltos bruscos ante cambios en tiempo real.
+- **Criterios de Aceptación:**
+  1. Todos los widgets disponen de respuesta táctil al click y hover suave.
+  2. Todas las animaciones respetan estrictamente la escala de tokens de duración y easing canónico.
+  3. Quickshell compila y carga sin errores ni advertencias de sintaxis QML.
+- **Dependencias:** [ISSUE-054], [ISSUE-055]

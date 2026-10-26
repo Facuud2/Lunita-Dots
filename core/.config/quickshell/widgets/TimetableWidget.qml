@@ -103,7 +103,7 @@ Item {
         id: stackSlideAnim
         target: root
         property: "stackOffsetY"
-        duration: 260
+        duration: 250
         easing.type: Easing.OutCubic
         onFinished: {
             if (root.pendingIndex !== -1) {
@@ -440,14 +440,14 @@ Item {
                     Layout.preferredHeight: 26
                     radius: 13
                     color: root.nothing ? (addMa.containsMouse ? (root.skin ? root.skin.dotOff : Qt.rgba(1,1,1,0.25)) : (root.skin ? root.skin.card : Qt.rgba(1,1,1,0.15))) : (addMa.containsMouse ? Qt.rgba(1, 1, 1, 0.35) : Qt.rgba(1, 1, 1, 0.20))
-                    scale: addMa.pressed ? 0.92 : 1.0
+                    scale: addMa.pressed ? 0.90 : (addMa.containsMouse ? 1.08 : 1.0)
 
                     Behavior on scale {
-                        NumberAnimation { duration: 100 }
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                     }
 
                     Behavior on color {
-                        ColorAnimation { duration: 120 }
+                        ColorAnimation { duration: 150 }
                     }
 
                     Text {
@@ -490,7 +490,15 @@ Item {
                     Layout.preferredWidth: Math.max(28, backContentRow.implicitWidth + 12)
                     radius: 14
                     color: backMa.containsMouse ? Qt.rgba(1, 1, 1, 0.30) : Qt.rgba(1, 1, 1, 0.15)
-                    scale: backMa.pressed ? 0.95 : 1.0
+                    scale: backMa.pressed ? 0.92 : (backMa.containsMouse ? 1.05 : 1.0)
+
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     RowLayout {
                         id: backContentRow
@@ -543,7 +551,15 @@ Item {
                     Layout.preferredWidth: Math.max(48, saveEditTxt.implicitWidth + 16)
                     radius: 13
                     color: saveEditMa.containsMouse ? Qt.rgba(1, 1, 1, 0.45) : Qt.rgba(1, 1, 1, 0.28)
-                    scale: saveEditMa.pressed ? 0.94 : 1.0
+                    scale: saveEditMa.pressed ? 0.92 : (saveEditMa.containsMouse ? 1.05 : 1.0)
+
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     Text {
                         id: saveEditTxt
@@ -574,7 +590,15 @@ Item {
                     Layout.preferredHeight: 26
                     radius: 13
                     color: delMa.containsMouse ? Qt.rgba(255, 59, 48, 0.85) : Qt.rgba(1, 1, 1, 0.20)
-                    scale: delMa.pressed ? 0.92 : 1.0
+                    scale: delMa.pressed ? 0.90 : (delMa.containsMouse ? 1.08 : 1.0)
+
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     Canvas {
                         anchors.centerIn: parent
@@ -632,6 +656,15 @@ Item {
                     Layout.preferredWidth: Math.max(28, cancelTxt.implicitWidth + 14)
                     radius: 13
                     color: cancelMa.containsMouse ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                    scale: cancelMa.pressed ? 0.92 : (cancelMa.containsMouse ? 1.05 : 1.0)
+
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
 
                     Text {
                         id: cancelTxt
@@ -687,10 +720,14 @@ Item {
                     Layout.preferredWidth: Math.max(52, saveTxt.implicitWidth + 18)
                     radius: 13
                     color: saveMa.containsMouse ? Qt.rgba(1, 1, 1, 0.45) : Qt.rgba(1, 1, 1, 0.28)
-                    scale: saveMa.pressed ? 0.94 : 1.0
+                    scale: saveMa.pressed ? 0.92 : (saveMa.containsMouse ? 1.05 : 1.0)
 
                     Behavior on scale {
-                        NumberAnimation { duration: 100 }
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
                     }
 
                     Text {
@@ -914,10 +951,10 @@ Item {
                             color: index === root.activeNoteIndex ? root.yellowHeaderColor : (root.isDark ? Qt.rgba(1, 1, 1, 0.25) : Qt.rgba(0, 0, 0, 0.18))
 
                             Behavior on height {
-                                NumberAnimation { duration: 160 }
+                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                             }
                             Behavior on color {
-                                ColorAnimation { duration: 160 }
+                                ColorAnimation { duration: 150 }
                             }
                         }
                     }
@@ -948,6 +985,14 @@ Item {
                         height: 38
                         radius: 6
                         color: medDelegateMa.containsMouse ? (root.isDark ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.04)) : "transparent"
+                        scale: medDelegateMa.pressed ? 0.98 : 1.0
+
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         RowLayout {
                             anchors.fill: parent
@@ -1032,6 +1077,14 @@ Item {
                         height: 50
                         radius: 7
                         color: lrgDelegateMa.containsMouse ? (root.isDark ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.04)) : "transparent"
+                        scale: lrgDelegateMa.pressed ? 0.98 : 1.0
+
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
 
                         RowLayout {
                             anchors.fill: parent

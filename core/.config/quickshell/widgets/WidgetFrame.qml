@@ -353,7 +353,8 @@ Item {
 
             Behavior on scale {
                 NumberAnimation {
-                    duration: 120
+                    duration: 150
+                    easing.type: Easing.OutCubic
                 }
 
             }
@@ -447,7 +448,8 @@ Item {
 
             Behavior on scale {
                 NumberAnimation {
-                    duration: 120
+                    duration: 150
+                    easing.type: Easing.OutCubic
                 }
 
             }
@@ -460,7 +462,7 @@ Item {
         enabled: !root.isDragging
 
         NumberAnimation {
-            duration: 340
+            duration: 250
             easing.type: Easing.OutCubic
         }
 
@@ -470,7 +472,7 @@ Item {
         enabled: !root.isDragging
 
         NumberAnimation {
-            duration: 340
+            duration: 250
             easing.type: Easing.OutCubic
         }
 
@@ -480,7 +482,7 @@ Item {
         enabled: !root.isResizing
 
         NumberAnimation {
-            duration: 340
+            duration: 250
             easing.type: Easing.OutCubic
         }
 
@@ -490,7 +492,7 @@ Item {
         enabled: !root.isResizing
 
         NumberAnimation {
-            duration: 340
+            duration: 250
             easing.type: Easing.OutCubic
         }
 
@@ -507,7 +509,7 @@ Item {
     Behavior on scale {
         NumberAnimation {
             duration: 150
-            easing.type: Easing.OutQuad
+            easing.type: Easing.OutCubic
         }
 
     }

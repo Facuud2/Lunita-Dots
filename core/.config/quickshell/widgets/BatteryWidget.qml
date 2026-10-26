@@ -36,6 +36,29 @@ Item {
         color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#231B3D")
         border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12))
         border.width: root.nothing ? 0 : 1
+        scale: cardMa.pressed ? 0.985 : 1.0
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: 150 }
+        }
+
+        MouseArea {
+            id: cardMa
+            anchors.fill: parent
+            enabled: !root.widgetsState || !root.widgetsState.isEditing
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                Quickshell.execDetached(["lunita-widgets-manager", "battery"]);
+            }
+        }
 
         // ═══════════════════════════════════════════════════════════════════
         // ── 1. VISTA MEDIUM (354 x 170): 4 ANILLOS HORIZONTALES (REFERENCIA) ──
@@ -227,6 +250,13 @@ Item {
                                 height: parent.height
                                 radius: 3
                                 color: modelData.percent > 20 ? "#30D158" : (modelData.percent > 10 ? "#FF9F0A" : "#FF453A")
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 250
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
                             }
 
                         }
@@ -314,15 +344,24 @@ Item {
                     Canvas {
                         id: canvas
 
-                        property int pct: slot.deviceData ? Math.max(0, Math.min(100, slot.deviceData.percent)) : 0
+                        property int targetPct: slot.deviceData ? Math.max(0, Math.min(100, slot.deviceData.percent)) : 0
+                        property real animPct: targetPct
                         property bool empty: slot.isEmpty
                         property string dType: slot.deviceData ? (slot.deviceData.type || "headset") : ""
                         property bool charging: slot.deviceData ? !!slot.deviceData.charging : false
 
+                        Behavior on animPct {
+                            NumberAnimation {
+                                duration: 350
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+
                         anchors.fill: parent
                         renderTarget: Canvas.FramebufferObject
                         antialiasing: true
-                        onPctChanged: requestPaint()
+                        onAnimPctChanged: requestPaint()
+                        onTargetPctChanged: animPct = targetPct
                         onEmptyChanged: requestPaint()
                         onDTypeChanged: requestPaint()
                         onChargingChanged: requestPaint()
@@ -343,22 +382,22 @@ Item {
 
                             // 2. Arco de progreso activo
                             var startAngle = -Math.PI / 2;
-                            var sweepAngle = (pct / 100) * 2 * Math.PI;
+                            var sweepAngle = (animPct / 100) * 2 * Math.PI;
                             var endAngle = startAngle + sweepAngle;
                             var strokeColor = "#30D158";
                             if (root.nothing) {
                                 if (charging)
                                     strokeColor = root.skin.green;
-                                else if (pct <= 12)
+                                else if (animPct <= 12)
                                     strokeColor = root.skin.signal;
-                                else if (pct <= 25)
+                                else if (animPct <= 25)
                                     strokeColor = root.skin.amber;
                                 else
                                     strokeColor = root.skin.green;
                             } else {
-                                if (pct <= 12)
+                                if (animPct <= 12)
                                     strokeColor = "#FF453A";
-                                else if (pct <= 25)
+                                else if (animPct <= 25)
                                     strokeColor = "#FF9F0A";
                             }
                             ctx.beginPath();

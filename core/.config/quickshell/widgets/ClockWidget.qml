@@ -23,6 +23,29 @@ Item {
         color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#211A39")
         border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12))
         border.width: root.nothing ? 0 : 1
+        scale: cardMa.pressed ? 0.985 : 1.0
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation { duration: 150 }
+        }
+
+        MouseArea {
+            id: cardMa
+            anchors.fill: parent
+            enabled: !root.widgetsState || !root.widgetsState.isEditing
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                Quickshell.execDetached(["lunita-widgets-manager", "clock"]);
+            }
+        }
 
         // ═══════════════════════════════════════════════════════════════════
         // ── ESFERA ANALÓGICA EXCLUSIVA (Reloj Suave macOS, Centrado) ───────
@@ -66,7 +89,7 @@ Item {
                 opacity: nothingFace.now.getSeconds() % 2 === 0 ? 1 : 0.25
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 250 }
+                    NumberAnimation { duration: 250; easing.type: Easing.InOutSine }
                 }
             }
 

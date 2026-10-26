@@ -86,34 +86,37 @@ Item {
 
         Behavior on x {
             NumberAnimation {
-                duration: 160
-                easing.type: Easing.OutQuad
+                duration: 150
+                easing.type: Easing.OutCubic
             }
         }
 
         Behavior on y {
             NumberAnimation {
-                duration: 160
-                easing.type: Easing.OutQuad
+                duration: 150
+                easing.type: Easing.OutCubic
             }
         }
 
         Behavior on width {
             NumberAnimation {
-                duration: 160
-                easing.type: Easing.OutQuad
+                duration: 150
+                easing.type: Easing.OutCubic
             }
         }
 
         Behavior on height {
             NumberAnimation {
-                duration: 160
-                easing.type: Easing.OutQuad
+                duration: 150
+                easing.type: Easing.OutCubic
             }
         }
 
         Behavior on opacity {
-            NumberAnimation { duration: 140 }
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
         }
 
         // Cruz de enfoque central de destino

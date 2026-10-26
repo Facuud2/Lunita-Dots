@@ -6,6 +6,10 @@ Item {
     id: ring
 
     property real value: 0          // 0.0 – 1.0
+    property real animValue: value
+    Behavior on animValue {
+        NumberAnimation { duration: 350; easing.type: Easing.OutCubic }
+    }
     property int dots: 36
     property real dotSize: 4
     property color onColor: "#F5F5F5"
@@ -15,7 +19,7 @@ Item {
     implicitWidth: 64
     implicitHeight: 64
 
-    onValueChanged: canvas.requestPaint()
+    onAnimValueChanged: canvas.requestPaint()
     onOnColorChanged: canvas.requestPaint()
     onOffColorChanged: canvas.requestPaint()
     onDotsChanged: canvas.requestPaint()
@@ -33,7 +37,7 @@ Item {
             var cx = width / 2;
             var cy = height / 2;
             var r = Math.min(width, height) / 2 - ring.dotSize / 2 - 0.5;
-            var lit = Math.round(Math.max(0, Math.min(1, ring.value)) * ring.dots);
+            var lit = Math.round(Math.max(0, Math.min(1, ring.animValue)) * ring.dots);
             for (var i = 0; i < ring.dots; i++) {
                 var a = (ring.startAngle + (360 / ring.dots) * i) * Math.PI / 180;
                 ctx.beginPath();

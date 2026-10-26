@@ -15,12 +15,23 @@ Item {
     readonly property bool isWide: isMedium || isLarge
 
     Rectangle {
+        id: cardBg
         anchors.fill: parent
         radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
         color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
         border.color: root.nothing ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
         border.width: root.nothing ? 0 : 1
         clip: true
+        scale: cardMa.pressed ? 0.985 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
+
+        MouseArea {
+            id: cardMa
+            anchors.fill: parent
+            hoverEnabled: true
+        }
 
         // ═══════════════════════════════════════════════════════════════════
         // 1. MODO PEQUEÑO (170 x 170): Dashboard 2x2 con Medidores Circulares
@@ -477,6 +488,7 @@ Item {
                         Behavior on width {
                             NumberAnimation {
                                 duration: 250
+                                easing.type: Easing.OutCubic
                             }
 
                         }
@@ -542,6 +554,7 @@ Item {
                         Behavior on width {
                             NumberAnimation {
                                 duration: 250
+                                easing.type: Easing.OutCubic
                             }
 
                         }
@@ -607,6 +620,7 @@ Item {
                         Behavior on width {
                             NumberAnimation {
                                 duration: 250
+                                easing.type: Easing.OutCubic
                             }
 
                         }
@@ -672,6 +686,7 @@ Item {
                         Behavior on width {
                             NumberAnimation {
                                 duration: 250
+                                easing.type: Easing.OutCubic
                             }
 
                         }
@@ -886,6 +901,7 @@ Item {
                                 Behavior on width {
                                     NumberAnimation {
                                         duration: 250
+                                        easing.type: Easing.OutCubic
                                     }
 
                                 }
@@ -1001,6 +1017,7 @@ Item {
                                 Behavior on width {
                                     NumberAnimation {
                                         duration: 250
+                                        easing.type: Easing.OutCubic
                                     }
 
                                 }
@@ -1116,6 +1133,7 @@ Item {
                                 Behavior on width {
                                     NumberAnimation {
                                         duration: 250
+                                        easing.type: Easing.OutCubic
                                     }
 
                                 }
@@ -1231,6 +1249,7 @@ Item {
                                 Behavior on width {
                                     NumberAnimation {
                                         duration: 250
+                                        easing.type: Easing.OutCubic
                                     }
 
                                 }

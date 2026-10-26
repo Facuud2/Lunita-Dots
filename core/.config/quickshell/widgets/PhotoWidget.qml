@@ -59,7 +59,7 @@ Item {
 
         target: root
         property: "stackOffsetY"
-        duration: 260
+        duration: 250
         easing.type: Easing.OutCubic
 
         onFinished: {
@@ -174,6 +174,10 @@ Item {
         clip: true
         border.color: root.nothing ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.18)
         border.width: root.nothing ? 0 : 1
+        scale: clickArea.pressed ? 0.985 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
 
         // ═══════════════════════════════════════════════════════════════════
         // ── 1. Gesto de Arrastre Vertical (DragHandler Smart Stack) ───────
@@ -337,6 +341,11 @@ Item {
                     : (root.activeDot === 0 ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45))
                 border.color: root.nothing ? "transparent" : Qt.rgba(0, 0, 0, 0.30)
                 border.width: root.nothing ? 0 : 0.5
+                scale: root.activeDot === 0 ? 1.25 : 1.0
+
+                Behavior on scale {
+                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                }
 
                 Behavior on color {
                     ColorAnimation { duration: 150 }
@@ -362,6 +371,11 @@ Item {
                     : (root.activeDot === 1 ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45))
                 border.color: root.nothing ? "transparent" : Qt.rgba(0, 0, 0, 0.30)
                 border.width: root.nothing ? 0 : 0.5
+                scale: root.activeDot === 1 ? 1.25 : 1.0
+
+                Behavior on scale {
+                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                }
 
                 Behavior on color {
                     ColorAnimation { duration: 150 }

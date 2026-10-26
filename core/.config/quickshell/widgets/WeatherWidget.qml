@@ -195,6 +195,10 @@ Item {
         border.color: root.nothing ? "transparent" : Qt.rgba(1, 1, 1, 0.12)
         border.width: root.nothing ? 0 : 1
         color: root.nothing ? root.skin.card : "transparent"
+        scale: clickArea.pressed ? 0.985 : 1.0
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
 
         gradient: root.nothing ? null : appleGradient
 
