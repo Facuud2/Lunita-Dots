@@ -790,11 +790,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 - **Dependencias:** Ninguna
 
 ### [ISSUE-052] Animación vertical estilo Smart Stack (iOS) en el Widget de Imágenes
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO [x]
 - **Prioridad:** MEDIA
-- **Rama Requerida:** `ISSUE_051_FEAT`
+- **Rama Requerida:** `ISSUE_052_FEAT`
 - **Módulo(s):** Temas / Widgets / Imágenes
-- **Archivos Afectados:** `themes/*/.config/quickshell/widgets/` (Componente QML de Imágenes)
+- **Archivos Afectados:** `core/.config/quickshell/widgets/PhotoWidget.qml`, `core/.config/quickshell/widgets/WidgetsState.qml`, `core/.config/quickshell/widgets/scripts/photo_provider.py`
 - **Descripción:** Reemplazar el cambio estático de fotografías por una animación vertical de subida y bajada idéntica al comportamiento de la "Pila Inteligente" (*Smart Stack*) de iOS. Al deslizar/arrastrar verticalmente o rotar automáticamente el carrusel, las imágenes deben desplazarse en el eje Y con físicas de resorte (`SpringAnimation` / curvas Bezier iOS-Like), escala sutil de profundidad e indicadores laterales temporales de posición.
 - **Criterios de Aceptación:**
   1. Las imágenes transicionan desplazándose verticalmente hacia arriba o hacia abajo con efecto de pila tridimensional estilo iOS.

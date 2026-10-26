@@ -151,6 +151,8 @@ Item {
     property var netHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     // ── Photo / Memories Data ──
     property string photoPath: ""
+    property string photoPrevPath: ""
+    property string photoNextPath: ""
     property string photoRawPath: ""
     property string photoTitle: "Recuerdos"
     property string photoCategory: "Destacados"
@@ -1265,6 +1267,8 @@ Item {
                     var p = JSON.parse(data.trim());
                     root.photoDirection = p.direction || 1;
                     root.photoPath = p.path || "";
+                    root.photoPrevPath = p.prev_path || "";
+                    root.photoNextPath = p.next_path || "";
                     root.photoTitle = p.title || "Recuerdos";
                     root.photoCategory = p.subtitle || "Fotos";
                     root.photoIndex = p.index || 1;

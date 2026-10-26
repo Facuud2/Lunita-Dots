@@ -1,4 +1,3 @@
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import Quickshell
 
@@ -15,15 +14,155 @@ Item {
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
 
     readonly property real cardRadius: root.nothing ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+
     readonly property string currentPhotoPath: {
         if (root.widgetsState && root.widgetsState.photoPath)
             return root.widgetsState.photoPath;
         return "";
     }
 
-    // Índice activo para los dos puntos de paginación verticales (exactos a la imagen)
+    readonly property string prevPhotoPath: {
+        if (root.widgetsState && root.widgetsState.photoPrevPath)
+            return root.widgetsState.photoPrevPath;
+        return "";
+    }
+
+    readonly property string nextPhotoPath: {
+        if (root.widgetsState && root.widgetsState.photoNextPath)
+            return root.widgetsState.photoNextPath;
+        return "";
+    }
+
+    // Ruta actualmente proyectada en la tarjeta frontal
+    property string displayCurrentPath: root.currentPhotoPath
+    readonly property bool hasPhotos: root.currentPhotoPath !== ""
+
+    onCurrentPhotoPathChanged: {
+        if (!root.isStackAnimating && root.currentPhotoPath !== "") {
+            root.displayCurrentPath = root.currentPhotoPath;
+        }
+    }
+
+    // Índice activo para los dos puntos de paginación verticales
     readonly property int photoIndex: root.widgetsState ? root.widgetsState.photoIndex : 1
     readonly property int activeDot: (root.photoIndex % 2 === 1) ? 0 : 1
+
+    // ── Propiedades de Navegación Smart Stack (iOS) ──────────────────────
+    property real stackOffsetY: 0
+    property bool isStackAnimating: false
+    property int pendingDirection: 0 // 1: next, -1: prev, 0: ninguno
+    property real lastWheelTime: 0
+
+    // Animación de deslizamiento vertical con físicas estilo resorte iOS
+    NumberAnimation {
+        id: stackSlideAnim
+
+        target: root
+        property: "stackOffsetY"
+        duration: 260
+        easing.type: Easing.OutCubic
+
+        onFinished: {
+            if (root.pendingDirection === 1) {
+                if (root.nextPhotoPath !== "") {
+                    root.displayCurrentPath = root.nextPhotoPath;
+                }
+                root.stackOffsetY = 0;
+                root.isStackAnimating = false;
+                root.pendingDirection = 0;
+                if (root.widgetsState)
+                    root.widgetsState.nextPhoto();
+            } else if (root.pendingDirection === -1) {
+                if (root.prevPhotoPath !== "") {
+                    root.displayCurrentPath = root.prevPhotoPath;
+                }
+                root.stackOffsetY = 0;
+                root.isStackAnimating = false;
+                root.pendingDirection = 0;
+                if (root.widgetsState)
+                    root.widgetsState.prevPhoto();
+            } else {
+                root.stackOffsetY = 0;
+                root.isStackAnimating = false;
+                root.pendingDirection = 0;
+            }
+        }
+    }
+
+    function slideToNext() {
+        if (stackSlideAnim.running || !root.widgetsState)
+            return ;
+
+        root.isStackAnimating = true;
+        root.pendingDirection = 1;
+        stackSlideAnim.from = root.stackOffsetY;
+        stackSlideAnim.to = -cardContainer.height;
+        stackSlideAnim.restart();
+    }
+
+    function slideToPrev() {
+        if (stackSlideAnim.running || !root.widgetsState)
+            return ;
+
+        root.isStackAnimating = true;
+        root.pendingDirection = -1;
+        stackSlideAnim.from = root.stackOffsetY;
+        stackSlideAnim.to = cardContainer.height;
+        stackSlideAnim.restart();
+    }
+
+    function snapStackBack() {
+        if (stackSlideAnim.running)
+            return ;
+
+        root.pendingDirection = 0;
+        stackSlideAnim.from = root.stackOffsetY;
+        stackSlideAnim.to = 0;
+        stackSlideAnim.restart();
+    }
+
+    // ── Componente Reutilizable: Tarjeta de Foto con Squircle ─────────────
+    component PhotoCardItem: Item {
+        id: cardItem
+
+        property string imagePath: ""
+        property real cardY: 0
+        property real cardScale: 1.0
+        property real cardOpacity: 1.0
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: parent.height
+        y: cardY
+        scale: cardScale
+        opacity: cardOpacity
+        transformOrigin: Item.Center
+
+        Rectangle {
+            anchors.fill: parent
+            radius: root.cardRadius
+            clip: true
+            color: root.nothing ? root.skin.card : "#1C1C1E"
+
+            Image {
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                smooth: true
+                cache: true
+                source: cardItem.imagePath !== "" ? ("file://" + cardItem.imagePath) : ""
+            }
+
+            // Borde squircle sutil
+            Rectangle {
+                anchors.fill: parent
+                radius: root.cardRadius
+                color: "transparent"
+                border.color: root.nothing ? root.skin.cardBorder : Qt.rgba(255, 255, 255, 0.14)
+                border.width: root.nothing ? 0 : 1
+            }
+        }
+    }
 
     // ── Tarjeta Contenedora Principal ─────────────────────────────────────
     Rectangle {
@@ -37,118 +176,147 @@ Item {
         border.width: root.nothing ? 0 : 1
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 1. Capa Fotográfica Full-Bleed con Máscara Squircle (iOS) ─────
+        // ── 1. Gesto de Arrastre Vertical (DragHandler Smart Stack) ───────
         // ═══════════════════════════════════════════════════════════════════
-        Item {
-            id: maskedContent
+        DragHandler {
+            id: dragHandler
 
-            anchors.fill: parent
-            layer.enabled: true
+            target: null
+            xAxis.enabled: false
+            yAxis.enabled: true
+            enabled: !root.isStackAnimating && (!root.widgetsState || !root.widgetsState.isEditing)
 
-            property bool usingA: true
-
-            // Imagen Primaria (A)
-            Image {
-                id: imgA
-
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                smooth: true
-                cache: true
-                opacity: 1
-                source: root.currentPhotoPath !== "" ? ("file://" + root.currentPhotoPath) : ""
-            }
-
-            // Imagen Secundaria (B) para Transición Suave CrossFade
-            Image {
-                id: imgB
-
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                smooth: true
-                cache: true
-                opacity: 0
-                source: ""
-            }
-
-            // Escuchar cambios de ruta de foto en widgetsState
-            Connections {
-                function onPhotoPathChanged() {
-                    var newPath = root.currentPhotoPath;
-                    if (!newPath)
-                        return ;
-
-                    var fileUrl = "file://" + newPath;
-                    if (maskedContent.usingA) {
-                        imgB.source = fileUrl;
-                        crossfadeToB.restart();
-                        maskedContent.usingA = false;
+            onActiveChanged: {
+                if (!active) {
+                    if (root.stackOffsetY < -35) {
+                        root.slideToNext();
+                    } else if (root.stackOffsetY > 35) {
+                        root.slideToPrev();
                     } else {
-                        imgA.source = fileUrl;
-                        crossfadeToA.restart();
-                        maskedContent.usingA = true;
+                        root.snapStackBack();
                     }
                 }
-
-                target: root.widgetsState
             }
 
-            // Animación de Transición A -> B
-            ParallelAnimation {
-                id: crossfadeToB
-
-                NumberAnimation {
-                    target: imgA
-                    property: "opacity"
-                    to: 0
-                    duration: 450
-                    easing.type: Easing.InOutQuad
-                }
-
-                NumberAnimation {
-                    target: imgB
-                    property: "opacity"
-                    to: 1
-                    duration: 450
-                    easing.type: Easing.InOutQuad
-                }
-            }
-
-            // Animación de Transición B -> A
-            ParallelAnimation {
-                id: crossfadeToA
-
-                NumberAnimation {
-                    target: imgB
-                    property: "opacity"
-                    to: 0
-                    duration: 450
-                    easing.type: Easing.InOutQuad
-                }
-
-                NumberAnimation {
-                    target: imgA
-                    property: "opacity"
-                    to: 1
-                    duration: 450
-                    easing.type: Easing.InOutQuad
-                }
-            }
-
-            // Máscara precisa con radio de curvatura idéntico a la referencia
-            layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: cardContainer.width
-                    height: cardContainer.height
-                    radius: root.cardRadius
+            onTranslationChanged: {
+                if (active && !root.isStackAnimating) {
+                    root.stackOffsetY = Math.max(-cardContainer.height, Math.min(cardContainer.height, translation.y));
                 }
             }
         }
 
         // ═══════════════════════════════════════════════════════════════════
-        // ── 2. Indicador Vertical de Paginación (2 Puntos Exactos a Ref) ──
+        // ── 2. Gesto con Rueda del Ratón / Touchpad (WheelHandler) ─────────
+        // ═══════════════════════════════════════════════════════════════════
+        WheelHandler {
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            enabled: !root.isStackAnimating && (!root.widgetsState || !root.widgetsState.isEditing)
+
+            onWheel: (event) => {
+                var now = Date.now();
+                if (now - root.lastWheelTime > 260 && !root.isStackAnimating) {
+                    root.lastWheelTime = now;
+                    if (event.angleDelta.y < 0)
+                        root.slideToNext();
+                    else if (event.angleDelta.y > 0)
+                        root.slideToPrev();
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // ── 3. Capas Smart Stack: Previa, Siguiente y Actual ──────────────
+        // ═══════════════════════════════════════════════════════════════════
+
+        // Foto Previa (Arriba: entra hacia abajo al arrastrar o navegar atrás)
+        PhotoCardItem {
+            id: prevCard
+
+            imagePath: root.prevPhotoPath
+            cardY: -cardContainer.height + root.stackOffsetY
+            cardScale: 0.92 + 0.08 * Math.min(1.0, Math.max(0.0, root.stackOffsetY / Math.max(1, cardContainer.height)))
+            cardOpacity: 0.45 + 0.55 * Math.min(1.0, Math.max(0.0, root.stackOffsetY / Math.max(1, cardContainer.height)))
+            visible: (root.stackOffsetY > 0 || (root.isStackAnimating && root.pendingDirection === -1)) && root.prevPhotoPath !== ""
+        }
+
+        // Foto Siguiente (Abajo: entra hacia arriba al arrastrar o navegar adelante)
+        PhotoCardItem {
+            id: nextCard
+
+            imagePath: root.nextPhotoPath
+            cardY: cardContainer.height + root.stackOffsetY
+            cardScale: 0.92 + 0.08 * Math.min(1.0, Math.max(0.0, -root.stackOffsetY / Math.max(1, cardContainer.height)))
+            cardOpacity: 0.45 + 0.55 * Math.min(1.0, Math.max(0.0, -root.stackOffsetY / Math.max(1, cardContainer.height)))
+            visible: (root.stackOffsetY < 0 || (root.isStackAnimating && root.pendingDirection === 1)) && root.nextPhotoPath !== ""
+        }
+
+        // Foto Actual
+        PhotoCardItem {
+            id: currentCard
+
+            imagePath: root.displayCurrentPath !== "" ? root.displayCurrentPath : root.currentPhotoPath
+            cardY: root.stackOffsetY
+            cardScale: 1.0 - 0.08 * Math.min(1.0, Math.abs(root.stackOffsetY) / Math.max(1, cardContainer.height))
+            cardOpacity: 1.0 - 0.45 * Math.min(1.0, Math.abs(root.stackOffsetY) / Math.max(1, cardContainer.height))
+            visible: root.hasPhotos
+        }
+
+        // Estado vacío si no hay imágenes
+        Item {
+            anchors.fill: parent
+            visible: !root.hasPhotos
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 8
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "󰄄"
+                    font.family: "CaskaydiaCove Nerd Font"
+                    font.pixelSize: 32
+                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.45)
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Sin Fotos"
+                    font.family: root.nothing ? root.skin.fontFigure : "SF Pro Display"
+                    font.pixelSize: 12
+                    font.weight: Font.DemiBold
+                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.55)
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // ── 4. Interacción Nativa (Clic rápido: Avanzar, Clic derecho: Abrir)
+        // ═══════════════════════════════════════════════════════════════════
+        MouseArea {
+            id: clickArea
+
+            anchors.fill: parent
+            z: 10
+            enabled: !root.widgetsState || !root.widgetsState.isEditing
+            cursorShape: Qt.PointingHandCursor
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+            onClicked: (mouse) => {
+                if (mouse.button === Qt.LeftButton) {
+                    if (!root.isStackAnimating && Math.abs(root.stackOffsetY) < 5) {
+                        root.slideToNext();
+                    }
+                } else if (mouse.button === Qt.RightButton) {
+                    var targetPath = root.displayCurrentPath !== "" ? root.displayCurrentPath : root.currentPhotoPath;
+                    if (targetPath) {
+                        Quickshell.execDetached(["xdg-open", targetPath]);
+                    }
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // ── 5. Indicador Vertical de Paginación (2 Puntos Smart Stack) ────
         // ═══════════════════════════════════════════════════════════════════
         Column {
             id: paginationDots
@@ -170,12 +338,16 @@ Item {
                 border.color: root.nothing ? "transparent" : Qt.rgba(0, 0, 0, 0.30)
                 border.width: root.nothing ? 0 : 0.5
 
+                Behavior on color {
+                    ColorAnimation { duration: 150 }
+                }
+
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        if (root.activeDot !== 0 && root.widgetsState)
-                            root.widgetsState.prevPhoto();
+                        if (!root.isStackAnimating && root.activeDot !== 0)
+                            root.slideToPrev();
                     }
                 }
             }
@@ -191,46 +363,17 @@ Item {
                 border.color: root.nothing ? "transparent" : Qt.rgba(0, 0, 0, 0.30)
                 border.width: root.nothing ? 0 : 0.5
 
+                Behavior on color {
+                    ColorAnimation { duration: 150 }
+                }
+
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        if (root.activeDot !== 1 && root.widgetsState)
-                            root.widgetsState.nextPhoto();
+                        if (!root.isStackAnimating && root.activeDot !== 1)
+                            root.slideToNext();
                     }
-                }
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // ── 3. Interacción Nativa (Clic: Avanzar, Rueda: Navegar) ─────────
-        // ═══════════════════════════════════════════════════════════════════
-        MouseArea {
-            id: clickArea
-
-            anchors.fill: parent
-            z: 10
-            enabled: !root.widgetsState || !root.widgetsState.isEditing
-            cursorShape: Qt.PointingHandCursor
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-
-            onClicked: (mouse) => {
-                if (mouse.button === Qt.LeftButton) {
-                    if (root.widgetsState)
-                        root.widgetsState.nextPhoto();
-                } else if (mouse.button === Qt.RightButton) {
-                    if (root.currentPhotoPath)
-                        Quickshell.execDetached(["xdg-open", root.currentPhotoPath]);
-                }
-            }
-
-            onWheel: (wheel) => {
-                if (wheel.angleDelta.y > 0) {
-                    if (root.widgetsState)
-                        root.widgetsState.prevPhoto();
-                } else if (wheel.angleDelta.y < 0) {
-                    if (root.widgetsState)
-                        root.widgetsState.nextPhoto();
                 }
             }
         }
