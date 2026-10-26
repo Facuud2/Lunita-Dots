@@ -38,16 +38,37 @@ Item {
     }
 
     function xToCol(px, span) {
-        var c = Math.round((px - marginLeft) / (cellSize + cellGap));
-        return Math.max(0, Math.min(cols - (span || 1), c));
+        var s = span || 1;
+        var widthPx = s * cellSize + (s - 1) * cellGap;
+        var centerX = px + widthPx / 2.0;
+        var step = cellSize + cellGap;
+        var c = Math.round(((centerX - marginLeft) / step) - (s / 2.0));
+        return Math.max(0, Math.min(cols - s, c));
     }
 
     function yToRow(py, span) {
-        var r = Math.round((py - marginTop) / (cellSize + cellGap));
-        return Math.max(0, Math.min(rows - (span || 1), r));
+        var s = span || 1;
+        var heightPx = s * cellSize + (s - 1) * cellGap;
+        var centerY = py + heightPx / 2.0;
+        var step = cellSize + cellGap;
+        var r = Math.round(((centerY - marginTop) / step) - (s / 2.0));
+        return Math.max(0, Math.min(rows - s, r));
+    }
+
+    // ── iOS Dwell Timer para Reordenamiento Suave (Dodge) ──
+    Timer {
+        id: dwellTimer
+        interval: 340 // 340ms: umbral óptimo de iOS/macOS antes de apartar widgets
+        repeat: false
+        onTriggered: {
+            if (activeDragWidget && activeDragCol >= 0 && activeDragRow >= 0) {
+                executeReflow(activeDragWidget, activeDragCol, activeDragRow, activeDragColSpan, activeDragRowSpan);
+            }
+        }
     }
 
     function onWidgetDragStarted(frame) {
+        dwellTimer.stop();
         activeDragWidget = frame;
         activeDragColSpan = (frame.width > 260) ? 2 : 1;
         activeDragRowSpan = (frame.height > 260) ? 2 : 1;
@@ -67,11 +88,18 @@ Item {
         if (targetCol !== activeDragCol || targetRow !== activeDragRow) {
             activeDragCol = targetCol;
             activeDragRow = targetRow;
-            reflowCollisions(frame, targetCol, targetRow, activeDragColSpan, activeDragRowSpan);
+
+            // Verificar si en la nueva posición hay colisión
+            var collist = checkCollisions(frame, targetCol, targetRow, activeDragColSpan, activeDragRowSpan);
+            if (collist.length > 0) {
+                dwellTimer.restart();
+            } else {
+                dwellTimer.stop();
+            }
         }
     }
 
-    function reflowCollisions(draggedFrame, tCol, tRow, tColSpan, tRowSpan) {
+    function checkCollisions(draggedFrame, tCol, tRow, tColSpan, tRowSpan) {
         var collided = [];
         for (var idKey in framesMap) {
             var f = framesMap[idKey];
@@ -90,73 +118,141 @@ Item {
                 collided.push({ frame: f, col: fCol, row: fRow, colSpan: fColSpan, rowSpan: fRowSpan });
             }
         }
+        return collided;
+    }
 
+    function executeReflow(draggedFrame, tCol, tRow, tColSpan, tRowSpan) {
+        var collided = checkCollisions(draggedFrame, tCol, tRow, tColSpan, tRowSpan);
         if (collided.length === 0)
             return;
 
-        for (var i = 0; i < collided.length; i++) {
-            var item = collided[i];
-            var f = item.frame;
+        // Matriz de ocupación bidimensional: cols x rows
+        var occ = [];
+        for (var r = 0; r < rows; r++) {
+            occ[r] = [];
+            for (var c = 0; c < cols; c++) {
+                occ[r][c] = false;
+            }
+        }
 
-            if (collided.length === 1 && dragOrigCol >= 0 && dragOrigRow >= 0 &&
-                (dragOrigCol + item.colSpan <= cols) && (dragOrigRow + item.rowSpan <= rows)) {
+        // 1. Reservar las celdas del widget arrastrado en su destino
+        for (var dr = tRow; dr < tRow + tRowSpan && dr < rows; dr++) {
+            for (var dc = tCol; dc < tCol + tColSpan && dc < cols; dc++) {
+                occ[dr][dc] = true;
+            }
+        }
+
+        // 2. Marcar celdas de widgets estables (que no colisionan)
+        for (var idKey in framesMap) {
+            var other = framesMap[idKey];
+            if (!other || other === draggedFrame || !other.widgetData)
+                continue;
+
+            var isCollided = false;
+            for (var ci = 0; ci < collided.length; ci++) {
+                if (collided[ci].frame === other) {
+                    isCollided = true;
+                    break;
+                }
+            }
+            if (isCollided)
+                continue;
+
+            var oSpanX = (other.width > 260) ? 2 : 1;
+            var oSpanY = (other.height > 260) ? 2 : 1;
+            var oCol = xToCol(other.x, oSpanX);
+            var oRow = yToRow(other.y, oSpanY);
+
+            for (var or = oRow; or < oRow + oSpanY && or < rows; or++) {
+                for (var oc = oCol; oc < oCol + oSpanX && oc < cols; oc++) {
+                    occ[or][oc] = true;
+                }
+            }
+        }
+
+        // 3. Swap estilo iOS: 1 solo widget colisionado y cabe en el hueco original
+        if (collided.length === 1 && dragOrigCol >= 0 && dragOrigRow >= 0) {
+            var single = collided[0];
+            var canSwap = true;
+            if (dragOrigCol + single.colSpan > cols || dragOrigRow + single.rowSpan > rows) {
+                canSwap = false;
+            } else {
+                for (var sr = dragOrigRow; sr < dragOrigRow + single.rowSpan; sr++) {
+                    for (var sc = dragOrigCol; sc < dragOrigCol + single.colSpan; sc++) {
+                        if (occ[sr][sc]) {
+                            canSwap = false;
+                            break;
+                        }
+                    }
+                    if (!canSwap) break;
+                }
+            }
+
+            if (canSwap) {
                 var swapX = colToX(dragOrigCol);
                 var swapY = rowToY(dragOrigRow);
-                f.x = swapX;
-                f.y = swapY;
+                single.frame.x = swapX;
+                single.frame.y = swapY;
                 if (root.widgetsState)
-                    root.widgetsState.updateWidgetPosition(root.screenName, f.widgetData.id, swapX, swapY);
-            } else {
-                var nextSlot = findNextFreeSlot(f, tCol, tRow, tColSpan, tRowSpan, item.colSpan, item.rowSpan);
-                if (nextSlot) {
-                    var newX = colToX(nextSlot.col);
-                    var newY = rowToY(nextSlot.row);
-                    f.x = newX;
-                    f.y = newY;
-                    if (root.widgetsState)
-                        root.widgetsState.updateWidgetPosition(root.screenName, f.widgetData.id, newX, newY);
+                    root.widgetsState.updateWidgetPosition(root.screenName, single.frame.widgetData.id, swapX, swapY);
+                return;
+            }
+        }
+
+        // 4. Reubicación limpia para cada widget colisionado sin superposiciones
+        for (var i = 0; i < collided.length; i++) {
+            var item = collided[i];
+            var bestSlot = findBestFreeSlotInOcc(occ, item.col, item.row, item.colSpan, item.rowSpan);
+            if (bestSlot) {
+                for (var br = bestSlot.row; br < bestSlot.row + item.rowSpan && br < rows; br++) {
+                    for (var bc = bestSlot.col; bc < bestSlot.col + item.colSpan && bc < cols; bc++) {
+                        occ[br][bc] = true;
+                    }
                 }
+                var newX = colToX(bestSlot.col);
+                var newY = rowToY(bestSlot.row);
+                item.frame.x = newX;
+                item.frame.y = newY;
+                if (root.widgetsState)
+                    root.widgetsState.updateWidgetPosition(root.screenName, item.frame.widgetData.id, newX, newY);
             }
         }
     }
 
-    function findNextFreeSlot(targetFrame, avoidCol, avoidRow, avoidColSpan, avoidRowSpan, spanX, spanY) {
+    function findBestFreeSlotInOcc(occ, prefCol, prefRow, spanX, spanY) {
+        var best = null;
+        var bestDist = 999999;
+
         for (var r = 0; r <= rows - spanY; r++) {
             for (var c = 0; c <= cols - spanX; c++) {
-                var overlapAvoid = (Math.max(avoidCol, c) < Math.min(avoidCol + avoidColSpan, c + spanX)) &&
-                                  (Math.max(avoidRow, r) < Math.min(avoidRow + avoidRowSpan, r + spanY));
-                if (overlapAvoid)
-                    continue;
-
-                var occupied = false;
-                for (var idKey in framesMap) {
-                    var other = framesMap[idKey];
-                    if (!other || other === targetFrame || other === activeDragWidget || !other.widgetData)
-                        continue;
-
-                    var oSpanX = (other.width > 260) ? 2 : 1;
-                    var oSpanY = (other.height > 260) ? 2 : 1;
-                    var oCol = xToCol(other.x, oSpanX);
-                    var oRow = yToRow(other.y, oSpanY);
-
-                    if ((Math.max(c, oCol) < Math.min(c + spanX, oCol + oSpanX)) &&
-                        (Math.max(r, oRow) < Math.min(r + spanY, oRow + oSpanY))) {
-                        occupied = true;
-                        break;
+                var free = true;
+                for (var dr = 0; dr < spanY; dr++) {
+                    for (var dc = 0; dc < spanX; dc++) {
+                        if (occ[r + dr][c + dc]) {
+                            free = false;
+                            break;
+                        }
                     }
+                    if (!free) break;
                 }
 
-                if (!occupied) {
-                    return { col: c, row: r };
+                if (free) {
+                    var dist = Math.abs(c - prefCol) + Math.abs(r - prefRow);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        best = { col: c, row: r };
+                    }
                 }
             }
         }
-        return null;
+        return best;
     }
 
     function onWidgetDragFinished(frame) {
         if (!frame || !frame.widgetData)
             return;
+
+        dwellTimer.stop();
 
         var finalCol = activeDragCol;
         var finalRow = activeDragRow;
@@ -164,6 +260,9 @@ Item {
             finalCol = xToCol(frame.x, activeDragColSpan);
             finalRow = yToRow(frame.y, activeDragRowSpan);
         }
+
+        // Ejecutar reflow inmediato si se suelta sobre una celda ocupada
+        executeReflow(frame, finalCol, finalRow, activeDragColSpan, activeDragRowSpan);
 
         var snapX = colToX(finalCol);
         var snapY = rowToY(finalRow);
@@ -203,7 +302,7 @@ Item {
         frame.x = snapX;
         frame.y = snapY;
 
-        reflowCollisions(frame, c, r, colSpan, rowSpan);
+        executeReflow(frame, c, r, colSpan, rowSpan);
 
         if (root.widgetsState) {
             root.widgetsState.updateWidgetSize(root.screenName, frame.widgetData.id, finalW, finalH, sizeName);

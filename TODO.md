@@ -877,3 +877,25 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   2. Todas las animaciones respetan estrictamente la escala de tokens de duración y easing canónico.
   3. Quickshell compila y carga sin errores ni advertencias de sintaxis QML.
 - **Dependencias:** [ISSUE-054], [ISSUE-055]
+
+---
+
+### [ISSUE-057] Sincronización de Celda por Centro, Supresión de Retícula y Dwell Timer estilo iOS en Desktop Grid
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_052_FEAT`
+- **Módulo(s):** Temas / Widgets / Quickshell / Desktop Grid
+- **Archivos Afectados:** `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/DesktopGridGuide.qml`
+- **Descripción:** Corregir fallos de sincronización, origen flotante del aura y superposición múltiple de widgets al reordenar el escritorio:
+  1. **Cálculo de Celda por Centro Geométrico:** Refactorización de `xToCol` y `yToRow` para calcular la posición destino basada en el centro exacto del widget (`centerX = px + width / 2.0`), eliminando saltos prematuros o asimétricos al cruzar columnas en widgets medianos (2x1, 2x2).
+  2. **Supresión de Retícula y Refinado del Ghost Slot:** Eliminación de la matriz estática de 50 celdas que saturaba la pantalla. Rediseño del `ghostSlot` estilo drop placeholder sutil de iOS / Nothing (sin bordes rojos ni cruces invasivas) y supresión del salto flotante desde `(-1, -1)` al iniciar el arrastre mediante guardas en `Behavior on x/y`.
+  3. **Dwell Timer estilo iOS / macOS:** Incorporación de un temporizador de permanencia (`dwellTimer` de 340ms) que evita el desplazamiento errático de widgets situados al pasar de paso sobre ellos; el reflow sólo se dispara si el usuario sostiene deliberadamente el widget sobre una posición ocupada.
+  4. **Motor de Reflow Libre de Colisiones con Matriz de Ocupación:** Sustitución de la lógica previa por una matriz virtual de ocupación bidimensional `occ[r][c]`. Implementa el intercambio (*swap*) directo si cabe en el hueco de origen, o reubica ordenadamente cada widget colisionado en celdas contiguas según distancia Manhattan mínima garantizando cero solapamientos o widgets duplicados en la misma celda.
+- **Criterios de Aceptación:**
+  1. El aura / ghostSlot nace en la posición inicial del widget sin volar desde la esquina de la pantalla.
+  2. El aura se reposiciona sincronizadamente con el centro del widget sin saltos prematuros.
+  3. La retícula repetitiva de fondo ya no cubre la pantalla innecesariamente.
+  4. Los widgets situados no se mueven si el widget arrastrado solo pasa por encima rápidamente; se apartan tras 340ms de permanencia sobre ellos.
+  5. Dos o más widgets arrastrados a una misma posición no se superponen ni se montan entre sí.
+  6. Quickshell carga limpiamente sin errores sintácticos.
+- **Dependencias:** [ISSUE-055], [ISSUE-056]
