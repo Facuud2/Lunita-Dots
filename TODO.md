@@ -837,3 +837,22 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   3. El tema `macos-theme` mantiene su diseño previo sin regresiones.
   4. Quickshell carga limpiamente sin errores de sintaxis QML.
 - **Dependencias:** [ISSUE-050], [ISSUE-051]
+
+---
+
+### [ISSUE-055] Desktop Grid a Pantalla Completa, Red Visual Dinámica y Auto-Reflow
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_055_FEAT`
+- **Módulo(s):** Temas / Widgets / Quickshell / Desktop Grid
+- **Archivos Afectados:** `core/.config/quickshell/widgets/DesktopGridCanvas.qml`, `core/.config/quickshell/widgets/DesktopGridGuide.qml`, `core/.config/quickshell/widgets/WidgetFrame.qml`
+- **Descripción:** Transformar el lienzo del escritorio en una cuadrícula completa modular matemática adaptativa inspirada en iOS / iPadOS / macOS y Ryoku:
+  1. **Red Visual Dinámica (`DesktopGridGuide.qml`):** Guía de celdas y retícula visible en modo edición que se activa al arrastrar widgets con proyección en vivo del área de destino (*Ghost Slot / Drop Target*).
+  2. **Motor de Colisión y Auto-Reflow:** Detección de solapamiento en coordenadas de celda y desplazamiento reactivo suave (*Push / Swap*) de los widgets en conflicto para evitar superposiciones no deseadas.
+  3. **Suavizado Ergonómico del Jiggle:** Reducción de amplitud a ±0.45° a 360ms y congelamiento automático del temblor al posicionar el cursor sobre el control de redimensión o durante la redimensión activa para garantizar estabilidad y precisión.
+- **Criterios de Aceptación:**
+  1. El lienzo calcula dinámicamente columnas y filas según la resolución de la pantalla.
+  2. Al mover un widget sobre otro, el widget en conflicto se desliza suavemente a una celda libre contigua.
+  3. La red visual proyecta la silueta de destino del widget arrastrado con sus dimensiones reales (1x1, 2x1 o 2x2).
+  4. El temblor jiggle es suave y se detiene automáticamente sobre el handle de resize.
+- **Dependencias:** [ISSUE-052], [ISSUE-054]

@@ -12,7 +12,17 @@ Item {
     // Visual State & Jiggle Animation
     property bool isDragging: dragArea.drag.active
     property bool isResizing: false
+    readonly property bool isInteractingWithResize: root.isResizing || (resizeHandle.visible && resizeHandle.isHovered)
     property real targetRotation: 0
+
+    onIsInteractingWithResizeChanged: {
+        if (root.isInteractingWithResize) {
+            jiggleAnim.stop();
+            jiggleRotation.angle = 0;
+        } else if (root.widgetsState && root.widgetsState.isEditing && !root.isDragging) {
+            jiggleAnim.restart();
+        }
+    }
 
     function applyData(newData) {
         if (!newData)
@@ -57,29 +67,30 @@ Item {
     }
     // Elevation & Scale feedback while dragging
     scale: isDragging ? 1.05 : 1
+    z: isDragging ? 500 : 10
 
-    // ── iOS / macOS Jiggle Animation ──
+    // ── iOS / macOS Gentle Jiggle Animation ──
     SequentialAnimation {
         id: jiggleAnim
 
-        running: (root.widgetsState ? root.widgetsState.isEditing : false) && !root.isDragging
+        running: (root.widgetsState ? root.widgetsState.isEditing : false) && !root.isDragging && !root.isInteractingWithResize
         loops: Animation.Infinite
 
         NumberAnimation {
             target: jiggleRotation
             property: "angle"
-            from: -1.2
-            to: 1.2
-            duration: 130
+            from: -0.45
+            to: 0.45
+            duration: 360
             easing.type: Easing.InOutSine
         }
 
         NumberAnimation {
             target: jiggleRotation
             property: "angle"
-            from: 1.2
-            to: -1.2
-            duration: 130
+            from: 0.45
+            to: -0.45
+            duration: 360
             easing.type: Easing.InOutSine
         }
 
@@ -268,19 +279,28 @@ Item {
         drag.target: root
         drag.axis: Drag.XAndYAxis
         cursorShape: (root.widgetsState && root.widgetsState.isEditing) ? (drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor) : Qt.ArrowCursor
+        onPressed: {
+            if (root.canvas)
+                root.canvas.onWidgetDragStarted(root);
+        }
+
+        onPositionChanged: {
+            if (drag.active && root.canvas) {
+                root.canvas.onWidgetDragMoved(root, root.x, root.y);
+            }
+        }
+
         onReleased: {
-            // Magnetic snap to a 20px desktop grid
-            var snappedX = Math.round(root.x / 20) * 20;
-            var snappedY = Math.round(root.y / 20) * 20;
-            // Boundary constraints
-            snappedX = Math.max(20, Math.min(1920 - root.width - 20, snappedX));
-            snappedY = Math.max(40, Math.min(1080 - root.height - 80, snappedY));
-            root.x = snappedX;
-            root.y = snappedY;
-            if (root.widgetData) {
-                if (root.canvas)
-                    root.canvas.updateWidgetPosition(root.widgetData.id, snappedX, snappedY);
-                else if (root.widgetsState)
+            if (root.canvas) {
+                root.canvas.onWidgetDragFinished(root);
+            } else {
+                var snappedX = Math.round(root.x / 20) * 20;
+                var snappedY = Math.round(root.y / 20) * 20;
+                snappedX = Math.max(20, Math.min(1920 - root.width - 20, snappedX));
+                snappedY = Math.max(40, Math.min(1080 - root.height - 80, snappedY));
+                root.x = snappedX;
+                root.y = snappedY;
+                if (root.widgetData && root.widgetsState)
                     root.widgetsState.updateWidgetPosition(root.screenName, root.widgetData.id, snappedX, snappedY);
             }
         }
@@ -344,6 +364,7 @@ Item {
         Rectangle {
             id: resizeHandle
 
+            readonly property bool isHovered: resizeMa.containsMouse || resizeMa.drag.active
             visible: !root.isClock
             enabled: !root.isClock
             x: parent.width - width + 8
@@ -417,7 +438,7 @@ Item {
                     root.height = finalH;
                     if (root.widgetData) {
                         if (root.canvas)
-                            root.canvas.updateWidgetSize(root.widgetData.id, finalW, finalH, sizeName);
+                            root.canvas.onWidgetResized(root, finalW, finalH, sizeName);
                         else if (root.widgetsState)
                             root.widgetsState.updateWidgetSize(root.screenName, root.widgetData.id, finalW, finalH, sizeName);
                     }

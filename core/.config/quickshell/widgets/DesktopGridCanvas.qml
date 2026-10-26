@@ -13,6 +13,205 @@ Item {
     readonly property bool isDarkTheme: root.widgetsState ? root.widgetsState.isDarkTheme : true
     readonly property color textColor: root.widgetsState ? root.widgetsState.textColor : "#FFFFFF"
 
+    // ── Desktop Fullscreen Grid Metrics & Alignment ──
+    readonly property real cellSize: 170
+    readonly property real cellGap: 14
+    readonly property int cols: Math.max(1, Math.floor((root.width - 40 + cellGap) / (cellSize + cellGap)))
+    readonly property int rows: Math.max(1, Math.floor((root.height - 90 + cellGap) / (cellSize + cellGap)))
+    readonly property real marginLeft: Math.max(20, (root.width - (cols * cellSize + (cols - 1) * cellGap)) / 2)
+    readonly property real marginTop: Math.max(48, (root.height - (rows * cellSize + (rows - 1) * cellGap)) / 2)
+
+    property var activeDragWidget: null
+    property int activeDragCol: -1
+    property int activeDragRow: -1
+    property int activeDragColSpan: 1
+    property int activeDragRowSpan: 1
+    property int dragOrigCol: -1
+    property int dragOrigRow: -1
+
+    function colToX(c) {
+        return Math.round(marginLeft + c * (cellSize + cellGap));
+    }
+
+    function rowToY(r) {
+        return Math.round(marginTop + r * (cellSize + cellGap));
+    }
+
+    function xToCol(px, span) {
+        var c = Math.round((px - marginLeft) / (cellSize + cellGap));
+        return Math.max(0, Math.min(cols - (span || 1), c));
+    }
+
+    function yToRow(py, span) {
+        var r = Math.round((py - marginTop) / (cellSize + cellGap));
+        return Math.max(0, Math.min(rows - (span || 1), r));
+    }
+
+    function onWidgetDragStarted(frame) {
+        activeDragWidget = frame;
+        activeDragColSpan = (frame.width > 260) ? 2 : 1;
+        activeDragRowSpan = (frame.height > 260) ? 2 : 1;
+        dragOrigCol = xToCol(frame.x, activeDragColSpan);
+        dragOrigRow = yToRow(frame.y, activeDragRowSpan);
+        activeDragCol = dragOrigCol;
+        activeDragRow = dragOrigRow;
+    }
+
+    function onWidgetDragMoved(frame, currentX, currentY) {
+        if (!activeDragWidget || activeDragWidget !== frame)
+            return;
+
+        var targetCol = xToCol(currentX, activeDragColSpan);
+        var targetRow = yToRow(currentY, activeDragRowSpan);
+
+        if (targetCol !== activeDragCol || targetRow !== activeDragRow) {
+            activeDragCol = targetCol;
+            activeDragRow = targetRow;
+            reflowCollisions(frame, targetCol, targetRow, activeDragColSpan, activeDragRowSpan);
+        }
+    }
+
+    function reflowCollisions(draggedFrame, tCol, tRow, tColSpan, tRowSpan) {
+        var collided = [];
+        for (var idKey in framesMap) {
+            var f = framesMap[idKey];
+            if (!f || f === draggedFrame || !f.widgetData)
+                continue;
+
+            var fColSpan = (f.width > 260) ? 2 : 1;
+            var fRowSpan = (f.height > 260) ? 2 : 1;
+            var fCol = xToCol(f.x, fColSpan);
+            var fRow = yToRow(f.y, fRowSpan);
+
+            var overlaps = (Math.max(tCol, fCol) < Math.min(tCol + tColSpan, fCol + fColSpan)) &&
+                           (Math.max(tRow, fRow) < Math.min(tRow + tRowSpan, fRow + fRowSpan));
+
+            if (overlaps) {
+                collided.push({ frame: f, col: fCol, row: fRow, colSpan: fColSpan, rowSpan: fRowSpan });
+            }
+        }
+
+        if (collided.length === 0)
+            return;
+
+        for (var i = 0; i < collided.length; i++) {
+            var item = collided[i];
+            var f = item.frame;
+
+            if (collided.length === 1 && dragOrigCol >= 0 && dragOrigRow >= 0 &&
+                (dragOrigCol + item.colSpan <= cols) && (dragOrigRow + item.rowSpan <= rows)) {
+                var swapX = colToX(dragOrigCol);
+                var swapY = rowToY(dragOrigRow);
+                f.x = swapX;
+                f.y = swapY;
+                if (root.widgetsState)
+                    root.widgetsState.updateWidgetPosition(root.screenName, f.widgetData.id, swapX, swapY);
+            } else {
+                var nextSlot = findNextFreeSlot(f, tCol, tRow, tColSpan, tRowSpan, item.colSpan, item.rowSpan);
+                if (nextSlot) {
+                    var newX = colToX(nextSlot.col);
+                    var newY = rowToY(nextSlot.row);
+                    f.x = newX;
+                    f.y = newY;
+                    if (root.widgetsState)
+                        root.widgetsState.updateWidgetPosition(root.screenName, f.widgetData.id, newX, newY);
+                }
+            }
+        }
+    }
+
+    function findNextFreeSlot(targetFrame, avoidCol, avoidRow, avoidColSpan, avoidRowSpan, spanX, spanY) {
+        for (var r = 0; r <= rows - spanY; r++) {
+            for (var c = 0; c <= cols - spanX; c++) {
+                var overlapAvoid = (Math.max(avoidCol, c) < Math.min(avoidCol + avoidColSpan, c + spanX)) &&
+                                  (Math.max(avoidRow, r) < Math.min(avoidRow + avoidRowSpan, r + spanY));
+                if (overlapAvoid)
+                    continue;
+
+                var occupied = false;
+                for (var idKey in framesMap) {
+                    var other = framesMap[idKey];
+                    if (!other || other === targetFrame || other === activeDragWidget || !other.widgetData)
+                        continue;
+
+                    var oSpanX = (other.width > 260) ? 2 : 1;
+                    var oSpanY = (other.height > 260) ? 2 : 1;
+                    var oCol = xToCol(other.x, oSpanX);
+                    var oRow = yToRow(other.y, oSpanY);
+
+                    if ((Math.max(c, oCol) < Math.min(c + spanX, oCol + oSpanX)) &&
+                        (Math.max(r, oRow) < Math.min(r + spanY, oRow + oSpanY))) {
+                        occupied = true;
+                        break;
+                    }
+                }
+
+                if (!occupied) {
+                    return { col: c, row: r };
+                }
+            }
+        }
+        return null;
+    }
+
+    function onWidgetDragFinished(frame) {
+        if (!frame || !frame.widgetData)
+            return;
+
+        var finalCol = activeDragCol;
+        var finalRow = activeDragRow;
+        if (finalCol < 0 || finalRow < 0) {
+            finalCol = xToCol(frame.x, activeDragColSpan);
+            finalRow = yToRow(frame.y, activeDragRowSpan);
+        }
+
+        var snapX = colToX(finalCol);
+        var snapY = rowToY(finalRow);
+
+        frame.x = snapX;
+        frame.y = snapY;
+
+        if (root.widgetsState) {
+            root.widgetsState.updateWidgetPosition(root.screenName, frame.widgetData.id, snapX, snapY);
+            root.widgetsState.saveScreensLayout();
+        }
+
+        activeDragWidget = null;
+        activeDragCol = -1;
+        activeDragRow = -1;
+        dragOrigCol = -1;
+        dragOrigRow = -1;
+    }
+
+    function onWidgetResized(frame, finalW, finalH, sizeName) {
+        if (!frame || !frame.widgetData)
+            return;
+
+        var colSpan = (finalW > 260) ? 2 : 1;
+        var rowSpan = (finalH > 260) ? 2 : 1;
+        var c = xToCol(frame.x, colSpan);
+        var r = yToRow(frame.y, rowSpan);
+
+        if (c + colSpan > cols)
+            c = Math.max(0, cols - colSpan);
+        if (r + rowSpan > rows)
+            r = Math.max(0, rows - rowSpan);
+
+        var snapX = colToX(c);
+        var snapY = rowToY(r);
+
+        frame.x = snapX;
+        frame.y = snapY;
+
+        reflowCollisions(frame, c, r, colSpan, rowSpan);
+
+        if (root.widgetsState) {
+            root.widgetsState.updateWidgetSize(root.screenName, frame.widgetData.id, finalW, finalH, sizeName);
+            root.widgetsState.updateWidgetPosition(root.screenName, frame.widgetData.id, snapX, snapY);
+            root.widgetsState.saveScreensLayout();
+        }
+    }
+
     // Helper forwarding methods for WidgetFrame and top bar
     function addWidget(type) {
         if (root.widgetsState)
@@ -115,6 +314,24 @@ Item {
             if (root.widgetsState)
                 root.widgetsState.wantsKeyboardFocus = false;
         }
+    }
+
+    // ── Desktop Grid Guide (Red Visual Dinámica estilo Ryoku / iOS) ──
+    DesktopGridGuide {
+        id: gridGuide
+
+        canvas: root
+        cellSize: root.cellSize
+        cellGap: root.cellGap
+        cols: root.cols
+        rows: root.rows
+        marginLeft: root.marginLeft
+        marginTop: root.marginTop
+        activeDragCol: root.activeDragCol
+        activeDragRow: root.activeDragRow
+        activeDragColSpan: root.activeDragColSpan
+        activeDragRowSpan: root.activeDragRowSpan
+        isDragging: root.activeDragWidget !== null
     }
 
     // ── 1. Persistent Dynamic Widgets Container (No flickering/recreation) ──
