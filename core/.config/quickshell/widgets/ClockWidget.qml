@@ -1,12 +1,12 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     id: root
 
     property var widgetsState: null
     property var canvas: null
-
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: root.skin ? root.skin.isNothing : false
     readonly property bool fluent: root.skin ? root.skin.isFluent : (root.widgetsState && root.widgetsState.activeThemeId === "modern-win11-theme")
@@ -24,21 +24,11 @@ Item {
         color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#211A39"))
         border.color: root.nothing ? "transparent" : (root.fluent ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12)))
         border.width: root.nothing ? 0 : 1
-        scale: cardMa.pressed ? 0.985 : 1.0
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: 150
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Behavior on color {
-            ColorAnimation { duration: 150 }
-        }
+        scale: cardMa.pressed ? 0.985 : 1
 
         MouseArea {
             id: cardMa
+
             anchors.fill: parent
             enabled: !root.widgetsState || !root.widgetsState.isEditing
             hoverEnabled: true
@@ -53,6 +43,7 @@ Item {
         // ═══════════════════════════════════════════════════════════════════
         AnalogClockFace {
             id: mainClockFace
+
             visible: !root.nothing && !root.fluent
             anchors.centerIn: parent
             dialSize: 142
@@ -81,6 +72,7 @@ Item {
             // Top Header: Chip "Reloj" y punto de señal de segundos
             Rectangle {
                 id: topChip
+
                 anchors.left: parent.left
                 anchors.top: parent.top
                 height: 22
@@ -92,6 +84,7 @@ Item {
 
                 RowLayout {
                     id: chipLayout
+
                     anchors.centerIn: parent
                     spacing: 5
 
@@ -109,7 +102,9 @@ Item {
                         font.weight: Font.DemiBold
                         color: root.skin ? root.skin.ink : "#FFFFFF"
                     }
+
                 }
+
             }
 
             Rectangle {
@@ -122,8 +117,13 @@ Item {
                 opacity: fluentFace.now.getSeconds() % 2 === 0 ? 1 : 0.35
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 250; easing.type: Easing.InOutSine }
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.InOutSine
+                    }
+
                 }
+
             }
 
             // Hora Principal Digital con Segundos
@@ -165,36 +165,47 @@ Item {
                             font.weight: Font.Medium
                             color: root.skin ? root.skin.inkDim : "#94A3B8"
                         }
+
                     }
+
                 }
+
             }
 
             // Barra sutil de progreso de segundos
             Rectangle {
                 id: secBar
+
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: bottomRow.top
                 anchors.bottomMargin: 8
                 height: 2
                 radius: 1
-                color: root.skin ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.10)
+                color: root.skin ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
 
                 Rectangle {
                     height: parent.height
                     radius: parent.radius
-                    width: Math.max(2, parent.width * ((fluentFace.now.getSeconds() + 1) / 60.0))
+                    width: Math.max(2, parent.width * ((fluentFace.now.getSeconds() + 1) / 60))
                     color: root.skin ? root.skin.accent : "#0078D4"
 
                     Behavior on width {
-                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        NumberAnimation {
+                            duration: 150
+                            easing.type: Easing.OutCubic
+                        }
+
                     }
+
                 }
+
             }
 
             // Fila inferior: Fecha formateada y zona
             RowLayout {
                 id: bottomRow
+
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
@@ -220,7 +231,9 @@ Item {
                     font.weight: Font.Normal
                     color: root.skin ? root.skin.inkMuted : Qt.rgba(1, 1, 1, 0.44)
                 }
+
             }
+
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -255,8 +268,13 @@ Item {
                 opacity: nothingFace.now.getSeconds() % 2 === 0 ? 1 : 0.25
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 250; easing.type: Easing.InOutSine }
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.InOutSine
+                    }
+
                 }
+
             }
 
             Column {
@@ -278,6 +296,7 @@ Item {
                     font.pixelSize: 54
                     color: root.nothing ? root.skin.inkDim : "grey"
                 }
+
             }
 
             Text {
@@ -292,6 +311,22 @@ Item {
                 font.weight: Font.Medium
                 color: root.nothing ? root.skin.ink : "white"
             }
+
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -324,18 +359,15 @@ Item {
                     var cx = width / 2;
                     var cy = height / 2;
                     var r = width / 2 - 2;
-
                     // 1. Fondo blanco puro del reloj
                     ctx.beginPath();
                     ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
                     ctx.fillStyle = "#FFFFFF";
                     ctx.fill();
-
                     // Borde sutil del dial
                     ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
                     ctx.lineWidth = 1;
                     ctx.stroke();
-
                     // 2. Marcas de minutos y horas (60 ticks)
                     for (var i = 0; i < 60; i++) {
                         var angle = (i / 60) * 2 * Math.PI - Math.PI / 2;
@@ -352,7 +384,6 @@ Item {
                         ctx.lineCap = "round";
                         ctx.stroke();
                     }
-
                     // 3. Números del 1 al 12
                     var fontSize = Math.round(r * 0.21);
                     ctx.font = "bold " + fontSize + "px 'SF Pro Display', Inter, -apple-system, sans-serif";
@@ -366,7 +397,6 @@ Item {
                         var ny = cy + numRadius * Math.sin(nAngle);
                         ctx.fillText(n.toString(), nx, ny + 0.5);
                     }
-
                     // 4. Obtener hora actual con fracciones para movimiento suave
                     var now = new Date();
                     var sec = now.getSeconds() + now.getMilliseconds() / 1000;
@@ -375,7 +405,6 @@ Item {
                     var hrAngle = (hr / 12) * 2 * Math.PI - Math.PI / 2;
                     var minAngle = (min / 60) * 2 * Math.PI - Math.PI / 2;
                     var secAngle = (sec / 60) * 2 * Math.PI - Math.PI / 2;
-
                     // 5. Aguja de las horas (Negra, redondeada)
                     var hrLen = r * 0.5;
                     ctx.beginPath();
@@ -385,7 +414,6 @@ Item {
                     ctx.lineWidth = Math.max(2.5, r * 0.055);
                     ctx.lineCap = "round";
                     ctx.stroke();
-
                     // 6. Aguja de los minutos (Negra, más larga, redondeada)
                     var minLen = r * 0.74;
                     ctx.beginPath();
@@ -395,7 +423,6 @@ Item {
                     ctx.lineWidth = Math.max(2, r * 0.04);
                     ctx.lineCap = "round";
                     ctx.stroke();
-
                     // 7. Aguja de los segundos (Naranja vibrante macOS con cola contrapeso)
                     var secLen = r * 0.86;
                     var secTail = r * 0.22;
@@ -406,20 +433,21 @@ Item {
                     ctx.lineWidth = Math.max(1.2, r * 0.018);
                     ctx.lineCap = "round";
                     ctx.stroke();
-
                     // 8. Tapa central naranja con orificio oscuro
                     var capRadius = Math.max(3.2, r * 0.052);
                     ctx.beginPath();
                     ctx.arc(cx, cy, capRadius, 0, 2 * Math.PI, false);
                     ctx.fillStyle = "#FF9500";
                     ctx.fill();
-
                     ctx.beginPath();
                     ctx.arc(cx, cy, capRadius * 0.4, 0, 2 * Math.PI, false);
                     ctx.fillStyle = "#1C1C1E";
                     ctx.fill();
                 }
             }
+
         }
+
     }
+
 }

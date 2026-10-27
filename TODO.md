@@ -941,3 +941,22 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   2. Todos los widgets del tema `Modern-Win11-Theme` presentan un lenguaje visual cohesivo, original y de nivel de producción, libre de estética genérica ("AI Slop").
   3. Las propiedades visuales y animaciones están implementadas en QML puro y válido sin romper la ingesta de datos ni la persistencia de posiciones del lienzo (`DesktopGridCanvas`).
 - **Dependencias:** Ninguna
+
+---
+
+### [ISSUE-060] Corrección de Autostart de Widgets y Resolución de Bloqueo Concurrente (Flock Leak) en Cambio de Tema
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_059_REFACTOR`
+- **Módulo(s):** Core / Widgets / Quickshell / Theme Selector / Lunita-Theme
+- **Archivos Afectados:** `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`, `core/.config/quickshell/widgets/BatteryWidget.qml`, `core/.local/bin/lunita-quickshell`, `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-theme-selector`, `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Corrección de los dos fallos reportados en el inicio de widgets y el cambio continuo de temas:
+  1. **Autostart y Carga de Widgets:** La adición reciente de componentes Fluent introdujo el uso de `RowLayout` y `ColumnLayout` en `ClockWidget.qml` y `PhotoWidget.qml` sin importar `QtQuick.Layouts`, provocando que Quickshell fallara silenciosamente al inicializar la configuración de widgets en el arranque (`autostart.lua`). Se incorporó el `import QtQuick.Layouts` faltante, se resolvieron las referencias de ámbito en `BatteryWidget.qml`, y se agregó un mecanismo de verificación y reintento en `lunita-quickshell cmd_start`.
+  2. **Bloqueo Concurrente y Fuga de File Descriptor (Flock Leak):** En `lunita-theme apply`, el bloqueo `flock` sobre el descriptor de archivo 200 era heredado por los procesos hijos y daemons en segundo plano (incluidas las instancias de Quickshell). Al finalizar `lunita-theme`, los daemons retenían el descriptor abierto impidiendo que el kernel liberara el bloqueo sobre `/tmp/lunita_theme_apply.lock`, lo que provocaba que cualquier cambio subsecuente de tema se bloqueara indefinidamente ("Ya hay una aplicación de tema en curso"). Se implementó el cierre forzado del descriptor (`200>&-`) en todas las llamadas a procesos en segundo plano y subshells, timeout de 10s con `flock -w 10`, registro de PID, trap de limpieza (`cleanup_theme_lock`) y liberación explícita antes de salir.
+  3. **Robustez en la GUI de Selección de Temas:** En `lunita-theme-selector`, se corrigió la evaluación de timeout y errores, garantizando que procesos colgados sean terminados limpiamente y que los fallos reales se reporten de forma fidedigna. En `lunita-widgets-manager`, se delegó el reinicio de widgets a `lunita-quickshell` asegurando la correcta inicialización del entorno Wayland.
+- **Criterios de Aceptación:**
+  1. El daemon de widgets arranca sin errores de QML y se muestra activo al reiniciar o iniciar sesión.
+  2. Es posible cambiar de tema múltiples veces consecutivas tanto desde la terminal como desde `lunita-theme-selector` sin bloqueos ni tiempos muertos.
+  3. No se filtran descriptores de archivo de bloqueo a los demonios de Quickshell.
+  4. Todas las validaciones de sintaxis (Bash, Python, QML) pasan con 0 errores.
+- **Dependencias:** [ISSUE-059]
