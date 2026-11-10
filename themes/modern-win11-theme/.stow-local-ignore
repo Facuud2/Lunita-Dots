@@ -8,3 +8,6 @@
 .*\.bak.*
 .*\.orig.*
 .*\.template$
+.*\.pyc$
+__pycache__
+.*\.tmp$

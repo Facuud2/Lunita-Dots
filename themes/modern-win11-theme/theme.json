@@ -1,13 +1,14 @@
 {
   "id": "modern-win11-theme",
-  "name": "Modern Win 11 Theme",
-  "version": "1.0.0",
-  "author": "Facuud2",
-  "description": "Tema autónomo inspirado en la estética moderna de Windows 11 Fluent Design / Mica y el setup COSMIC Desktop con Dynamic Island reactiva superior (Media, Calendario/Pomodoro y Centro de Control), Dock flotante centrado, y paneles laterales de activación por cursor (Sonido en borde izquierdo y Brillo en borde derecho), implementado 100% sobre Quickshell (Qt6/QML) sin dependencias de AGS.",
+  "name": "Modern Windows 11 V2",
+  "version": "2.0.0",
+  "author": "Facuud2 & Lunita Core Team",
+  "description": "Tema refactorizado de nueva generación inspirado en Astraeus y Fluent Design (Windows 11) con material Acrylic / Mica, Dynamic Island líquida superior con física de resorte (Notch y Long Pill con letras sincronizadas), Dashboard deslizable con navegación por Rail, controles de sistema, herramientas rápidas y Dock acrílico flotante, implementado 100% sobre Quickshell (Qt6/QML).",
+  "archetype": "Fluent Acrylic (Win11)",
   "components": {
-    "bar": "quickshell-dynamic-island",
-    "dock": "quickshell-win11-dock",
-    "launcher": "quickshell-win11-startmenu",
+    "bar": "quickshell-astraeus-island",
+    "dock": "quickshell-fluent-dock",
+    "launcher": "quickshell-fluent-startmenu",
     "powermenu": "wlogout-fluent-glass",
     "notifications": "quickshell-fluent-notifications",
     "widgets": "quickshell-widgets",
@@ -33,50 +34,95 @@
   },
   "tokens": {
     "accent": "#0078D4",
-    "accent_hover": "#60CDFF",
+    "accent_hover": "#4CC2FF",
     "accent_active": "#005A9E",
     "accent_fg": "#FFFFFF",
     "dark": {
-      "surface": "#1A1C23",
-      "surface_container": "#18191F",
-      "surface_container_high": "#242730",
-      "on_surface": "#F4F4F5",
-      "on_surface_dim": "#94A3B8",
+      "surface": "#121318",
+      "surface_container": "#1A1C24",
+      "surface_container_high": "#252834",
+      "on_surface": "#F4F4F6",
+      "on_surface_dim": "#A0A5B5",
+      "on_surface_low": "#707588",
       "border": "rgba(255, 255, 255, 0.08)",
-      "surface_opacity": 0.85
+      "border_specular": "rgba(255, 255, 255, 0.16)",
+      "surface_opacity": 0.88
     },
     "light": {
-      "surface": "#F3F3F3",
+      "surface": "#F3F3F8",
       "surface_container": "#FFFFFF",
-      "surface_container_high": "#E5E5E5",
-      "on_surface": "#1A1A1A",
-      "on_surface_dim": "#5C5C5C",
+      "surface_container_high": "#E5E7EB",
+      "on_surface": "#1C1D22",
+      "on_surface_dim": "#5C5F6D",
+      "on_surface_low": "#9CA3AF",
       "border": "rgba(0, 0, 0, 0.08)",
-      "surface_opacity": 0.90
+      "border_specular": "rgba(255, 255, 255, 0.45)",
+      "surface_opacity": 0.92
+    },
+    "astraeus": {
+      "default_look": "dark",
+      "looks": ["dark", "light", "glass", "starfall", "custom"],
+      "starfall": {
+        "surface": "#0B0C16",
+        "surface_container": "rgba(20, 22, 36, 0.74)",
+        "surface_container_high": "rgba(30, 32, 52, 0.85)",
+        "accent": "#9F8CFF",
+        "accent_hover": "#B588F7",
+        "accent_active": "#7B2CBF",
+        "accent_glow": "rgba(123, 44, 191, 0.40)",
+        "on_surface": "#F0EFFF",
+        "on_surface_dim": "#9D9BC2",
+        "on_surface_low": "#6B6894",
+        "border": "rgba(159, 140, 255, 0.15)",
+        "hairline_top": "rgba(255, 255, 255, 0.18)",
+        "hairline_bot": "rgba(255, 255, 255, 0.04)"
+      },
+      "glass": {
+        "surface": "rgba(18, 20, 28, 0.45)",
+        "surface_container": "rgba(255, 255, 255, 0.08)",
+        "surface_container_high": "rgba(255, 255, 255, 0.14)",
+        "accent": "#60CDFF",
+        "accent_hover": "#7BD7FF",
+        "accent_active": "#0091FF",
+        "accent_glow": "rgba(96, 205, 255, 0.30)",
+        "on_surface": "#FFFFFF",
+        "on_surface_dim": "rgba(255, 255, 255, 0.82)",
+        "on_surface_low": "rgba(255, 255, 255, 0.55)",
+        "border": "rgba(255, 255, 255, 0.14)",
+        "border_specular": "rgba(255, 255, 255, 0.38)",
+        "hairline_top": "rgba(255, 255, 255, 0.38)",
+        "hairline_bot": "rgba(255, 255, 255, 0.08)",
+        "blur": true
+      }
     }
   },
   "component_overrides": {
     "widgets": {
       "skin": "fluent",
       "card_radius": 10,
-      "card_bg": "rgba(32, 32, 32, 0.88)",
+      "card_bg": "rgba(26, 28, 36, 0.88)",
       "card_border": "rgba(255, 255, 255, 0.08)",
       "accent": "#0078D4"
     },
     "dock": {
-      "surface_opacity": 0.22,
-      "accent": "#4CC2FF"
+      "surface_opacity": 0.32,
+      "accent": "#4CC2FF",
+      "radius": 12
     },
     "launcher": {
-      "surface_opacity": 0.22,
-      "accent": "#4CC2FF"
+      "surface_opacity": 0.32,
+      "accent": "#4CC2FF",
+      "radius": 12
     },
     "bar": {
-      "accent": "#4CC2FF"
+      "accent": "#4CC2FF",
+      "pill_height": 34,
+      "pill_radius": 17,
+      "panel_radius": 18
     },
     "hyprland": {
       "active_border_1": "rgba(0078d4ee)",
-      "active_border_2": "rgba(60cdffaa)",
+      "active_border_2": "rgba(4cc2ffaa)",
       "inactive_border": "rgba(ffffff14)",
       "group_border_active": "rgba(0078d4ee)",
       "group_border_inactive": "rgba(ffffff14)",
@@ -84,11 +130,14 @@
     }
   },
   "features": [
-    "Dynamic Island flotante superior interactiva con modos Colapsado, Reproductor de Música, Calendario con Pomodoro y Centro de Control",
-    "Paneles laterales deslizables por cursor en bordes: Sonido en borde medio izquierdo y Brillo en borde medio derecho con temporizador de gracia",
-    "Dock flotante centrado estilo Windows 11 con efecto Mica / Frosted Acrylic, animaciones elásticas y seguimiento de apps abiertas",
-    "Menú de Inicio Windows 11 centrado con buscador y cuadrícula de aplicaciones",
-    "Integración nativa con Pipewire (audio y conmutación de dispositivos) y control de brillo",
-    "100% Autónomo: Desarrollado íntegramente en Quickshell (Qt6/QML) a altas tasas de refresco (60/120/144+ FPS) sin dependencias de AGS"
+    "Dynamic Island líquida superior inspirada en Astraeus con modo Notch y Long Pill reactivo a letras sincronizadas",
+    "Dashboard desplegable con navegación por Rail lateral (Home, Media, System, Network, Shelf, Tools, Widgets, Settings)",
+    "Subpaneles interactivos 'Behind Home': Wi-Fi Radar con intensidad dBm, Bluetooth Orbit, Volume Mixer por aplicación y Pronóstico/Calendario",
+    "Escenario multimedia a pantalla completa con letras sincronizadas palabra por palabra y halo de audio reactivo",
+    "Diagnóstico continuo de hardware (CPU/GPU/RAM/Procesos) y telemetría de red con sparklines temporales",
+    "Zona Drag & Drop 'The Shelf' en el margen superior para almacenamiento temporal de archivos, URLs y fragmentos de texto",
+    "Botonera de herramientas rápidas con temporizador, cronómetro, modo focus y confirmación preventiva de energía por pulsación prolongada",
+    "Dock flotante centrado y Menú de Inicio con material Fluent 2 Acrylic / Mica y respuesta a 120/144/240Hz",
+    "100% Autónomo en Quickshell (Qt6/QML) con integración nativa a Pipewire, NetworkManager y BlueZ"
   ]
 }

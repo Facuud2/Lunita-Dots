@@ -981,3 +981,165 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   4. La barra de Nothing Dynamic Island (`SUPER+SPACE`) y menús del dock aceptan teclado y responden a Escape.
   5. `qmllint` y validaciones sintácticas pasan con 0 errores.
 - **Dependencias:** [ISSUE-060]
+
+---
+
+### [ISSUE-062] Modern Win 11 V2: Arquitectura Base, Tokens de Diseño Astraeus / Fluent Mica y Manifiesto (`theme.json`)
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `feat/modern-win11-v2`
+- **Módulo(s):** Temas / Modern-Win11-Theme / Tokens & Specs
+- **Archivos Afectados:** `themes/modern-win11-theme/theme.json`, `themes/modern-win11-theme/.stow-local-ignore`, `themes/modern-win11-theme/.config/quickshell/bar/BarState.qml`
+- **Descripción:** Actualizar el manifiesto de tema (`theme.json`) para Modern Win 11 V2 incorporando la especificación estética del ecosistema Astraeus: tokens de Fluent Mica / Acrylic (`better-colors`), definición del arquetipo estético, soporte para las variantes de apariencia de Astraeus (Dark, Light, Glass con blur acrílico, Starfall con resplandor cósmico violeta y colores adaptativos derivados del wallpaper o portada del álbum), tipografía Segoe UI Variable y configuración de dimensiones y curvaturas canónicas.
+- **Criterios de Aceptación:**
+  1. `theme.json` validado sintácticamente con `python3 -m json.tool` conteniendo la nueva arquitectura de tokens y metadatos V2.
+  2. Tokens semánticos (`surface`, `surface_container`, `accent`, `border`) calibrados con contraste accesible WCAG AA $\ge 4.5:1$.
+  3. `.stow-local-ignore` actualizado para aislar activos y documentación auxiliar sin contaminar `$HOME`.
+- **Dependencias:** [ISSUE-061]
+
+---
+
+### [ISSUE-063] Modern Win 11 V2: Dynamic Island & Long Pill Superior con Físicas Orgánicas Astraeus
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `feat/modern-win11-v2`
+- **Módulo(s):** Modern-Win11-Theme / Bar / Dynamic Island
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/bar/shell.qml`, `themes/modern-win11-theme/.config/quickshell/bar/DynamicIsland.qml`, `themes/modern-win11-theme/.config/quickshell/bar/BarState.qml`, `themes/modern-win11-theme/.config/quickshell/bar/WaveformBars.qml`
+- **Descripción:** Refactorización completa de la Dynamic Island superior (`DynamicIsland.qml`) inspirada en la física "liquid drip" de Astraeus:
+  1. **Modo Collapsed Notch / Pill:** Píldora compacta anclada al tope de la pantalla con reloj, indicador de estado de red, batería y micro-espectrograma de audio.
+  2. **Modo Long Pill ("Singing along"):** Modo extendido que muestra carátula diminuta, título, artista y línea de letra sincronizada en tiempo real o indicadores del sistema.
+  3. **Físicas de caída orgánica ("drip down"):** Animaciones de resorte fluidas (Spring / Bezier OutCubic) al interactuar o pasar el cursor por el centro superior (`Win+Alt+A` o hover).
+  4. **Integración con estado de ventanas:** Se repliega a píldora mínima en ventanas maximizadas/tiled y se oculta automáticamente en aplicaciones fullscreen completas.
+- **Criterios de Aceptación:**
+  1. Transición suave entre estado contraído y expandido sin saltos de fotogramas ni desbordamiento visual.
+  2. Detección precisa de eventos de cursor y atajos de teclado sin perder el foco.
+  3. La Long Pill presenta soporte reactivo a letras o datos de reproducción sin truncar erróneamente la interfaz.
+- **Dependencias:** [ISSUE-062]
+
+---
+
+### [ISSUE-064] Modern Win 11 V2: Dashboard Desplegable de Astraeus con Rail Lateral y Vista "Home"
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `feat/modern-win11-v2`
+- **Módulo(s):** Modern-Win11-Theme / Bar / Dashboard & Home
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/bar/dashboard/DashboardView.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/RailNav.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/HomeView.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/PlayerCard.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/WeatherCard.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/TogglesGrid.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/SlidersCard.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/StatsRow.qml`
+- **Descripción:** Construcción de la superficie principal del panel líquido que brota desde el borde superior:
+  1. **Rail lateral scrollable** con iconos de páginas: Home (01), Media (02), System (03), Network (04), Shelf (05), Tools (06), Widgets (07), Settings (08).
+  2. **Vista Home (Overview):**
+     - Tarjeta de Reproductor multimedia con carátula 3D giratoria (flip card al cambiar de pista), glow reactivo de fondo (bass to treble), controles de transporte y seekbar interactivo.
+     - Tarjeta de Clima/Calendario: Icono del tiempo, temperatura, localidad y reloj apilado tipográfico (HH/MM).
+     - Matriz 2x2 de Quick Toggles: Wi-Fi, Bluetooth, Energía/Batería (con tooltip hover de salud y consumo en W) y Micrófono.
+     - Tarjeta de Sliders Fluent: Control de volumen master (icono altavoz interactivo), micrófono y brillo de pantalla.
+     - Fila inferior de tarjetas de telemetría: Sparklines en tiempo real de CPU, Memoria RAM y velocidad de Descarga de Red.
+- **Criterios de Aceptación:**
+  1. El Dashboard se despliega y oculta fluidamente con físicas de panel líquido.
+  2. El rail permite alternar entre páginas con scroll, clics o teclado.
+  3. Todos los controles de la tarjeta Home (reproductor, toggles, sliders y sparklines) son plenamente interactivos.
+- **Dependencias:** [ISSUE-063]
+
+---
+
+### [ISSUE-065] Modern Win 11 V2: Subpaneles Flotantes "Behind Home" (Wi-Fi Radar, Bluetooth Orbit, Volume Mixer, Calendar & Forecast)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `feat/modern-win11-v2`
+- **Módulo(s):** Modern-Win11-Theme / Bar / Flyouts & Sheets
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/bar/dashboard/sheets/WifiRadarSheet.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/sheets/BluetoothOrbitSheet.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/sheets/VolumeMixerSheet.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/sheets/CalendarForecastSheet.qml`
+- **Descripción:** Implementación de las hojas y vistas detalladas accesibles mediante clic secundario o interacción con los tiles de Home:
+  1. **Wi-Fi Radar Sheet:** Mapa radial de redes inalámbricas detectadas situadas en arcos según su potencia de señal (dBm), con diálogo de autenticación.
+  2. **Bluetooth Orbit Sheet:** Representación orbital de periféricos Bluetooth donde los conectados gravitan más cerca del nodo central, permitiendo emparejar, conectar o desconectar con un toque.
+  3. **Volume Mixer Sheet:** Pequeña consola mezcladora con faders independientes para cada aplicación con salida de audio en Pipewire (`wpctl` / PulseAudio) junto al canal maestro.
+  4. **Calendar & Forecast Sheet:** Vista mensual con marcadores de días festivos y pronóstico meteorológico detallado por horas y días subsiguientes.
+- **Criterios de Aceptación:**
+  1. Clic secundario en los toggles de Wi-Fi y Bluetooth despliega sus respectivas hojas orbitales/radiales.
+  2. Clic en el icono de altavoz abre el mezclador por aplicación de Pipewire.
+  3. Las transiciones de apertura/cierre de hojas respetan la aceleración Bezier y no causan artefactos de renderizado.
+- **Dependencias:** [ISSUE-064]
+
+---
+
+### [ISSUE-066] Modern Win 11 V2: Reproductor a Pantalla Completa y Letras Sincronizadas (Astraeus Stage & Synced Lyrics)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `feat/modern-win11-v2`
+- **Módulo(s):** Modern-Win11-Theme / Bar / Fullscreen Stage
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/bar/dashboard/stage/FullscreenStage.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/stage/LyricsView.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/stage/VisualizerGlow.qml`, `themes/modern-win11-theme/.config/quickshell/bar/scripts/lyrics_provider.py`
+- **Descripción:** Creación del modo escenario a pantalla completa al hacer clic en la carátula de la tarjeta de medios o presionar tecla designada:
+  1. **A la izquierda:** Gran carátula del álbum con halo de luz reactivo al sonido (Cava / pulseaudio visualizer) que pulsa según frecuencias graves y agudas.
+  2. **A la derecha:** Visualizador de letras sincronizadas con resaltado dinámico palabra por palabra o línea activa, con tipografía redondeada de lectura fluida y difuminado de líneas inactivas.
+  3. **Interactividad:** Clic en cualquier estrofa para saltar a ese punto de la pista (seek) y cierre ágil con `Escape`.
+- **Criterios de Aceptación:**
+  1. Modo escenario cubre la pantalla con transición cinematográfica.
+  2. Las letras sincronizadas consumen proveedores locales o en línea (LRC/MPRIS) sin demorar el hilo principal.
+  3. El visualizador de espectro reacciona en tiempo real a Pipewire.
+- **Dependencias:** [ISSUE-064]
+
+---
+
+### [ISSUE-067] Modern Win 11 V2: Páginas de Telemetría Avanzada (System Dashboard & Network Live Latency)
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Requerida:** `feat/modern-win11-v2`
+- **Módulo(s):** Modern-Win11-Theme / Bar / Dashboard Pages
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/bar/dashboard/pages/SystemPageView.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/pages/NetworkPageView.qml`, `themes/modern-win11-theme/.config/quickshell/bar/scripts/system_stats_provider.py`
+- **Descripción:** Desarrollo de las páginas de diagnóstico profundo en el rail de Astraeus:
+  1. **System Page:** Visualización continua de uso de CPU (global y por cores), GPU (Nvidia/AMD/Intel), memoria RAM y Swap con sparklines temporales y tabla de los 5 procesos más consumidores.
+  2. **Network Page:** Gráfico de rendimiento de ancho de banda (down/up), medición activa de latencia (ping) y fluctuación (jitter), datos del adaptador Ethernet/Wi-Fi y direcciones IP (LAN/Pública).
+- **Criterios de Aceptación:**
+  1. Los datos se actualizan únicamente cuando la página respectiva está visible en pantalla (ahorro de recursos).
+  2. Los gráficos sparklines son fluidos y utilizan canvas/shapes de QML sin fugas de memoria.
+- **Dependencias:** [ISSUE-064]
+
+---
+
+### [ISSUE-068] Modern Win 11 V2: "The Shelf" (Zona Drag & Drop en Borde Superior) & Herramientas Rápidas "Tools"
+- **Estado:** PENDIENTE
+- **Prioridad:** MEDIA
+- **Rama Requerida:** `feat/modern-win11-v2`
+- **Módulo(s):** Modern-Win11-Theme / Bar / Shelf & Tools
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/bar/dashboard/pages/ShelfPageView.qml`, `themes/modern-win11-theme/.config/quickshell/bar/dashboard/pages/ToolsPageView.qml`, `themes/modern-win11-theme/.config/quickshell/bar/scripts/shelf_manager.py`
+- **Descripción:** Incorporación de dos de las herramientas más distintivas de Astraeus:
+  1. **The Shelf:** Zona reactiva en el margen superior para arrastrar y depositar archivos, enlaces web o fragmentos de texto, presentándolos como tarjetas ordenadas cronológicamente para volver a arrastrar o copiar rápidamente.
+  2. **Tools Page:** Botonera de energía segura (Bloqueo, Suspender, Reiniciar, Apagar con pulsación prolongada preventiva), widgets utilitarios (Temporizador con cuenta regresiva, Cronómetro con vueltas, Sesión de Enfoque Pomodoro, Selector de color de pantalla con copiado de hex, y Atajo de screenshot).
+- **Criterios de Aceptación:**
+  1. Arrastrar un archivo al borde superior abre la Shelf y almacena la referencia sin duplicar archivos en disco.
+  2. Las acciones destructivas de energía requieren mantener presionado el botón por 1.5s antes de ejecutarse.
+  3. Los temporizadores y cronómetros se actualizan con precisión de milisegundos.
+- **Dependencias:** [ISSUE-064]
+
+---
+
+### [ISSUE-069] Modern Win 11 V2: Rediseño y Armonización Fluent de Dock, Start Menu, Notificaciones y Wlogout
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `feat/modern-win11-v2`
+- **Módulo(s):** Modern-Win11-Theme / Dock / Launcher / Notifications / Wlogout
+- **Archivos Afectados:** `themes/modern-win11-theme/.config/quickshell/dock/DockPlatter.qml`, `themes/modern-win11-theme/.config/quickshell/dock/TrayPlatter.qml`, `themes/modern-win11-theme/.config/quickshell/launcher/LauncherView.qml`, `themes/modern-win11-theme/.config/quickshell/notifications/NotificationCard.qml`, `themes/modern-win11-theme/.config/wlogout/style.css`
+- **Descripción:** Armonizar el resto de los componentes del tema Windows 11 para que compartan la dirección visual de Astraeus / Fluent Mica V2:
+  1. **Dock inferior:** Material acrílico refinado con bordes de 1px de refracción tenue, elevación y animaciones fluidas en sintonía con la Dynamic Island.
+  2. **Menú de Inicio (Launcher):** Integración perfecta de colores y radios redondeados Fluent 2.
+  3. **Notificaciones:** Tarjetas translúcidas con iconografía nítida y física de entrada elástica.
+  4. **Wlogout:** Estilo Fluent Glass consistente con los nuevos tokens.
+- **Criterios de Aceptación:**
+  1. Coherencia estética absoluta entre barra/isla superior, dock inferior y menú de inicio.
+  2. Ningún elemento rompe el lenguaje de diseño Fluent 2 / Mica.
+- **Dependencias:** [ISSUE-065]
+
+---
+
+### [ISSUE-070] Modern Win 11 V2: Protocolo de Auditoría UX, Resiliencia Break-UI & Validación Pre-Commit (`lunita-theme-creator`)
+- **Estado:** PENDIENTE
+- **Prioridad:** ALTA
+- **Rama Requerida:** `feat/modern-win11-v2`
+- **Módulo(s):** Modern-Win11-Theme / QA / Resiliencia / Docs
+- **Archivos Afectados:** Toda la suite de `themes/modern-win11-theme/`, `themes/modern-win11-theme/README.md`
+- **Descripción:** Aplicación rigurosa de los módulos 4, 5 y 6 de la skill `lunita-theme-creator`:
+  1. **Auditoría UX:** Touch/click targets $\ge 28\times 28$px, tipografía Segoe UI Variable jerarquizada, contraste WCAG AA $\ge 4.5:1$.
+  2. **Break-UI no destructivo:** Simulación de textos MPRIS desbordantes, títulos de ventana infinitos, estados sin conexión o sin medios, sin desbordamientos de geometría ni fugas de memoria.
+  3. **Validación técnica obligatoria:** `json.tool` sobre `theme.json`, `python3 -m py_compile` en scripts Python, `bash -n` en scripts Bash, `qmlformat` / `qmllint` sobre archivos QML.
+  4. **Documentación:** Redacción exhaustiva en `themes/modern-win11-theme/README.md`.
+- **Criterios de Aceptación:**
+  1. Cero errores en todas las validaciones de sintaxis e higiene de Git.
+  2. `README.md` documenta todas las capacidades, atajos e integraciones de Modern Win 11 V2.
+- **Dependencias:** [ISSUE-069]
