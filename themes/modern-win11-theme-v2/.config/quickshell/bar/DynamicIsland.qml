@@ -166,7 +166,7 @@ Item {
                     return parts[0] || root.barState.timeStr;
                 }
                 font.family: root.barState.themeFontInterface
-                font.pixelSize: 11.5
+                font.pixelSize: 12
                 font.weight: Font.Medium
                 color: root.barState.themeOnSurface
             }
@@ -188,11 +188,11 @@ Item {
 
                 // Battery Glyph
                 Text {
-                    visible: root.barState.batteryAvailable
-                    text: root.barState.isCharging ? "󰂄" : (root.barState.batteryPercent > 20 ? "󰁹" : "󰂃")
+                    visible: !!root.barState.hasBattery
+                    text: root.barState.isBatteryCharging ? "󰂄" : (root.barState.batteryPercent > 20 ? "󰁹" : "󰂃")
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 11
-                    color: root.barState.isCharging ? "#107C41" : (root.barState.batteryPercent <= 20 ? "#E81123" : root.barState.themeOnSurfaceDim)
+                    color: root.barState.isBatteryCharging ? "#107C41" : (root.barState.batteryPercent <= 20 ? "#E81123" : root.barState.themeOnSurfaceDim)
                 }
 
                 // Volume Muted Indicator
@@ -352,7 +352,7 @@ Item {
                         return "Modern Win 11 V2";
                     }
                     font.family: root.barState.themeFontInterface
-                    font.pixelSize: 11.5
+                    font.pixelSize: 12
                     font.weight: Font.DemiBold
                     color: root.barState.themeOnSurface
                     elide: Text.ElideRight
@@ -418,7 +418,7 @@ Item {
                         Text {
                             text: root.barState.volumePercent + "%"
                             font.family: root.barState.themeFontInterface
-                            font.pixelSize: 8.5
+                            font.pixelSize: 9
                             color: root.barState.themeOnSurfaceDim
                         }
                     }
