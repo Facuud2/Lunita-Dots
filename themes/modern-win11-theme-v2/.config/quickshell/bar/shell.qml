@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import "popups"
 import "panels"
+import "dashboard"
 
 Scope {
     id: root
@@ -30,7 +31,9 @@ Scope {
         target: "bar"
 
         function toggle(popupName: string) {
-            if (popupName === "sound" || popupName === "volume") {
+            if (popupName === "dashboard" || popupName === "island" || popupName === "drawer") {
+                globalBarState.openPopup("dashboard");
+            } else if (popupName === "sound" || popupName === "volume") {
                 var targetVol = (Hyprland.focusedMonitor && Hyprland.focusedMonitor.name) ? Hyprland.focusedMonitor.name : "";
                 globalBarState.toggleSound(targetVol);
             } else if (popupName === "media" || popupName === "music" || popupName === "player") {
@@ -97,6 +100,43 @@ Scope {
                     barState: globalBarState
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
+                }
+            }
+
+            // ── 1B. Top Astraeus Liquid-Glass Dashboard Overlay Window ──
+            PanelWindow {
+                id: dashboardOverlayWindow
+                screen: screenScope.modelData
+                color: "transparent"
+                visible: globalBarState.activePopup === "dashboard"
+
+                anchors {
+                    top: true
+                    bottom: true
+                    left: true
+                    right: true
+                }
+                margins {
+                    top: 0
+                }
+
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.namespace: "win11-astraeus-dashboard"
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+                // Dismiss Backdrop
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: globalBarState.closePopups()
+                }
+
+                DashboardView {
+                    id: dashboardView
+                    barState: globalBarState
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 46
                 }
             }
 

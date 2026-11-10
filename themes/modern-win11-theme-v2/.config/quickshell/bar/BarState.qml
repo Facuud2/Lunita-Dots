@@ -383,6 +383,17 @@ Item {
     property string mprisPositionStr: "0:00"
     property string mprisRemainingStr: "-0:00"
 
+    // Astraeus MPRIS Compatibility Aliases
+    property alias mprisTrackTitle: root.mprisTitle
+    property alias mprisTrackArtist: root.mprisArtist
+    property alias mprisPlaybackPosition: root.mprisPosition
+    property alias mprisTrackLength: root.mprisLength
+    readonly property string mprisPlaybackStatus: root.mprisPlaying ? "Playing" : "Paused"
+
+    function togglePlay() {
+        root.playPause();
+    }
+
     // 6 seconds pause timeout (iOS Dynamic Island standard): automatically dismiss CAVA and media cover if inactive
     Timer {
         id: pauseTimeoutTimer
@@ -763,6 +774,78 @@ Item {
         root.timerInitialSecs = mins * 60;
         root.timerRemainingSecs = mins * 60;
         root.updateTimerDisplay();
+    }
+
+    // ==========================================
+    // 7B. TELEMETRY & SPARKLINE HISTORIES
+    // ==========================================
+    property int cpuPercent: 0
+    property var cpuHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    property int ramPercent: 0
+    property string ramUsed: ""
+    property var ramHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    property string netDownRate: "0 KB/s"
+    property var netHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    property alias bluetoothDeviceName: root.bluetoothConnectedDevice
+
+    Timer {
+        id: telemetryTimer
+        interval: 1500
+        repeat: true
+        running: root.activePopup === "dashboard"
+        triggeredOnStart: true
+        onTriggered: {
+            telemetrySysProc.running = true;
+            telemetryNetProc.running = true;
+        }
+    }
+
+    Process {
+        id: telemetrySysProc
+        command: [Quickshell.env("HOME") + "/.config/quickshell/widgets/scripts/sys_provider.py"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    var obj = JSON.parse(data.trim());
+                    if (obj.cpu !== undefined) {
+                        root.cpuPercent = Math.round(obj.cpu);
+                        var ch = root.cpuHistory.slice();
+                        ch.push(root.cpuPercent);
+                        if (ch.length > 12) ch.shift();
+                        root.cpuHistory = ch;
+                    }
+                    if (obj.ram !== undefined) {
+                        root.ramPercent = Math.round(obj.ram);
+                        root.ramUsed = obj.ram_used || (root.ramPercent + "%");
+                        var rh = root.ramHistory.slice();
+                        rh.push(root.ramPercent);
+                        if (rh.length > 12) rh.shift();
+                        root.ramHistory = rh;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
+    Process {
+        id: telemetryNetProc
+        command: [Quickshell.env("HOME") + "/.config/quickshell/widgets/scripts/net_provider.py"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    var obj = JSON.parse(data.trim());
+                    if (obj.down_val !== undefined && obj.down_unit !== undefined) {
+                        root.netDownRate = obj.down_val + " " + obj.down_unit;
+                        var val = parseFloat(obj.down_kb) || 0.0;
+                        var nh = root.netHistory.slice();
+                        nh.push(val);
+                        if (nh.length > 12) nh.shift();
+                        root.netHistory = nh;
+                    }
+                } catch (e) {}
+            }
+        }
     }
 
     // ==========================================

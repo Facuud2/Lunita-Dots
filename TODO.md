@@ -1020,21 +1020,21 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 ---
 
 ### [ISSUE-064] Modern Win 11 Theme V2: Dashboard Desplegable de Astraeus con Rail Lateral y Vista "Home"
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO
 - **Prioridad:** ALTA
 - **Rama Requerida:** `feat/modern-win11-v2`
 - **Módulo(s):** Modern-Win11-Theme-V2 / Bar / Dashboard & Home
-- **Archivos Afectados:** `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/DashboardView.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/RailNav.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/HomeView.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/PlayerCard.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/WeatherCard.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/TogglesGrid.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/SlidersCard.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/StatsRow.qml`
+- **Archivos Afectados:** `themes/modern-win11-theme-v2/.config/quickshell/bar/shell.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/BarState.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/DynamicIsland.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/DashboardView.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/RailNav.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/HomeView.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/PlayerCard.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/WeatherCard.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/TogglesGrid.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/SlidersCard.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/StatsRow.qml`
 - **Descripción:** Construcción de la superficie principal del panel líquido que brota desde el borde superior:
-  1. **Rail lateral scrollable** con iconos de páginas: Home (01), Media (02), System (03), Network (04), Shelf (05), Tools (06), Widgets (07), Settings (08).
+  1. **Rail lateral scrollable** con iconos de páginas: Home (01), Media (02), System (03), Network (04), Shelf (05), Tools (06), Settings (07).
   2. **Vista Home (Overview):**
      - Tarjeta de Reproductor multimedia con carátula 3D giratoria (flip card al cambiar de pista), glow reactivo de fondo (bass to treble), controles de transporte y seekbar interactivo.
      - Tarjeta de Clima/Calendario: Icono del tiempo, temperatura, localidad y reloj apilado tipográfico (HH/MM).
-     - Matriz 2x2 de Quick Toggles: Wi-Fi, Bluetooth, Energía/Batería (con tooltip hover de salud y consumo en W) y Micrófono.
-     - Tarjeta de Sliders Fluent: Control de volumen master (icono altavoz interactivo), micrófono y brillo de pantalla.
+     - Matriz 2x2 de Quick Toggles: Wi-Fi, Bluetooth, Energía/Batería y Micrófono.
+     - Tarjeta de Sliders Fluent: Control de volumen master (icono altavoz interactivo) y brillo de pantalla.
      - Fila inferior de tarjetas de telemetría: Sparklines en tiempo real de CPU, Memoria RAM y velocidad de Descarga de Red.
 - **Criterios de Aceptación:**
-  1. El Dashboard se despliega y oculta fluidamente con físicas de panel líquido.
+  1. El Dashboard se despliega y oculta fluidamente con físicas de panel líquido al pulsar sobre la Dynamic Island.
   2. El rail permite alternar entre páginas con scroll, clics o teclado.
   3. Todos los controles de la tarjeta Home (reproductor, toggles, sliders y sparklines) son plenamente interactivos.
 - **Dependencias:** [ISSUE-063]

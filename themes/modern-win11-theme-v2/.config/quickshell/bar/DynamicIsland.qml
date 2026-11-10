@@ -98,7 +98,7 @@ Item {
         color: root.barState.themeSurface
         clip: true
 
-        border.color: root.isHovered ? root.barState.themeBorderSpecular : root.barState.themeBorder
+        border.color: (root.barState.activePopup === "dashboard") ? root.barState.themeAccent : (root.isHovered ? root.barState.themeBorderSpecular : root.barState.themeBorder)
         border.width: 1
 
         Behavior on border.color {
@@ -202,6 +202,14 @@ Item {
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 11
                     color: "#E81123"
+                }
+
+                // Expand Indicator
+                Text {
+                    text: root.barState.activePopup === "dashboard" ? "󰅃" : (root.isHovered ? "󰅀" : "󰍉")
+                    font.family: "JetBrainsMono Nerd Font"
+                    font.pixelSize: 10
+                    color: (root.barState.activePopup === "dashboard" || root.isHovered) ? root.barState.themeAccent : root.barState.themeOnSurfaceLow
                 }
             }
         }
@@ -327,8 +335,9 @@ Item {
 
                     MouseArea {
                         anchors.fill: parent
+                        z: 5
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.barState.togglePlay()
+                        onClicked: root.barState.playPause()
                     }
                 }
             }
@@ -426,10 +435,10 @@ Item {
 
                 // Chevron indicating dropdown capability
                 Text {
-                    text: "󰅀"
+                    text: root.barState.activePopup === "dashboard" ? "󰅃" : "󰅀"
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 11
-                    color: root.isHovered ? root.barState.themeAccent : root.barState.themeOnSurfaceLow
+                    color: (root.barState.activePopup === "dashboard" || root.isHovered) ? root.barState.themeAccent : root.barState.themeOnSurfaceLow
                 }
             }
         }
