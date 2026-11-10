@@ -91,12 +91,14 @@ Scope {
             id: screenScope
             required property var modelData
 
+            readonly property bool isTargetScreen: root.targetScreen !== null && (root.targetScreen === screenScope.modelData || root.targetScreen.name === screenScope.modelData.name)
+
             // ── 1. Fullscreen Dismiss Click Catcher (100% transparente, captura clics afuera y cierra) ──
             PanelWindow {
                 id: clickCatcherWindow
                 screen: screenScope.modelData
                 color: "transparent"
-                visible: globalLauncherState.isOpen && root.targetScreen !== null && root.targetScreen.name === screenScope.modelData.name
+                visible: globalLauncherState.isOpen && screenScope.isTargetScreen
 
                 anchors {
                     top: true
@@ -121,7 +123,7 @@ Scope {
                 id: launcherWin
                 screen: screenScope.modelData
                 color: "transparent"
-                visible: (globalLauncherState.isOpen || globalLauncherState.visualOpacity > 0.001) && root.targetScreen !== null && root.targetScreen.name === screenScope.modelData.name
+                visible: (globalLauncherState.isOpen || globalLauncherState.visualOpacity > 0.001) && screenScope.isTargetScreen
 
                 // El PanelWindow abarca únicamente la zona necesaria en la esquina inferior derecha
                 // sin cubrir toda la pantalla, permitiendo hacer clic en cualquier ventana o espacio libre.
@@ -143,9 +145,9 @@ Scope {
 
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.namespace: "lunita-app-launcher"
-                // OnDemand para responder a teclado y Escape sin atrapar el cursor ni ventanas
-                WlrLayershell.keyboardFocus: globalLauncherState.isOpen
-                    ? WlrKeyboardFocus.OnDemand
+                // Foco exclusivo para responder a teclado de forma inmediata en Hyprland 0.57+
+                WlrLayershell.keyboardFocus: (globalLauncherState.isOpen && screenScope.isTargetScreen)
+                    ? WlrKeyboardFocus.Exclusive
                     : WlrKeyboardFocus.None
 
                 // Dismiss al hacer clic en el margen transparente de la ventana
@@ -166,11 +168,29 @@ Scope {
                     id: keyHandler
                     focus: globalLauncherState.isOpen && !globalLauncherState.searchMode
 
+                    Timer {
+                        id: keyFocusTimer
+                        interval: 25
+                        repeat: false
+                        onTriggered: {
+                            if (globalLauncherState.isOpen && !globalLauncherState.searchMode) {
+                                keyHandler.forceActiveFocus();
+                            }
+                        }
+                    }
+
                     Connections {
                         target: globalLauncherState
                         function onIsOpenChanged() {
                             if (globalLauncherState.isOpen && !globalLauncherState.searchMode) {
                                 keyHandler.forceActiveFocus();
+                                keyFocusTimer.restart();
+                            }
+                        }
+                        function onSearchModeChanged() {
+                            if (globalLauncherState.isOpen && !globalLauncherState.searchMode) {
+                                keyHandler.forceActiveFocus();
+                                keyFocusTimer.restart();
                             }
                         }
                     }
@@ -208,6 +228,11 @@ Scope {
                         if (!globalLauncherState.searchMode) {
                             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 root.handleReturn(event);
+                                event.accepted = true;
+                                return;
+                            }
+                            if (event.key === Qt.Key_Escape) {
+                                globalLauncherState.closeLauncher();
                                 event.accepted = true;
                                 return;
                             }

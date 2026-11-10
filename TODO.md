@@ -960,3 +960,24 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   3. No se filtran descriptores de archivo de bloqueo a los demonios de Quickshell.
   4. Todas las validaciones de sintaxis (Bash, Python, QML) pasan con 0 errores.
 - **Dependencias:** [ISSUE-059]
+
+---
+
+### [ISSUE-061] Adaptación a Hyprland 0.57.0: Restauración de Foco Exclusivo de Teclado, Autofocus y Escape en Launchers y Capas Quickshell
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_059_REFACTOR`
+- **Módulo(s):** Quickshell / Hyprland 0.57.0 / Launchers / Bar / Dock
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/shell.qml`, `themes/lunita-default/.config/quickshell/launcher/SearchMenuView.qml`, `themes/lunita-default/.config/quickshell/bar/shell.qml`, `themes/modern-win11-theme/.config/quickshell/launcher/shell.qml`, `themes/modern-win11-theme/.config/quickshell/dock/shell.qml`, `TODO.md`
+- **Descripción:** Adaptación de las capas interactivas de Quickshell al protocolo estricto de foco de Hyprland v0.57.0 y Aquamarine v0.15:
+  1. **Foco Exclusivo de Teclado en Launcher:** En Hyprland 0.57+, las capas con `WlrKeyboardFocus.OnDemand` ya no reciben el foco del teclado inmediatamente al mapearse o abrirse si no se hace clic sobre ellas. Se reemplazó por `WlrKeyboardFocus.Exclusive` condicionado a la pantalla activa (`(globalLauncherState.isOpen && screenScope.isTargetScreen)`), devolviendo el foco de inmediato a las ventanas subyacentes al cerrarse.
+  2. **Autofocus y Posición de Cursor en Búsqueda:** Se corrigió el autofocus al tipear inmediatamente tras abrir con `SUPER+A` asegurando `focus: true`, `cursorPosition: text.length` y microtimer de asignación para que las pulsaciones se dirijan de forma instantánea al `TextInput` sin sobrescribir ni omitir el caracter inicial.
+  3. **Control de Escape Multinivel:** Se corrigió el flujo de la tecla `Escape` en `SearchMenuView.qml` y `shell.qml`: si la búsqueda contiene texto, el primer Escape limpia el término y retorna a la vista compacta; un Escape en un término vacío (o en la vista compacta) cierra inmediatamente el launcher y libera el foco. Se agregó además la reactivación de foco en `keyHandler` ante cambios de `searchMode`.
+  4. **Dynamic Island y Menús Emergentes:** Se actualizó `WlrKeyboardFocus` a `Exclusive` cuando la Nothing Dynamic Island está expandida (`themes/lunita-default/.config/quickshell/bar/shell.qml`), permitiendo escribir en `AppLauncher` (`SUPER+SPACE`) o `ConnPanel` (WiFi) y cerrarla con Escape. Asimismo, se unificó la lógica en el launcher y dock del tema Windows 11.
+- **Criterios de Aceptación:**
+  1. `SUPER+A` abre el launcher e inmediatamente captura el teclado sin necesidad de hacer clic.
+  2. Escribir cualquier caracter abre fluidamente la búsqueda con autofocus y ubica el cursor al final del texto.
+  3. `Escape` cierra la búsqueda y el launcher respectivamente en cada nivel.
+  4. La barra de Nothing Dynamic Island (`SUPER+SPACE`) y menús del dock aceptan teclado y responden a Escape.
+  5. `qmllint` y validaciones sintácticas pasan con 0 errores.
+- **Dependencias:** [ISSUE-060]

@@ -241,7 +241,9 @@ Scope {
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.namespace: "nothing-island-popup"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+                WlrLayershell.keyboardFocus: (islandState.expanded && islandState.activeScreen !== null && islandState.activeScreen.name === screenScope.modelData.name)
+                    ? WlrKeyboardFocus.Exclusive
+                    : WlrKeyboardFocus.None
 
                 Rectangle {
                     id: expandedShell
