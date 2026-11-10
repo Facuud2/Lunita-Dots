@@ -1,0 +1,6 @@
+file://{{XDG_DOCUMENTS_DIR}} Documents
+file://{{XDG_PICTURES_DIR}} Images
+file://{{XDG_VIDEOS_DIR}} Videos
+file://{{XDG_MUSIC_DIR}} Music
+file://{{XDG_DESKTOP_DIR}} Desktop
+file://{{XDG_DOWNLOAD_DIR}} Downloads

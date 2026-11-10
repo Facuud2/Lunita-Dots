@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="bagGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#DDE2E8"/>
+    </linearGradient>
+    <linearGradient id="handleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C5CCD6"/>
+      <stop offset="100%" stop-color="#9BA5B4"/>
+    </linearGradient>
+  </defs>
+  <!-- Bag Handle -->
+  <path d="M 17 15 L 17 11 C 17 7.13 20.13 4 24 4 C 27.87 4 31 7.13 31 11 L 31 15" fill="none" stroke="url(#handleGrad)" stroke-width="3" stroke-linecap="round"/>
+  <!-- Bag Body -->
+  <rect x="7" y="13" width="34" height="29" rx="5" fill="url(#bagGrad)"/>
+  <!-- Bag subtle shadow / inner rim -->
+  <rect x="7" y="13" width="34" height="29" rx="5" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="1"/>
+  <!-- 4 Microsoft Tiles -->
+  <g transform="translate(18, 22)">
+    <!-- Red/Orange (Top-Left) -->
+    <rect x="0" y="0" width="5.2" height="5.2" rx="1" fill="#F25022"/>
+    <!-- Green (Top-Right) -->
+    <rect x="6.8" y="0" width="5.2" height="5.2" rx="1" fill="#7FBA00"/>
+    <!-- Blue (Bottom-Left) -->
+    <rect x="0" y="6.8" width="5.2" height="5.2" rx="1" fill="#00A4EF"/>
+    <!-- Yellow (Bottom-Right) -->
+    <rect x="6.8" y="6.8" width="5.2" height="5.2" rx="1" fill="#FFB900"/>
+  </g>
+</svg>
