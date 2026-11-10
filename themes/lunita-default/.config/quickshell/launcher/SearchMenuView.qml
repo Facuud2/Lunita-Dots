@@ -20,6 +20,7 @@ Item {
     width: parent.width
     Component.onCompleted: {
         searchInput.forceActiveFocus();
+        searchInput.cursorPosition = searchInput.text.length;
     }
 
     Timer {
@@ -28,7 +29,10 @@ Item {
         interval: 30
         running: true
         repeat: false
-        onTriggered: searchInput.forceActiveFocus()
+        onTriggered: {
+            searchInput.forceActiveFocus();
+            searchInput.cursorPosition = searchInput.text.length;
+        }
     }
 
     ColumnLayout {
@@ -119,6 +123,8 @@ Item {
                         font.pixelSize: 12
                         clip: true
                         text: launcherState.searchQuery
+                        cursorPosition: text.length
+                        focus: true
                         onTextChanged: {
                             launcherState.searchQuery = text;
                         }
@@ -140,13 +146,28 @@ Item {
                             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 root.launchCurrent();
                                 event.accepted = true;
+                                return;
+                            }
+                            if (event.key === Qt.Key_Escape) {
+                                if (launcherState.searchQuery !== "") {
+                                    launcherState.searchQuery = "";
+                                    launcherState.closeSearch();
+                                } else {
+                                    launcherState.closeSearch();
+                                    launcherState.closeLauncher();
+                                }
+                                event.accepted = true;
+                                return;
                             }
                         }
                         Keys.onEscapePressed: {
-                            if (launcherState.searchQuery !== "")
+                            if (launcherState.searchQuery !== "") {
                                 launcherState.searchQuery = "";
-
-                            launcherState.closeSearch();
+                                launcherState.closeSearch();
+                            } else {
+                                launcherState.closeSearch();
+                                launcherState.closeLauncher();
+                            }
                         }
 
                         Text {

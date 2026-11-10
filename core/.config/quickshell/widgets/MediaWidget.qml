@@ -10,14 +10,15 @@ Item {
     property var canvas: null
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: skin ? skin.isNothing : false
-    readonly property string fontText: (nothing && skin) ? skin.fontText : "SF Pro Display"
-    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : "SF Pro Display"
+    readonly property bool fluent: skin ? skin.isFluent : false
+    readonly property string fontText: (skin && (nothing || fluent)) ? skin.fontText : "SF Pro Display"
+    readonly property string fontFigure: (skin && (nothing || fluent)) ? skin.fontFigure : "SF Pro Display"
 
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
     readonly property bool isWide: isMedium || isLarge
-    readonly property color domColor: root.nothing ? (root.skin ? root.skin.ink : "#F5F5F5") : (root.widgetsState && root.widgetsState.mediaDominantColor ? root.widgetsState.mediaDominantColor : "#0A84FF")
+    readonly property color domColor: root.nothing ? (root.skin ? root.skin.ink : "#F5F5F5") : (root.fluent ? (root.widgetsState && root.widgetsState.mediaDominantColor ? root.widgetsState.mediaDominantColor : "#0078D4") : (root.widgetsState && root.widgetsState.mediaDominantColor ? root.widgetsState.mediaDominantColor : "#0A84FF"))
     readonly property bool isPlaying: root.widgetsState ? !!root.widgetsState.mediaIsPlaying : false
     // ── Cava Visualizer Frequency Bars (16 bands) ──
     property var cavaBars: [4, 6, 8, 12, 10, 16, 14, 20, 18, 15, 12, 10, 8, 6, 4, 3]
@@ -63,9 +64,9 @@ Item {
         id: bg
 
         anchors.fill: parent
-        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
-        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
-        border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
+        radius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22))
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75)))
+        border.color: root.nothing ? "transparent" : (root.fluent ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14)))
         border.width: root.nothing ? 0 : 1
         clip: true
         scale: cardMa.pressed ? 0.985 : 1.0
@@ -125,7 +126,7 @@ Item {
             Rectangle {
                 Layout.preferredWidth: 142
                 Layout.preferredHeight: 142
-                radius: 16
+                radius: root.fluent ? 8 : 16
                 clip: true
                 color: root.widgetsState && root.widgetsState.isDarkTheme ? "#1A1A1E" : "#E5E5EA"
                 border.color: root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"
@@ -630,7 +631,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 170
                 Layout.preferredHeight: 170
-                radius: 18
+                radius: root.fluent ? 10 : 18
                 clip: true
                 color: root.widgetsState && root.widgetsState.isDarkTheme ? "#1A1A1E" : "#E5E5EA"
                 border.color: root.widgetsState && root.widgetsState.isDarkTheme ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)"

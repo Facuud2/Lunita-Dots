@@ -7,19 +7,25 @@ Item {
     property var widgetsState
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: skin ? skin.isNothing : false
-    readonly property string fontText: (nothing && skin) ? skin.fontText : "SF Pro Display"
-    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : "SF Pro Display"
+    readonly property bool fluent: skin ? skin.isFluent : false
+    readonly property string fontText: (skin && (nothing || fluent)) ? skin.fontText : "SF Pro Display"
+    readonly property string fontFigure: (skin && (nothing || fluent)) ? skin.fontFigure : "SF Pro Display"
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
     readonly property bool isWide: isMedium || isLarge
 
+    readonly property color cpuColor: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.cyan) : (root.fluent ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? "#E81123" : "#0078D4") : "#64D2FF")
+    readonly property color ramColor: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.green) : (root.fluent ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? "#E81123" : "#00B7C3") : "#30D158")
+    readonly property color gpuColor: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.purple) : (root.fluent ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? "#E81123" : "#8764B8") : "#BF5AF2")
+    readonly property color diskColor: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.amber) : (root.fluent ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? "#E81123" : "#F7630C") : "#FF9F0A")
+
     Rectangle {
         id: cardBg
         anchors.fill: parent
-        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
-        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75))
-        border.color: root.nothing ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14))
+        radius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22))
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : Qt.rgba(0.12, 0.14, 0.18, 0.75)))
+        border.color: root.nothing ? root.skin.cardBorder : (root.fluent ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.14)))
         border.width: root.nothing ? 0 : 1
         clip: true
         scale: cardMa.pressed ? 0.985 : 1.0
@@ -452,14 +458,14 @@ Item {
                     width: 22
                     height: 22
                     radius: 6
-                    color: root.nothing ? root.skin.raised : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.15)
+                    color: root.fluent ? Qt.rgba(0, 120 / 255, 212 / 255, 0.15) : (root.nothing ? root.skin.raised : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.15))
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰻠"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: root.nothing ? root.skin.cyan : "#64D2FF"
+                        color: root.cpuColor
                     }
 
                 }
@@ -477,13 +483,13 @@ Item {
                     Layout.fillWidth: true
                     height: 8
                     radius: 4
-                    color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08)
+                    color: root.fluent ? "rgba(255, 255, 255, 0.08)" : (root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08))
 
                     Rectangle {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.cpuPercent : 0)) / 100))
                         radius: 4
-                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.cyan) : "#64D2FF"
+                        color: root.cpuColor
 
                         Behavior on width {
                             NumberAnimation {
@@ -502,7 +508,7 @@ Item {
                     font.family: root.fontFigure
                     font.pixelSize: 11
                     font.weight: Font.ExtraBold
-                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.cpuPercent : 0) >= 85) ? root.skin.signal : root.skin.cyan) : "#64D2FF"
+                    color: root.cpuColor
                     Layout.preferredWidth: 40
                     horizontalAlignment: Text.AlignRight
                 }
@@ -518,14 +524,14 @@ Item {
                     width: 22
                     height: 22
                     radius: 6
-                    color: root.nothing ? root.skin.raised : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.15)
+                    color: root.fluent ? Qt.rgba(0, 183 / 255, 195 / 255, 0.15) : (root.nothing ? root.skin.raised : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.15))
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰍛"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: root.nothing ? root.skin.green : "#30D158"
+                        color: root.ramColor
                     }
 
                 }
@@ -543,13 +549,13 @@ Item {
                     Layout.fillWidth: true
                     height: 8
                     radius: 4
-                    color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08)
+                    color: root.fluent ? "rgba(255, 255, 255, 0.08)" : (root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08))
 
                     Rectangle {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.ramPercent : 0)) / 100))
                         radius: 4
-                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.green) : "#30D158"
+                        color: root.ramColor
 
                         Behavior on width {
                             NumberAnimation {
@@ -568,7 +574,7 @@ Item {
                     font.family: root.fontFigure
                     font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.ramPercent : 0) >= 85) ? root.skin.signal : root.skin.green) : "#30D158"
+                    color: root.ramColor
                     Layout.preferredWidth: 95
                     horizontalAlignment: Text.AlignRight
                 }
@@ -584,14 +590,14 @@ Item {
                     width: 22
                     height: 22
                     radius: 6
-                    color: root.nothing ? root.skin.raised : Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.15)
+                    color: root.fluent ? Qt.rgba(135 / 255, 100 / 255, 184 / 255, 0.15) : (root.nothing ? root.skin.raised : Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.15))
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰢮"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: root.nothing ? root.skin.purple : "#BF5AF2"
+                        color: root.gpuColor
                     }
 
                 }
@@ -609,13 +615,13 @@ Item {
                     Layout.fillWidth: true
                     height: 8
                     radius: 4
-                    color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08)
+                    color: root.fluent ? "rgba(255, 255, 255, 0.08)" : (root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08))
 
                     Rectangle {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.gpuPercent : 0)) / 100))
                         radius: 4
-                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.purple) : "#BF5AF2"
+                        color: root.gpuColor
 
                         Behavior on width {
                             NumberAnimation {
@@ -634,7 +640,7 @@ Item {
                     font.family: root.fontFigure
                     font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.gpuPercent : 0) >= 85) ? root.skin.signal : root.skin.purple) : "#BF5AF2"
+                    color: root.gpuColor
                     Layout.preferredWidth: 95
                     horizontalAlignment: Text.AlignRight
                 }
@@ -650,14 +656,14 @@ Item {
                     width: 22
                     height: 22
                     radius: 6
-                    color: root.nothing ? root.skin.raised : Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.15)
+                    color: root.fluent ? Qt.rgba(247 / 255, 99 / 255, 12 / 255, 0.15) : (root.nothing ? root.skin.raised : Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.15))
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰋊"
                         font.family: "CaskaydiaCove Nerd Font"
                         font.pixelSize: 12
-                        color: root.nothing ? root.skin.amber : "#FF9F0A"
+                        color: root.diskColor
                     }
 
                 }
@@ -675,13 +681,13 @@ Item {
                     Layout.fillWidth: true
                     height: 8
                     radius: 4
-                    color: root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08)
+                    color: root.fluent ? "rgba(255, 255, 255, 0.08)" : (root.nothing ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.08))
 
                     Rectangle {
                         height: parent.height
                         width: Math.max(6, parent.width * (Math.min(100, Math.max(0, root.widgetsState ? root.widgetsState.diskPercent : 0)) / 100))
                         radius: 4
-                        color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.amber) : "#FF9F0A"
+                        color: root.diskColor
 
                         Behavior on width {
                             NumberAnimation {
@@ -700,7 +706,7 @@ Item {
                     font.family: root.fontFigure
                     font.pixelSize: 10
                     font.weight: Font.Bold
-                    color: root.nothing ? (((root.widgetsState ? root.widgetsState.diskPercent : 0) >= 85) ? root.skin.signal : root.skin.amber) : "#FF9F0A"
+                    color: root.diskColor
                     Layout.preferredWidth: 95
                     horizontalAlignment: Text.AlignRight
                 }
@@ -811,9 +817,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: root.nothing ? 16 : 14
-                    color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
-                    border.color: root.nothing ? "transparent" : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.22)
+                    radius: root.fluent ? 6 : (root.nothing ? 16 : 14)
+                    color: root.fluent ? root.skin.cardAlt : (root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05))
+                    border.color: root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.22))
                     border.width: 1
 
                     ColumnLayout {
@@ -832,14 +838,14 @@ Item {
                                 width: 22
                                 height: 22
                                 radius: 6
-                                color: root.nothing ? root.skin.card : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.18)
+                                color: root.fluent ? Qt.rgba(0, 120 / 255, 212 / 255, 0.15) : (root.nothing ? root.skin.card : Qt.rgba(100 / 255, 210 / 255, 255 / 255, 0.18))
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰻠"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: root.nothing ? root.skin.cyan : "#64D2FF"
+                                    color: root.cpuColor
                                 }
 
                             }
@@ -927,9 +933,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: root.nothing ? 16 : 14
-                    color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
-                    border.color: root.nothing ? "transparent" : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.22)
+                    radius: root.fluent ? 6 : (root.nothing ? 16 : 14)
+                    color: root.fluent ? root.skin.cardAlt : (root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05))
+                    border.color: root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.22))
                     border.width: 1
 
                     ColumnLayout {
@@ -948,14 +954,14 @@ Item {
                                 width: 22
                                 height: 22
                                 radius: 6
-                                color: root.nothing ? root.skin.card : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.18)
+                                color: root.fluent ? Qt.rgba(0, 183 / 255, 195 / 255, 0.15) : (root.nothing ? root.skin.card : Qt.rgba(48 / 255, 209 / 255, 88 / 255, 0.18))
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰍛"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: root.nothing ? root.skin.green : "#30D158"
+                                    color: root.ramColor
                                 }
 
                             }
@@ -1043,9 +1049,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: root.nothing ? 16 : 14
-                    color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
-                    border.color: root.nothing ? "transparent" : Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.22)
+                    radius: root.fluent ? 6 : (root.nothing ? 16 : 14)
+                    color: root.fluent ? root.skin.cardAlt : (root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05))
+                    border.color: root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.22))
                     border.width: 1
 
                     ColumnLayout {
@@ -1064,14 +1070,14 @@ Item {
                                 width: 22
                                 height: 22
                                 radius: 6
-                                color: root.nothing ? root.skin.card : Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.18)
+                                color: root.fluent ? Qt.rgba(135 / 255, 100 / 255, 184 / 255, 0.15) : (root.nothing ? root.skin.card : Qt.rgba(191 / 255, 90 / 255, 242 / 255, 0.18))
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰢮"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: root.nothing ? root.skin.purple : "#BF5AF2"
+                                    color: root.gpuColor
                                 }
 
                             }
@@ -1159,9 +1165,9 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: root.nothing ? 16 : 14
-                    color: root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
-                    border.color: root.nothing ? "transparent" : Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.22)
+                    radius: root.fluent ? 6 : (root.nothing ? 16 : 14)
+                    color: root.fluent ? root.skin.cardAlt : (root.nothing ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05))
+                    border.color: root.fluent ? root.skin.cardBorder : (root.nothing ? "transparent" : Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.22))
                     border.width: 1
 
                     ColumnLayout {
@@ -1180,14 +1186,14 @@ Item {
                                 width: 22
                                 height: 22
                                 radius: 6
-                                color: root.nothing ? root.skin.card : Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.18)
+                                color: root.fluent ? Qt.rgba(247 / 255, 99 / 255, 12 / 255, 0.15) : (root.nothing ? root.skin.card : Qt.rgba(255 / 255, 159 / 255, 10 / 255, 0.18))
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰋊"
                                     font.family: "CaskaydiaCove Nerd Font"
                                     font.pixelSize: 13
-                                    color: root.nothing ? root.skin.amber : "#FF9F0A"
+                                    color: root.diskColor
                                 }
 
                             }

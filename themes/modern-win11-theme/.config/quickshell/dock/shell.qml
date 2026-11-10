@@ -148,7 +148,7 @@ Scope {
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.namespace: "win11-dock-overlay"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+                WlrLayershell.keyboardFocus: globalDockState.contextMenuVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
                 DockContextMenu {
                     dockState: globalDockState
@@ -219,7 +219,7 @@ Scope {
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.namespace: "win11-dock-flyout"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
-                WlrLayershell.keyboardFocus: globalDockState.activeFlyout === "network" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: globalDockState.activeFlyout === "network" ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
                 MediaControlFlyout {
                     id: mediaFlyout

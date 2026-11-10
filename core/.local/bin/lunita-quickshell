@@ -224,7 +224,7 @@ start_component() {
         return 0
     fi
 
-    "$qs_bin" -d -n -p "$config_dir" >/dev/null 2>&1
+    "$qs_bin" -d -n -p "$config_dir" 200>&- >/dev/null 2>&1
     success "Iniciado Quickshell [$comp]"
 }
 
@@ -276,6 +276,12 @@ cmd_start() {
             start_component "$comp"
         fi
     done
+
+    # Garantizar que el servicio de widgets esté activo si el tema lo soporta
+    if is_component_enabled_in_theme "widgets" && ! is_component_running "widgets"; then
+        sleep 0.2
+        start_component "widgets"
+    fi
 }
 
 cmd_stop() {

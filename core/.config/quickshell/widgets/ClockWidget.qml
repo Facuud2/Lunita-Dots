@@ -1,14 +1,15 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     id: root
 
     property var widgetsState: null
     property var canvas: null
-
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: root.skin ? root.skin.isNothing : false
+    readonly property bool fluent: root.skin ? root.skin.isFluent : (root.widgetsState && root.widgetsState.activeThemeId === "modern-win11-theme")
 
     // Forzar dimensiones pequeñas estándar (170 x 170)
     width: 170
@@ -18,26 +19,16 @@ Item {
         id: cardBg
 
         anchors.fill: parent
-        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+        radius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22))
         clip: true
-        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#211A39")
-        border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12))
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#211A39"))
+        border.color: root.nothing ? "transparent" : (root.fluent ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12)))
         border.width: root.nothing ? 0 : 1
-        scale: cardMa.pressed ? 0.985 : 1.0
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: 150
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Behavior on color {
-            ColorAnimation { duration: 150 }
-        }
+        scale: cardMa.pressed ? 0.985 : 1
 
         MouseArea {
             id: cardMa
+
             anchors.fill: parent
             enabled: !root.widgetsState || !root.widgetsState.isEditing
             hoverEnabled: true
@@ -52,9 +43,197 @@ Item {
         // ═══════════════════════════════════════════════════════════════════
         AnalogClockFace {
             id: mainClockFace
-            visible: !root.nothing
+
+            visible: !root.nothing && !root.fluent
             anchors.centerIn: parent
             dialSize: 142
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // ── SKIN FLUENT: DIGITAL BENTO CLOCK WINDOWS 11 ────────────────────
+        // ═══════════════════════════════════════════════════════════════════
+        Item {
+            id: fluentFace
+
+            property date now: new Date()
+
+            anchors.fill: parent
+            anchors.margins: root.skin ? root.skin.pad : 14
+            visible: root.fluent
+
+            Timer {
+                interval: 1000
+                running: fluentFace.visible
+                repeat: true
+                triggeredOnStart: true
+                onTriggered: fluentFace.now = new Date()
+            }
+
+            // Top Header: Chip "Reloj" y punto de señal de segundos
+            Rectangle {
+                id: topChip
+
+                anchors.left: parent.left
+                anchors.top: parent.top
+                height: 22
+                width: chipLayout.implicitWidth + 14
+                radius: root.skin ? root.skin.radiusControl : 6
+                color: root.skin ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                border.color: root.skin ? root.skin.cardBorder : Qt.rgba(1, 1, 1, 0.08)
+                border.width: 1
+
+                RowLayout {
+                    id: chipLayout
+
+                    anchors.centerIn: parent
+                    spacing: 5
+
+                    Text {
+                        text: "󱑂"
+                        font.family: "Symbols Nerd Font"
+                        font.pixelSize: 11
+                        color: root.skin ? root.skin.accent : "#0078D4"
+                    }
+
+                    Text {
+                        text: "Reloj"
+                        font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
+                        color: root.skin ? root.skin.ink : "#FFFFFF"
+                    }
+
+                }
+
+            }
+
+            Rectangle {
+                anchors.right: parent.right
+                anchors.verticalCenter: topChip.verticalCenter
+                width: 6
+                height: 6
+                radius: 3
+                color: root.skin ? root.skin.accent : "#0078D4"
+                opacity: fluentFace.now.getSeconds() % 2 === 0 ? 1 : 0.35
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.InOutSine
+                    }
+
+                }
+
+            }
+
+            // Hora Principal Digital con Segundos
+            Item {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: topChip.bottom
+                anchors.bottom: secBar.top
+                anchors.topMargin: 4
+                anchors.bottomMargin: 6
+
+                RowLayout {
+                    anchors.centerIn: parent
+                    spacing: 4
+
+                    Text {
+                        text: Qt.formatTime(fluentFace.now, "HH:mm")
+                        font.family: root.skin ? root.skin.fontFigure : "Segoe UI Variable Display"
+                        font.pixelSize: 34
+                        font.weight: Font.DemiBold
+                        color: root.skin ? root.skin.ink : "#FFFFFF"
+                    }
+
+                    ColumnLayout {
+                        spacing: 0
+
+                        Text {
+                            text: Qt.formatTime(fluentFace.now, "ss")
+                            font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                            font.pixelSize: 12
+                            font.weight: Font.Bold
+                            color: root.skin ? root.skin.accent : "#0078D4"
+                        }
+
+                        Text {
+                            text: Qt.formatTime(fluentFace.now, "ap").toUpperCase()
+                            font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                            font.pixelSize: 10
+                            font.weight: Font.Medium
+                            color: root.skin ? root.skin.inkDim : "#94A3B8"
+                        }
+
+                    }
+
+                }
+
+            }
+
+            // Barra sutil de progreso de segundos
+            Rectangle {
+                id: secBar
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: bottomRow.top
+                anchors.bottomMargin: 8
+                height: 2
+                radius: 1
+                color: root.skin ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
+
+                Rectangle {
+                    height: parent.height
+                    radius: parent.radius
+                    width: Math.max(2, parent.width * ((fluentFace.now.getSeconds() + 1) / 60))
+                    color: root.skin ? root.skin.accent : "#0078D4"
+
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: 150
+                            easing.type: Easing.OutCubic
+                        }
+
+                    }
+
+                }
+
+            }
+
+            // Fila inferior: Fecha formateada y zona
+            RowLayout {
+                id: bottomRow
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                spacing: 4
+
+                Text {
+                    Layout.fillWidth: true
+                    text: {
+                        var s = fluentFace.now.toLocaleDateString(Qt.locale("es_AR"), "ddd, d MMM");
+                        return s.charAt(0).toUpperCase() + s.slice(1).replace(/\./g, "");
+                    }
+                    font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                    font.pixelSize: 11
+                    font.weight: Font.Medium
+                    color: root.skin ? root.skin.inkDim : "#94A3B8"
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    text: "Local"
+                    font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                    font.pixelSize: 10
+                    font.weight: Font.Normal
+                    color: root.skin ? root.skin.inkMuted : Qt.rgba(1, 1, 1, 0.44)
+                }
+
+            }
+
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -89,8 +268,13 @@ Item {
                 opacity: nothingFace.now.getSeconds() % 2 === 0 ? 1 : 0.25
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 250; easing.type: Easing.InOutSine }
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.InOutSine
+                    }
+
                 }
+
             }
 
             Column {
@@ -112,6 +296,7 @@ Item {
                     font.pixelSize: 54
                     color: root.nothing ? root.skin.inkDim : "grey"
                 }
+
             }
 
             Text {
@@ -126,6 +311,22 @@ Item {
                 font.weight: Font.Medium
                 color: root.nothing ? root.skin.ink : "white"
             }
+
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -158,18 +359,15 @@ Item {
                     var cx = width / 2;
                     var cy = height / 2;
                     var r = width / 2 - 2;
-
                     // 1. Fondo blanco puro del reloj
                     ctx.beginPath();
                     ctx.arc(cx, cy, r, 0, 2 * Math.PI, false);
                     ctx.fillStyle = "#FFFFFF";
                     ctx.fill();
-
                     // Borde sutil del dial
                     ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
                     ctx.lineWidth = 1;
                     ctx.stroke();
-
                     // 2. Marcas de minutos y horas (60 ticks)
                     for (var i = 0; i < 60; i++) {
                         var angle = (i / 60) * 2 * Math.PI - Math.PI / 2;
@@ -186,7 +384,6 @@ Item {
                         ctx.lineCap = "round";
                         ctx.stroke();
                     }
-
                     // 3. Números del 1 al 12
                     var fontSize = Math.round(r * 0.21);
                     ctx.font = "bold " + fontSize + "px 'SF Pro Display', Inter, -apple-system, sans-serif";
@@ -200,7 +397,6 @@ Item {
                         var ny = cy + numRadius * Math.sin(nAngle);
                         ctx.fillText(n.toString(), nx, ny + 0.5);
                     }
-
                     // 4. Obtener hora actual con fracciones para movimiento suave
                     var now = new Date();
                     var sec = now.getSeconds() + now.getMilliseconds() / 1000;
@@ -209,7 +405,6 @@ Item {
                     var hrAngle = (hr / 12) * 2 * Math.PI - Math.PI / 2;
                     var minAngle = (min / 60) * 2 * Math.PI - Math.PI / 2;
                     var secAngle = (sec / 60) * 2 * Math.PI - Math.PI / 2;
-
                     // 5. Aguja de las horas (Negra, redondeada)
                     var hrLen = r * 0.5;
                     ctx.beginPath();
@@ -219,7 +414,6 @@ Item {
                     ctx.lineWidth = Math.max(2.5, r * 0.055);
                     ctx.lineCap = "round";
                     ctx.stroke();
-
                     // 6. Aguja de los minutos (Negra, más larga, redondeada)
                     var minLen = r * 0.74;
                     ctx.beginPath();
@@ -229,7 +423,6 @@ Item {
                     ctx.lineWidth = Math.max(2, r * 0.04);
                     ctx.lineCap = "round";
                     ctx.stroke();
-
                     // 7. Aguja de los segundos (Naranja vibrante macOS con cola contrapeso)
                     var secLen = r * 0.86;
                     var secTail = r * 0.22;
@@ -240,20 +433,21 @@ Item {
                     ctx.lineWidth = Math.max(1.2, r * 0.018);
                     ctx.lineCap = "round";
                     ctx.stroke();
-
                     // 8. Tapa central naranja con orificio oscuro
                     var capRadius = Math.max(3.2, r * 0.052);
                     ctx.beginPath();
                     ctx.arc(cx, cy, capRadius, 0, 2 * Math.PI, false);
                     ctx.fillStyle = "#FF9500";
                     ctx.fill();
-
                     ctx.beginPath();
                     ctx.arc(cx, cy, capRadius * 0.4, 0, 2 * Math.PI, false);
                     ctx.fillStyle = "#1C1C1E";
                     ctx.fill();
                 }
             }
+
         }
+
     }
+
 }

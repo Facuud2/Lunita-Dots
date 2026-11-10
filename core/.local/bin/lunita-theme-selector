@@ -755,8 +755,7 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
                         if ret != 0:
                             stderr_data = "".join(stderr_chunks).strip()
                             stdout_data = "".join(stdout_chunks).strip()
-                            if get_current_theme_id() != theme.id:
-                                error_msg = stderr_data or stdout_data or f"Código de salida: {ret}"
+                            error_msg = stderr_data or stdout_data or f"Código de salida: {ret}"
                         break
 
                     import time
@@ -764,13 +763,13 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
                     elapsed += poll_interval
 
                     if elapsed >= max_wait_seconds:
-                        if get_current_theme_id() != theme.id:
-                            proc.kill()
-                            error_msg = "El proceso tardó demasiado en aplicar el tema"
+                        proc.kill()
+                        t_out.join(timeout=0.5)
+                        t_err.join(timeout=0.5)
+                        error_msg = "El proceso tardó demasiado en aplicar el tema"
                         break
             except Exception as e:
-                if get_current_theme_id() != theme.id:
-                    error_msg = str(e)
+                error_msg = str(e)
             finally:
                 GLib.idle_add(self.on_apply_finished, theme, error_msg)
 
@@ -780,11 +779,11 @@ class ThemeSelectorWindow(Adw.ApplicationWindow):
         self.is_applying = False
         self.current_theme_id = get_current_theme_id()
 
-        if self.current_theme_id == theme.id:
-            toast = Adw.Toast(title=f"¡Tema '{theme.name}' aplicado exitosamente!")
-            self.toast_overlay.add_toast(toast)
-        elif error_msg:
+        if error_msg:
             toast = Adw.Toast(title=f"Error al aplicar tema: {error_msg}")
+            self.toast_overlay.add_toast(toast)
+        elif self.current_theme_id == theme.id:
+            toast = Adw.Toast(title=f"¡Tema '{theme.name}' aplicado exitosamente!")
             self.toast_overlay.add_toast(toast)
         else:
             toast = Adw.Toast(title=f"Error al verificar la aplicación del tema '{theme.name}'")

@@ -56,6 +56,13 @@
     }
   },
   "component_overrides": {
+    "widgets": {
+      "skin": "fluent",
+      "card_radius": 10,
+      "card_bg": "rgba(32, 32, 32, 0.88)",
+      "card_border": "rgba(255, 255, 255, 0.08)",
+      "accent": "#0078D4"
+    },
     "dock": {
       "surface_opacity": 0.22,
       "accent": "#4CC2FF"

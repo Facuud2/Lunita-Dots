@@ -9,26 +9,27 @@ Item {
     property var widgetsState
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: skin ? skin.isNothing : false
-    readonly property string fontText: (nothing && skin) ? skin.fontText : "SF Pro Display"
-    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : "SF Pro Display"
+    readonly property bool fluent: skin ? skin.isFluent : (root.widgetsState && root.widgetsState.activeThemeId === "modern-win11-theme")
+    readonly property string fontText: (nothing && skin) ? skin.fontText : (fluent && skin ? skin.fontText : "SF Pro Display")
+    readonly property string fontFigure: (nothing && skin) ? skin.fontFigure : (fluent && skin ? skin.fontFigure : "SF Pro Display")
 
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
     readonly property bool isDark: root.widgetsState ? root.widgetsState.isDarkTheme : false
-    readonly property real cardRadius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
-    readonly property string fontFamily: nothing ? fontText : "SF Pro Display, SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
+    readonly property real cardRadius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22))
+    readonly property string fontFamily: nothing ? fontText : (fluent ? fontText : "SF Pro Display, SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif")
 
-    // ── Notes Color Tokens (Nothing OS Monocromo vs Apple Notes) ────────────
-    readonly property color cardBgColor: root.nothing ? root.skin.card : (isDark ? (root.widgetsState ? root.widgetsState.cardBg : "#1C1C1E") : "#FFFFFF")
-    readonly property color cardBorderColor: root.nothing ? "transparent" : (isDark ? (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.10)) : Qt.rgba(0, 0, 0, 0.04))
-    readonly property color yellowHeaderColor: root.nothing ? root.skin.raised : "#FCC603"
-    readonly property color textPrimaryColor: root.nothing ? root.skin.ink : (isDark ? "#FFFFFF" : "#000000")
-    readonly property color textSecondaryColor: root.nothing ? root.skin.inkDim : (isDark ? "#98989D" : "#8E8E93")
-    readonly property color dividerColor: root.nothing ? root.skin.dotOff : (isDark ? Qt.rgba(1, 1, 1, 0.12) : "#E2E2E3")
-    readonly property color perforationColor: root.nothing ? root.skin.dotOff : (isDark ? Qt.rgba(1, 1, 1, 0.20) : "#D1D1D6")
-    readonly property color inputBgColor: root.nothing ? root.skin.raised : (isDark ? Qt.rgba(255, 255, 255, 0.06) : Qt.rgba(0, 0, 0, 0.04))
+    // ── Notes Color Tokens (Nothing OS Monocromo vs Apple Notes vs Windows Sticky Notes) ────
+    readonly property color cardBgColor: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : (isDark ? (root.widgetsState ? root.widgetsState.cardBg : "#1C1C1E") : "#FFFFFF"))
+    readonly property color cardBorderColor: root.nothing ? "transparent" : (root.fluent ? root.skin.cardBorder : (isDark ? (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.10)) : Qt.rgba(0, 0, 0, 0.04)))
+    readonly property color yellowHeaderColor: root.nothing ? root.skin.raised : (root.fluent ? root.skin.yellow : "#FCC603")
+    readonly property color textPrimaryColor: root.nothing ? root.skin.ink : (root.fluent ? root.skin.ink : (isDark ? "#FFFFFF" : "#000000"))
+    readonly property color textSecondaryColor: root.nothing ? root.skin.inkDim : (root.fluent ? root.skin.inkDim : (isDark ? "#98989D" : "#8E8E93"))
+    readonly property color dividerColor: root.nothing ? root.skin.dotOff : (root.fluent ? root.skin.dotOff : (isDark ? Qt.rgba(1, 1, 1, 0.12) : "#E2E2E3"))
+    readonly property color perforationColor: root.nothing ? root.skin.dotOff : (root.fluent ? "transparent" : (isDark ? Qt.rgba(1, 1, 1, 0.20) : "#D1D1D6"))
+    readonly property color inputBgColor: root.nothing ? root.skin.raised : (root.fluent ? root.skin.raised : (isDark ? Qt.rgba(255, 255, 255, 0.06) : Qt.rgba(0, 0, 0, 0.04)))
 
     readonly property var notesList: {
         if (root.widgetsState && root.widgetsState.ttNotesList !== undefined && root.widgetsState.ttNotesList !== null)
@@ -292,6 +293,17 @@ Item {
 
         Behavior on color {
             ColorAnimation { duration: 150 }
+        }
+
+        // Sticky Notes top accent stripe (Windows 11 Fluent)
+        Rectangle {
+            visible: root.fluent
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 3
+            color: root.skin ? root.skin.yellow : "#FCE100"
+            z: 20
         }
 
         // Absorb clicks on card background so they never fall through to desktop canvas

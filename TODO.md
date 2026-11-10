@@ -923,3 +923,61 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
   3. No existen condiciones de carrera entre llamadas concurrentes a `lunita-theme apply`.
   4. La sintaxis de Bash, Python y QML pasa todas las validaciones sin errores.
 - **Dependencias:** [ISSUE-057]
+
+### [ISSUE-059] Rediseño integral y autónomo de los Widgets de Escritorio en Modern-Win11-Theme
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_059_REFACTOR`
+- **Módulo(s):** Modern-Win11-Theme / Widgets (Todos los componentes QML)
+- **Archivos Afectados:** `core/.config/quickshell/widgets/WidgetSkin.qml`, `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/BatteryWidget.qml`, `core/.config/quickshell/widgets/WeatherWidget.qml`, `core/.config/quickshell/widgets/TimetableWidget.qml`, `core/.config/quickshell/widgets/CalendarWidget.qml`, `core/.config/quickshell/widgets/FilesWidget.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`, `core/.config/quickshell/widgets/HabitTrackerWidget.qml`, `core/.config/quickshell/widgets/SystemResourcesWidget.qml`, `core/.config/quickshell/widgets/NetworkWidget.qml`, `core/.config/quickshell/widgets/MediaWidget.qml`, `core/.config/quickshell/widgets/GitActivityWidget.qml`, `themes/modern-win11-theme/theme.json`, `core/.local/bin/lunita-palette-sync`, `TODO.md`
+- **Descripción:** Rediseño integral de todos los widgets de escritorio existentes para el tema `Modern-Win11-Theme`. Se aplicó una dirección visual cohesiva de Fluent Design moderno (Windows 11) con superficies Mica/Acrylic translúcidas calibradas, radios estandarizados (10px en tarjeta exterior, 6px en controles internos), tipografía Segoe UI Variable y paleta cromática semántica Fluent (azul `#0078D4`, teal `#00B7C3`, púrpura `#8764B8`, naranja `#F7630C`, verde `#107C41`, amarillo Sticky Notes `#FCE100` y acento de error `#E81123`).
+- **Directrices de Diseño y Adaptación de Skills (CSS ➔ QML):**
+  1. **`/anti-slop-frontend`:** Eliminación de gradientes planos saturados o fondos genéricos. Bordes sutiles de 1px con refracción sutil, jerarquía estricta y superficies Mica/Acrylic de alta fidelidad.
+  2. **`/ui-ux-pro-max`:** Jerarquía clara, métricas prominentes con Segoe UI Variable Display / Bold, etiquetas de metadatos atenuadas, paddings proporcionales y layouts Bento en reloj y batería.
+  3. **`/design-taste-frontend`:** Composición Bento en widgets compactos, medianos y grandes. Selector de dispositivos Bluetooth/periféricos en batería con indicadores de color, sticky notes con franja de color superior, monitor de recursos con barras calibradas y reproductor multimedia con acento Fluent.
+  4. **`/transitions-dev`:** Micro-interacciones de 150ms-250ms con curvas `Easing.OutCubic` en `Behavior on scale` para mouse presses, `Behavior on width` en progress bars, y transiciones de color en botones e interruptores interactivos.
+- **Criterios de Aceptación:**
+  1. El trabajo se desarrolla y confirma en la rama `ISSUE_059_REFACTOR`.
+  2. Todos los widgets del tema `Modern-Win11-Theme` presentan un lenguaje visual cohesivo, original y de nivel de producción, libre de estética genérica ("AI Slop").
+  3. Las propiedades visuales y animaciones están implementadas en QML puro y válido sin romper la ingesta de datos ni la persistencia de posiciones del lienzo (`DesktopGridCanvas`).
+- **Dependencias:** Ninguna
+
+---
+
+### [ISSUE-060] Corrección de Autostart de Widgets y Resolución de Bloqueo Concurrente (Flock Leak) en Cambio de Tema
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_059_REFACTOR`
+- **Módulo(s):** Core / Widgets / Quickshell / Theme Selector / Lunita-Theme
+- **Archivos Afectados:** `core/.config/quickshell/widgets/ClockWidget.qml`, `core/.config/quickshell/widgets/PhotoWidget.qml`, `core/.config/quickshell/widgets/BatteryWidget.qml`, `core/.local/bin/lunita-quickshell`, `core/.local/bin/lunita-theme`, `core/.local/bin/lunita-theme-selector`, `core/.local/bin/lunita-widgets-manager`
+- **Descripción:** Corrección de los dos fallos reportados en el inicio de widgets y el cambio continuo de temas:
+  1. **Autostart y Carga de Widgets:** La adición reciente de componentes Fluent introdujo el uso de `RowLayout` y `ColumnLayout` en `ClockWidget.qml` y `PhotoWidget.qml` sin importar `QtQuick.Layouts`, provocando que Quickshell fallara silenciosamente al inicializar la configuración de widgets en el arranque (`autostart.lua`). Se incorporó el `import QtQuick.Layouts` faltante, se resolvieron las referencias de ámbito en `BatteryWidget.qml`, y se agregó un mecanismo de verificación y reintento en `lunita-quickshell cmd_start`.
+  2. **Bloqueo Concurrente y Fuga de File Descriptor (Flock Leak):** En `lunita-theme apply`, el bloqueo `flock` sobre el descriptor de archivo 200 era heredado por los procesos hijos y daemons en segundo plano (incluidas las instancias de Quickshell). Al finalizar `lunita-theme`, los daemons retenían el descriptor abierto impidiendo que el kernel liberara el bloqueo sobre `/tmp/lunita_theme_apply.lock`, lo que provocaba que cualquier cambio subsecuente de tema se bloqueara indefinidamente ("Ya hay una aplicación de tema en curso"). Se implementó el cierre forzado del descriptor (`200>&-`) en todas las llamadas a procesos en segundo plano y subshells, timeout de 10s con `flock -w 10`, registro de PID, trap de limpieza (`cleanup_theme_lock`) y liberación explícita antes de salir.
+  3. **Robustez en la GUI de Selección de Temas:** En `lunita-theme-selector`, se corrigió la evaluación de timeout y errores, garantizando que procesos colgados sean terminados limpiamente y que los fallos reales se reporten de forma fidedigna. En `lunita-widgets-manager`, se delegó el reinicio de widgets a `lunita-quickshell` asegurando la correcta inicialización del entorno Wayland.
+- **Criterios de Aceptación:**
+  1. El daemon de widgets arranca sin errores de QML y se muestra activo al reiniciar o iniciar sesión.
+  2. Es posible cambiar de tema múltiples veces consecutivas tanto desde la terminal como desde `lunita-theme-selector` sin bloqueos ni tiempos muertos.
+  3. No se filtran descriptores de archivo de bloqueo a los demonios de Quickshell.
+  4. Todas las validaciones de sintaxis (Bash, Python, QML) pasan con 0 errores.
+- **Dependencias:** [ISSUE-059]
+
+---
+
+### [ISSUE-061] Adaptación a Hyprland 0.57.0: Restauración de Foco Exclusivo de Teclado, Autofocus y Escape en Launchers y Capas Quickshell
+- **Estado:** COMPLETADO [x]
+- **Prioridad:** ALTA
+- **Rama Requerida:** `ISSUE_059_REFACTOR`
+- **Módulo(s):** Quickshell / Hyprland 0.57.0 / Launchers / Bar / Dock
+- **Archivos Afectados:** `themes/lunita-default/.config/quickshell/launcher/shell.qml`, `themes/lunita-default/.config/quickshell/launcher/SearchMenuView.qml`, `themes/lunita-default/.config/quickshell/bar/shell.qml`, `themes/modern-win11-theme/.config/quickshell/launcher/shell.qml`, `themes/modern-win11-theme/.config/quickshell/dock/shell.qml`, `TODO.md`
+- **Descripción:** Adaptación de las capas interactivas de Quickshell al protocolo estricto de foco de Hyprland v0.57.0 y Aquamarine v0.15:
+  1. **Foco Exclusivo de Teclado en Launcher:** En Hyprland 0.57+, las capas con `WlrKeyboardFocus.OnDemand` ya no reciben el foco del teclado inmediatamente al mapearse o abrirse si no se hace clic sobre ellas. Se reemplazó por `WlrKeyboardFocus.Exclusive` condicionado a la pantalla activa (`(globalLauncherState.isOpen && screenScope.isTargetScreen)`), devolviendo el foco de inmediato a las ventanas subyacentes al cerrarse.
+  2. **Autofocus y Posición de Cursor en Búsqueda:** Se corrigió el autofocus al tipear inmediatamente tras abrir con `SUPER+A` asegurando `focus: true`, `cursorPosition: text.length` y microtimer de asignación para que las pulsaciones se dirijan de forma instantánea al `TextInput` sin sobrescribir ni omitir el caracter inicial.
+  3. **Control de Escape Multinivel:** Se corrigió el flujo de la tecla `Escape` en `SearchMenuView.qml` y `shell.qml`: si la búsqueda contiene texto, el primer Escape limpia el término y retorna a la vista compacta; un Escape en un término vacío (o en la vista compacta) cierra inmediatamente el launcher y libera el foco. Se agregó además la reactivación de foco en `keyHandler` ante cambios de `searchMode`.
+  4. **Dynamic Island y Menús Emergentes:** Se actualizó `WlrKeyboardFocus` a `Exclusive` cuando la Nothing Dynamic Island está expandida (`themes/lunita-default/.config/quickshell/bar/shell.qml`), permitiendo escribir en `AppLauncher` (`SUPER+SPACE`) o `ConnPanel` (WiFi) y cerrarla con Escape. Asimismo, se unificó la lógica en el launcher y dock del tema Windows 11.
+- **Criterios de Aceptación:**
+  1. `SUPER+A` abre el launcher e inmediatamente captura el teclado sin necesidad de hacer clic.
+  2. Escribir cualquier caracter abre fluidamente la búsqueda con autofocus y ubica el cursor al final del texto.
+  3. `Escape` cierra la búsqueda y el launcher respectivamente en cada nivel.
+  4. La barra de Nothing Dynamic Island (`SUPER+SPACE`) y menús del dock aceptan teclado y responden a Escape.
+  5. `qmllint` y validaciones sintácticas pasan con 0 errores.
+- **Dependencias:** [ISSUE-060]

@@ -6,10 +6,9 @@ Item {
     id: root
 
     property var widgetsState
-
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: root.skin ? root.skin.isNothing : false
-
+    readonly property bool fluent: root.skin ? root.skin.isFluent : (root.widgetsState && root.widgetsState.activeThemeId === "modern-win11-theme")
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
@@ -31,26 +30,16 @@ Item {
         id: cardBg
 
         anchors.fill: parent
-        radius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
+        radius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22))
         clip: true
-        color: root.nothing ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#231B3D")
-        border.color: root.nothing ? "transparent" : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12))
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : (root.widgetsState ? root.widgetsState.cardBg : "#231B3D"))
+        border.color: root.nothing ? "transparent" : (root.fluent ? root.skin.cardBorder : (root.widgetsState ? root.widgetsState.cardBorder : Qt.rgba(1, 1, 1, 0.12)))
         border.width: root.nothing ? 0 : 1
-        scale: cardMa.pressed ? 0.985 : 1.0
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: 150
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Behavior on color {
-            ColorAnimation { duration: 150 }
-        }
+        scale: cardMa.pressed ? 0.985 : 1
 
         MouseArea {
             id: cardMa
+
             anchors.fill: parent
             enabled: !root.widgetsState || !root.widgetsState.isEditing
             hoverEnabled: true
@@ -65,7 +54,7 @@ Item {
         // ═══════════════════════════════════════════════════════════════════
         Item {
             anchors.fill: parent
-            visible: root.isMedium || (!root.isSmall && !root.isLarge)
+            visible: (root.isMedium || (!root.isSmall && !root.isLarge)) && !root.fluent
 
             RowLayout {
                 anchors.centerIn: parent
@@ -87,11 +76,135 @@ Item {
         }
 
         // ═══════════════════════════════════════════════════════════════════
+        // ── 1-B. VISTA MEDIUM FLUENT (354 x 170): 4 TARJETAS BENTO WIN11 ───
+        // ═══════════════════════════════════════════════════════════════════
+        Item {
+            anchors.fill: parent
+            anchors.margins: 12
+            visible: (root.isMedium || (!root.isSmall && !root.isLarge)) && root.fluent
+
+            RowLayout {
+                anchors.fill: parent
+                spacing: 10
+
+                Repeater {
+                    model: 4
+
+                    Rectangle {
+                        property var dev: index < root.activeDevices.length ? root.activeDevices[index] : null
+                        property bool hasDev: dev !== null
+                        property int pct: hasDev ? Math.max(0, Math.min(100, dev.percent)) : 0
+                        property bool isChg: hasDev && !!dev.charging
+
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: root.skin ? root.skin.radiusControl : 6
+                        color: root.skin ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                        border.color: root.skin ? root.skin.cardBorder : Qt.rgba(1, 1, 1, 0.08)
+                        border.width: 1
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 10
+                            spacing: 6
+
+                            RowLayout {
+                                Layout.fillWidth: true
+
+                                Text {
+                                    text: hasDev ? (dev.icon || "󰋋") : "󰂎"
+                                    font.family: "Symbols Nerd Font"
+                                    font.pixelSize: 16
+                                    color: hasDev ? root.skin.ink : root.skin.inkMuted
+                                }
+
+                                Item {
+                                    Layout.fillWidth: true
+                                }
+
+                                Text {
+                                    visible: isChg
+                                    text: "󱐋"
+                                    font.family: "Symbols Nerd Font"
+                                    font.pixelSize: 12
+                                    color: root.skin.accent
+                                }
+
+                            }
+
+                            Item {
+                                Layout.fillHeight: true
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: hasDev ? (dev.name || "Dispositivo") : "Disponible"
+                                font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                                font.pixelSize: 11
+                                font.weight: Font.DemiBold
+                                color: hasDev ? root.skin.ink : root.skin.inkMuted
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                text: hasDev ? (pct + "%") : "--"
+                                font.family: root.skin ? root.skin.fontFigure : "Segoe UI Variable Display"
+                                font.pixelSize: 16
+                                font.weight: Font.Bold
+                                color: hasDev ? root.skin.ink : root.skin.inkDim
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                height: 4
+                                radius: 2
+                                color: root.skin ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
+
+                                Rectangle {
+                                    height: parent.height
+                                    radius: parent.radius
+                                    width: hasDev ? (parent.width * (pct / 100)) : 0
+                                    color: {
+                                        if (!hasDev)
+                                            return "transparent";
+
+                                        if (pct > 40)
+                                            return root.skin.green;
+
+                                        if (pct > 15)
+                                            return root.skin.amber;
+
+                                        return root.skin.red;
+                                    }
+
+                                    Behavior on width {
+                                        NumberAnimation {
+                                            duration: 350
+                                            easing.type: Easing.OutCubic
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
         // ── 2. VISTA COMPACTA (170 x 170): DISPOSITIVO PRINCIPAL O 2x2 ──
         // ═══════════════════════════════════════════════════════════════════
         Item {
             anchors.fill: parent
-            visible: root.isSmall
+            visible: root.isSmall && !root.fluent
 
             // Si hay 1 dispositivo conectado: Anillo grande centrado con nombre
             ColumnLayout {
@@ -143,13 +256,160 @@ Item {
         }
 
         // ═══════════════════════════════════════════════════════════════════
+        // ── 2-B. VISTA COMPACTA FLUENT (170 x 170): DASHBOARD DISPOSITIVO ─
+        // ═══════════════════════════════════════════════════════════════════
+        Item {
+            anchors.fill: parent
+            anchors.margins: 12
+            visible: root.isSmall && root.fluent
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 6
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Text {
+                        text: "󰁹"
+                        font.family: "Symbols Nerd Font"
+                        font.pixelSize: 13
+                        color: root.skin ? root.skin.accent : "#0078D4"
+                    }
+
+                    Text {
+                        text: "Batería"
+                        font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
+                        color: root.skin ? root.skin.ink : "#FFFFFF"
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: root.activeDevices.length + " disp."
+                        font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                        font.pixelSize: 10
+                        color: root.skin ? root.skin.inkMuted : Qt.rgba(1, 1, 1, 0.44)
+                    }
+
+                }
+
+                Rectangle {
+                    id: fluentMainDevCard
+
+                    property var mainDev: root.activeDevices.length > 0 ? root.activeDevices[0] : null
+                    property int mainPct: fluentMainDevCard.mainDev ? Math.max(0, Math.min(100, fluentMainDevCard.mainDev.percent)) : 0
+                    property bool mainChg: fluentMainDevCard.mainDev && !!fluentMainDevCard.mainDev.charging
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    radius: root.skin ? root.skin.radiusControl : 6
+                    color: root.skin ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                    border.color: root.skin ? root.skin.cardBorder : Qt.rgba(1, 1, 1, 0.08)
+                    border.width: 1
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        spacing: 4
+
+                        RowLayout {
+                            Layout.fillWidth: true
+
+                            Text {
+                                text: fluentMainDevCard.mainDev ? (fluentMainDevCard.mainDev.name || "Equipo") : "Sin dispositivos"
+                                font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                                font.pixelSize: 11
+                                font.weight: Font.DemiBold
+                                color: root.skin ? root.skin.ink : "#FFFFFF"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+
+                            Text {
+                                visible: fluentMainDevCard.mainChg
+                                text: "󱐋"
+                                font.family: "Symbols Nerd Font"
+                                font.pixelSize: 12
+                                color: root.skin ? root.skin.accent : "#0078D4"
+                            }
+
+                        }
+
+                        Text {
+                            text: fluentMainDevCard.mainDev ? (fluentMainDevCard.mainPct + "%") : "--"
+                            font.family: root.skin ? root.skin.fontFigure : "Segoe UI Variable Display"
+                            font.pixelSize: 26
+                            font.weight: Font.Bold
+                            color: root.skin ? root.skin.ink : "#FFFFFF"
+                        }
+
+                        Text {
+                            text: fluentMainDevCard.mainChg ? "Conectado a la corriente" : (fluentMainDevCard.mainDev ? "Autonomía óptima" : "Esperando conexión")
+                            font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                            font.pixelSize: 10
+                            color: root.skin ? root.skin.inkDim : "#94A3B8"
+                        }
+
+                        Item {
+                            Layout.fillHeight: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 5
+                            radius: 2.5
+                            color: root.skin ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
+
+                            Rectangle {
+                                height: parent.height
+                                radius: parent.radius
+                                width: fluentMainDevCard.mainDev ? (parent.width * (fluentMainDevCard.mainPct / 100)) : 0
+                                color: {
+                                    if (!fluentMainDevCard.mainDev)
+                                        return "transparent";
+
+                                    if (fluentMainDevCard.mainPct > 40)
+                                        return root.skin.green;
+
+                                    if (fluentMainDevCard.mainPct > 15)
+                                        return root.skin.amber;
+
+                                    return root.skin.red;
+                                }
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 350
+                                        easing.type: Easing.OutCubic
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
         // ── 3. VISTA EXPANDIDA (354 x 354): ANILLOS + LISTA DETALLADA ──
         // ═══════════════════════════════════════════════════════════════════
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 14
             spacing: 12
-            visible: root.isLarge
+            visible: root.isLarge && !root.fluent
 
             // Fila superior: Los 4 anillos horizontales
             RowLayout {
@@ -256,7 +516,9 @@ Item {
                                         duration: 250
                                         easing.type: Easing.OutCubic
                                     }
+
                                 }
+
                             }
 
                         }
@@ -318,6 +580,275 @@ Item {
         }
 
         // ═══════════════════════════════════════════════════════════════════
+        // ── 3-B. VISTA EXPANDIDA FLUENT (354 x 354): GESTOR WIN11 COMPLETO ─
+        // ═══════════════════════════════════════════════════════════════════
+        Item {
+            anchors.fill: parent
+            anchors.margins: 14
+            visible: root.isLarge && root.fluent
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 10
+
+                // Fila superior: 4 tarjetas de dispositivo
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 110
+                    spacing: 8
+
+                    Repeater {
+                        model: 4
+
+                        Rectangle {
+                            property var dev: index < root.activeDevices.length ? root.activeDevices[index] : null
+                            property bool hasDev: dev !== null
+                            property int pct: hasDev ? Math.max(0, Math.min(100, dev.percent)) : 0
+                            property bool isChg: hasDev && !!dev.charging
+
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            radius: root.skin ? root.skin.radiusControl : 6
+                            color: root.skin ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                            border.color: root.skin ? root.skin.cardBorder : Qt.rgba(1, 1, 1, 0.08)
+                            border.width: 1
+
+                            ColumnLayout {
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                spacing: 4
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+
+                                    Text {
+                                        text: hasDev ? (dev.icon || "󰋋") : "󰂎"
+                                        font.family: "Symbols Nerd Font"
+                                        font.pixelSize: 14
+                                        color: hasDev ? root.skin.ink : root.skin.inkMuted
+                                    }
+
+                                    Item {
+                                        Layout.fillWidth: true
+                                    }
+
+                                    Text {
+                                        visible: isChg
+                                        text: "󱐋"
+                                        font.family: "Symbols Nerd Font"
+                                        font.pixelSize: 11
+                                        color: root.skin.accent
+                                    }
+
+                                }
+
+                                Item {
+                                    Layout.fillHeight: true
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: hasDev ? (dev.name || "Dispositivo") : "Disponible"
+                                    font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                                    font.pixelSize: 10
+                                    font.weight: Font.DemiBold
+                                    color: hasDev ? root.skin.ink : root.skin.inkMuted
+                                    elide: Text.ElideRight
+                                }
+
+                                Text {
+                                    text: hasDev ? (pct + "%") : "--"
+                                    font.family: root.skin ? root.skin.fontFigure : "Segoe UI Variable Display"
+                                    font.pixelSize: 14
+                                    font.weight: Font.Bold
+                                    color: hasDev ? root.skin.ink : root.skin.inkDim
+                                }
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 3
+                                    radius: 1.5
+                                    color: root.skin ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
+
+                                    Rectangle {
+                                        height: parent.height
+                                        radius: parent.radius
+                                        width: hasDev ? (parent.width * (pct / 100)) : 0
+                                        color: {
+                                            if (!hasDev)
+                                                return "transparent";
+
+                                            if (pct > 40)
+                                                return root.skin.green;
+
+                                            if (pct > 15)
+                                                return root.skin.amber;
+
+                                            return root.skin.red;
+                                        }
+
+                                        Behavior on width {
+                                            NumberAnimation {
+                                                duration: 350
+                                                easing.type: Easing.OutCubic
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                // Separador sutil Fluent
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: root.skin ? root.skin.cardBorder : Qt.rgba(1, 1, 1, 0.08)
+                }
+
+                // Encabezado de lista
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Text {
+                        text: "DISPOSITIVOS CONECTADOS"
+                        font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                        font.pixelSize: 10
+                        font.weight: Font.Bold
+                        color: root.skin ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.55)
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+
+                    Text {
+                        text: "Modo de energía: Equilibrado"
+                        font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                        font.pixelSize: 10
+                        color: root.skin ? root.skin.accent : "#0078D4"
+                    }
+
+                }
+
+                // Lista detallada
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    model: root.activeDevices
+                    spacing: 6
+
+                    delegate: Rectangle {
+                        width: parent ? parent.width : 320
+                        height: 40
+                        radius: root.skin ? root.skin.radiusControl : 6
+                        color: root.skin ? root.skin.raised : Qt.rgba(1, 1, 1, 0.05)
+                        border.color: root.skin ? root.skin.cardBorder : Qt.rgba(1, 1, 1, 0.08)
+                        border.width: 1
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 10
+
+                            Text {
+                                text: modelData.icon || "󰋋"
+                                font.family: "Symbols Nerd Font"
+                                font.pixelSize: 14
+                                color: root.skin ? root.skin.ink : "#FFFFFF"
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 1
+
+                                Text {
+                                    text: modelData.name || "Dispositivo"
+                                    font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                                    font.pixelSize: 11
+                                    font.weight: Font.DemiBold
+                                    color: root.skin ? root.skin.ink : "#FFFFFF"
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+
+                                Text {
+                                    text: "Conectado"
+                                    font.family: root.skin ? root.skin.fontText : "Segoe UI Variable Text"
+                                    font.pixelSize: 9
+                                    color: root.skin ? root.skin.green : "#6CCB5F"
+                                }
+
+                            }
+
+                            Rectangle {
+                                width: 50
+                                height: 4
+                                radius: 2
+                                color: root.skin ? root.skin.dotOff : Qt.rgba(1, 1, 1, 0.1)
+
+                                Rectangle {
+                                    height: parent.height
+                                    radius: parent.radius
+                                    width: parent.width * (Math.max(0, Math.min(100, modelData.percent)) / 100)
+                                    color: modelData.percent > 40 ? root.skin.green : (modelData.percent > 15 ? root.skin.amber : root.skin.red)
+
+                                    Behavior on width {
+                                        NumberAnimation {
+                                            duration: 350
+                                            easing.type: Easing.OutCubic
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                            Text {
+                                text: modelData.percent + "%"
+                                font.family: root.skin ? root.skin.fontFigure : "Segoe UI Variable Display"
+                                font.pixelSize: 11
+                                font.weight: Font.Bold
+                                color: root.skin ? root.skin.ink : "#FFFFFF"
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
         // ── COMPONENTE REUTILIZABLE: ANILLO DE BATERÍA ESTILO macOS ──
         // ═══════════════════════════════════════════════════════════════════
         component BatteryRingSlot: Item {
@@ -349,13 +880,6 @@ Item {
                         property bool empty: slot.isEmpty
                         property string dType: slot.deviceData ? (slot.deviceData.type || "headset") : ""
                         property bool charging: slot.deviceData ? !!slot.deviceData.charging : false
-
-                        Behavior on animPct {
-                            NumberAnimation {
-                                duration: 350
-                                easing.type: Easing.OutCubic
-                            }
-                        }
 
                         anchors.fill: parent
                         renderTarget: Canvas.FramebufferObject
@@ -391,6 +915,15 @@ Item {
                                 else if (animPct <= 12)
                                     strokeColor = root.skin.signal;
                                 else if (animPct <= 25)
+                                    strokeColor = root.skin.amber;
+                                else
+                                    strokeColor = root.skin.green;
+                            } else if (root.fluent) {
+                                if (charging)
+                                    strokeColor = root.skin.accent;
+                                else if (animPct <= 15)
+                                    strokeColor = root.skin.red;
+                                else if (animPct <= 30)
                                     strokeColor = root.skin.amber;
                                 else
                                     strokeColor = root.skin.green;
@@ -461,6 +994,15 @@ Item {
                                 ctx.strokeRect(cx - 6 * s, cy - 9 * s, 12 * s, 18 * s);
                             }
                         }
+
+                        Behavior on animPct {
+                            NumberAnimation {
+                                duration: 350
+                                easing.type: Easing.OutCubic
+                            }
+
+                        }
+
                     }
 
                 }
@@ -474,9 +1016,7 @@ Item {
                     font.pixelSize: root.nothing ? 12 : 13
                     font.weight: Font.Medium
                     font.italic: false
-                    color: root.nothing
-                        ? (slot.deviceData && slot.deviceData.percent <= 12 ? root.skin.signal : (slot.deviceData && slot.deviceData.percent <= 25 ? root.skin.amber : root.skin.green))
-                        : "#FFFFFF"
+                    color: root.nothing ? (slot.deviceData && slot.deviceData.percent <= 12 ? root.skin.signal : (slot.deviceData && slot.deviceData.percent <= 25 ? root.skin.amber : root.skin.green)) : "#FFFFFF"
                 }
 
                 // Espacio reservado transparente para los slots vacíos

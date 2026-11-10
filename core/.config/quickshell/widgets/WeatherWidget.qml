@@ -11,14 +11,15 @@ Item {
 
     readonly property var skin: root.widgetsState ? root.widgetsState.skin : null
     readonly property bool nothing: root.skin ? root.skin.isNothing : false
+    readonly property bool fluent: root.skin ? root.skin.isFluent : (root.widgetsState && root.widgetsState.activeThemeId === "modern-win11-theme")
 
     readonly property bool isSmall: root.width <= 220
     readonly property bool isMedium: root.width > 220 && root.height <= 240
     readonly property bool isLarge: root.width > 220 && root.height > 240
 
-    readonly property real cardRadius: root.nothing ? root.skin.radius : (root.widgetsState ? root.widgetsState.cardRadius : 22)
-    readonly property string fontFamily: root.nothing ? root.skin.fontText : "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Cantarell, sans-serif"
-    readonly property string fontFigure: root.nothing ? root.skin.fontFigure : root.fontFamily
+    readonly property real cardRadius: root.nothing ? root.skin.radius : (root.fluent ? root.skin.radiusCard : (root.widgetsState ? root.widgetsState.cardRadius : 22))
+    readonly property string fontFamily: root.nothing ? root.skin.fontText : (root.fluent ? root.skin.fontText : "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Cantarell, sans-serif")
+    readonly property string fontFigure: root.nothing ? root.skin.fontFigure : (root.fluent ? root.skin.fontFigure : root.fontFamily)
 
     // ── Datos reactivos obtenidos de widgetsState ──────────────────────────
     readonly property string cityName: (root.widgetsState && root.widgetsState.weatherCityName) ? root.widgetsState.weatherCityName : "Buenos Aires"
@@ -192,15 +193,15 @@ Item {
         anchors.fill: parent
         radius: root.cardRadius
         clip: true
-        border.color: root.nothing ? "transparent" : Qt.rgba(1, 1, 1, 0.12)
+        border.color: root.nothing ? "transparent" : (root.fluent ? root.skin.cardBorder : Qt.rgba(1, 1, 1, 0.12))
         border.width: root.nothing ? 0 : 1
-        color: root.nothing ? root.skin.card : "transparent"
+        color: root.nothing ? root.skin.card : (root.fluent ? root.skin.card : "transparent")
         scale: clickArea.pressed ? 0.985 : 1.0
         Behavior on scale {
             NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
         }
 
-        gradient: root.nothing ? null : appleGradient
+        gradient: (root.nothing || root.fluent) ? null : appleGradient
 
         Gradient {
             id: appleGradient
@@ -513,8 +514,10 @@ Item {
                 anchors.right: parent.right
                 anchors.rightMargin: 16
                 height: 86
-                radius: root.nothing ? 16 : 14
-                color: root.nothing ? root.skin.raised : Qt.rgba(0, 0, 0, 0.12)
+                radius: root.nothing ? 16 : (root.fluent ? root.skin.radiusControl : 14)
+                color: root.nothing ? root.skin.raised : (root.fluent ? root.skin.raised : Qt.rgba(0, 0, 0, 0.12))
+                border.color: root.fluent ? root.skin.cardBorder : "transparent"
+                border.width: root.fluent ? 1 : 0
 
                 Row {
                     anchors.fill: parent
@@ -537,7 +540,7 @@ Item {
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: index === 0 ? "Ahora" : (hItem.time || "")
-                                    color: root.nothing ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.85)
+                                    color: root.nothing ? root.skin.inkDim : (root.fluent ? root.skin.inkDim : Qt.rgba(1, 1, 1, 0.85))
                                     font.family: root.fontFamily
                                     font.pixelSize: 11
                                     font.weight: Font.Medium
@@ -552,7 +555,7 @@ Item {
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: hItem.temp || "--°"
-                                    color: root.nothing ? root.skin.ink : "#FFFFFF"
+                                    color: root.nothing ? root.skin.ink : (root.fluent ? root.skin.ink : "#FFFFFF")
                                     font.family: root.fontFigure
                                     font.pixelSize: root.nothing ? 13 : 13
                                     font.weight: Font.DemiBold
@@ -575,8 +578,10 @@ Item {
                 anchors.leftMargin: 16
                 anchors.right: parent.right
                 anchors.rightMargin: 16
-                radius: root.nothing ? 16 : 14
-                color: root.nothing ? root.skin.raised : Qt.rgba(0, 0, 0, 0.12)
+                radius: root.nothing ? 16 : (root.fluent ? root.skin.radiusControl : 14)
+                color: root.nothing ? root.skin.raised : (root.fluent ? root.skin.raised : Qt.rgba(0, 0, 0, 0.12))
+                border.color: root.fluent ? root.skin.cardBorder : "transparent"
+                border.width: root.fluent ? 1 : 0
 
                 Column {
                     anchors.fill: parent
