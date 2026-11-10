@@ -7,14 +7,14 @@ Rectangle {
 
     required property var barState
 
-    color: root.barState.themeSurfaceContainer
-    radius: root.barState.themeCardRadius
-    border.color: cardHover.hovered ? root.barState.themeBorderSpecular : root.barState.themeBorder
+    color: Qt.rgba(1, 1, 1, 0.08)
+    radius: 16
+    border.color: cardHover.hovered ? root.barState.themeBorderSpecular : Qt.rgba(1, 1, 1, 0.12)
     border.width: 1
     clip: true
 
-    implicitWidth: 180
-    implicitHeight: 168
+    implicitWidth: 188
+    implicitHeight: 166
 
     HoverHandler { id: cardHover }
 
@@ -28,10 +28,10 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 14
-        spacing: 4
+        anchors.margins: 16
+        spacing: 2
 
-        // Top Header: Weather Icon & Astraeus Stacked Clock
+        // Top Row: Weather Icon & Astraeus Stacked Clock (Coral)
         RowLayout {
             Layout.fillWidth: true
 
@@ -44,20 +44,20 @@ Rectangle {
 
             Item { Layout.fillWidth: true }
 
-            // Astraeus Stacked Clock (HH on top, MM on bottom)
+            // Astraeus Stacked Clock: HH on top, MM on bottom (both coral accent)
             Column {
-                spacing: -4
+                spacing: -6
 
                 Text {
                     anchors.right: parent.right
                     text: {
                         var parts = root.barState.timeStr.split(":");
-                        return parts[0] || "20";
+                        return parts[0] || "10";
                     }
                     font.family: root.barState.themeFontDisplay
-                    font.pixelSize: 22
-                    font.weight: Font.DemiBold
-                    color: root.barState.themeOnSurface
+                    font.pixelSize: 28
+                    font.weight: Font.Light
+                    color: root.barState.themeAccent
                 }
 
                 Text {
@@ -65,13 +65,13 @@ Rectangle {
                     text: {
                         var parts = root.barState.timeStr.split(":");
                         if (parts.length > 1) {
-                            return parts[1].split(" ")[0] || "00";
+                            return parts[1].split(" ")[0] || "44";
                         }
-                        return "00";
+                        return "44";
                     }
                     font.family: root.barState.themeFontDisplay
-                    font.pixelSize: 22
-                    font.weight: Font.DemiBold
+                    font.pixelSize: 28
+                    font.weight: Font.Light
                     color: root.barState.themeAccent
                 }
             }
@@ -79,32 +79,32 @@ Rectangle {
 
         Item { Layout.fillHeight: true }
 
-        // Temperature Headline
+        // Temperature Headline (Large, thin white typography)
         Text {
-            text: root.barState.weatherTemp || "22°C"
+            text: root.barState.weatherTemp || "29°"
             font.family: root.barState.themeFontDisplay
-            font.pixelSize: 28
-            font.weight: Font.Light
-            color: root.barState.themeOnSurface
+            font.pixelSize: 34
+            font.weight: Font.Thin
+            color: "#FFFFFF"
         }
 
-        // Weather Condition & Date
+        // Weather Condition & Location
         Text {
             Layout.fillWidth: true
-            text: root.barState.weatherDesc || "Soleado"
+            text: root.barState.weatherDesc || "Clear"
             font.family: root.barState.themeFontInterface
             font.pixelSize: 11
             font.weight: Font.Medium
-            color: root.barState.themeOnSurface
+            color: Qt.rgba(1, 1, 1, 0.75)
             elide: Text.ElideRight
         }
 
         Text {
             Layout.fillWidth: true
-            text: root.barState.dateStr || "Hoy"
+            text: root.barState.dateStr || "Lisbon"
             font.family: root.barState.themeFontInterface
             font.pixelSize: 10
-            color: root.barState.themeOnSurfaceDim
+            color: Qt.rgba(1, 1, 1, 0.50)
             elide: Text.ElideRight
         }
     }

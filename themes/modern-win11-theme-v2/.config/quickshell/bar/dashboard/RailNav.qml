@@ -10,46 +10,35 @@ Item {
     signal pageSelected(int pageIndex)
 
     readonly property var pages: [
-        { id: 0, num: "01", name: "Home", icon: "󰋜" },
+        { id: 0, num: "01", name: "Home", icon: "󰕰" },
         { id: 1, num: "02", name: "Media", icon: "󰝚" },
-        { id: 2, num: "03", name: "System", icon: "󰍹" },
+        { id: 2, num: "03", name: "System", icon: "󰄪" },
         { id: 3, num: "04", name: "Network", icon: "󰤨" },
         { id: 4, num: "05", name: "Shelf", icon: "󰉋" },
         { id: 5, num: "06", name: "Tools", icon: "󰒓" },
         { id: 6, num: "07", name: "Settings", icon: "󰅒" }
     ]
 
-    implicitWidth: 54
+    implicitWidth: 48
     implicitHeight: railCol.implicitHeight
 
     // Active Indicator Capsule (Sliding animated pill behind active tab)
     Rectangle {
         id: activeIndicator
-        width: 44
+        width: 38
         height: 38
         radius: 10
-        color: root.barState.themeSurfaceContainerHigh
-        border.color: root.barState.themeBorderSpecular
+        color: root.currentPage === 0 ? root.barState.themeAccent : Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.28)
+        border.color: root.currentPage === 0 ? "transparent" : root.barState.themeAccent
         border.width: 1
         x: 5
         y: root.currentPage * (38 + 6) + 4
 
         Behavior on y {
             NumberAnimation {
-                duration: 220
+                duration: 200
                 easing.type: Easing.OutCubic
             }
-        }
-
-        // Left Accent Bar (2px)
-        Rectangle {
-            width: 3
-            height: 18
-            radius: 1.5
-            color: root.barState.themeAccent
-            anchors.left: parent.left
-            anchors.leftMargin: 2
-            anchors.verticalCenter: parent.verticalCenter
         }
     }
 
@@ -64,7 +53,7 @@ Item {
             model: root.pages
 
             Item {
-                width: 44
+                width: 38
                 height: 38
 
                 readonly property bool isActive: root.currentPage === index
@@ -72,29 +61,14 @@ Item {
 
                 HoverHandler { id: tabHover }
 
-                Column {
+                Text {
                     anchors.centerIn: parent
-                    spacing: 1
+                    text: modelData.icon
+                    font.family: "JetBrainsMono Nerd Font"
+                    font.pixelSize: 16
+                    color: parent.isActive ? (root.currentPage === 0 ? "#FFFFFF" : root.barState.themeAccent) : (parent.isHovered ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.55))
 
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: modelData.icon
-                        font.family: "JetBrainsMono Nerd Font"
-                        font.pixelSize: 14
-                        color: parent.parent.isActive ? root.barState.themeAccent : (parent.parent.isHovered ? root.barState.themeOnSurface : root.barState.themeOnSurfaceLow)
-
-                        Behavior on color { ColorAnimation { duration: 140 } }
-                    }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: modelData.num
-                        font.family: root.barState.themeFontInterface
-                        font.pixelSize: 8
-                        font.weight: Font.DemiBold
-                        color: parent.parent.isActive ? root.barState.themeOnSurface : root.barState.themeOnSurfaceLow
-                        opacity: parent.parent.isActive ? 0.9 : 0.5
-                    }
+                    Behavior on color { ColorAnimation { duration: 140 } }
                 }
 
                 MouseArea {

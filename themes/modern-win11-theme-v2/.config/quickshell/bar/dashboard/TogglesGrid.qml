@@ -7,8 +7,8 @@ Item {
 
     required property var barState
 
-    implicitWidth: 280
-    implicitHeight: 168
+    implicitWidth: 260
+    implicitHeight: 166
 
     GridLayout {
         anchors.fill: parent
@@ -21,45 +21,42 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: root.barState.themeControlRadius
-            color: root.barState.wifiConnected ? root.barState.themeAccentGlow : root.barState.themeSurfaceContainer
-            border.color: wifiHover.hovered ? root.barState.themeBorderSpecular : root.barState.themeBorder
+            radius: 14
+            color: root.barState.wifiConnected ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.22) : Qt.rgba(1, 1, 1, 0.08)
+            border.color: root.barState.wifiConnected ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.40) : (wifiHover.hovered ? root.barState.themeBorderSpecular : Qt.rgba(1, 1, 1, 0.12))
             border.width: 1
 
             HoverHandler { id: wifiHover }
 
-            RowLayout {
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
+                anchors.margins: 12
+                spacing: 4
 
                 Text {
                     text: root.barState.wifiConnected ? "󰤨" : "󰤭"
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 18
-                    color: root.barState.wifiConnected ? root.barState.themeAccent : root.barState.themeOnSurfaceLow
+                    color: root.barState.wifiConnected ? root.barState.themeAccent : Qt.rgba(1, 1, 1, 0.50)
                 }
 
-                ColumnLayout {
+                Item { Layout.fillHeight: true }
+
+                Text {
+                    text: "Wi-Fi"
+                    font.family: root.barState.themeFontInterface
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    color: "#FFFFFF"
+                }
+
+                Text {
                     Layout.fillWidth: true
-                    spacing: 1
-
-                    Text {
-                        text: "Wi-Fi"
-                        font.family: root.barState.themeFontInterface
-                        font.pixelSize: 11
-                        font.weight: Font.DemiBold
-                        color: root.barState.themeOnSurface
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.barState.wifiConnected ? (root.barState.wifiSsid || "Conectado") : "Desactivado"
-                        font.family: root.barState.themeFontInterface
-                        font.pixelSize: 10
-                        color: root.barState.themeOnSurfaceDim
-                        elide: Text.ElideRight
-                    }
+                    text: root.barState.wifiConnected ? (root.barState.wifiSsid || "Home") : "Off"
+                    font.family: root.barState.themeFontInterface
+                    font.pixelSize: 10
+                    color: Qt.rgba(1, 1, 1, 0.65)
+                    elide: Text.ElideRight
                 }
             }
 
@@ -81,45 +78,42 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: root.barState.themeControlRadius
-            color: root.barState.bluetoothConnected ? root.barState.themeAccentGlow : root.barState.themeSurfaceContainer
-            border.color: btHover.hovered ? root.barState.themeBorderSpecular : root.barState.themeBorder
+            radius: 14
+            color: root.barState.bluetoothConnected ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.22) : Qt.rgba(1, 1, 1, 0.08)
+            border.color: root.barState.bluetoothConnected ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.40) : (btHover.hovered ? root.barState.themeBorderSpecular : Qt.rgba(1, 1, 1, 0.12))
             border.width: 1
 
             HoverHandler { id: btHover }
 
-            RowLayout {
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
+                anchors.margins: 12
+                spacing: 4
 
                 Text {
                     text: root.barState.bluetoothEnabled ? "󰂯" : "󰂲"
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 18
-                    color: root.barState.bluetoothConnected ? root.barState.themeAccent : (root.barState.bluetoothEnabled ? root.barState.themeOnSurface : root.barState.themeOnSurfaceLow)
+                    color: root.barState.bluetoothConnected ? root.barState.themeAccent : (root.barState.bluetoothEnabled ? "#FFFFFF" : Qt.rgba(1, 1, 1, 0.50))
                 }
 
-                ColumnLayout {
+                Item { Layout.fillHeight: true }
+
+                Text {
+                    text: "Bluetooth"
+                    font.family: root.barState.themeFontInterface
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    color: "#FFFFFF"
+                }
+
+                Text {
                     Layout.fillWidth: true
-                    spacing: 1
-
-                    Text {
-                        text: "Bluetooth"
-                        font.family: root.barState.themeFontInterface
-                        font.pixelSize: 11
-                        font.weight: Font.DemiBold
-                        color: root.barState.themeOnSurface
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.barState.bluetoothConnected ? (root.barState.bluetoothDeviceName || "Conectado") : (root.barState.bluetoothEnabled ? "Activo" : "Desactivado")
-                        font.family: root.barState.themeFontInterface
-                        font.pixelSize: 10
-                        color: root.barState.themeOnSurfaceDim
-                        elide: Text.ElideRight
-                    }
+                    text: root.barState.bluetoothConnected ? (root.barState.bluetoothDeviceName || "On") : (root.barState.bluetoothEnabled ? "On" : "Off")
+                    font.family: root.barState.themeFontInterface
+                    font.pixelSize: 10
+                    color: Qt.rgba(1, 1, 1, 0.65)
+                    elide: Text.ElideRight
                 }
             }
 
@@ -129,7 +123,7 @@ Item {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: mouse => {
                     if (mouse.button === Qt.RightButton) {
-                        root.barState.openPopup("bt_orbit");
+                        root.barState.openPopup("bluetooth_orbit");
                     } else {
                         root.barState.toggleBluetooth();
                     }
@@ -137,49 +131,46 @@ Item {
             }
         }
 
-        // ── Tile 3: Batería / Modo de Energía ──
+        // ── Tile 3: Batería / Potencia ──
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: root.barState.themeControlRadius
-            color: root.barState.themeSurfaceContainer
-            border.color: pwrHover.hovered ? root.barState.themeBorderSpecular : root.barState.themeBorder
+            radius: 14
+            color: root.barState.isBatteryCharging ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.22) : Qt.rgba(1, 1, 1, 0.08)
+            border.color: root.barState.isBatteryCharging ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.40) : (batHover.hovered ? root.barState.themeBorderSpecular : Qt.rgba(1, 1, 1, 0.12))
             border.width: 1
 
-            HoverHandler { id: pwrHover }
+            HoverHandler { id: batHover }
 
-            RowLayout {
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
+                anchors.margins: 12
+                spacing: 4
 
                 Text {
-                    text: root.barState.isBatteryCharging ? "󰂄" : (root.barState.hasBattery ? (root.barState.batteryPercent > 20 ? "󰁹" : "󰂃") : "󰓅")
+                    text: root.barState.isBatteryCharging ? "󰂄" : "󱐋"
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 18
-                    color: root.barState.isBatteryCharging ? "#107C41" : root.barState.themeAccent
+                    color: root.barState.isBatteryCharging ? root.barState.themeAccent : Qt.rgba(1, 1, 1, 0.70)
                 }
 
-                ColumnLayout {
+                Item { Layout.fillHeight: true }
+
+                Text {
+                    text: root.barState.hasBattery ? (root.barState.batteryPercent + "%") : "Power"
+                    font.family: root.barState.themeFontInterface
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    color: "#FFFFFF"
+                }
+
+                Text {
                     Layout.fillWidth: true
-                    spacing: 1
-
-                    Text {
-                        text: root.barState.hasBattery ? "Batería" : "Energía"
-                        font.family: root.barState.themeFontInterface
-                        font.pixelSize: 11
-                        font.weight: Font.DemiBold
-                        color: root.barState.themeOnSurface
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.barState.hasBattery ? (root.barState.batteryPercent + "% · " + (root.barState.isBatteryCharging ? "Cargando" : "En uso")) : "Equilibrado"
-                        font.family: root.barState.themeFontInterface
-                        font.pixelSize: 10
-                        color: root.barState.themeOnSurfaceDim
-                        elide: Text.ElideRight
-                    }
+                    text: root.barState.isBatteryCharging ? "Charging" : "Balanced"
+                    font.family: root.barState.themeFontInterface
+                    font.pixelSize: 10
+                    color: Qt.rgba(1, 1, 1, 0.65)
+                    elide: Text.ElideRight
                 }
             }
         }
@@ -188,45 +179,48 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: root.barState.themeControlRadius
-            color: root.barState.themeSurfaceContainer
-            border.color: micHover.hovered ? root.barState.themeBorderSpecular : root.barState.themeBorder
+            radius: 14
+            color: !root.barState.micMuted ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.22) : Qt.rgba(1, 1, 1, 0.08)
+            border.color: !root.barState.micMuted ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.40) : (micHover.hovered ? root.barState.themeBorderSpecular : Qt.rgba(1, 1, 1, 0.12))
             border.width: 1
 
             HoverHandler { id: micHover }
 
-            RowLayout {
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
-                spacing: 8
+                anchors.margins: 12
+                spacing: 4
 
                 Text {
-                    text: "󰍬"
+                    text: root.barState.micMuted ? "󰍭" : "󰍬"
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 18
-                    color: root.barState.themeAccent
+                    color: !root.barState.micMuted ? root.barState.themeAccent : Qt.rgba(1, 1, 1, 0.50)
                 }
 
-                ColumnLayout {
+                Item { Layout.fillHeight: true }
+
+                Text {
+                    text: "Mic"
+                    font.family: root.barState.themeFontInterface
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    color: "#FFFFFF"
+                }
+
+                Text {
                     Layout.fillWidth: true
-                    spacing: 1
-
-                    Text {
-                        text: "Micrófono"
-                        font.family: root.barState.themeFontInterface
-                        font.pixelSize: 11
-                        font.weight: Font.DemiBold
-                        color: root.barState.themeOnSurface
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: "En línea"
-                        font.family: root.barState.themeFontInterface
-                        font.pixelSize: 10
-                        color: root.barState.themeOnSurfaceDim
-                    }
+                    text: root.barState.micMuted ? "Muted" : "Live"
+                    font.family: root.barState.themeFontInterface
+                    font.pixelSize: 10
+                    color: Qt.rgba(1, 1, 1, 0.65)
                 }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.barState.toggleMicMute()
             }
         }
     }

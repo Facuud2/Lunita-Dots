@@ -84,6 +84,13 @@ function M.setup()
     })
 
     hl.layer_rule({
+        name  = "win11-astraeus-blur",
+        match = { namespace = "^(win11-astraeus-dashboard|win11-dynamic-island)$" },
+        blur  = true,
+        ignore_alpha = 0.05,
+    })
+
+    hl.layer_rule({
         name  = "macos-spotlight-blur",
         match = { namespace = "^macos-spotlight$" },
         blur  = true,

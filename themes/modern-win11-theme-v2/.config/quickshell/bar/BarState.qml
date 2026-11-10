@@ -37,22 +37,22 @@ Item {
 
     // Surfaces & Containers
     property color themeSurface: {
-        if (root.astraeusLook === "light") return "#F3F3F8";
-        if (root.astraeusLook === "glass") return Qt.rgba(0.07, 0.08, 0.11, 0.45);
-        if (root.astraeusLook === "starfall") return "#0B0C16";
-        return "#121318";
+        if (root.astraeusLook === "light") return Qt.rgba(0.95, 0.95, 0.97, 0.82);
+        if (root.astraeusLook === "glass") return Qt.rgba(0.08, 0.08, 0.12, 0.65);
+        if (root.astraeusLook === "starfall") return Qt.rgba(0.04, 0.05, 0.09, 0.85);
+        return Qt.rgba(0.07, 0.07, 0.10, 0.78);
     }
     property color themeSurfaceContainer: {
-        if (root.astraeusLook === "light") return "#FFFFFF";
-        if (root.astraeusLook === "glass") return Qt.rgba(1, 1, 1, 0.08);
+        if (root.astraeusLook === "light") return Qt.rgba(1, 1, 1, 0.65);
+        if (root.astraeusLook === "glass") return Qt.rgba(1, 1, 1, 0.09);
         if (root.astraeusLook === "starfall") return Qt.rgba(0.08, 0.09, 0.14, 0.74);
-        return "#1A1C24";
+        return Qt.rgba(1, 1, 1, 0.07);
     }
     property color themeSurfaceContainerHigh: {
-        if (root.astraeusLook === "light") return "#E5E7EB";
-        if (root.astraeusLook === "glass") return Qt.rgba(1, 1, 1, 0.14);
+        if (root.astraeusLook === "light") return Qt.rgba(1, 1, 1, 0.90);
+        if (root.astraeusLook === "glass") return Qt.rgba(1, 1, 1, 0.16);
         if (root.astraeusLook === "starfall") return Qt.rgba(0.12, 0.13, 0.20, 0.85);
-        return "#252834";
+        return Qt.rgba(1, 1, 1, 0.12);
     }
 
     // Typography & Ink Tokens
@@ -322,6 +322,21 @@ Item {
     function toggleMute() {
         root.isMuted = !root.isMuted;
         Quickshell.execDetached(["bash", "-c", "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle 2>/dev/null || pactl set-sink-mute @DEFAULT_SINK@ toggle 2>/dev/null"]);
+    }
+
+    // Microphone Volume & Mute Controls
+    property int micPercent: 100
+    property bool micMuted: false
+
+    function setMicVolume(pct) {
+        var clamped = Math.max(0, Math.min(100, Math.round(pct)));
+        root.micPercent = clamped;
+        Quickshell.execDetached(["bash", "-c", "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ " + (clamped / 100).toFixed(2) + " 2>/dev/null || true"]);
+    }
+
+    function toggleMicMute() {
+        root.micMuted = !root.micMuted;
+        Quickshell.execDetached(["bash", "-c", "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle 2>/dev/null || true"]);
     }
 
     // ==========================================

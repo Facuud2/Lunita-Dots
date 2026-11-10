@@ -45,6 +45,19 @@ Rectangle {
         opacity: 0.90
     }
 
+    // Glossy Sheen Wash (Light catching the top glass bevel)
+    Rectangle {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 52
+        radius: root.radius
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.09) }
+            GradientStop { position: 1.0; color: "transparent" }
+        }
+    }
+
     // Starfall Cosmic Backdrop Effect
     Rectangle {
         anchors.fill: parent

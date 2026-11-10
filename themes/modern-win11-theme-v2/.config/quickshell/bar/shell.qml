@@ -103,9 +103,9 @@ Scope {
                 }
             }
 
-            // ── 1B. Top Astraeus Liquid-Glass Dashboard Overlay Window ──
+            // ── 1B. Fullscreen Backdrop & Dismiss Veil ──
             PanelWindow {
-                id: dashboardOverlayWindow
+                id: dashboardBackdropWindow
                 screen: screenScope.modelData
                 color: "transparent"
                 visible: globalBarState.activePopup === "dashboard"
@@ -116,8 +116,52 @@ Scope {
                     left: true
                     right: true
                 }
+
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.namespace: "win11-dashboard-backdrop"
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+                // Soft background veil: dims high-contrast wallpapers/desktop widgets
+                Rectangle {
+                    anchors.fill: parent
+                    color: "#000000"
+                    opacity: globalBarState.activePopup === "dashboard" ? 0.28 : 0.0
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 180 }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.ArrowCursor
+                        onClicked: globalBarState.closePopups()
+                    }
+                }
+            }
+
+            // ── 1C. Top Astraeus Liquid-Glass Dashboard Panel Window (Exact Region Blur) ──
+            PanelWindow {
+                id: dashboardWindow
+                screen: screenScope.modelData
+                color: "transparent"
+                visible: globalBarState.activePopup === "dashboard"
+
+                anchors {
+                    top: true
+                }
                 margins {
-                    top: 0
+                    top: 42
+                }
+
+                implicitWidth: 924
+                implicitHeight: 340
+
+                mask: Region {
+                    Region {
+                        item: dashboardView
+                        radius: 18
+                    }
                 }
 
                 WlrLayershell.layer: WlrLayer.Overlay
@@ -125,18 +169,11 @@ Scope {
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-                // Dismiss Backdrop
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: globalBarState.closePopups()
-                }
-
                 DashboardView {
                     id: dashboardView
                     barState: globalBarState
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.topMargin: 46
                 }
             }
 
