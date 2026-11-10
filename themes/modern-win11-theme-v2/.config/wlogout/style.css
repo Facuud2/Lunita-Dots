@@ -1,0 +1,30 @@
+* {
+    background-image: none;
+    box-shadow: none;
+    font-family: "Segoe UI Variable Text, Segoe UI, Inter", -apple-system, sans-serif;
+}
+
+window {
+    background-color: rgba(18, 18, 22, 0.82);
+}
+
+button {
+    border-radius: 16px;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #F4F4F6;
+    background-color: #1A1C24;
+    border-style: solid;
+    border-width: 1px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 28%;
+    margin: 10px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+button:focus, button:active, button:hover {
+    background-color: #0078D4;
+    color: #FFFFFF;
+    border-color: #0078D4;
+    outline-style: none;
+}

@@ -1,0 +1,578 @@
+/* 🪟 Windows 11 Liquid Frosted Acrylic Theme for Qt6 & Dolphin
+ * Lunita-Dots — Calibrado para máxima transparencia, efecto cristal y bordes redondeados Fluent
+ * Acento principal: Turquesa / Cian vibrante (#00D2C4)
+ */
+
+* {
+    font-family: "SF Pro Display", "Segoe UI Variable Display", "Inter", "Cantarell", sans-serif;
+    font-size: 13px;
+    outline: none;
+    color: #f8fafc;
+}
+
+/* ── Ventana Principal (Transparencia Total de Cristal Líquido) ── */
+QMainWindow,
+QWidget#DolphinMainWindow,
+DolphinMainWindow {
+    background-color: rgba(18, 22, 28, 0.15);
+    color: #f8fafc;
+}
+
+/* ── Barra Lateral (Places / Lugares / Acceso Rápido) ── */
+QDockWidget {
+    background-color: rgba(14, 18, 24, 0.18);
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    titlebar-close-icon: none;
+    titlebar-normal-icon: none;
+}
+
+QDockWidget::title {
+    background-color: transparent;
+    padding: 10px 14px 6px 14px;
+    font-weight: 700;
+    color: #94a3b8;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+/* Lista de lugares en la barra lateral */
+QDockWidget QTreeView,
+QDockWidget QListView {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    color: #f8fafc;
+    padding: 6px;
+}
+
+/* Elementos individuales de la barra lateral (Cápsulas Windows 11) */
+QDockWidget QTreeView::item,
+QDockWidget QListView::item {
+    height: 32px;
+    padding: 2px 10px;
+    border-radius: 8px;
+    margin: 2px 6px;
+    color: #f1f5f9;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+QDockWidget QTreeView::item:hover,
+QDockWidget QListView::item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+/* Ítem activo en la barra lateral con la firma de Windows 11 (Cápsula con barra Cian vertical) */
+QDockWidget QTreeView::item:selected,
+QDockWidget QListView::item:selected {
+    background-color: rgba(0, 210, 196, 0.16);
+    border: 1px solid rgba(0, 210, 196, 0.35);
+    border-left: 3.5px solid #00D2C4;
+    border-radius: 4px 8px 8px 4px;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+QDockWidget QTreeView::item:selected:!active,
+QDockWidget QListView::item:selected:!active {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-left: 3.5px solid #00b4d8;
+    color: #f1f5f9;
+}
+
+/* Barras de capacidad de disco en la barra lateral (Dispositivos) */
+QProgressBar,
+KCapacityBar {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+    max-height: 4px;
+    min-height: 4px;
+    margin-top: 3px;
+    text-align: center;
+}
+
+QProgressBar::chunk,
+KCapacityBar::chunk {
+    background-color: #00D2C4;
+    border-radius: 2px;
+}
+
+/* ── Vista Central de Archivos de Dolphin (Lienzo 100% Transparente) ── */
+DolphinViewContainer,
+DolphinView,
+KItemListContainer,
+KItemListView,
+QGraphicsView,
+QAbstractScrollArea,
+QAbstractScrollArea > QWidget,
+QAbstractScrollArea > QWidget#qt_scrollarea_viewport,
+QAbstractItemView,
+QFrame#view {
+    background-color: transparent;
+    background: transparent;
+    color: #ffffff;
+    border: none;
+}
+
+/* Elementos de archivos y carpetas (Tarjetas Fluent redondeadas Windows 11) */
+QTreeView::item,
+QListView::item {
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin: 3px 4px;
+    color: #ffffff;
+    border: 1px solid transparent;
+}
+
+QTreeView::item:hover,
+QListView::item:hover {
+    background-color: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    color: #ffffff;
+}
+
+QTreeView::item:selected,
+QListView::item:selected {
+    background-color: rgba(0, 210, 196, 0.22);
+    border: 1px solid rgba(0, 210, 196, 0.50);
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+QTreeView::item:selected:!active,
+QListView::item:selected:!active {
+    background-color: rgba(0, 210, 196, 0.14);
+    border: 1px solid rgba(0, 210, 196, 0.30);
+    border-radius: 10px;
+    color: #f8fafc;
+}
+
+/* ── Encabezados de Columnas (Modo Detalles) ── */
+QHeaderView::section {
+    background-color: rgba(22, 26, 33, 0.25);
+    color: #94a3b8;
+    padding: 6px 12px;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QHeaderView::section:hover {
+    background-color: rgba(255, 255, 255, 0.10);
+    color: #ffffff;
+}
+
+/* ── Barra de Herramientas y Botones Fluent ── */
+QToolBar {
+    background-color: rgba(16, 20, 26, 0.16);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    spacing: 6px;
+    padding: 6px 12px;
+}
+
+QToolButton,
+QToolBar QToolButton {
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 7px;
+    padding: 5px 12px;
+    margin: 1px 3px;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+/* Separación holgada para botones con flecha/menú desplegable (como el selector de vistas) */
+QToolButton[popupMode="1"],
+QToolButton[popupMode="2"],
+QToolBar QToolButton[popupMode="1"],
+QToolBar QToolButton[popupMode="2"] {
+    padding-right: 32px !important;
+    padding-left: 10px;
+}
+
+QToolButton::menu-button,
+QToolBar QToolButton::menu-button {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 20px;
+    border: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+QToolButton::menu-button:hover,
+QToolBar QToolButton::menu-button:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+QToolButton::menu-indicator,
+QToolBar QToolButton::menu-indicator {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    right: 5px;
+    width: 10px;
+    height: 10px;
+}
+
+QToolButton::menu-arrow,
+QToolBar QToolButton::menu-arrow {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    right: 5px;
+    width: 10px;
+    height: 10px;
+}
+
+QToolButton:hover,
+QToolBar QToolButton:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.24);
+    color: #ffffff;
+}
+
+QToolButton:pressed,
+QToolBar QToolButton:pressed {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: #00D2C4;
+}
+
+QToolButton:checked,
+QToolBar QToolButton:checked {
+    background-color: rgba(0, 210, 196, 0.22);
+    border: 1px solid #00D2C4;
+    color: #00F0FF;
+    font-weight: 600;
+}
+
+QToolButton:disabled,
+QToolBar QToolButton:disabled {
+    background-color: transparent;
+    border-color: transparent;
+    color: #475569;
+}
+
+/* ── Barra de Direcciones / Migas de pan (Breadcrumb Pill) y Buscador ── */
+QLineEdit,
+QWidget#urlNavigator,
+KUrlNavigator {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    padding: 4px 12px;
+    color: #ffffff;
+    selection-background-color: #00D2C4;
+    selection-color: #000000;
+    font-weight: 500;
+}
+
+QLineEdit:hover,
+QWidget#urlNavigator:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.26);
+}
+
+QLineEdit:focus,
+QWidget#urlNavigator:focus {
+    background-color: rgba(255, 255, 255, 0.16);
+    border: 1.5px solid #00D2C4;
+    color: #ffffff;
+}
+
+/* ── Pestañas Estilo Windows 11 Fluent Acrylic ── */
+QTabWidget::pane {
+    border: none;
+    background-color: transparent;
+}
+
+QTabBar {
+    background-color: rgba(13, 16, 21, 0.20);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 4px 8px 0 8px;
+    qproperty-drawBase: 0;
+}
+
+QTabBar::tab {
+    background-color: transparent;
+    color: #94a3b8;
+    border: 1px solid transparent;
+    border-radius: 8px 8px 0 0;
+    padding: 6px 16px;
+    margin: 2px 2px 0 2px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+QTabBar::tab:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+QTabBar::tab:selected {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-bottom: 1px solid transparent;
+    font-weight: 600;
+}
+
+QTabBar::close-button {
+    subcontrol-position: right;
+    padding: 2px;
+    border-radius: 4px;
+}
+
+QTabBar::close-button:hover {
+    background-color: rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+}
+
+/* ── Botones Estándar (PushButtons) ── */
+QPushButton {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 7px;
+    padding: 5px 16px;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+}
+
+QPushButton:pressed {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: #00D2C4;
+}
+
+QPushButton:default,
+QPushButton#primaryButton {
+    background-color: #00D2C4;
+    color: #032025;
+    border: 1px solid #00b8ac;
+    font-weight: 600;
+}
+
+QPushButton:default:hover,
+QPushButton#primaryButton:hover {
+    background-color: #00e5d7;
+}
+
+/* ── Barra de Estado y Píldora Redondeada Windows 11 ── */
+QStatusBar,
+DolphinStatusBar {
+    background-color: transparent;
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    min-height: 34px;
+    padding: 3px 12px;
+}
+
+/* Recuadro redondeado estilo Windows 11 para la información de elementos/carpetas (Píldora Fluent) */
+DolphinStatusBar QLabel,
+QStatusBar QLabel {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    padding: 4px 18px;
+    margin: 2px 4px;
+    color: #f1f5f9;
+    font-size: 11px;
+    font-weight: 500;
+    min-width: 220px;
+}
+
+DolphinStatusBar QToolButton,
+QStatusBar QToolButton {
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+
+DolphinStatusBar QToolButton:hover,
+QStatusBar QToolButton:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+/* ── Barras de Desplazamiento Ultrafinas (Fluent Scrollbars) ── */
+QScrollBar:vertical {
+    background-color: transparent;
+    width: 6px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background-color: rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+    min-height: 28px;
+    margin: 1px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #00D2C4;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+    border: none;
+}
+
+QScrollBar:horizontal {
+    background-color: transparent;
+    height: 6px;
+    margin: 0;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+    min-width: 28px;
+    margin: 1px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: #00D2C4;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal,
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: none;
+    border: none;
+}
+
+/* ── Menús Contextuales y Desplegables (Dark Acrylic Popups) ── */
+QMenu {
+    background-color: rgba(24, 28, 36, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 9px;
+    padding: 6px 4px;
+    color: #f1f5f9;
+}
+
+QMenu::item {
+    background-color: transparent;
+    color: #f1f5f9;
+    padding: 6px 28px 6px 12px;
+    border-radius: 6px;
+    margin: 1px 4px;
+    font-size: 13px;
+    font-weight: 450;
+}
+
+QMenu::item:selected {
+    background-color: rgba(0, 210, 196, 0.25);
+    border: 1px solid rgba(0, 210, 196, 0.45);
+    color: #ffffff;
+    font-weight: 500;
+}
+
+QMenu::item:disabled {
+    color: #64748b;
+    background-color: transparent;
+    border: none;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.10);
+    margin: 5px 8px;
+}
+
+QMenu::indicator {
+    width: 14px;
+    height: 14px;
+    margin-left: 6px;
+}
+
+QMenu::right-arrow {
+    margin: 4px;
+}
+
+/* ── Diálogo de Propiedades / Información (KPropertiesDialog & QDialog) ── */
+QDialog,
+KPropertiesDialog {
+    background-color: rgba(24, 28, 36, 0.98);
+    color: #f1f5f9;
+}
+
+QDialog QWidget,
+QDialog QLabel,
+QDialog QTabBar::tab,
+QDialog QGroupBox,
+QDialog QCheckBox,
+QDialog QRadioButton {
+    color: #f1f5f9;
+}
+
+QDialog QLabel {
+    color: #e2e8f0;
+    font-size: 13px;
+}
+
+QDialog QLineEdit {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: #ffffff;
+}
+
+QDialog QPushButton {
+    background-color: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-radius: 6px;
+    padding: 6px 18px;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+QDialog QPushButton:hover {
+    background-color: rgba(255, 255, 255, 0.20);
+    border-color: rgba(255, 255, 255, 0.32);
+    color: #ffffff;
+}
+
+QDialog QPushButton:default,
+QDialog QPushButton#primaryButton {
+    background-color: #00D2C4;
+    border: 1px solid #00b8ac;
+    color: #041f24;
+    font-weight: 600;
+}
+
+QDialog QPushButton:default:hover {
+    background-color: #00e5d7;
+}
+
+/* ── Tooltips ── */
+QToolTip {
+    background-color: rgba(15, 23, 42, 0.94);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+}
