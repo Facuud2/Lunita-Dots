@@ -1001,11 +1001,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 ---
 
 ### [ISSUE-063] Modern Win 11 Theme V2: Dynamic Island & Long Pill Superior con Físicas Orgánicas Astraeus
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO [x]
 - **Prioridad:** ALTA
-- **Rama Requerida:** `feat/modern-win11-v2`
+- **Rama Requerida:** `ISSUE_063_FEAT`
 - **Módulo(s):** Modern-Win11-Theme-V2 / Bar / Dynamic Island
-- **Archivos Afectados:** `themes/modern-win11-theme-v2/.config/quickshell/bar/shell.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/DynamicIsland.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/BarState.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/WaveformBars.qml`
+- **Archivos Afectados:** `themes/modern-win11-theme-v2/.config/quickshell/bar/shell.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/DynamicIsland.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/BarState.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/WaveformBars.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/scripts/activewindow.sh`
 - **Descripción:** Refactorización completa de la Dynamic Island superior (`DynamicIsland.qml`) en `modern-win11-theme-v2` inspirada en la física "liquid drip" de Astraeus:
   1. **Modo Collapsed Notch / Pill:** Píldora compacta anclada al tope de la pantalla con reloj, indicador de estado de red, batería y micro-espectrograma de audio.
   2. **Modo Long Pill ("Singing along"):** Modo extendido que muestra carátula diminuta, título, artista y línea de letra sincronizada en tiempo real o indicadores del sistema.

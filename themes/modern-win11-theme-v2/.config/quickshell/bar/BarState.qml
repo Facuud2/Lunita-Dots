@@ -124,6 +124,59 @@ Item {
     }
 
     // ==========================================
+    // 0B. WINDOW & FULLSCREEN TRACKING
+    // ==========================================
+    property string activeWindowTitle: ""
+    property string activeWindowClass: ""
+    property int isWindowFullscreen: 0
+    property bool isWindowFloating: false
+
+    Timer {
+        id: hyprActiveTimer
+        interval: 800
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!hyprActiveProc.running) {
+                hyprActiveProc.running = true;
+            }
+        }
+    }
+
+    Process {
+        id: hyprActiveProc
+        command: [Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/activewindow.sh"]
+        stdout: SplitParser {
+            onRead: data => {
+                var str = data.trim();
+                if (!str || str === "{}" || str === "") {
+                    root.activeWindowTitle = "";
+                    root.activeWindowClass = "";
+                    root.isWindowFloating = false;
+                    root.isWindowFullscreen = 0;
+                    return;
+                }
+                try {
+                    var parsed = JSON.parse(str);
+                    root.activeWindowTitle = parsed.title || "";
+                    root.activeWindowClass = parsed.class || "";
+                    root.isWindowFloating = !!parsed.floating;
+                    root.isWindowFullscreen = parsed.fullscreen || 0;
+                } catch(e) {}
+            }
+        }
+    }
+
+    // ==========================================
+    // 0C. ASTRAEUS DYNAMIC ISLAND & LYRICS STATE
+    // ==========================================
+    property string islandStateMode: "notch" // "notch" | "music_pill" | "long_pill" | "dashboard"
+    property bool forceLongPill: false
+    property string currentLyricLine: ""
+    property bool lyricsActive: false
+
+    // ==========================================
     // 1. DATE & TIME
     // ==========================================
     property string timeStr: "03:31 p. m."
@@ -752,9 +805,11 @@ Item {
         target: Hyprland
         function onFocusedMonitorChanged() {
             root.closeEdgePanels();
+            if (!hyprActiveProc.running) hyprActiveProc.running = true;
         }
         function onFocusedWorkspaceChanged() {
             root.closeEdgePanels();
+            if (!hyprActiveProc.running) hyprActiveProc.running = true;
         }
     }
 }
