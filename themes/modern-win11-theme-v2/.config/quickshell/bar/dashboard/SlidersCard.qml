@@ -146,7 +146,7 @@ Rectangle {
             isMuted: root.barState.isMuted
             activeColor: root.barState.themeAccent
             onValueChangedByUser: pct => root.barState.setVolume(pct)
-            onIconClicked: root.barState.toggleMute()
+            onIconClicked: root.barState.openSheet("volume_mixer")
         }
 
         // 2. Microphone Gain

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "sheets"
 
 Rectangle {
     id: root
@@ -97,12 +98,21 @@ Rectangle {
             opacity: 0.6
         }
 
-        // ── 2. Active Page Content Host ──
-        StackLayout {
-            id: pageStack
-            currentIndex: root.activePage
+        // ── 2. Active Page Content Host with Floating Sheets Layer ──
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
+
+            StackLayout {
+                id: pageStack
+                anchors.fill: parent
+                currentIndex: root.activePage
+                opacity: root.barState.activeSheet !== "" ? 0.0 : 1.0
+                scale: root.barState.activeSheet !== "" ? 0.96 : 1.0
+                visible: opacity > 0.01
+
+                Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
             // Page 0: Home Overview (Astraeus Overview)
             HomeView {
@@ -346,6 +356,47 @@ Rectangle {
                             }
                         }
                     }
+                }
+            }
+        }
+
+        // ── Floating Sheets Layer ("Behind Home" Subpanels) ──
+            Item {
+                id: sheetsLayer
+                anchors.fill: parent
+                visible: opacity > 0.01
+                opacity: root.barState.activeSheet !== "" ? 1.0 : 0.0
+                y: root.barState.activeSheet !== "" ? 0 : 16
+
+                Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                Behavior on y { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+
+                WifiRadarSheet {
+                    anchors.fill: parent
+                    barState: root.barState
+                    visible: root.barState.activeSheet === "wifi_radar"
+                    onCloseRequested: root.barState.closeSheet()
+                }
+
+                BluetoothOrbitSheet {
+                    anchors.fill: parent
+                    barState: root.barState
+                    visible: root.barState.activeSheet === "bluetooth_orbit"
+                    onCloseRequested: root.barState.closeSheet()
+                }
+
+                VolumeMixerSheet {
+                    anchors.fill: parent
+                    barState: root.barState
+                    visible: root.barState.activeSheet === "volume_mixer"
+                    onCloseRequested: root.barState.closeSheet()
+                }
+
+                CalendarForecastSheet {
+                    anchors.fill: parent
+                    barState: root.barState
+                    visible: root.barState.activeSheet === "calendar"
+                    onCloseRequested: root.barState.closeSheet()
                 }
             }
         }

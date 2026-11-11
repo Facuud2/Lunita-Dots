@@ -891,13 +891,67 @@ Item {
     }
 
     // ==========================================
-    // 8. POPUPS & OVERLAYS MANAGEMENT
+    // 8. POPUPS, SHEETS & OVERLAYS MANAGEMENT
     // ==========================================
-    property string activePopup: "" // "" | "media" | "calendar" | "controlcenter"
+    property string activePopup: "" // "" | "dashboard" | "media" | "calendar" | "controlcenter"
+    property string activeSheet: "" // "" | "wifi_radar" | "bluetooth_orbit" | "volume_mixer" | "calendar"
+    property var audioStreams: []
+
+    Timer {
+        id: mixerTimer
+        interval: 1800
+        running: root.activeSheet === "volume_mixer"
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!mixerProc.running) mixerProc.running = true;
+        }
+    }
+
+    Process {
+        id: mixerProc
+        command: ["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/mixer_helper.py"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    var list = JSON.parse(data.trim());
+                    if (Array.isArray(list)) {
+                        root.audioStreams = list;
+                    }
+                } catch(e) {}
+            }
+        }
+    }
+
+    function setStreamVolume(streamId, vol) {
+        Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/mixer_helper.py", "set-volume", streamId.toString(), vol.toString()]);
+        mixerTimer.restart();
+    }
+
+    function toggleStreamMute(streamId) {
+        Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/mixer_helper.py", "toggle-mute", streamId.toString()]);
+        mixerTimer.restart();
+    }
+
+    function openSheet(name) {
+        root.activeSheet = name;
+        if (root.activePopup !== "dashboard") {
+            root.openPopup("dashboard");
+        }
+    }
+
+    function closeSheet() {
+        root.activeSheet = "";
+    }
 
     function openPopup(name) {
+        if (name === "wifi_radar" || name === "bluetooth_orbit" || name === "volume_mixer" || name === "calendar") {
+            root.openSheet(name);
+            return;
+        }
         if (root.activePopup === name) {
             root.activePopup = "";
+            root.activeSheet = "";
         } else {
             root.activePopup = name;
         }
@@ -905,6 +959,7 @@ Item {
 
     function closePopups() {
         root.activePopup = "";
+        root.activeSheet = "";
     }
 
     // ==========================================
