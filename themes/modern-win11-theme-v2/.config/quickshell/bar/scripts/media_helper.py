@@ -5,13 +5,18 @@ import subprocess
 import json
 import re
 import time
+import urllib.parse
 import urllib.request
 import threading
 
 CACHE_DURATIONS = {}
 FETCHING = set()
+RESOLVED_ARTS = {}
+RESOLVING_ARTS = set()
 
 SEEK_FILE = "/tmp/lunita_media_seek.txt"
+CACHE_ART_PATH = "/tmp/lunita_bar_art.jpg"
+CACHE_ART_KEY = "/tmp/lunita_bar_art_key.txt"
 
 def fetch_yt_duration(vid_id):
     if vid_id in CACHE_DURATIONS or vid_id in FETCHING:
@@ -33,6 +38,83 @@ def fetch_yt_duration(vid_id):
         pass
     finally:
         FETCHING.discard(vid_id)
+
+def resolve_cover_art_worker(art_url, title, artist, url, vid_id, track_key):
+    try:
+        # 1. Direct local file URL
+        if art_url and art_url.startswith("file://"):
+            RESOLVED_ARTS[track_key] = art_url
+            return
+
+        # 2. Remote URL from MPRIS (Spotify, etc.)
+        if art_url and (art_url.startswith("http://") or art_url.startswith("https://")):
+            try:
+                urllib.request.urlretrieve(art_url, CACHE_ART_PATH)
+                with open(CACHE_ART_KEY, "w", encoding="utf-8") as f:
+                    f.write(track_key)
+                RESOLVED_ARTS[track_key] = f"file://{CACHE_ART_PATH}"
+                return
+            except Exception:
+                RESOLVED_ARTS[track_key] = art_url
+                return
+
+        # 3. Direct YouTube video ID thumbnail
+        if vid_id:
+            try:
+                thumb = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
+                urllib.request.urlretrieve(thumb, CACHE_ART_PATH)
+                with open(CACHE_ART_KEY, "w", encoding="utf-8") as f:
+                    f.write(track_key)
+                RESOLVED_ARTS[track_key] = f"file://{CACHE_ART_PATH}"
+                return
+            except Exception:
+                RESOLVED_ARTS[track_key] = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
+                return
+
+        # 4. Search query on iTunes or YouTube if title is present
+        if title and title.strip() and "sin reproducción" not in title.lower():
+            # Try iTunes music art
+            try:
+                clean_t = re.sub(r'\(.*?\)|\[.*?\]', '', title).strip()
+                query = f"{artist} {clean_t}".strip() if artist else clean_t
+                q_enc = urllib.parse.quote(query)
+                itunes_url = f"https://itunes.apple.com/search?term={q_enc}&media=music&limit=1"
+                req = urllib.request.Request(itunes_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=2.0) as resp:
+                    res_data = json.loads(resp.read().decode("utf-8"))
+                    if res_data.get("resultCount", 0) > 0:
+                        art = res_data["results"][0].get("artworkUrl100", "").replace("100x100bb", "400x400bb")
+                        if art:
+                            urllib.request.urlretrieve(art, CACHE_ART_PATH)
+                            with open(CACHE_ART_KEY, "w", encoding="utf-8") as f:
+                                f.write(track_key)
+                            RESOLVED_ARTS[track_key] = f"file://{CACHE_ART_PATH}"
+                            return
+            except Exception:
+                pass
+
+            # Try YouTube search query
+            try:
+                q_enc = urllib.parse.quote(title.strip())
+                yt_url = f"https://www.youtube.com/results?search_query={q_enc}"
+                req = urllib.request.Request(yt_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=2.2) as resp:
+                    html = resp.read().decode("utf-8", errors="ignore")
+                    m = re.search(r'\"videoId\":\"([a-zA-Z0-9_-]{11})\"', html)
+                    if m:
+                        v_id = m.group(1)
+                        thumb = f"https://i.ytimg.com/vi/{v_id}/hqdefault.jpg"
+                        urllib.request.urlretrieve(thumb, CACHE_ART_PATH)
+                        with open(CACHE_ART_KEY, "w", encoding="utf-8") as f:
+                            f.write(track_key)
+                        RESOLVED_ARTS[track_key] = f"file://{CACHE_ART_PATH}"
+                        return
+            except Exception:
+                pass
+    except Exception:
+        pass
+    finally:
+        RESOLVING_ARTS.discard(track_key)
 
 def format_time(seconds):
     try:
@@ -62,7 +144,6 @@ def main():
     last_track_id = ""
     last_known_pos = 0.0
     last_update_time = time.time()
-    last_status = "Stopped"
 
     while True:
         try:
@@ -117,6 +198,13 @@ def main():
                 except Exception:
                     pass
 
+            # Extract video ID from URL
+            vid_id = None
+            if url:
+                m_vid = re.search(r'(?:v=|\/)([a-zA-Z0-9_-]{11})', url)
+                if m_vid:
+                    vid_id = m_vid.group(1)
+
             # Determine length in seconds
             len_sec = 0.0
             if len_raw:
@@ -126,13 +214,6 @@ def main():
                 except Exception:
                     pass
 
-            # If browser/YouTube has no native length, resolve it
-            vid_id = None
-            if url:
-                m_vid = re.search(r'(?:v=|\/)([a-zA-Z0-9_-]{11})', url)
-                if m_vid:
-                    vid_id = m_vid.group(1)
-
             if len_sec <= 0 and vid_id:
                 if vid_id in CACHE_DURATIONS:
                     len_sec = float(CACHE_DURATIONS[vid_id])
@@ -140,7 +221,7 @@ def main():
                     threading.Thread(target=fetch_yt_duration, args=(vid_id,), daemon=True).start()
 
             if len_sec <= 0:
-                len_sec = 180.0  # graceful default fallback
+                len_sec = 180.0
 
             # Determine position in seconds
             native_pos = None
@@ -148,7 +229,6 @@ def main():
                 try:
                     p_val = float(pos_raw)
                     if is_browser:
-                        # Browsers frequently send microsecond stubs (< 1000)
                         if p_val > 100000:
                             native_pos = p_val / 1000000.0
                     else:
@@ -157,7 +237,6 @@ def main():
                     pass
 
             if track_key != last_track_id:
-                # Track changed
                 last_track_id = track_key
                 last_update_time = time.time()
                 initial_pos = 0.0
@@ -184,6 +263,36 @@ def main():
             rem_sec = max(0.0, len_sec - current_pos)
             progress = (current_pos / len_sec) if len_sec > 0 else 0.0
 
+            # Resolve Artwork
+            final_art = ""
+            if track_key in RESOLVED_ARTS:
+                final_art = RESOLVED_ARTS[track_key]
+            else:
+                # Check persistent cache file
+                if os.path.exists(CACHE_ART_KEY) and os.path.exists(CACHE_ART_PATH):
+                    try:
+                        with open(CACHE_ART_KEY, "r", encoding="utf-8") as f:
+                            if f.read().strip() == track_key and os.path.getsize(CACHE_ART_PATH) > 1000:
+                                final_art = f"file://{CACHE_ART_PATH}"
+                                RESOLVED_ARTS[track_key] = final_art
+                    except Exception:
+                        pass
+
+                if not final_art and track_key not in RESOLVING_ARTS:
+                    RESOLVING_ARTS.add(track_key)
+                    threading.Thread(
+                        target=resolve_cover_art_worker,
+                        args=(art_url, title, artist, url, vid_id, track_key),
+                        daemon=True
+                    ).start()
+
+                # Fallback to direct art_url or YouTube thumb while thread resolves
+                if not final_art:
+                    if art_url:
+                        final_art = art_url
+                    elif vid_id:
+                        final_art = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
+
             pos_str = format_time(current_pos)
             rem_str = "-" + format_time(rem_sec)
 
@@ -192,8 +301,8 @@ def main():
                 "playing": is_playing,
                 "active": True,
                 "title": title or "Sin reproducción",
-                "artist": artist or "Media Player",
-                "art_url": art_url,
+                "artist": artist or ("Media Player" if is_browser else "Astraeus Music"),
+                "art_url": final_art,
                 "position": round(current_pos, 1),
                 "length": round(len_sec, 1),
                 "position_str": pos_str,

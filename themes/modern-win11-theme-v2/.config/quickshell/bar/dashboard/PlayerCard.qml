@@ -18,12 +18,12 @@ Rectangle {
 
     // Subtle audio-reactive glow wash behind album cover
     Rectangle {
-        width: 150
-        height: 150
-        radius: 75
-        x: 8
-        y: 8
-        opacity: root.barState.mprisPlaying ? 0.32 : 0.08
+        width: 140
+        height: 140
+        radius: 70
+        x: 12
+        y: 13
+        opacity: root.barState.mprisPlaying ? 0.35 : 0.08
         color: root.barState.themeAccentGlow
 
         Behavior on opacity { NumberAnimation { duration: 250 } }
@@ -34,11 +34,11 @@ Rectangle {
         anchors.margins: 16
         spacing: 16
 
-        // ── 1. Album Cover with 3D Flip on song change ──
+        // ── 1. Circular Vinyl Album Cover (104x104px) ──
         Item {
             id: coverContainer
-            width: 112
-            height: 112
+            width: 104
+            height: 104
             Layout.alignment: Qt.AlignVCenter
 
             property real flipAngle: 0
@@ -57,34 +57,79 @@ Rectangle {
             }
 
             transform: Rotation {
-                origin.x: 56
-                origin.y: 56
+                origin.x: 52
+                origin.y: 52
                 axis { x: 0; y: 1; z: 0 }
                 angle: coverContainer.flipAngle
             }
 
+            // Outer Vinyl Disc (Fully Rounded)
             Rectangle {
+                id: vinylDisc
                 anchors.fill: parent
-                radius: 12
-                color: Qt.rgba(0.18, 0.18, 0.22, 0.85)
-                border.color: Qt.rgba(1, 1, 1, 0.20)
-                border.width: 1
+                radius: width / 2
+                color: Qt.rgba(0.14, 0.14, 0.18, 0.90)
+                border.color: Qt.rgba(1, 1, 1, 0.22)
+                border.width: 1.5
                 clip: true
 
+                // Slow, smooth vinyl rotation when playing
+                NumberAnimation on rotation {
+                    running: root.barState.mprisPlaying
+                    from: 0
+                    to: 360
+                    duration: 20000
+                    loops: Animation.Infinite
+                }
+
+                // Album Art Image (Fills circular disc)
                 Image {
                     anchors.fill: parent
                     source: root.barState.mprisArtUrl || ""
                     fillMode: Image.PreserveAspectCrop
                     visible: root.barState.mprisArtUrl !== ""
+                    cache: false
                 }
 
+                // Vinyl Grooves & Center Spindle when no art or subtle overlay
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "transparent"
+                    border.color: Qt.rgba(1, 1, 1, 0.10)
+                    border.width: 1
+                    visible: root.barState.mprisArtUrl === ""
+                }
+
+                // Center Spindle Hole / Ring
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 22
+                    height: 22
+                    radius: 11
+                    color: Qt.rgba(0.08, 0.08, 0.10, 0.85)
+                    border.color: Qt.rgba(1, 1, 1, 0.30)
+                    border.width: 1.5
+
+                    // Inner center dot
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 6
+                        height: 6
+                        radius: 3
+                        color: root.barState.themeAccent
+                    }
+                }
+
+                // Fallback icon when no art URL
                 Text {
                     anchors.centerIn: parent
                     visible: root.barState.mprisArtUrl === ""
                     text: "󰝚"
                     font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 36
+                    font.pixelSize: 32
                     color: root.barState.themeAccent
+                    opacity: 0.80
                 }
             }
         }
@@ -94,9 +139,9 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignVCenter
-            spacing: 3
+            spacing: 2
 
-            // Uppercase Tag (SPOTIFY / IDLE)
+            // Uppercase Tag (SPOTIFY / IDLE / BROWSER)
             Text {
                 text: root.barState.mprisActive ? "SPOTIFY" : "IDLE"
                 font.family: root.barState.themeFontInterface
@@ -130,21 +175,21 @@ Rectangle {
                 maximumLineCount: 1
             }
 
-            Item { height: 6 }
+            Item { height: 4 }
 
             // Transport Control Buttons
             Row {
+                Layout.preferredHeight: 38
+                Layout.fillWidth: true
                 spacing: 14
-                Layout.alignment: Qt.AlignLeft
 
                 // Previous Button
                 Rectangle {
                     width: 32
                     height: 32
                     radius: 16
-                    color: prevHover.hovered ? Qt.rgba(1, 1, 1, 0.15) : "transparent"
-
-                    HoverHandler { id: prevHover }
+                    color: prevMa.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : "transparent"
+                    anchors.verticalCenter: parent.verticalCenter
 
                     Text {
                         anchors.centerIn: parent
@@ -155,7 +200,9 @@ Rectangle {
                     }
 
                     MouseArea {
+                        id: prevMa
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.barState.previousTrack()
                     }
@@ -163,14 +210,15 @@ Rectangle {
 
                 // Play / Pause Prominent Circle Button (Astraeus Coral Accent)
                 Rectangle {
+                    id: playBtn
                     width: 38
                     height: 38
                     radius: 19
                     color: root.barState.themeAccent
-                    scale: playHover.hovered ? 1.06 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 120 } }
+                    anchors.verticalCenter: parent.verticalCenter
+                    scale: playMa.containsMouse ? 1.08 : 1.0
 
-                    HoverHandler { id: playHover }
+                    Behavior on scale { NumberAnimation { duration: 100 } }
 
                     Text {
                         anchors.centerIn: parent
@@ -181,9 +229,14 @@ Rectangle {
                     }
 
                     MouseArea {
+                        id: playMa
                         anchors.fill: parent
+                        z: 10
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.barState.playPause()
+                        onClicked: {
+                            root.barState.playPause();
+                        }
                     }
                 }
 
@@ -192,9 +245,8 @@ Rectangle {
                     width: 32
                     height: 32
                     radius: 16
-                    color: nextHover.hovered ? Qt.rgba(1, 1, 1, 0.15) : "transparent"
-
-                    HoverHandler { id: nextHover }
+                    color: nextMa.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : "transparent"
+                    anchors.verticalCenter: parent.verticalCenter
 
                     Text {
                         anchors.centerIn: parent
@@ -205,19 +257,22 @@ Rectangle {
                     }
 
                     MouseArea {
+                        id: nextMa
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.barState.nextTrack()
                     }
                 }
             }
 
-            Item { height: 4 }
+            Item { height: 2 }
 
             // Seekbar Track
             Item {
                 id: seekContainer
                 Layout.fillWidth: true
+                Layout.preferredHeight: 12
                 height: 12
 
                 Rectangle {

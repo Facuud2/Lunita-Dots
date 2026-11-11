@@ -481,26 +481,15 @@ Item {
     }
 
     function playPause() {
-        root.mprisPlaying = !root.mprisPlaying;
-        if (root.mprisPlaying) {
-            pauseTimeoutTimer.stop();
-            root.mprisActive = true;
-        } else {
-            pauseTimeoutTimer.restart();
-        }
-        Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/media_helper.py", "play-pause"]);
+        Quickshell.execDetached(["playerctl", "play-pause"]);
     }
 
     function nextTrack() {
-        pauseTimeoutTimer.stop();
-        root.mprisActive = true;
-        Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/media_helper.py", "next"]);
+        Quickshell.execDetached(["playerctl", "next"]);
     }
 
     function previousTrack() {
-        pauseTimeoutTimer.stop();
-        root.mprisActive = true;
-        Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/media_helper.py", "previous"]);
+        Quickshell.execDetached(["playerctl", "previous"]);
     }
 
     function seekPosition(ratio) {

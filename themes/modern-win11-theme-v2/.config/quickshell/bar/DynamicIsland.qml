@@ -244,12 +244,12 @@ Item {
                 NumberAnimation { duration: 150 }
             }
 
-            // Mini Album Art
+            // Mini Album Art (Circular)
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 width: 20
                 height: 20
-                radius: 4
+                radius: 10
                 color: root.barState.themeSurfaceContainerHigh
                 clip: true
 
@@ -310,12 +310,12 @@ Item {
                 NumberAnimation { duration: 150 }
             }
 
-            // Left Slot: Album Art with Quick Transport Overlay
+            // Left Slot: Album Art with Quick Transport Overlay (Circular)
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 width: 28
                 height: 28
-                radius: 6
+                radius: 14
                 color: root.barState.themeSurfaceContainerHigh
                 clip: true
 
