@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 import Quickshell
 
 Item {
@@ -245,18 +246,37 @@ Item {
             }
 
             // Mini Album Art (Circular)
-            Rectangle {
+            Item {
                 Layout.alignment: Qt.AlignVCenter
                 width: 20
                 height: 20
-                radius: 10
-                color: root.barState.themeSurfaceContainerHigh
-                clip: true
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 10
+                    color: root.barState.themeSurfaceContainerHigh
+                }
 
                 Image {
+                    id: miniArtImg
                     anchors.fill: parent
                     source: root.barState.mprisArtUrl || ""
                     fillMode: Image.PreserveAspectCrop
+                    visible: false
+                    cache: false
+                }
+
+                Rectangle {
+                    id: miniArtMask
+                    anchors.fill: parent
+                    radius: 10
+                    visible: false
+                }
+
+                OpacityMask {
+                    anchors.fill: parent
+                    source: miniArtImg
+                    maskSource: miniArtMask
                     visible: root.barState.mprisArtUrl !== ""
                 }
 
@@ -311,18 +331,37 @@ Item {
             }
 
             // Left Slot: Album Art with Quick Transport Overlay (Circular)
-            Rectangle {
+            Item {
                 Layout.alignment: Qt.AlignVCenter
                 width: 28
                 height: 28
-                radius: 14
-                color: root.barState.themeSurfaceContainerHigh
-                clip: true
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 14
+                    color: root.barState.themeSurfaceContainerHigh
+                }
 
                 Image {
+                    id: longPillArtImg
                     anchors.fill: parent
                     source: root.barState.mprisArtUrl || ""
                     fillMode: Image.PreserveAspectCrop
+                    visible: false
+                    cache: false
+                }
+
+                Rectangle {
+                    id: longPillArtMask
+                    anchors.fill: parent
+                    radius: 14
+                    visible: false
+                }
+
+                OpacityMask {
+                    anchors.fill: parent
+                    source: longPillArtImg
+                    maskSource: longPillArtMask
                     visible: root.barState.mprisArtUrl !== ""
                 }
 
@@ -338,6 +377,7 @@ Item {
                 // Hover Play/Pause Quick Click Overlay
                 Rectangle {
                     anchors.fill: parent
+                    radius: 14
                     color: Qt.rgba(0, 0, 0, 0.45)
                     visible: root.barState.mprisActive && root.isHovered
 

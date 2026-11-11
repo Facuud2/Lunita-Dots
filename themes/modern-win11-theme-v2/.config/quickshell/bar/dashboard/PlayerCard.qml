@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: root
@@ -64,14 +65,9 @@ Rectangle {
             }
 
             // Outer Vinyl Disc (Fully Rounded)
-            Rectangle {
+            Item {
                 id: vinylDisc
                 anchors.fill: parent
-                radius: width / 2
-                color: Qt.rgba(0.14, 0.14, 0.18, 0.90)
-                border.color: Qt.rgba(1, 1, 1, 0.22)
-                border.width: 1.5
-                clip: true
 
                 // Slow, smooth vinyl rotation when playing
                 NumberAnimation on rotation {
@@ -82,23 +78,48 @@ Rectangle {
                     loops: Animation.Infinite
                 }
 
-                // Album Art Image (Fills circular disc)
+                // Disc base background
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: Qt.rgba(0.14, 0.14, 0.18, 0.90)
+                    border.color: Qt.rgba(1, 1, 1, 0.22)
+                    border.width: 1.5
+                }
+
+                // Hidden source image
                 Image {
+                    id: coverArtImg
                     anchors.fill: parent
                     source: root.barState.mprisArtUrl || ""
                     fillMode: Image.PreserveAspectCrop
-                    visible: root.barState.mprisArtUrl !== ""
+                    visible: false
                     cache: false
                 }
 
-                // Vinyl Grooves & Center Spindle when no art or subtle overlay
+                // Circular mask item
+                Rectangle {
+                    id: coverArtMask
+                    anchors.fill: parent
+                    radius: width / 2
+                    visible: false
+                }
+
+                // Circular Masked Artwork (True Circle, zero corner overflow)
+                OpacityMask {
+                    anchors.fill: parent
+                    source: coverArtImg
+                    maskSource: coverArtMask
+                    visible: root.barState.mprisArtUrl !== ""
+                }
+
+                // Subtle Vinyl Grooves & Specular Rim
                 Rectangle {
                     anchors.fill: parent
                     radius: width / 2
                     color: "transparent"
-                    border.color: Qt.rgba(1, 1, 1, 0.10)
+                    border.color: Qt.rgba(1, 1, 1, 0.16)
                     border.width: 1
-                    visible: root.barState.mprisArtUrl === ""
                 }
 
                 // Center Spindle Hole / Ring
@@ -107,8 +128,8 @@ Rectangle {
                     width: 22
                     height: 22
                     radius: 11
-                    color: Qt.rgba(0.08, 0.08, 0.10, 0.85)
-                    border.color: Qt.rgba(1, 1, 1, 0.30)
+                    color: Qt.rgba(0.08, 0.08, 0.10, 0.90)
+                    border.color: Qt.rgba(1, 1, 1, 0.35)
                     border.width: 1.5
 
                     // Inner center dot
@@ -141,9 +162,9 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             spacing: 2
 
-            // Uppercase Tag (SPOTIFY / IDLE / BROWSER)
+            // Uppercase Media Tag (YOUTUBE / SPOTIFY / BROWSER / IDLE)
             Text {
-                text: root.barState.mprisActive ? "SPOTIFY" : "IDLE"
+                text: root.barState.mprisActive ? (root.barState.mprisSource || "MEDIA") : "IDLE"
                 font.family: root.barState.themeFontInterface
                 font.pixelSize: 10
                 font.weight: Font.DemiBold

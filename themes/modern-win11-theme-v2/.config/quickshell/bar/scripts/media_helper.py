@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-import sys
-import os
-import subprocess
+import hashlib
 import json
+import os
 import re
+import subprocess
+import sys
+import threading
 import time
 import urllib.parse
 import urllib.request
-import threading
 
 CACHE_DURATIONS = {}
 FETCHING = set()
@@ -15,8 +16,10 @@ RESOLVED_ARTS = {}
 RESOLVING_ARTS = set()
 
 SEEK_FILE = "/tmp/lunita_media_seek.txt"
-CACHE_ART_PATH = "/tmp/lunita_bar_art.jpg"
-CACHE_ART_KEY = "/tmp/lunita_bar_art_key.txt"
+
+def get_track_cache_path(track_key):
+    h = hashlib.md5(track_key.encode("utf-8", errors="ignore")).hexdigest()[:16]
+    return f"/tmp/lunita_art_{h}.jpg"
 
 def fetch_yt_duration(vid_id):
     if vid_id in CACHE_DURATIONS or vid_id in FETCHING:
@@ -40,35 +43,38 @@ def fetch_yt_duration(vid_id):
         FETCHING.discard(vid_id)
 
 def resolve_cover_art_worker(art_url, title, artist, url, vid_id, track_key):
+    target_path = get_track_cache_path(track_key)
     try:
         # 1. Direct local file URL
         if art_url and art_url.startswith("file://"):
             RESOLVED_ARTS[track_key] = art_url
             return
 
-        # 2. Remote URL from MPRIS (Spotify, etc.)
+        # 2. Direct YouTube video ID thumbnail
+        if vid_id:
+            thumb = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
+            try:
+                req = urllib.request.Request(thumb, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"})
+                with urllib.request.urlopen(req, timeout=3.0) as resp:
+                    with open(target_path, "wb") as f:
+                        f.write(resp.read())
+                RESOLVED_ARTS[track_key] = f"file://{target_path}"
+                return
+            except Exception:
+                RESOLVED_ARTS[track_key] = thumb
+                return
+
+        # 3. Remote URL from MPRIS (Spotify, etc.)
         if art_url and (art_url.startswith("http://") or art_url.startswith("https://")):
             try:
-                urllib.request.urlretrieve(art_url, CACHE_ART_PATH)
-                with open(CACHE_ART_KEY, "w", encoding="utf-8") as f:
-                    f.write(track_key)
-                RESOLVED_ARTS[track_key] = f"file://{CACHE_ART_PATH}"
+                req = urllib.request.Request(art_url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64)"})
+                with urllib.request.urlopen(req, timeout=3.0) as resp:
+                    with open(target_path, "wb") as f:
+                        f.write(resp.read())
+                RESOLVED_ARTS[track_key] = f"file://{target_path}"
                 return
             except Exception:
                 RESOLVED_ARTS[track_key] = art_url
-                return
-
-        # 3. Direct YouTube video ID thumbnail
-        if vid_id:
-            try:
-                thumb = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
-                urllib.request.urlretrieve(thumb, CACHE_ART_PATH)
-                with open(CACHE_ART_KEY, "w", encoding="utf-8") as f:
-                    f.write(track_key)
-                RESOLVED_ARTS[track_key] = f"file://{CACHE_ART_PATH}"
-                return
-            except Exception:
-                RESOLVED_ARTS[track_key] = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
                 return
 
         # 4. Search query on iTunes or YouTube if title is present
@@ -80,15 +86,16 @@ def resolve_cover_art_worker(art_url, title, artist, url, vid_id, track_key):
                 q_enc = urllib.parse.quote(query)
                 itunes_url = f"https://itunes.apple.com/search?term={q_enc}&media=music&limit=1"
                 req = urllib.request.Request(itunes_url, headers={"User-Agent": "Mozilla/5.0"})
-                with urllib.request.urlopen(req, timeout=2.0) as resp:
+                with urllib.request.urlopen(req, timeout=2.5) as resp:
                     res_data = json.loads(resp.read().decode("utf-8"))
                     if res_data.get("resultCount", 0) > 0:
                         art = res_data["results"][0].get("artworkUrl100", "").replace("100x100bb", "400x400bb")
                         if art:
-                            urllib.request.urlretrieve(art, CACHE_ART_PATH)
-                            with open(CACHE_ART_KEY, "w", encoding="utf-8") as f:
-                                f.write(track_key)
-                            RESOLVED_ARTS[track_key] = f"file://{CACHE_ART_PATH}"
+                            req_art = urllib.request.Request(art, headers={"User-Agent": "Mozilla/5.0"})
+                            with urllib.request.urlopen(req_art, timeout=2.5) as a_resp:
+                                with open(target_path, "wb") as f:
+                                    f.write(a_resp.read())
+                            RESOLVED_ARTS[track_key] = f"file://{target_path}"
                             return
             except Exception:
                 pass
@@ -98,16 +105,17 @@ def resolve_cover_art_worker(art_url, title, artist, url, vid_id, track_key):
                 q_enc = urllib.parse.quote(title.strip())
                 yt_url = f"https://www.youtube.com/results?search_query={q_enc}"
                 req = urllib.request.Request(yt_url, headers={"User-Agent": "Mozilla/5.0"})
-                with urllib.request.urlopen(req, timeout=2.2) as resp:
+                with urllib.request.urlopen(req, timeout=2.5) as resp:
                     html = resp.read().decode("utf-8", errors="ignore")
                     m = re.search(r'\"videoId\":\"([a-zA-Z0-9_-]{11})\"', html)
                     if m:
                         v_id = m.group(1)
                         thumb = f"https://i.ytimg.com/vi/{v_id}/hqdefault.jpg"
-                        urllib.request.urlretrieve(thumb, CACHE_ART_PATH)
-                        with open(CACHE_ART_KEY, "w", encoding="utf-8") as f:
-                            f.write(track_key)
-                        RESOLVED_ARTS[track_key] = f"file://{CACHE_ART_PATH}"
+                        req_t = urllib.request.Request(thumb, headers={"User-Agent": "Mozilla/5.0"})
+                        with urllib.request.urlopen(req_t, timeout=2.5) as t_resp:
+                            with open(target_path, "wb") as f:
+                                f.write(t_resp.read())
+                        RESOLVED_ARTS[track_key] = f"file://{target_path}"
                         return
             except Exception:
                 pass
@@ -184,8 +192,55 @@ def main():
             url = parts[7] if len(parts) > 7 else ""
 
             is_playing = (status.lower() == "playing")
-            track_key = f"{title}_{artist}_{url}"
             is_browser = any(b in player.lower() for b in ["firefox", "zen", "chrome", "chromium", "brave"])
+
+            # Extract video ID from URL if present
+            vid_id = None
+            if url:
+                m_vid = re.search(r'(?:v=|\/)([a-zA-Z0-9_-]{11})(?:[&?]|$)', url)
+                if m_vid:
+                    vid_id = m_vid.group(1)
+
+            if vid_id:
+                track_key = f"yt_{vid_id}"
+            elif url:
+                track_key = f"{player}_{url}"
+            else:
+                track_key = f"{player}_{title}_{artist}"
+
+            # Detect Media Source Name
+            p_lower = player.lower()
+            u_lower = url.lower()
+            media_source = "MEDIA"
+
+            if "youtube.com" in u_lower or "youtu.be" in u_lower:
+                media_source = "YOUTUBE"
+            elif "instagram.com" in u_lower:
+                media_source = "INSTAGRAM"
+            elif "spotify" in p_lower or "spotify.com" in u_lower:
+                media_source = "SPOTIFY"
+            elif "soundcloud.com" in u_lower:
+                media_source = "SOUNDCLOUD"
+            elif "twitch.tv" in u_lower:
+                media_source = "TWITCH"
+            elif "netflix.com" in u_lower:
+                media_source = "NETFLIX"
+            elif "vlc" in p_lower:
+                media_source = "VLC"
+            elif "mpv" in p_lower:
+                media_source = "MPV"
+            elif is_browser:
+                m_dom = re.search(r'https?://(?:www\.)?([^/:]+)', url)
+                if m_dom:
+                    dom = m_dom.group(1).split('.')[0].upper()
+                    if dom and len(dom) > 1:
+                        media_source = dom
+                    else:
+                        media_source = player.upper()
+                else:
+                    media_source = player.upper()
+            elif player:
+                media_source = player.upper()
 
             # Check seek signal file
             if os.path.exists(SEEK_FILE):
@@ -197,13 +252,6 @@ def main():
                     os.remove(SEEK_FILE)
                 except Exception:
                     pass
-
-            # Extract video ID from URL
-            vid_id = None
-            if url:
-                m_vid = re.search(r'(?:v=|\/)([a-zA-Z0-9_-]{11})', url)
-                if m_vid:
-                    vid_id = m_vid.group(1)
 
             # Determine length in seconds
             len_sec = 0.0
@@ -265,20 +313,15 @@ def main():
 
             # Resolve Artwork
             final_art = ""
+            target_cache_path = get_track_cache_path(track_key)
+
             if track_key in RESOLVED_ARTS:
                 final_art = RESOLVED_ARTS[track_key]
+            elif os.path.exists(target_cache_path) and os.path.getsize(target_cache_path) > 1000:
+                final_art = f"file://{target_cache_path}"
+                RESOLVED_ARTS[track_key] = final_art
             else:
-                # Check persistent cache file
-                if os.path.exists(CACHE_ART_KEY) and os.path.exists(CACHE_ART_PATH):
-                    try:
-                        with open(CACHE_ART_KEY, "r", encoding="utf-8") as f:
-                            if f.read().strip() == track_key and os.path.getsize(CACHE_ART_PATH) > 1000:
-                                final_art = f"file://{CACHE_ART_PATH}"
-                                RESOLVED_ARTS[track_key] = final_art
-                    except Exception:
-                        pass
-
-                if not final_art and track_key not in RESOLVING_ARTS:
+                if track_key not in RESOLVING_ARTS:
                     RESOLVING_ARTS.add(track_key)
                     threading.Thread(
                         target=resolve_cover_art_worker,
@@ -287,11 +330,10 @@ def main():
                     ).start()
 
                 # Fallback to direct art_url or YouTube thumb while thread resolves
-                if not final_art:
-                    if art_url:
-                        final_art = art_url
-                    elif vid_id:
-                        final_art = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
+                if art_url:
+                    final_art = art_url
+                elif vid_id:
+                    final_art = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
 
             pos_str = format_time(current_pos)
             rem_str = "-" + format_time(rem_sec)
@@ -300,6 +342,7 @@ def main():
                 "available": True,
                 "playing": is_playing,
                 "active": True,
+                "source": media_source,
                 "title": title or "Sin reproducción",
                 "artist": artist or ("Media Player" if is_browser else "Astraeus Music"),
                 "art_url": final_art,

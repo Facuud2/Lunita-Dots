@@ -390,6 +390,7 @@ Item {
     property bool mprisAvailable: false
     property bool mprisPlaying: false
     property bool mprisActive: false
+    property string mprisSource: "IDLE"
     property string mprisTitle: ""
     property string mprisArtist: ""
     property string mprisArtUrl: ""
@@ -436,6 +437,7 @@ Item {
                         root.mprisAvailable = false;
                         root.mprisPlaying = false;
                         root.mprisActive = false;
+                        root.mprisSource = "IDLE";
                         pauseTimeoutTimer.stop();
                         root.mprisTitle = "";
                         root.mprisArtist = "";
@@ -444,6 +446,7 @@ Item {
                     }
 
                     root.mprisAvailable = true;
+                    root.mprisSource = obj.source || (root.mprisActive ? "MEDIA" : "IDLE");
                     root.mprisTitle = obj.title || "";
                     root.mprisArtist = obj.artist || "";
                     root.mprisArtUrl = obj.art_url || "";
