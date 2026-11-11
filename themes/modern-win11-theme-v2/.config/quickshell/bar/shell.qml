@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import "popups"
 import "panels"
+import "dashboard"
 
 Scope {
     id: root
@@ -30,7 +31,9 @@ Scope {
         target: "bar"
 
         function toggle(popupName: string) {
-            if (popupName === "sound" || popupName === "volume") {
+            if (popupName === "dashboard" || popupName === "island" || popupName === "drawer") {
+                globalBarState.openPopup("dashboard");
+            } else if (popupName === "sound" || popupName === "volume") {
                 var targetVol = (Hyprland.focusedMonitor && Hyprland.focusedMonitor.name) ? Hyprland.focusedMonitor.name : "";
                 globalBarState.toggleSound(targetVol);
             } else if (popupName === "media" || popupName === "music" || popupName === "player") {
@@ -70,8 +73,8 @@ Scope {
                 id: notchWindow
                 screen: screenScope.modelData
                 color: "transparent"
-                implicitHeight: 300
-                implicitWidth: 440
+                implicitHeight: Math.max(island.height + 20, 100)
+                implicitWidth: Math.max(island.width + 40, 600)
 
                 anchors {
                     top: true
@@ -81,20 +84,86 @@ Scope {
                 }
 
                 mask: Region {
-                    width: island.islandMode === "collapsed" ? island.width : 412
-                    height: island.islandMode === "collapsed" ? 34 : (island.islandMode === "media" ? 172 : 280)
-                    x: (notchWindow.width - width) / 2
-                    y: 0
-                    radius: island.islandMode === "collapsed" ? 18 : 22
+                    Region {
+                        item: island
+                        radius: island.islandRadius
+                    }
                 }
 
                 WlrLayershell.layer: WlrLayer.Top
                 WlrLayershell.namespace: "win11-dynamic-island"
-                WlrLayershell.exclusiveZone: 34
+                WlrLayershell.exclusiveZone: island.isFullscreen ? 0 : 36
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
                 DynamicIsland {
                     id: island
+                    barState: globalBarState
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                }
+            }
+
+            // ── 1B. Transparent Dismiss Catcher (Below Island, Zero Black Veil) ──
+            PanelWindow {
+                id: dashboardBackdropWindow
+                screen: screenScope.modelData
+                color: "transparent"
+                visible: globalBarState.activePopup === "dashboard"
+
+                anchors {
+                    top: true
+                    bottom: true
+                    left: true
+                    right: true
+                }
+                margins {
+                    top: 44
+                }
+
+                WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.namespace: "win11-dashboard-dismiss"
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+                // Transparent dismiss catcher: no black tint, doesn't obstruct island
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.ArrowCursor
+                    onClicked: globalBarState.closePopups()
+                }
+            }
+
+            // ── 1C. Top Astraeus Liquid-Glass Dashboard Panel Window (Exact Region Blur) ──
+            PanelWindow {
+                id: dashboardWindow
+                screen: screenScope.modelData
+                color: "transparent"
+                visible: globalBarState.activePopup === "dashboard"
+
+                anchors {
+                    top: true
+                }
+                margins {
+                    top: 42
+                }
+
+                implicitWidth: 924
+                implicitHeight: 340
+
+                mask: Region {
+                    Region {
+                        item: dashboardView
+                        radius: 18
+                    }
+                }
+
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.namespace: "win11-astraeus-dashboard"
+                WlrLayershell.exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+                DashboardView {
+                    id: dashboardView
                     barState: globalBarState
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top

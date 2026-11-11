@@ -37,22 +37,22 @@ Item {
 
     // Surfaces & Containers
     property color themeSurface: {
-        if (root.astraeusLook === "light") return "#F3F3F8";
-        if (root.astraeusLook === "glass") return Qt.rgba(0.07, 0.08, 0.11, 0.45);
-        if (root.astraeusLook === "starfall") return "#0B0C16";
-        return "#121318";
+        if (root.astraeusLook === "light") return Qt.rgba(0.95, 0.95, 0.97, 0.82);
+        if (root.astraeusLook === "glass") return Qt.rgba(0.08, 0.08, 0.12, 0.65);
+        if (root.astraeusLook === "starfall") return Qt.rgba(0.04, 0.05, 0.09, 0.85);
+        return Qt.rgba(0.07, 0.07, 0.10, 0.78);
     }
     property color themeSurfaceContainer: {
-        if (root.astraeusLook === "light") return "#FFFFFF";
-        if (root.astraeusLook === "glass") return Qt.rgba(1, 1, 1, 0.08);
+        if (root.astraeusLook === "light") return Qt.rgba(1, 1, 1, 0.65);
+        if (root.astraeusLook === "glass") return Qt.rgba(1, 1, 1, 0.09);
         if (root.astraeusLook === "starfall") return Qt.rgba(0.08, 0.09, 0.14, 0.74);
-        return "#1A1C24";
+        return Qt.rgba(1, 1, 1, 0.07);
     }
     property color themeSurfaceContainerHigh: {
-        if (root.astraeusLook === "light") return "#E5E7EB";
-        if (root.astraeusLook === "glass") return Qt.rgba(1, 1, 1, 0.14);
+        if (root.astraeusLook === "light") return Qt.rgba(1, 1, 1, 0.90);
+        if (root.astraeusLook === "glass") return Qt.rgba(1, 1, 1, 0.16);
         if (root.astraeusLook === "starfall") return Qt.rgba(0.12, 0.13, 0.20, 0.85);
-        return "#252834";
+        return Qt.rgba(1, 1, 1, 0.12);
     }
 
     // Typography & Ink Tokens
@@ -122,6 +122,59 @@ Item {
             root.astraeusLook = newLook;
         }
     }
+
+    // ==========================================
+    // 0B. WINDOW & FULLSCREEN TRACKING
+    // ==========================================
+    property string activeWindowTitle: ""
+    property string activeWindowClass: ""
+    property int isWindowFullscreen: 0
+    property bool isWindowFloating: false
+
+    Timer {
+        id: hyprActiveTimer
+        interval: 800
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!hyprActiveProc.running) {
+                hyprActiveProc.running = true;
+            }
+        }
+    }
+
+    Process {
+        id: hyprActiveProc
+        command: [Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/activewindow.sh"]
+        stdout: SplitParser {
+            onRead: data => {
+                var str = data.trim();
+                if (!str || str === "{}" || str === "") {
+                    root.activeWindowTitle = "";
+                    root.activeWindowClass = "";
+                    root.isWindowFloating = false;
+                    root.isWindowFullscreen = 0;
+                    return;
+                }
+                try {
+                    var parsed = JSON.parse(str);
+                    root.activeWindowTitle = parsed.title || "";
+                    root.activeWindowClass = parsed.class || "";
+                    root.isWindowFloating = !!parsed.floating;
+                    root.isWindowFullscreen = parsed.fullscreen || 0;
+                } catch(e) {}
+            }
+        }
+    }
+
+    // ==========================================
+    // 0C. ASTRAEUS DYNAMIC ISLAND & LYRICS STATE
+    // ==========================================
+    property string islandStateMode: "notch" // "notch" | "music_pill" | "long_pill" | "dashboard"
+    property bool forceLongPill: false
+    property string currentLyricLine: ""
+    property bool lyricsActive: false
 
     // ==========================================
     // 1. DATE & TIME
@@ -271,6 +324,21 @@ Item {
         Quickshell.execDetached(["bash", "-c", "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle 2>/dev/null || pactl set-sink-mute @DEFAULT_SINK@ toggle 2>/dev/null"]);
     }
 
+    // Microphone Volume & Mute Controls
+    property int micPercent: 100
+    property bool micMuted: false
+
+    function setMicVolume(pct) {
+        var clamped = Math.max(0, Math.min(100, Math.round(pct)));
+        root.micPercent = clamped;
+        Quickshell.execDetached(["bash", "-c", "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ " + (clamped / 100).toFixed(2) + " 2>/dev/null || true"]);
+    }
+
+    function toggleMicMute() {
+        root.micMuted = !root.micMuted;
+        Quickshell.execDetached(["bash", "-c", "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle 2>/dev/null || true"]);
+    }
+
     // ==========================================
     // 3. BRIGHTNESS (brightnessctl / fallback)
     // ==========================================
@@ -322,6 +390,7 @@ Item {
     property bool mprisAvailable: false
     property bool mprisPlaying: false
     property bool mprisActive: false
+    property string mprisSource: "IDLE"
     property string mprisTitle: ""
     property string mprisArtist: ""
     property string mprisArtUrl: ""
@@ -329,6 +398,17 @@ Item {
     property double mprisLength: 100.0
     property string mprisPositionStr: "0:00"
     property string mprisRemainingStr: "-0:00"
+
+    // Astraeus MPRIS Compatibility Aliases
+    property alias mprisTrackTitle: root.mprisTitle
+    property alias mprisTrackArtist: root.mprisArtist
+    property alias mprisPlaybackPosition: root.mprisPosition
+    property alias mprisTrackLength: root.mprisLength
+    readonly property string mprisPlaybackStatus: root.mprisPlaying ? "Playing" : "Paused"
+
+    function togglePlay() {
+        root.playPause();
+    }
 
     // 6 seconds pause timeout (iOS Dynamic Island standard): automatically dismiss CAVA and media cover if inactive
     Timer {
@@ -357,6 +437,7 @@ Item {
                         root.mprisAvailable = false;
                         root.mprisPlaying = false;
                         root.mprisActive = false;
+                        root.mprisSource = "IDLE";
                         pauseTimeoutTimer.stop();
                         root.mprisTitle = "";
                         root.mprisArtist = "";
@@ -365,6 +446,7 @@ Item {
                     }
 
                     root.mprisAvailable = true;
+                    root.mprisSource = obj.source || (root.mprisActive ? "MEDIA" : "IDLE");
                     root.mprisTitle = obj.title || "";
                     root.mprisArtist = obj.artist || "";
                     root.mprisArtUrl = obj.art_url || "";
@@ -402,26 +484,15 @@ Item {
     }
 
     function playPause() {
-        root.mprisPlaying = !root.mprisPlaying;
-        if (root.mprisPlaying) {
-            pauseTimeoutTimer.stop();
-            root.mprisActive = true;
-        } else {
-            pauseTimeoutTimer.restart();
-        }
-        Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/media_helper.py", "play-pause"]);
+        Quickshell.execDetached(["playerctl", "play-pause"]);
     }
 
     function nextTrack() {
-        pauseTimeoutTimer.stop();
-        root.mprisActive = true;
-        Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/media_helper.py", "next"]);
+        Quickshell.execDetached(["playerctl", "next"]);
     }
 
     function previousTrack() {
-        pauseTimeoutTimer.stop();
-        root.mprisActive = true;
-        Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/quickshell/bar/scripts/media_helper.py", "previous"]);
+        Quickshell.execDetached(["playerctl", "previous"]);
     }
 
     function seekPosition(ratio) {
@@ -657,6 +728,41 @@ Item {
         Quickshell.execDetached(["bash", "-c", "hyprshot -m region 2>/dev/null || grimblast copy area 2>/dev/null || grim -g \"$(slurp)\" - | wl-copy 2>/dev/null || true"]);
     }
 
+    // Recording (wf-recorder) State & Methods
+    property bool isRecording: false
+
+    Timer {
+        id: recordTimer
+        interval: 1500
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            recordProc.running = true;
+        }
+    }
+
+    Process {
+        id: recordProc
+        command: ["bash", "-c", "pgrep -x wf-recorder >/dev/null && echo 'yes' || echo 'no'"]
+        stdout: SplitParser {
+            onRead: data => {
+                root.isRecording = (data.trim() === "yes");
+            }
+        }
+    }
+
+    function toggleRecording(mode) {
+        var m = mode || "area";
+        var home = Quickshell.env("HOME");
+        if (root.isRecording) {
+            Quickshell.execDetached(["bash", "-c", home + "/.config/hypr/scripts/record.sh stop"]);
+        } else {
+            Quickshell.execDetached(["bash", "-c", home + "/.config/hypr/scripts/record.sh " + m]);
+        }
+        recordProc.running = true;
+    }
+
     function openLauncher() {
         Quickshell.execDetached(["bash", "-c", "lunita-launcher 2>/dev/null || rofi -show drun 2>/dev/null || true"]);
     }
@@ -713,6 +819,78 @@ Item {
     }
 
     // ==========================================
+    // 7B. TELEMETRY & SPARKLINE HISTORIES
+    // ==========================================
+    property int cpuPercent: 0
+    property var cpuHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    property int ramPercent: 0
+    property string ramUsed: ""
+    property var ramHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    property string netDownRate: "0 KB/s"
+    property var netHistory: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    property alias bluetoothDeviceName: root.bluetoothConnectedDevice
+
+    Timer {
+        id: telemetryTimer
+        interval: 1500
+        repeat: true
+        running: root.activePopup === "dashboard"
+        triggeredOnStart: true
+        onTriggered: {
+            telemetrySysProc.running = true;
+            telemetryNetProc.running = true;
+        }
+    }
+
+    Process {
+        id: telemetrySysProc
+        command: [Quickshell.env("HOME") + "/.config/quickshell/widgets/scripts/sys_provider.py"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    var obj = JSON.parse(data.trim());
+                    if (obj.cpu !== undefined) {
+                        root.cpuPercent = Math.round(obj.cpu);
+                        var ch = root.cpuHistory.slice();
+                        ch.push(root.cpuPercent);
+                        if (ch.length > 12) ch.shift();
+                        root.cpuHistory = ch;
+                    }
+                    if (obj.ram !== undefined) {
+                        root.ramPercent = Math.round(obj.ram);
+                        root.ramUsed = obj.ram_used || (root.ramPercent + "%");
+                        var rh = root.ramHistory.slice();
+                        rh.push(root.ramPercent);
+                        if (rh.length > 12) rh.shift();
+                        root.ramHistory = rh;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
+    Process {
+        id: telemetryNetProc
+        command: [Quickshell.env("HOME") + "/.config/quickshell/widgets/scripts/net_provider.py"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    var obj = JSON.parse(data.trim());
+                    if (obj.down_val !== undefined && obj.down_unit !== undefined) {
+                        root.netDownRate = obj.down_val + " " + obj.down_unit;
+                        var val = parseFloat(obj.down_kb) || 0.0;
+                        var nh = root.netHistory.slice();
+                        nh.push(val);
+                        if (nh.length > 12) nh.shift();
+                        root.netHistory = nh;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
+    // ==========================================
     // 8. POPUPS & OVERLAYS MANAGEMENT
     // ==========================================
     property string activePopup: "" // "" | "media" | "calendar" | "controlcenter"
@@ -752,9 +930,11 @@ Item {
         target: Hyprland
         function onFocusedMonitorChanged() {
             root.closeEdgePanels();
+            if (!hyprActiveProc.running) hyprActiveProc.running = true;
         }
         function onFocusedWorkspaceChanged() {
             root.closeEdgePanels();
+            if (!hyprActiveProc.running) hyprActiveProc.running = true;
         }
     }
 }
