@@ -204,6 +204,22 @@ Item {
                     color: "#E81123"
                 }
 
+                // Screen Recording Indicator
+                Text {
+                    visible: root.barState.isRecording
+                    text: "󰑋"
+                    font.family: "JetBrainsMono Nerd Font"
+                    font.pixelSize: 11
+                    color: "#E81123"
+
+                    SequentialAnimation on opacity {
+                        running: root.barState.isRecording
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0.3; duration: 500 }
+                        NumberAnimation { to: 1.0; duration: 500 }
+                    }
+                }
+
                 // Expand Indicator
                 Text {
                     text: root.barState.activePopup === "dashboard" ? "󰅃" : (root.isHovered ? "󰅀" : "󰍉")

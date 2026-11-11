@@ -175,16 +175,25 @@ Item {
             }
         }
 
-        // ── Tile 4: Micrófono ──
+        // ── Tile 4: Grabación de Pantalla (Screen Record) ──
         Rectangle {
+            id: recTile
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: 14
-            color: !root.barState.micMuted ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.22) : Qt.rgba(1, 1, 1, 0.08)
-            border.color: !root.barState.micMuted ? Qt.rgba(root.barState.themeAccent.r, root.barState.themeAccent.g, root.barState.themeAccent.b, 0.40) : (micHover.hovered ? root.barState.themeBorderSpecular : Qt.rgba(1, 1, 1, 0.12))
+            color: root.barState.isRecording ? Qt.rgba(0.91, 0.18, 0.24, 0.26) : Qt.rgba(1, 1, 1, 0.08)
+            border.color: root.barState.isRecording ? Qt.rgba(0.91, 0.18, 0.24, 0.60) : (recHover.hovered ? root.barState.themeBorderSpecular : Qt.rgba(1, 1, 1, 0.12))
             border.width: 1
 
-            HoverHandler { id: micHover }
+            HoverHandler { id: recHover }
+
+            // Pulse opacity when recording
+            SequentialAnimation on opacity {
+                running: root.barState.isRecording
+                loops: Animation.Infinite
+                NumberAnimation { to: 0.75; duration: 600; easing.type: Easing.InOutQuad }
+                NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutQuad }
+            }
 
             ColumnLayout {
                 anchors.fill: parent
@@ -192,16 +201,16 @@ Item {
                 spacing: 4
 
                 Text {
-                    text: root.barState.micMuted ? "󰍭" : "󰍬"
+                    text: root.barState.isRecording ? "󰑋" : "󰻃"
                     font.family: "JetBrainsMono Nerd Font"
                     font.pixelSize: 18
-                    color: !root.barState.micMuted ? root.barState.themeAccent : Qt.rgba(1, 1, 1, 0.50)
+                    color: root.barState.isRecording ? "#E81123" : root.barState.themeAccent
                 }
 
                 Item { Layout.fillHeight: true }
 
                 Text {
-                    text: "Mic"
+                    text: "Grabar"
                     font.family: root.barState.themeFontInterface
                     font.pixelSize: 11
                     font.weight: Font.DemiBold
@@ -210,18 +219,30 @@ Item {
 
                 Text {
                     Layout.fillWidth: true
-                    text: root.barState.micMuted ? "Muted" : "Live"
+                    text: root.barState.isRecording ? "Grabando..." : "Pantalla"
                     font.family: root.barState.themeFontInterface
                     font.pixelSize: 10
-                    color: Qt.rgba(1, 1, 1, 0.65)
+                    color: root.barState.isRecording ? "#FF6B6B" : Qt.rgba(1, 1, 1, 0.65)
+                    elide: Text.ElideRight
                 }
             }
 
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.barState.toggleMicMute()
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton) {
+                        root.barState.toggleRecording("screen");
+                    } else {
+                        root.barState.toggleRecording("area");
+                    }
+                }
             }
+
+            ToolTip.visible: recHover.hovered
+            ToolTip.delay: 400
+            ToolTip.text: root.barState.isRecording ? "Clic para detener grabación" : "Clic: Grabar área · Clic der: Pantalla completa"
         }
     }
 }

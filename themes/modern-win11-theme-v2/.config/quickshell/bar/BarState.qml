@@ -736,6 +736,41 @@ Item {
         Quickshell.execDetached(["bash", "-c", "hyprshot -m region 2>/dev/null || grimblast copy area 2>/dev/null || grim -g \"$(slurp)\" - | wl-copy 2>/dev/null || true"]);
     }
 
+    // Recording (wf-recorder) State & Methods
+    property bool isRecording: false
+
+    Timer {
+        id: recordTimer
+        interval: 1500
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            recordProc.running = true;
+        }
+    }
+
+    Process {
+        id: recordProc
+        command: ["bash", "-c", "pgrep -x wf-recorder >/dev/null && echo 'yes' || echo 'no'"]
+        stdout: SplitParser {
+            onRead: data => {
+                root.isRecording = (data.trim() === "yes");
+            }
+        }
+    }
+
+    function toggleRecording(mode) {
+        var m = mode || "area";
+        var home = Quickshell.env("HOME");
+        if (root.isRecording) {
+            Quickshell.execDetached(["bash", "-c", home + "/.config/hypr/scripts/record.sh stop"]);
+        } else {
+            Quickshell.execDetached(["bash", "-c", home + "/.config/hypr/scripts/record.sh " + m]);
+        }
+        recordProc.running = true;
+    }
+
     function openLauncher() {
         Quickshell.execDetached(["bash", "-c", "lunita-launcher 2>/dev/null || rofi -show drun 2>/dev/null || true"]);
     }
