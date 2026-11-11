@@ -103,7 +103,7 @@ Scope {
                 }
             }
 
-            // ── 1B. Fullscreen Backdrop & Dismiss Veil ──
+            // ── 1B. Transparent Dismiss Catcher (Below Island, Zero Black Veil) ──
             PanelWindow {
                 id: dashboardBackdropWindow
                 screen: screenScope.modelData
@@ -116,27 +116,20 @@ Scope {
                     left: true
                     right: true
                 }
+                margins {
+                    top: 44
+                }
 
-                WlrLayershell.layer: WlrLayer.Overlay
-                WlrLayershell.namespace: "win11-dashboard-backdrop"
+                WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.namespace: "win11-dashboard-dismiss"
                 WlrLayershell.exclusionMode: ExclusionMode.Ignore
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-                // Soft background veil: dims high-contrast wallpapers/desktop widgets
-                Rectangle {
+                // Transparent dismiss catcher: no black tint, doesn't obstruct island
+                MouseArea {
                     anchors.fill: parent
-                    color: "#000000"
-                    opacity: globalBarState.activePopup === "dashboard" ? 0.28 : 0.0
-
-                    Behavior on opacity {
-                        NumberAnimation { duration: 180 }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.ArrowCursor
-                        onClicked: globalBarState.closePopups()
-                    }
+                    cursorShape: Qt.ArrowCursor
+                    onClicked: globalBarState.closePopups()
                 }
             }
 
