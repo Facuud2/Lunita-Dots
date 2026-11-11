@@ -1042,11 +1042,11 @@ Este archivo refleja el estado de ejecución del ciclo de trabajo activo. Es mut
 ---
 
 ### [ISSUE-065] Modern Win 11 Theme V2: Subpaneles Flotantes "Behind Home" (Wi-Fi Radar, Bluetooth Orbit, Volume Mixer, Calendar & Forecast)
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADO [x]
 - **Prioridad:** ALTA
-- **Rama Requerida:** `feat/modern-win11-v2`
+- **Rama Requerida:** `ISSUE_065_FEAT`
 - **Módulo(s):** Modern-Win11-Theme-V2 / Bar / Flyouts & Sheets
-- **Archivos Afectados:** `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/sheets/WifiRadarSheet.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/sheets/BluetoothOrbitSheet.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/sheets/VolumeMixerSheet.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/sheets/CalendarForecastSheet.qml`
+- **Archivos Afectados:** `themes/modern-win11-theme-v2/.config/quickshell/bar/BarState.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/DashboardView.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/SlidersCard.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/scripts/mixer_helper.py`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/sheets/WifiRadarSheet.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/sheets/BluetoothOrbitSheet.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/sheets/VolumeMixerSheet.qml`, `themes/modern-win11-theme-v2/.config/quickshell/bar/dashboard/sheets/CalendarForecastSheet.qml`
 - **Descripción:** Implementación de las hojas y vistas detalladas accesibles mediante clic secundario o interacción con los tiles de Home:
   1. **Wi-Fi Radar Sheet:** Mapa radial de redes inalámbricas detectadas situadas en arcos según su potencia de señal (dBm), con diálogo de autenticación.
   2. **Bluetooth Orbit Sheet:** Representación orbital de periféricos Bluetooth donde los conectados gravitan más cerca del nodo central, permitiendo emparejar, conectar o desconectar con un toque.
